@@ -119,20 +119,35 @@ const SuperAdminPage = () => {
 
   // --- ACCIONES ---
 
-  // 👇 1. NUEVA FUNCIÓN PARA BORRAR HOTEL
-  const handleDeleteHotel = async (hotelId) => {
-    const confirm = window.confirm(
-      '⚠️ ¿ESTÁS SEGURO?\n\nEsto borrará el hotel y todos sus datos (reservas, habitaciones, etc) permanentemente.\n\nEsta acción NO se puede deshacer.'
-    );
-    if (!confirm) return;
+  // 👇 FUNCIÓN ACTUALIZADA: PROTECCIÓN CON CONFIRMACIÓN DE TEXTO
+  const handleDeleteHotel = async (hotel) => {
+    // 1. Primer aviso visual (Soft Warning)
+    const confirmMsg = `⚠️ ZONA DE PELIGRO ⚠️\n\nEstás a punto de ELIMINAR PERMANENTEMENTE el hotel:\n\n🏨 ${hotel.name}\n\nSe borrarán:\n- Todas sus reservas\n- Historial de huéspedes\n- Configuración y Habitaciones\n\nPara confirmar, escribe la palabra "BORRAR" (en mayúsculas) a continuación:`;
 
-    const { error } = await supabase.from('hotels').delete().eq('id', hotelId);
+    const userInput = window.prompt(confirmMsg);
+
+    // 2. Validación Estricta (Hard Lock)
+    if (userInput !== 'BORRAR') {
+      if (userInput !== null) {
+        // Si no le dio Cancelar, pero escribió mal
+        alert(
+          '❌ Operación cancelada. La palabra de confirmación no coincide.'
+        );
+      }
+      return; // Abortar misión
+    }
+
+    // 3. Ejecución Nuclear (Solo si pasó la validación)
+    const { error } = await supabase.from('hotels').delete().eq('id', hotel.id);
 
     if (error) {
-      alert('Error al borrar: ' + error.message);
+      alert('Error crítico al borrar: ' + error.message);
     } else {
-      fetchHotels(); // Recargar la lista
-      alert('Hotel eliminado correctamente.');
+      // Feedback positivo y recarga
+      alert(`✅ El hotel "${hotel.name}" ha sido eliminado del sistema.`);
+      fetchHotels();
+      // Actualizar también las stats de lanzamiento si es necesario
+      if (launchData.taken > 0) updateLaunchSpots(launchData.taken - 1);
     }
   };
 
@@ -443,7 +458,7 @@ const SuperAdminPage = () => {
 
                         {/* 👇 CAMBIO 2: BOTÓN DE BORRAR (Trash2) */}
                         <button
-                          onClick={() => handleDeleteHotel(hotel.id)}
+                          onClick={() => handleDeleteHotel(hotel)}
                           className='text-gray-400 hover:text-red-600'
                           title='Eliminar Hotel'
                         >
