@@ -1,3 +1,116 @@
+/* 1. DIRECTIVAS OBLIGATORIAS DE TAILWIND (NO BORRAR) */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* 2. TU DISEÑO LUXURY (Glassmorphism & Gradientes) */
+@layer utilities {
+  .glass-card {
+    background: rgba(255, 255, 255, 0.7);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px); /* Para Safari */
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.07);
+  }
+
+  .text-gradient {
+    background: linear-gradient(135deg, #0f172a 0%, #3b82f6 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+}
+
+/* 3. ANIMACIONES DE FONDO (Aurora Boreal) */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* 4. FUENTE GLOBAL (Opcional pero recomendado para limpieza) */
+body {
+  @apply bg-slate-50 text-slate-900;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+/* --- ESTILOS GLOBALES DE HOSPEDASUITE --- */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,600;0,700;1,600&display=swap');
+
+html {
+  scroll-behavior: smooth;
+}
+
+:root {
+  --font-sans: 'Inter', sans-serif;
+  --font-serif: 'Playfair Display', serif;
+  --color-cyan: #06b6d4;
+  --deep-midnight: #010512;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: #f8fafc;
+}
+
+.font-serif-display {
+  font-family: var(--font-serif);
+}
+
+@keyframes shimmer {
+  0% {
+    transform: translateX(-150%);
+  }
+  100% {
+    transform: translateX(150%);
+  }
+}
+
+.cyber-button-glow {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(6, 182, 212, 0.4),
+    transparent
+  );
+  transform: skewX(-20deg);
+}
+
+.tech-nav {
+  background-color: var(--deep-midnight);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.tech-footer {
+  background-color: var(--deep-midnight);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.logo-fusion {
+  mix-blend-mode: lighten;
+  filter: contrast(1.2) brightness(1.1);
+}

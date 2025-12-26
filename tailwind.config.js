@@ -1,17 +1,17 @@
-/** @type {import('tailwindcss').Config} */
+// tailwind.config.js
 export default {
   content: ['./index.html', './src/**/*.{js,ts,jsx,tsx}'],
   theme: {
     extend: {
       fontFamily: {
-        // La fuente de los títulos elegantes
-        serif: ['"Playfair Display"', 'serif'],
-        // La fuente de los textos técnicos/legibles
-        sans: ['Inter', 'sans-serif'],
+        sans: ['Inter', 'sans-serif'], // Asegúrate de importar Inter en index.css
       },
       colors: {
-        // La variable de oro oficial del proyecto
-        'leyva-gold': '#D4AF37',
+        brand: {
+          50: '#f8fafc',
+          100: '#f1f5f9',
+          900: '#0f172a', // Azul oscuro premium
+        },
       },
     },
   },
