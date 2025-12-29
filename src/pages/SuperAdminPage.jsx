@@ -1,5 +1,7 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
+import { createClient } from '@supabase/supabase-js';
 import {
   Building2,
   MapPin,
@@ -9,15 +11,41 @@ import {
   Users,
   AlertCircle,
   Edit,
-  ExternalLink, // ✅ TU LINK SE MANTIENE AQUÍ
+  ExternalLink,
   Inbox,
   CheckCircle,
   XCircle,
   MessageCircle,
-  Trash2, // <--- AGREGAR ESTE
+  Trash2, // <--- ¡SOLO UNA VEZ!
+  LogOut, // <--- Este es el nuevo para salir
 } from 'lucide-react';
 
 const SuperAdminPage = () => {
+  const navigate = useNavigate();
+
+  // 🛡️ GUARDIÁN DE SEGURIDAD (CANDADO)
+  useEffect(() => {
+    const checkAccess = async () => {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser();
+
+      // 1. Si no hay usuario logueado -> Fuera
+      if (!user) {
+        alert('⛔ Acceso Prohibido: Identifícate.');
+        return navigate('/login');
+      }
+
+      // 2. (OPCIONAL) Si quieres que SOLO TU CORREO pueda entrar, descomenta esto:
+      /*
+      if (user.email !== 'tucorreo@gmail.com') {
+         alert("⛔ No eres el Super Admin.");
+         return navigate('/dashboard');
+      }
+      */
+    };
+    checkAccess();
+  }, []);
   // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState('hotels'); // 'hotels' | 'leads'
   const [hotels, setHotels] = useState([]);
@@ -134,6 +162,11 @@ const SuperAdminPage = () => {
           '❌ Operación cancelada. La palabra de confirmación no coincide.'
         );
       }
+      // 👇 FUNCIÓN PARA CERRAR SESIÓN
+      const handleLogout = async () => {
+        await supabase.auth.signOut();
+        navigate('/login');
+      };
       return; // Abortar misión
     }
 
@@ -151,39 +184,74 @@ const SuperAdminPage = () => {
     }
   };
 
-  // 👇 2. NUEVA FUNCIÓN PARA CREAR HOTEL MANUALMENTE
+  // 👇 FUNCIÓN CON DIAGNÓSTICO (DEBUG)
   const handleManualCreate = async () => {
-    const name = window.prompt('Nombre del nuevo Hotel:');
+    console.log('🚀 Iniciando creación manual...');
+
+    const name = window.prompt('Nombre del Hotel:');
     if (!name) return;
 
-    const email = window.prompt('Correo del dueño (para el login):');
-    if (!email) return;
+    // 👇 CORRECCIÓN AQUÍ:
+    const rawEmail = window.prompt('Correo (Usuario):'); // 1. La recibimos como "cruda" (raw)
+    if (!rawEmail) return;
 
-    const location = prompt('Ubicación / Ciudad:', 'Villa de Leyva');
+    const email = rawEmail.toLowerCase().trim(); // 2. La limpiamos y guardamos como 'email' final
 
-    // Calcular fecha de prueba (30 días)
+    // ... resto del código igual ...
+    const password = window.prompt('Contraseña temporal:', 'hotel123');
+    const phone = window.prompt('WhatsApp:');
+    const location = prompt('Ubicación:', 'Villa de Leyva');
+
+    console.log('1️⃣ Intentando conectar con Supabase Auth...');
+
+    // Cliente Temporal
+    const tempSupabase = createClient(
+      import.meta.env.VITE_SUPABASE_URL,
+      import.meta.env.VITE_SUPABASE_ANON_KEY,
+      { auth: { persistSession: false, autoRefreshToken: false } }
+    );
+
+    // Intentar crear usuario
+    const { data: authData, error: authError } = await tempSupabase.auth.signUp(
+      {
+        email: email,
+        password: password,
+      }
+    );
+
+    if (authError) {
+      console.error('❌ Error en Auth:', authError);
+      alert('❌ Error creando usuario: ' + authError.message);
+      return; // 🛑 AQUÍ SE DETIENE SI FALLA EL USUARIO
+    }
+
+    console.log('✅ Usuario creado en Auth:', authData);
+
+    // Crear Hotel
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 30);
 
-    const { error } = await supabase.from('hotels').insert([
+    const { error: dbError } = await supabase.from('hotels').insert([
       {
         name: name,
         email: email,
+        phone: phone,
         status: 'trial',
         trial_ends_at: trialEnd.toISOString(),
-        monthly_price: 29, // Precio por defecto
-        location: 'Ubicación pendiente',
+        monthly_price: 29,
+        location: location || 'Ubicación pendiente',
       },
     ]);
 
-    if (error) {
-      alert('Error creando hotel: ' + error.message);
+    if (dbError) {
+      console.error('❌ Error en DB:', dbError);
+      alert('⚠️ Usuario creado pero falló el hotel: ' + dbError.message);
     } else {
-      fetchHotels(); // Recargar lista
-      alert('✅ Hotel creado manualmente.');
+      console.log('✅ Hotel creado en DB');
+      fetchHotels();
+      alert(`✅ TODO ÉXITO: Usuario ${email} creado.`);
     }
   };
-
   // ... (aquí siguen tus funciones existentes como handleApproveLead)
   const updateLaunchSpots = async (newVal) => {
     const safeVal = Math.max(0, Math.min(newVal, launchData.total));
@@ -283,7 +351,10 @@ const SuperAdminPage = () => {
     setEditingHotel(null);
     fetchHotels();
   };
-
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    navigate('/login');
+  };
   // --- RENDERIZADO ---
 
   return (
@@ -317,6 +388,14 @@ const SuperAdminPage = () => {
                   {stats.pendingLeads}
                 </span>
               )}
+            </button>
+            {/* 👇 NUEVO BOTÓN DE CERRAR SESIÓN */}
+            <button
+              onClick={handleLogout}
+              className='px-4 py-2 rounded-lg text-sm font-bold bg-red-50 text-red-600 hover:bg-red-100 transition-colors flex items-center gap-2'
+              title='Cerrar Sesión'
+            >
+              <LogOut size={16} /> Salir
             </button>
           </div>
         </h1>

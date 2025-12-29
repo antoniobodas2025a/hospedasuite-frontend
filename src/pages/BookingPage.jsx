@@ -14,12 +14,27 @@ import {
   ChevronLeft,
   MapPin,
   Wifi,
-  Coffee,
-  Star,
   ArrowRight,
   Loader,
   Eraser,
   CreditCard,
+  Coffee,
+  Star,
+  Tv,
+  Wind,
+  Bath,
+  Mountain,
+  Car,
+  Utensils,
+  Snowflake,
+  Waves,
+  Wine,
+  Dumbbell,
+  PawPrint,
+  X,
+  Users,
+  BedDouble,
+  DoorOpen,
 } from 'lucide-react';
 
 // --- ESTILOS GLOBALES ---
@@ -77,11 +92,15 @@ const BookingPage = () => {
     checkOut: new Date(Date.now() + 86400000).toISOString().split('T')[0],
   });
   const [selectedRoom, setSelectedRoom] = useState(null);
+  const [viewingRoom, setViewingRoom] = useState(null); // Memoria para el Modal de Detalles
+
   const [guest, setGuest] = useState({
     fullName: '',
     docNumber: '',
     email: '',
     phone: '',
+    guestsCount: 1,
+    comments: '',
   });
 
   // --- LOGICA CORREGIDA ---
@@ -120,7 +139,13 @@ const BookingPage = () => {
     e.preventDefault();
     if (sigPad.current.isEmpty())
       return alert('La firma es requerida para confirmar.');
-
+    // 👇 PARCHE: Si ponen más gente de la que cabe, da error
+    const maxCap = selectedRoom.capacity || 10;
+    if (parseInt(guest.guestsCount) > maxCap) {
+      return alert(
+        `⚠️ Error de Cupo: Esta habitación solo permite un máximo de ${maxCap} personas.`
+      );
+    }
     setProcessing(true);
     try {
       const signatureBlob = await new Promise((resolve) =>
@@ -170,8 +195,9 @@ const BookingPage = () => {
           guest_id: gData.id,
           check_in: dates.checkIn,
           check_out: dates.checkOut,
-          total_price: (selectedRoom.price || 0) * nights,
+          total_price: (selectedRoom.price || 0) * nights * multiplier,
           status: 'confirmed',
+          notes: `Huéspedes: ${guest.guestsCount}. Solicitud: ${guest.comments}`,
         },
       ]);
 
@@ -191,11 +217,18 @@ const BookingPage = () => {
       </div>
     );
 
+  // --- 🧮 CALCULADORA INTELIGENTE ---
   const totalNights = Math.max(
     1,
     Math.ceil((new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000)
   );
-  const totalCost = (selectedRoom?.price || 0) * totalNights;
+
+  // Detectar si cobramos por persona o por habitación
+  const multiplier = selectedRoom?.is_price_per_person
+    ? parseInt(guest.guestsCount) || 1 // Si es por persona, usa el número de huéspedes
+    : 1; // Si no, multiplica por 1 (precio fijo)
+
+  const totalCost = (selectedRoom?.price || 0) * totalNights * multiplier;
 
   // INDICADOR DE PASOS (Contrastado)
   const StepIndicator = () => (
@@ -342,7 +375,15 @@ const BookingPage = () => {
                   className='flex justify-center'
                 >
                   <button
-                    onClick={() => setStep(2)}
+                    onClick={() => {
+                      // 👇 PARCHE: Si la salida es antes o igual a la llegada, da error
+                      if (new Date(dates.checkOut) <= new Date(dates.checkIn)) {
+                        return alert(
+                          '⚠️ Error: La fecha de salida debe ser posterior a la llegada.'
+                        );
+                      }
+                      setStep(2);
+                    }}
                     className='bg-[#111] text-white px-12 py-5 rounded-full font-bold text-xs tracking-[0.2em] hover:bg-black hover:scale-105 transition-all shadow-xl flex items-center gap-4 group'
                   >
                     VER DISPONIBILIDAD{' '}
@@ -398,7 +439,7 @@ const BookingPage = () => {
                       <div className='grid md:grid-cols-2 gap-0'>
                         <div className='h-64 md:h-80 overflow-hidden bg-gray-200'>
                           <img
-                            src={ROOM_PLACEHOLDER}
+                            src={room.image_url || ROOM_PLACEHOLDER}
                             className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out'
                             alt={room.name}
                           />
@@ -413,14 +454,36 @@ const BookingPage = () => {
                                 ${(room.price || 0).toLocaleString()}
                               </span>
                               <span className='text-[10px] text-gray-500 uppercase tracking-widest font-bold'>
-                                Por Noche
+                                {room.is_price_per_person
+                                  ? 'Por Persona'
+                                  : 'Por Noche'}
+                              </span>
+                            </div>
+                          </div>
+                          {/* 👇 BARRA DE CAPACIDAD Y CAMAS */}
+                          <div className='flex gap-4 mt-4 mb-4 border-b border-gray-100 pb-4'>
+                            <div className='flex items-center gap-2 text-xs font-bold text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg'>
+                              <Users size={14} />
+                              <span>{room.capacity || 2} Personas</span>
+                            </div>
+                            <div className='flex items-center gap-2 text-xs font-bold text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg'>
+                              <BedDouble size={14} />
+                              <span>
+                                {room.beds || 1}{' '}
+                                {room.beds === 1 ? 'Cama' : 'Camas'}
+                              </span>
+                            </div>
+                            <div className='flex items-center gap-2 text-xs font-bold text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg'>
+                              <DoorOpen size={14} />
+                              <span>
+                                {room.bedrooms || 1}{' '}
+                                {room.bedrooms === 1 ? 'Cuarto' : 'Cuartos'}
                               </span>
                             </div>
                           </div>
                           <p className='text-gray-600 font-medium mb-6 line-clamp-3 text-sm leading-relaxed'>
-                            Disfruta de una experiencia inigualable con diseño
-                            exclusivo, iluminación cálida y todos los servicios
-                            para tu confort.
+                            {room.description ||
+                              'Disfruta de una experiencia inigualable con diseño exclusivo, iluminación cálida y todos los servicios para tu confort.'}
                           </p>
                           <div className='flex gap-5 text-gray-400 mb-8'>
                             <Wifi size={20} /> <Coffee size={20} />{' '}
@@ -428,9 +491,17 @@ const BookingPage = () => {
                           </div>
 
                           <div className='flex items-center justify-between mt-auto pt-4 border-t border-gray-100'>
-                            <span className='text-xs font-bold text-black underline decoration-1 underline-offset-4'>
+                            {/* 👇 BOTÓN VER DETALLES ACTIVADO */}
+                            {/* BOTÓN VIVO PARA ABRIR DETALLES */}
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setViewingRoom(room);
+                              }}
+                              className='text-xs font-bold text-black underline decoration-1 underline-offset-4 hover:text-gray-600 transition-colors z-20 relative'
+                            >
                               VER DETALLES
-                            </span>
+                            </button>
                             {selectedRoom?.id === room.id ? (
                               <motion.button
                                 initial={{ scale: 0 }}
@@ -538,6 +609,46 @@ const BookingPage = () => {
                           </label>
                         </div>
                       ))}
+                      {/* 👇 NUEVO: NÚMERO DE PERSONAS */}
+                      <div className='relative pt-2'>
+                        <input
+                          type='number'
+                          min='1'
+                          max={selectedRoom?.capacity || 10}
+                          required
+                          className='w-full bg-transparent border-b-2 border-gray-300 py-3 text-lg text-gray-900 focus:border-black outline-none transition-colors peer placeholder-gray-300 font-serif'
+                          placeholder='1'
+                          value={guest.guestsCount}
+                          onChange={(e) =>
+                            setGuest({
+                              ...guest,
+                              guestsCount: e.target.value,
+                            })
+                          }
+                        />
+                        <label className='absolute left-0 -top-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 peer-focus:text-black transition-colors'>
+                          NÚMERO DE PERSONAS
+                        </label>
+                      </div>
+
+                      {/* 👇 NUEVO: SOLICITUDES ESPECIALES */}
+                      <div className='relative pt-2'>
+                        <textarea
+                          rows='2'
+                          className='w-full bg-transparent border-b-2 border-gray-300 py-3 text-lg text-gray-900 focus:border-black outline-none transition-colors peer placeholder-gray-300 font-serif resize-none'
+                          placeholder='Ej: Alérgico a las plumas, Cama adicional...'
+                          value={guest.comments}
+                          onChange={(e) =>
+                            setGuest({
+                              ...guest,
+                              comments: e.target.value,
+                            })
+                          }
+                        />
+                        <label className='absolute left-0 -top-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 peer-focus:text-black transition-colors'>
+                          SOLICITUDES ESPECIALES
+                        </label>
+                      </div>
                     </motion.div>
 
                     <motion.div
@@ -708,6 +819,120 @@ const BookingPage = () => {
           POWERED BY HOSPEDASUITE
         </div>
       </div>
+
+      {/* --- MODAL DE DETALLES DE LUJO (INICIO) --- */}
+      <AnimatePresence>
+        {viewingRoom && (
+          <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md'>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95, y: 20 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              onClick={(e) => e.stopPropagation()}
+              className='bg-white w-full max-w-4xl max-h-[90vh] rounded-[2rem] overflow-hidden shadow-2xl flex flex-col md:flex-row relative'
+            >
+              {/* Botón Cerrar */}
+              <button
+                onClick={() => setViewingRoom(null)}
+                className='absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full hover:bg-black hover:text-white transition-colors backdrop-blur shadow-sm'
+              >
+                <X size={20} />
+              </button>
+
+              {/* COLUMNA 1: FOTO */}
+              <div className='md:w-1/2 h-64 md:h-auto bg-gray-100 relative'>
+                <img
+                  src={viewingRoom.image_url || ROOM_PLACEHOLDER}
+                  className='w-full h-full object-cover'
+                  alt={viewingRoom.name}
+                />
+              </div>
+
+              {/* COLUMNA 2: INFO */}
+              <div className='md:w-1/2 p-8 md:p-10 overflow-y-auto bg-white flex flex-col'>
+                <span className='text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-2'>
+                  HospedaSuite Collection
+                </span>
+                <h2 className='font-serif text-3xl md:text-4xl text-black leading-tight mb-4'>
+                  {viewingRoom.name}
+                </h2>
+
+                <div className='mb-6 border-b border-gray-100 pb-6'>
+                  <span className='font-display text-2xl font-bold text-black'>
+                    ${viewingRoom.price?.toLocaleString()}
+                  </span>
+                  <span className='text-sm text-gray-500 ml-2'>/ Noche</span>
+                </div>
+
+                <div className='mb-8'>
+                  <p className='text-gray-600 leading-relaxed font-light text-sm'>
+                    {viewingRoom.description ||
+                      'Una experiencia inolvidable con todas las comodidades.'}
+                  </p>
+                </div>
+
+                {/* LISTA DE ICONOS INTELIGENTE */}
+                <div className='mb-10'>
+                  <h3 className='font-bold text-xs uppercase tracking-widest text-gray-900 mb-4'>
+                    Comodidades Incluidas
+                  </h3>
+
+                  {viewingRoom.amenities && viewingRoom.amenities.length > 0 ? (
+                    <div className='grid grid-cols-2 gap-y-4 gap-x-2'>
+                      {viewingRoom.amenities.map((item) => {
+                        let Icon = Star;
+                        if (item === 'Wifi') Icon = Wifi;
+                        if (item === 'TV') Icon = Tv;
+                        if (item === 'Baño Privado') Icon = Bath;
+                        if (item === 'Agua Caliente') Icon = Coffee;
+                        if (item === 'Vista') Icon = Mountain;
+                        if (item === 'Secador') Icon = Wind;
+                        if (item === 'Aire Acondicionado') Icon = Snowflake;
+                        if (item === 'Parqueadero') Icon = Car;
+                        if (item === 'Desayuno') Icon = Utensils;
+                        if (item === 'Piscina') Icon = Waves;
+                        if (item === 'Minibar') Icon = Wine;
+                        if (item === 'Gimnasio') Icon = Dumbbell;
+                        if (item === 'Pet Friendly') Icon = PawPrint;
+
+                        return (
+                          <div
+                            key={item}
+                            className='flex items-center gap-3 text-gray-600 text-sm group'
+                          >
+                            <div className='p-1.5 bg-gray-50 rounded-lg group-hover:bg-black group-hover:text-white transition-colors'>
+                              <Icon size={16} />
+                            </div>
+                            <span>{item}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  ) : (
+                    <p className='text-gray-400 text-xs italic'>
+                      Servicios estándar incluidos.
+                    </p>
+                  )}
+                </div>
+
+                <div className='mt-auto pt-6'>
+                  <button
+                    onClick={() => {
+                      setSelectedRoom(viewingRoom);
+                      setViewingRoom(null);
+                      setStep(3);
+                    }}
+                    className='w-full bg-black text-white py-4 rounded-xl font-bold tracking-widest text-xs hover:bg-gray-800 transition-transform hover:scale-[1.02] shadow-lg'
+                  >
+                    RESERVAR AHORA
+                  </button>
+                </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* --- MODAL DE DETALLES DE LUJO (FIN) --- */}
     </div>
   );
 };

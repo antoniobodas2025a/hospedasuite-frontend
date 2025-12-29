@@ -35,41 +35,6 @@ const SalesAgent = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
   }, [messages]);
 
-  // --- LOGICA DE APERTURA (TRIGGERS) ---
-  useEffect(() => {
-    const handleScroll = () => {
-      if (hasAutoOpened || isOpen) return;
-      const scrollPercent =
-        (window.scrollY / (document.body.scrollHeight - window.innerHeight)) *
-        100;
-      if (scrollPercent > 50) triggerOpen();
-    };
-
-    const resetIdleTimer = () => {
-      if (hasAutoOpened || isOpen) return;
-      if (timerRef.current) clearTimeout(timerRef.current);
-      timerRef.current = setTimeout(triggerOpen, 60000); // 1 minuto silencio
-    };
-
-    window.addEventListener('scroll', handleScroll);
-    window.addEventListener('mousemove', resetIdleTimer);
-    window.addEventListener('keydown', resetIdleTimer);
-
-    resetIdleTimer();
-
-    return () => {
-      window.removeEventListener('scroll', handleScroll);
-      window.removeEventListener('mousemove', resetIdleTimer);
-      window.removeEventListener('keydown', resetIdleTimer);
-      if (timerRef.current) clearTimeout(timerRef.current);
-    };
-  }, [hasAutoOpened, isOpen]);
-
-  const triggerOpen = () => {
-    setIsOpen(true);
-    setHasAutoOpened(true);
-  };
-
   // --- ENVÍO BLINDADO (CABALLO DE TROYA) ---
   const handleSendMessage = async (e) => {
     e.preventDefault();

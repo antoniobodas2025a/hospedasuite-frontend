@@ -311,8 +311,11 @@ const LandingPage = () => {
 
             {/* P: Explica la oferta real: Tecnología a cambio de feedback, sin rodeos */}
             <p className='text-lg text-slate-700 max-w-2xl mx-auto mb-10 leading-relaxed font-light'>
-              Acceda a la{' '}
-              <strong>Beca de Implementación Tecnológica (100% OFF)</strong>.
+              Active su{' '}
+              <strong>
+                Subvención de Lanzamiento (Primer Mes 100% Bonificado).
+              </strong>
+              .
               <br />
               Automatice sus reportes legales (SIRE/TRA) y eleve el estándar de
               su hotel antes de que la normativa se endurezca.
@@ -528,7 +531,7 @@ const LandingPage = () => {
                 >
                   <div className='mb-6'>
                     <h3 className='text-xl font-bold text-slate-900'>
-                      Postular a la Beca
+                      Solicitar Ingreso al Círculo Fundador
                     </h3>
                     <p className='text-sm text-slate-600'>
                       Paso {formStep} de 2:{' '}

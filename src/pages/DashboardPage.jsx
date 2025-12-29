@@ -40,6 +40,18 @@ import {
   Utensils,
   Printer,
   PenTool,
+  Tv,
+  Wind,
+  Bath,
+  Mountain,
+  Car,
+  Snowflake,
+  Waves,
+  Wine,
+  Wifi,
+  Star,
+  Dumbbell,
+  PawPrint,
 } from 'lucide-react';
 
 const GlobalStyles = () => (
@@ -83,6 +95,96 @@ const DashboardPage = () => {
   // Estados Principales
   const [activeTab, setActiveTab] = useState('calendar');
   const [rooms, setRooms] = useState([]);
+  // ... tus otros estados ...
+
+  // 👇 ESTADOS PARA EDICIÓN Y SUBIDA DE FOTOS
+  const [editingRoom, setEditingRoom] = useState(null);
+  const [uploading, setUploading] = useState(false); // Nuevo estado de carga
+  const [selectedFile, setSelectedFile] = useState(null); // Nuevo estado para el archivo
+
+  const [roomForm, setRoomForm] = useState({
+    name: '',
+    price: '',
+    description: '',
+    image_url: '',
+    amenities: [],
+  });
+
+  // 👇 FUNCIÓN PARA ABRIR EL MODAL (ACTUALIZADA)
+  const openEditRoom = (room) => {
+    setEditingRoom(room);
+    setSelectedFile(null);
+    setRoomForm({
+      name: room.name || '',
+      price: room.price || '',
+      description: room.description || '',
+      image_url: room.image_url || '',
+      amenities: room.amenities || [],
+      // 👇 DATOS NUEVOS
+      capacity: room.capacity || 2,
+      beds: room.beds || 1,
+      bedrooms: room.bedrooms || 1,
+      is_price_per_person: room.is_price_per_person || false,
+    });
+  };
+
+  // 👇 FUNCIÓN DE GUARDADO (ACTUALIZADA)
+  const handleUpdateRoom = async (e) => {
+    e.preventDefault();
+    if (!editingRoom) return;
+
+    setUploading(true);
+    let finalImageUrl = roomForm.image_url;
+
+    try {
+      // 1. Subida de Foto
+      if (selectedFile) {
+        const fileExt = selectedFile.name.split('.').pop();
+        const fileName = `${Date.now()}.${fileExt}`;
+        const filePath = `${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from('room-images')
+          .upload(filePath, selectedFile);
+
+        if (uploadError) throw new Error('Falla en subida');
+
+        const { data: urlData } = supabase.storage
+          .from('room-images')
+          .getPublicUrl(filePath);
+
+        finalImageUrl = urlData.publicUrl;
+      }
+
+      // 2. Guardar en Base de Datos
+      const { error: updateError } = await supabase
+        .from('rooms')
+        .update({
+          name: roomForm.name,
+          price: parseFloat(roomForm.price),
+          description: roomForm.description,
+          image_url: finalImageUrl,
+          amenities: roomForm.amenities,
+          // 👇 GUARDANDO LO NUEVO
+          capacity: parseInt(roomForm.capacity),
+          beds: parseInt(roomForm.beds),
+          bedrooms: parseInt(roomForm.bedrooms),
+          is_price_per_person: roomForm.is_price_per_person,
+        })
+        .eq('id', editingRoom.id);
+
+      if (updateError) throw new Error(updateError.message);
+
+      alert('✅ Habitación actualizada');
+      setEditingRoom(null);
+      fetchOperationalData();
+    } catch (error) {
+      alert('❌ Error: ' + error.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const [guests, setGuests] = useState([]);
   const [bookings, setBookings] = useState([]);
   const [leads, setLeads] = useState([]); // Estado para Plan GROWTH/CORP
@@ -902,6 +1004,7 @@ const DashboardPage = () => {
           {activeTab === 'calendar' && (
             <div className='h-full overflow-auto custom-scrollbar relative'>
               <div className='min-w-max pb-20'>
+                {/* Cabecera de Días */}
                 <div className='flex sticky top-0 z-10 bg-[#F9F7F2]/95 backdrop-blur border-b border-[#E5E0D8]'>
                   <div className='w-40 p-4 font-serif font-bold text-[#2C2C2C] sticky left-0 bg-[#F9F7F2] z-20 border-r border-[#E5E0D8] shadow-sm'>
                     Habitación
@@ -932,47 +1035,78 @@ const DashboardPage = () => {
                     </div>
                   ))}
                 </div>
-                {rooms.map((r) => (
-                  <div
-                    key={r.id}
-                    className='flex border-b border-[#E5E0D8] h-20 hover:bg-white transition-colors'
-                  >
-                    <div className='w-40 p-4 font-sans font-bold text-[#555] sticky left-0 bg-[#F9F7F2] z-10 border-r border-[#E5E0D8] flex items-center justify-between'>
-                      <span>{r.name}</span>
-                      <div className='w-1.5 h-1.5 rounded-full bg-green-400' />
+
+                {/* CUADRÍCULA DE RESERVAS (EL CEREBRO DE LA AGENDA) */}
+                <div className='divide-y divide-[#E5E0D8]'>
+                  {rooms.map((room) => (
+                    <div
+                      key={room.id}
+                      className='flex group hover:bg-[#F9F7F2] transition-colors'
+                    >
+                      {/* Columna Nombre Habitación */}
+                      <div className='w-40 p-4 sticky left-0 bg-white group-hover:bg-[#F9F7F2] z-10 border-r border-[#E5E0D8] shadow-sm flex flex-col justify-center'>
+                        <span className='font-serif font-bold text-[#2C2C2C] text-sm leading-tight'>
+                          {room.name}
+                        </span>
+                        <span className='text-[10px] text-gray-400 mt-1 uppercase tracking-widest'>
+                          ${parseInt(room.price).toLocaleString()}
+                        </span>
+                      </div>
+
+                      {/* Celdas de la cuadrícula */}
+                      {daysInMonth.map((d) => {
+                        const booking = getBookingForDate(room.id, d);
+                        const isStart =
+                          booking &&
+                          new Date(booking.check_in + 'T00:00').getTime() ===
+                            d.getTime();
+
+                        let cellContent = null;
+                        let cellClass = '';
+
+                        if (booking) {
+                          if (isStart) {
+                            const color =
+                              booking.status === 'maintenance'
+                                ? 'bg-gray-800'
+                                : 'bg-[#8C3A3A]';
+                            cellContent = (
+                              <motion.div
+                                layoutId={`booking-${booking.id}`}
+                                onClick={() => {
+                                  setSelectedBooking(booking);
+                                  setIsEditing(false);
+                                }}
+                                className={`absolute top-1 left-1 right-1 bottom-1 ${color} rounded-lg shadow-md z-10 cursor-pointer flex items-center px-2 overflow-hidden hover:brightness-110`}
+                              >
+                                <span className='text-[10px] font-bold text-white truncate'>
+                                  {booking.guests?.full_name || 'Bloqueo'}
+                                </span>
+                              </motion.div>
+                            );
+                          } else {
+                            cellClass =
+                              booking.status === 'maintenance'
+                                ? 'bg-gray-100'
+                                : 'bg-[#8C3A3A]/10';
+                          }
+                        }
+
+                        return (
+                          <div
+                            key={d.toISOString()}
+                            className={`w-14 h-16 border-r border-[#E5E0D8] relative flex-none transition-colors ${cellClass}`}
+                          >
+                            {cellContent}
+                          </div>
+                        );
+                      })}
                     </div>
-                    {daysInMonth.map((d) => {
-                      const b = getBookingForDate(r.id, d);
-                      return (
-                        <div
-                          key={d.toString()}
-                          className='w-14 border-r border-[#E5E0D8] relative p-1'
-                        >
-                          {b && (
-                            <motion.div
-                              layoutId={`booking-${b.id}`}
-                              whileHover={{ scale: 1.05, zIndex: 50 }}
-                              onClick={() => {
-                                setSelectedBooking(b);
-                                setModalTab('info');
-                                setIsEditing(false);
-                              }}
-                              className='w-full h-full rounded-lg shadow-sm cursor-pointer border-l-4 border-black/20'
-                              style={{
-                                backgroundColor:
-                                  b.status === 'maintenance'
-                                    ? '#A8A29E'
-                                    : brandColor,
-                              }}
-                              title={b.guests?.full_name}
-                            />
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
+
+              {/* Botón Flotante Agregar */}
               <div className='absolute bottom-8 right-8 flex flex-col gap-4 z-30'>
                 <motion.button
                   whileHover={{ scale: 1.1 }}
@@ -989,6 +1123,7 @@ const DashboardPage = () => {
           {/* INVENTARIO */}
           {activeTab === 'inventory' && (
             <div className='p-8 h-full overflow-auto'>
+              {/* Formulario Agregar Rápido */}
               <div className='bg-white/80 p-8 rounded-[2rem] shadow-sm border border-[#E5E0D8] mb-8 max-w-2xl'>
                 <h3 className='font-serif text-2xl font-bold mb-6 text-[#2C2C2C]'>
                   Agregar Habitación
@@ -1012,30 +1147,63 @@ const DashboardPage = () => {
                   </button>
                 </form>
               </div>
-              <div className='grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'>
+
+              {/* GRID DE HABITACIONES (CON FOTOS Y LÁPIZ) */}
+              <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6'>
                 {rooms.map((r) => (
                   <motion.div
                     initial={{ scale: 0.9, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
                     key={r.id}
-                    className='bg-white p-6 rounded-[1.5rem] border border-[#E5E0D8] shadow-sm flex justify-between items-center hover:shadow-md transition-shadow'
+                    className='bg-white p-4 rounded-[1.5rem] border border-[#E5E0D8] shadow-sm hover:shadow-md transition-all flex flex-col gap-4 group relative'
                   >
-                    <div>
-                      <span className='font-serif font-bold text-lg text-[#2C2C2C] block'>
-                        {r.name}
-                      </span>
+                    {/* FOTO + LÁPIZ DE EDICIÓN */}
+                    <div className='h-40 w-full bg-gray-100 rounded-2xl overflow-hidden relative'>
+                      {r.image_url ? (
+                        <img
+                          src={r.image_url}
+                          className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
+                          alt={r.name}
+                        />
+                      ) : (
+                        <div className='w-full h-full flex items-center justify-center text-gray-300 bg-slate-50'>
+                          <ImageIcon size={32} />
+                        </div>
+                      )}
+
+                      {/* EL LÁPIZ MÁGICO ✏️ */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          openEditRoom(r);
+                        }}
+                        className='absolute top-3 right-3 bg-white/90 p-2 rounded-full text-slate-700 shadow-sm hover:bg-black hover:text-white transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0'
+                        title='Editar habitación'
+                      >
+                        <Edit size={14} />
+                      </button>
+                    </div>
+
+                    {/* DATOS */}
+                    <div className='flex justify-between items-end'>
+                      <div>
+                        <span className='font-serif font-bold text-lg text-[#2C2C2C] block leading-tight mb-1'>
+                          {r.name}
+                        </span>
+                        <span className='text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded'>
+                          ${r.price?.toLocaleString()}
+                        </span>
+                      </div>
                       <button
                         onClick={() => {
                           setTargetRoomId(r.id);
                           fileInputRef.current.click();
                         }}
-                        className='text-[10px] font-bold text-blue-600 bg-blue-50 px-3 py-1.5 rounded-lg mt-2 flex items-center gap-1 hover:bg-blue-100 transition-colors'
+                        className='p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors'
+                        title='Sincronizar Airbnb'
                       >
-                        <UploadCloud size={12} /> Sync Airbnb
+                        <UploadCloud size={18} />
                       </button>
-                    </div>
-                    <div className='bg-[#F9F7F2] p-2 rounded-full text-[#8C3A3A]'>
-                      <BedDouble size={20} />
                     </div>
                   </motion.div>
                 ))}
@@ -2292,6 +2460,247 @@ const DashboardPage = () => {
           className='hidden'
           onChange={handleIcalUpload}
         />
+        {/* MODAL EDITAR HABITACIÓN */}
+        <AnimatePresence>
+          {editingRoom && (
+            <div className='fixed inset-0 bg-[#2C2C2C]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                className='bg-[#F9F7F2] rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden'
+              >
+                <div className='p-6 border-b border-[#E5E0D8] flex justify-between items-center'>
+                  <h3 className='font-serif text-xl font-bold'>
+                    Editar Detalles
+                  </h3>
+                  <button onClick={() => setEditingRoom(null)}>
+                    <X />
+                  </button>
+                </div>
+
+                <form
+                  onSubmit={handleUpdateRoom}
+                  className='p-6 space-y-4'
+                >
+                  {/* Nombre y Precio */}
+                  <div className='grid grid-cols-2 gap-4'>
+                    <div>
+                      <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
+                        Nombre
+                      </label>
+                      <input
+                        className='w-full p-3 bg-white rounded-xl border-none font-bold'
+                        value={roomForm.name}
+                        onChange={(e) =>
+                          setRoomForm({ ...roomForm, name: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
+                        Precio
+                      </label>
+                      <input
+                        type='number'
+                        className='w-full p-3 bg-white rounded-xl border-none font-bold'
+                        value={roomForm.price}
+                        onChange={(e) =>
+                          setRoomForm({ ...roomForm, price: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                  {/* 👇 SWITCH PRECIO POR PERSONA */}
+                  <div className='flex items-center gap-2 mt-2'>
+                    <input
+                      type='checkbox'
+                      id='pricePerPerson'
+                      checked={roomForm.is_price_per_person}
+                      onChange={(e) =>
+                        setRoomForm({
+                          ...roomForm,
+                          is_price_per_person: e.target.checked,
+                        })
+                      }
+                      className='w-4 h-4 text-black rounded border-gray-300 focus:ring-black'
+                    />
+                    <label
+                      htmlFor='pricePerPerson'
+                      className='text-xs font-bold text-gray-600 select-none cursor-pointer'
+                    >
+                      Cobrar por persona (Mostrar "/ Persona" en la web)
+                    </label>
+                  </div>
+                  {/* FILA DE CAPACIDAD Y CAMAS */}
+                  <div className='grid grid-cols-3 gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 mt-4 mb-4'>
+                    <div>
+                      <label className='text-[9px] font-bold uppercase text-gray-500 tracking-widest'>
+                        Personas
+                      </label>
+                      <input
+                        type='number'
+                        className='w-full p-2 bg-white rounded-lg border-none font-bold text-center'
+                        value={roomForm.capacity}
+                        onChange={(e) =>
+                          setRoomForm({ ...roomForm, capacity: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className='text-[9px] font-bold uppercase text-gray-500 tracking-widest'>
+                        Camas
+                      </label>
+                      <input
+                        type='number'
+                        className='w-full p-2 bg-white rounded-lg border-none font-bold text-center'
+                        value={roomForm.beds}
+                        onChange={(e) =>
+                          setRoomForm({ ...roomForm, beds: e.target.value })
+                        }
+                      />
+                    </div>
+                    <div>
+                      <label className='text-[9px] font-bold uppercase text-gray-500 tracking-widest'>
+                        Habitaciones
+                      </label>
+                      <input
+                        type='number'
+                        className='w-full p-2 bg-white rounded-lg border-none font-bold text-center'
+                        value={roomForm.bedrooms}
+                        onChange={(e) =>
+                          setRoomForm({ ...roomForm, bedrooms: e.target.value })
+                        }
+                      />
+                    </div>
+                  </div>
+                  {/* Foto URL */}
+                  {/* SELECCIONAR FOTO */}
+                  <div className='bg-white p-4 rounded-xl border border-dashed border-gray-300'>
+                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest block mb-3'>
+                      Foto de la Habitación
+                    </label>
+
+                    {/* Botón para elegir archivo */}
+                    <input
+                      type='file'
+                      accept='image/*'
+                      onChange={(e) => setSelectedFile(e.target.files[0])}
+                      className='block w-full text-sm text-slate-500
+                          file:mr-4 file:py-2.5 file:px-4
+                          file:rounded-xl file:border-0
+                          file:text-xs file:font-bold
+                          file:bg-[#2C2C2C] file:text-white
+                          file:cursor-pointer hover:file:bg-black
+                          cursor-pointer mb-4'
+                    />
+
+                    {/* Campo de texto (Plan B) */}
+                    <div className='relative'>
+                      <span className='absolute top-2.5 left-3 text-[10px] font-bold text-gray-400'>
+                        URL
+                      </span>
+                      <input
+                        placeholder='O pega un enlace aquí...'
+                        className='w-full p-2 pl-10 bg-[#F9F7F2] rounded-lg border-none text-xs text-gray-600'
+                        value={roomForm.image_url}
+                        onChange={(e) =>
+                          setRoomForm({
+                            ...roomForm,
+                            image_url: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                  </div>
+
+                  {/* Descripción */}
+                  <div>
+                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
+                      Descripción
+                    </label>
+                    <textarea
+                      rows='3'
+                      className='w-full p-3 bg-white rounded-xl border-none text-sm'
+                      value={roomForm.description}
+                      onChange={(e) =>
+                        setRoomForm({
+                          ...roomForm,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  {/* --- BLOQUE DE COMODIDADES (AMENITIES) --- */}
+                  <div className='mb-6 bg-white p-4 rounded-xl border border-gray-100'>
+                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest block mb-3'>
+                      Comodidades de la Habitación
+                    </label>
+                    <div className='grid grid-cols-2 gap-3'>
+                      {[
+                        'Wifi',
+                        'TV',
+                        'Baño Privado',
+                        'Agua Caliente',
+                        'Vista',
+                        'Secador',
+                        'Aire Acondicionado',
+                        'Parqueadero',
+                        'Desayuno',
+                        'Piscina',
+                        'Minibar',
+                        'Gimnasio',
+                        'Pet Friendly',
+                      ].map((item) => (
+                        <label
+                          key={item}
+                          className='flex items-center gap-2 p-2 bg-[#F9F7F2] rounded-lg border border-transparent hover:border-gray-200 cursor-pointer transition-colors'
+                        >
+                          <input
+                            type='checkbox'
+                            checked={roomForm.amenities?.includes(item)}
+                            onChange={(e) => {
+                              const currentAmenities = roomForm.amenities || [];
+                              if (e.target.checked) {
+                                // Agregar si se marca
+                                setRoomForm({
+                                  ...roomForm,
+                                  amenities: [...currentAmenities, item],
+                                });
+                              } else {
+                                // Quitar si se desmarca
+                                setRoomForm({
+                                  ...roomForm,
+                                  amenities: currentAmenities.filter(
+                                    (i) => i !== item
+                                  ),
+                                });
+                              }
+                            }}
+                            className='w-4 h-4 rounded text-black focus:ring-black border-gray-300'
+                          />
+                          <span className='text-xs font-bold text-gray-600 select-none'>
+                            {item}
+                          </span>
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                  <button
+                    disabled={uploading}
+                    className={`w-full text-white font-bold py-4 rounded-xl transition-all shadow-lg ${
+                      uploading
+                        ? 'bg-gray-400 cursor-not-allowed'
+                        : 'bg-[#2C2C2C] hover:scale-[1.02]'
+                    }`}
+                  >
+                    {uploading ? '⏳ Subiendo Foto...' : 'Guardar Cambios'}
+                  </button>
+                </form>
+              </motion.div>
+            </div>
+          )}
+        </AnimatePresence>
       </main>
       {/* Navegación Móvil */}
       <nav className='md:hidden fixed bottom-0 left-0 w-full bg-white border-t flex justify-around p-3 z-50'>
