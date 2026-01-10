@@ -48,6 +48,7 @@ const SuperAdminPage = () => {
   }, []);
   // --- ESTADOS ---
   const [activeTab, setActiveTab] = useState('hotels'); // 'hotels' | 'leads'
+  const [processingId, setProcessingId] = useState(null);
   const [hotels, setHotels] = useState([]);
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -82,7 +83,27 @@ const SuperAdminPage = () => {
 
   const fetchData = async () => {
     setLoading(true);
-    await Promise.all([fetchHotels(), fetchLeads()]);
+
+    // 1. Cargar Solicitudes (Leads de Plataforma)
+    // ⬇️⬇️ CAMBIO CRÍTICO: 'leads' -> 'platform_leads' ⬇️⬇️
+    const { data: leadsData, error: leadsError } = await supabase
+      .from('platform_leads')
+      .select('*')
+      .order('created_at', { ascending: false });
+    // ⬆️⬆️ FIN DEL CAMBIO ⬆️⬆️
+
+    if (leadsError) console.error('Error leads:', leadsError);
+    else setLeads(leadsData || []);
+
+    // 2. Cargar Hoteles Existentes (Esto se mantiene igual)
+    const { data: hotelsData, error: hotelsError } = await supabase
+      .from('hotels')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (hotelsError) console.error('Error hotels:', hotelsError);
+    else setHotels(hotelsData || []);
+
     setLoading(false);
   };
 
@@ -240,6 +261,7 @@ const SuperAdminPage = () => {
         trial_ends_at: trialEnd.toISOString(),
         monthly_price: 29,
         location: location || 'Ubicación pendiente',
+        subscription_plan: 'PRO_AI', // 👈 AGREGAR ESTO PARA QUE NAZCAN DESBLOQUEADOS
       },
     ]);
 
@@ -263,57 +285,119 @@ const SuperAdminPage = () => {
     if (!error) setLaunchData({ ...launchData, taken: safeVal });
   };
 
+
+
+
+
+
+
+
+
+
+
+
   const handleApproveLead = async (lead) => {
-    // 1. Red de Seguridad: Si no hay nombre de hotel, usamos "Hotel de [Dueño]"
+    // 🔒 BLOQUEO DE SEGURIDAD: Si ya se está procesando, no hacer nada (Evita doble clic)
+    if (processingId) return;
+    setProcessingId(lead.id); // Bloqueamos el botón visualmente
+
+    // 1. Red de Seguridad: Nombre del hotel
     const safeHotelName = lead.hotel_name || `Hotel de ${lead.full_name}`;
 
-    // 2. Confirmación visual para ti
-    if (!window.confirm(`¿Aprobar y crear cuenta para "${safeHotelName}"?`))
+    // 2. Confirmación visual
+    if (!window.confirm(`¿Aprobar y crear cuenta para "${safeHotelName}"?`)) {
+      setProcessingId(null); // Liberamos si cancela
       return;
-
-    // 3. Calcular fecha de prueba (30 días)
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 30);
-
-    // 4. Crear el Hotel (Usando el nombre seguro)
-    const { error: hotelError } = await supabase.from('hotels').insert([
-      {
-        name: safeHotelName, // 👈 AQUÍ ESTÁ EL TRUCO
-        location: lead.city_interest || 'Villa de Leyva',
-        status: 'trial',
-        trial_ends_at: trialEnd.toISOString(),
-        monthly_price: 0,
-        phone: lead.phone,
-        email: lead.email,
-        slug: null, // Ya lo hicimos opcional en la base de datos
-      },
-    ]);
-
-    if (hotelError) {
-      console.error(hotelError);
-      return alert('Error al crear hotel: ' + hotelError.message);
     }
 
-    // 5. Actualizar la solicitud a "aprobada"
-    await supabase
-      .from('leads')
-      .update({ status: 'approved' })
-      .eq('id', lead.id);
+    try {
+      // 🛡️ [CREACIÓN DE USUARIO AUTH] 🛡️
+      // Usamos un cliente temporal para no cerrar tu sesión de SuperAdmin
+      const tempSupabase = createClient(
+        import.meta.env.VITE_SUPABASE_URL,
+        import.meta.env.VITE_SUPABASE_ANON_KEY,
+        { auth: { persistSession: false, autoRefreshToken: false } }
+      );
 
-    // 6. Actualizar contadores
-    updateLaunchSpots(launchData.taken + 1);
+      const tempPassword = 'hotel123'; // 🔑 Contraseña temporal
 
-    alert(`¡${safeHotelName} ha sido admitido exitosamente!`);
-    fetchData(); // Recargar la lista
+      // Intentamos crear el usuario en Auth
+      const { data: authData, error: authError } =
+        await tempSupabase.auth.signUp({
+          email: lead.email,
+          password: tempPassword,
+        });
+
+      if (authError) {
+        console.error('Error Auth:', authError);
+        // Solo continuamos si el error es "User already registered" (para reconexiones)
+        if (!authError.message.includes('already registered')) {
+          throw new Error(
+            '❌ Error crítico creando usuario Auth: ' + authError.message
+          );
+        }
+      }
+
+      // 3. Calcular fecha de prueba (30 días)
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 30);
+
+      // 4. Crear el Hotel en la DB
+      const { error: hotelError } = await supabase.from('hotels').insert([
+        {
+          name: safeHotelName,
+          location: lead.city_interest || 'Villa de Leyva',
+          status: 'trial',
+          trial_ends_at: trialEnd.toISOString(),
+          monthly_price: 0,
+          phone: lead.phone,
+          email: lead.email,
+          slug: null,
+          subscription_plan: 'PRO_AI', // 🛡️ Upgrade forzoso para garantizar acceso
+        },
+      ]);
+
+      if (hotelError)
+        throw new Error('Error al crear hotel en DB: ' + hotelError.message);
+
+      // 5. Actualizar la solicitud a "aprobada" en platform_leads
+      const { error: leadError } = await supabase
+        .from('platform_leads')
+        .update({ status: 'approved' })
+        .eq('id', lead.id);
+
+      if (leadError)
+        throw new Error('Error actualizando lead: ' + leadError.message);
+
+      // 6. Actualizar contadores
+      updateLaunchSpots(launchData.taken + 1);
+
+      // 🚀 LIMPIEZA INMEDIATA (Optimistic UI)
+      // Eliminamos el lead de la lista localmente YA, sin esperar a recargar
+      setLeads((prev) => prev.filter((l) => l.id !== lead.id));
+
+      alert(
+        `✅ ¡ÉXITO TOTAL!\n\nHotel: ${safeHotelName}\nUsuario: ${lead.email}\nClave: ${tempPassword}`
+      );
+    } catch (error) {
+      console.error(error);
+      alert('❌ Ocurrió un error: ' + error.message);
+    } finally {
+      setProcessingId(null); // 🔓 Desbloqueamos el botón (aunque la fila ya habrá desaparecido)
+    }
   };
 
   const handleRejectLead = async (leadId) => {
     if (!window.confirm('¿Rechazar esta solicitud?')) return;
+
+    // Corregido para usar platform_leads
     await supabase
-      .from('leads')
+      .from('platform_leads')
       .update({ status: 'rejected' })
       .eq('id', leadId);
-    fetchData();
+
+    // Actualización visual inmediata
+    setLeads((prev) => prev.filter((l) => l.id !== leadId));
   };
 
   // --- FUNCIONES ANTIGUAS (Mantenidas para compatibilidad) ---
@@ -351,6 +435,7 @@ const SuperAdminPage = () => {
     setEditingHotel(null);
     fetchHotels();
   };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');

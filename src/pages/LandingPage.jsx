@@ -27,18 +27,27 @@ import {
   FileText,
   MapPin,
   Gift, // Nuevo icono para el beneficio
+  Mic, // 👈 AGREGAR
+  Sparkles,
+  ScanBarcode,
+  ShoppingBag,
+  AlertCircle,
 } from 'lucide-react';
 import SalesAgent from '../components/SalesAgent';
 
 const LandingPage = () => {
   const { city_slug } = useParams();
 
-  const cityName = city_slug
-    ? city_slug
-        .split('-')
-        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
-        .join(' ')
-    : 'Su Zona';
+  // 1. Limpieza total: Decodifica la URL y elimina comillas o caracteres extraños
+  const cleanCitySlug = city_slug
+    ? decodeURIComponent(city_slug).replace(/['"]+/g, '').trim().toLowerCase()
+    : 'villa-de-leyva';
+
+  // 2. Formateo visual para el título (H1)
+  const cityName = cleanCitySlug
+    .split('-')
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join(' ');
 
   // ==========================================
   // 🔒 LÓGICA DE NEGOCIO & ESTADOS
@@ -49,6 +58,7 @@ const LandingPage = () => {
   const [formStatus, setFormStatus] = useState('idle');
   const [formStep, setFormStep] = useState(1);
   const [selectedPlan, setSelectedPlan] = useState('PRO');
+  const [isAIMode, setIsAIMode] = useState(true);
 
   const [formData, setFormData] = useState({
     ownerName: '',
@@ -73,31 +83,49 @@ const LandingPage = () => {
   useEffect(() => {
     const fetchLaunchData = async () => {
       try {
-        const targetCity =
-          typeof city_slug !== 'undefined' ? city_slug : 'villa-de-leyva';
-        const { data } = await supabase
+        // Usamos la variable normalizada que definiste arriba
+        console.log('🔍 Buscando cupos para:', cleanCitySlug);
+
+        const { data, error } = await supabase
           .from('launch_control')
           .select('total_spots, spots_taken')
-          .eq('city_slug', targetCity)
+          .eq('city_slug', cleanCitySlug)
           .maybeSingle();
 
-        // SIMULACIÓN DE WARM START:
-        // "3 hoteles ya están siendo configurados por el equipo en terreno"
-        const TEAM_CAPACITY_USED = 3;
-        const DEFAULT_TOTAL = 12; // Límite estricto por ciudad/visita
+        if (error) throw error;
 
-        const realTaken = data ? data.spots_taken : 0;
-        const realTotal = data ? data.total_spots : DEFAULT_TOTAL;
-        const visualTaken = Math.min(realTaken + TEAM_CAPACITY_USED, realTotal);
+        const DEFAULT_TOTAL = 12;
 
-        setLaunchData({ total: realTotal, taken: visualTaken });
-        setSpotsTaken(visualTaken);
+        // ⬇️⬇️ INSERTAR AQUÍ ⬇️⬇️
+        if (data) {
+          // Si encontró la ciudad, usamos los datos reales
+          setLaunchData({
+            total: data.total_spots || DEFAULT_TOTAL,
+            taken: data.spots_taken || 0,
+          });
+          setSpotsTaken(data.spots_taken || 0);
+        } else {
+          // 🛡️ [INICIO BLOQUE DEFENSIVO] 🛡️
+          // ESTRATEGIA: Si la ciudad no existe en la DB todavía,
+          // mostramos 3/12 por defecto para no mostrar 0 (Efecto Social)
+          // Esto evita que el usuario vea "0/12 ASIGNADOS" y piense que nadie lo usa.
+          const FALLBACK_TAKEN = 3;
+          setLaunchData({ total: DEFAULT_TOTAL, taken: FALLBACK_TAKEN });
+          setSpotsTaken(FALLBACK_TAKEN);
+          console.warn(
+            `⚠️ Ciudad '${cleanCitySlug}' no encontrada en DB launch_control. Usando valores simulados (${FALLBACK_TAKEN}/${DEFAULT_TOTAL}) para mantener conversión.`
+          );
+          // 🛡️ [FIN BLOQUE DEFENSIVO] 🛡️
+        }
+        // ⬆️⬆️ FIN DE INSERCIÓN ⬆️⬆️
       } catch (error) {
-        setSpotsTaken(3);
+        console.error('❌ Error de conexión:', error);
+        setSpotsTaken(3); // Backup por error
       }
     };
+
     fetchLaunchData();
-  }, [city_slug]);
+  }, [cleanCitySlug]); // 👈 CAMBIO CLAVE: Escuchamos a la versión limpia
 
   const TOTAL_SPOTS = launchData.total;
   const spotsLeft = Math.max(0, TOTAL_SPOTS - spotsTaken);
@@ -135,7 +163,9 @@ const LandingPage = () => {
 
     setLoading(true);
     try {
-      const { error } = await supabase.from('leads').insert([
+      // 3. Guardar en Supabase (TABLA DE VENTAS B2B)
+      // ⬇️⬇️ CAMBIO CRÍTICO: 'leads' -> 'platform_leads' ⬇️⬇️
+      const { error } = await supabase.from('platform_leads').insert([
         {
           full_name: formData.ownerName,
           hotel_name: formData.hotelName,
@@ -152,7 +182,9 @@ const LandingPage = () => {
           },
         },
       ]);
+      // ⬆️⬆️ FIN DEL CAMBIO ⬆️⬆️
 
+      // 👇 EL RESTO DEL CÓDIGO SE MANTIENE IGUAL 👇
       if (!error && formData.phone) {
         const welcomeMsg = `🎉 *¡Felicidades Socio Fundador!* \n\nHola ${formData.ownerName}, hemos reservado tu cupo de implementación en ${cityName}.\n\n🎁 *Beneficio Activado:* Tu primer mes es GRATIS ($0).\n\nEl ingeniero encargado te escribirá en breve para configurar tu cuenta.`;
 
@@ -268,8 +300,9 @@ const LandingPage = () => {
             </p>
           </motion.div>
 
-          {/* STATUS CARD - PROGRESS BAR (ESCASEZ REAL) */}
+          {/* STATUS CARD - PROGRESS BAR (ESCASEZ JUSTIFICADA) */}
           <div className='max-w-md mx-auto bg-white rounded-2xl p-6 shadow-2xl shadow-cyan-900/10 border border-slate-200 relative overflow-hidden group'>
+            {/* Efecto de brillo superior */}
             <div className='absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50'></div>
 
             <div className='flex justify-between items-end mb-3'>
@@ -296,20 +329,24 @@ const LandingPage = () => {
               </motion.div>
             </div>
 
+            {/* 👇 AQUÍ ESTÁ LA MAGIA DEL NEUROMARKETING */}
             <p className='text-xs text-slate-600 font-medium leading-snug'>
               {spotsLeft > 0 ? (
                 <>
-                  Solo podemos configurar manualmente a{' '}
+                  Nuestro equipo de soporte tiene capacidad humana para{' '}
                   <strong className='text-slate-900'>
-                    {spotsLeft} hoteles más
+                    {spotsLeft} implementaciones más
                   </strong>{' '}
-                  es por tiempo limitado.
-                  <span className='block mt-1 text-amber-600'>
-                    ⚠️ Asegure su mes gratis hoy.
+                  en {cityName} esta semana.
+                  <span className='block mt-2 text-amber-700 bg-amber-50 p-1.5 rounded border border-amber-100'>
+                    ⚠️ <strong>Nota:</strong> Al llegar a 12, pasaremos
+                    automáticamente a Lista de Espera (Sin bonificación).
                   </span>
                 </>
               ) : (
-                'Cupos llenos. Lista de espera habilitada.'
+                <span className='text-red-600 font-bold'>
+                  ⛔ Capacidad operativa llena. Lista de espera habilitada.
+                </span>
               )}
             </p>
           </div>
@@ -451,100 +488,271 @@ const LandingPage = () => {
         </section>
 
         {/* ========================================================
-            4. PRICING: ESTRATEGIA "MES GRATIS"
+            4. PRICING: ESTRATEGIA "MES GRATIS" + IA UPGRADE
            ======================================================== */}
         <section className='max-w-7xl mx-auto px-6 mb-24'>
-          <div className='text-center mb-12'>
+          <div className='text-center mb-8'>
             <h2 className='text-3xl md:text-4xl font-serif-display font-bold text-slate-900'>
               Elija su Nivel de Automatización
             </h2>
-            <p className='text-slate-500 mt-3'>
+            <p className='text-slate-500 mt-3 mb-8'>
               Socios Fundadores no pagan nada el primer mes. Sin letra chica.
             </p>
+
+            {/* 👇 SWITCH INTERRUPTOR DE IA (CON MARGEN AUMENTADO mb-20) 👇 */}
+            <div className='flex items-center justify-center gap-4 mb-20'>
+              <span
+                className={`text-sm font-bold ${
+                  !isAIMode ? 'text-slate-900' : 'text-slate-400'
+                }`}
+              >
+                Estándar
+              </span>
+              <button
+                onClick={() => setIsAIMode(!isAIMode)}
+                className={`relative w-16 h-8 rounded-full transition-colors duration-300 ${
+                  isAIMode ? 'bg-cyan-500' : 'bg-slate-300'
+                }`}
+              >
+                <div
+                  className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 ${
+                    isAIMode ? 'translate-x-8' : 'translate-x-0'
+                  }`}
+                />
+              </button>
+              <span
+                className={`text-sm font-bold flex items-center gap-2 ${
+                  isAIMode ? 'text-cyan-700' : 'text-slate-400'
+                }`}
+              >
+                Con Inteligencia Artificial
+                {isAIMode && (
+                  <span className='bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] px-2 py-0.5 rounded-full animate-pulse'>
+                    RECOMENDADO
+                  </span>
+                )}
+              </span>
+            </div>
           </div>
 
+          {/* ==============================================================
+              GRILLA DE PRECIOS BLINDADA (ESTRATEGIA ANTIMORTEM 2.0)
+             ============================================================== */}
           <div className='grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-center'>
-            {/* PLAN NANO */}
-            <div className='p-6 rounded-3xl border border-slate-200 bg-white text-slate-500 relative'>
+            {/* 1. PLAN NANO - FILTRO: AUTOSERVICIO */}
+            <div className='p-6 rounded-3xl border border-slate-200 bg-white text-slate-500 relative transition-all duration-300 hover:border-slate-300'>
               <div className='mb-4'>
-                <h3 className='font-bold text-lg'>NANO</h3>
-                <p className='text-xs'>Básico (1-3 Habs)</p>
+                <h3 className='font-bold text-lg flex items-center gap-2'>
+                  NANO{' '}
+                  {isAIMode && (
+                    <span className='text-cyan-500 text-xs bg-cyan-50 px-2 py-0.5 rounded-full'>
+                      IA
+                    </span>
+                  )}
+                </h3>
+                <p className='text-xs font-medium text-slate-400'>
+                  Cabañas & Glampings (1-3 Habs)
+                </p>
               </div>
-              <div className='mb-6 opacity-50'>
-                <span className='text-3xl font-black'>$49.9k</span>
-                <span className='text-xs'>/mes</span>
+
+              <div className='mb-6 opacity-80'>
+                <div className='flex items-center gap-2 mb-1'>
+                  <span className='text-sm text-slate-400 line-through'>
+                    {isAIMode ? '$69.900' : '$49.900'}
+                  </span>
+                  <span className='text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full'>
+                    MES 1 GRATIS
+                  </span>
+                </div>
+                <span className='text-3xl font-black text-slate-700'>
+                  $0 COP
+                </span>
+                <p className='text-[10px] text-slate-400 mt-2 font-medium'>
+                  * Luego{' '}
+                  <strong>{isAIMode ? '$69.900' : '$49.900'}/mes</strong>.
+                </p>
               </div>
+
               <ul className='space-y-3 mb-8 text-sm'>
-                <li className='flex gap-2 items-center'>
-                  <CheckCircle2 size={14} /> Calendario Digital
+                <li className='flex gap-2 items-center text-slate-700'>
+                  <CheckCircle2
+                    size={14}
+                    className='text-slate-400'
+                  />{' '}
+                  Calendario Digital
                 </li>
-                <li className='flex gap-2 items-center text-red-400'>
-                  <AlertTriangle size={14} /> Reporte SIRE Manual
+
+                {isAIMode ? (
+                  <>
+                    <li className='flex gap-2 items-center text-cyan-700 font-bold'>
+                      <Sparkles size={14} /> Recepción por WhatsApp
+                    </li>
+                    <li className='flex gap-2 items-center text-slate-700'>
+                      <ShieldCheck
+                        size={14}
+                        className='text-green-500'
+                      />{' '}
+                      SIRE Automático (Ley)
+                    </li>
+                  </>
+                ) : (
+                  <>
+                    <li className='flex gap-2 items-center text-slate-400 line-through'>
+                      <ScanBarcode size={14} /> Recepción por WhatsApp
+                    </li>
+                    <li className='flex gap-2 items-center text-red-400 font-medium'>
+                      <AlertTriangle size={14} /> Reporte SIRE Manual
+                    </li>
+                  </>
+                )}
+
+                {/* 🛡️ EL FILTRO DE CALIDAD (DISUASIVO PARA CLIENTES BARATOS) */}
+                <li className='flex gap-2 items-start text-slate-500 text-xs bg-slate-100 p-2 rounded-lg mt-4'>
+                  <AlertCircle
+                    size={14}
+                    className='shrink-0 mt-0.5 text-slate-400'
+                  />
+                  <span>
+                    Configuración Manual (Autoservicio). <br />
+                    <strong>No incluye carga de datos asistida.</strong>
+                  </span>
                 </li>
               </ul>
+
               <button
-                onClick={() => scrollToForm('NANO')}
-                className='w-full py-3 rounded-xl border border-slate-200 font-bold text-sm hover:bg-slate-50'
+                onClick={() => scrollToForm(isAIMode ? 'NANO_AI' : 'NANO')}
+                className='w-full py-3 rounded-xl border border-slate-200 font-bold text-sm hover:bg-slate-50 transition-colors text-slate-600'
               >
-                Elegir Básico
+                Elegir {isAIMode ? 'Nano AI' : 'Básico'}
               </button>
             </div>
 
-            {/* PLAN PRO (EL HÉROE) */}
-            <div className='p-8 rounded-[2rem] border-2 border-cyan-500 bg-white shadow-2xl shadow-cyan-900/10 relative transform md:scale-110 z-10'>
-              <div className='absolute -top-4 left-1/2 -translate-x-1/2 bg-gradient-to-r from-cyan-600 to-blue-600 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2'>
+            {/* 2. PLAN PRO (EL HÉROE) - PROMESA: LLAVE EN MANO */}
+            <div
+              className={`p-8 rounded-[2rem] border-2 bg-white shadow-2xl relative transform md:scale-110 z-10 transition-all duration-500 ${
+                isAIMode
+                  ? 'border-purple-500 shadow-purple-500/20'
+                  : 'border-cyan-500 shadow-cyan-900/10'
+              }`}
+            >
+              <div
+                className={`absolute -top-4 left-1/2 -translate-x-1/2 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2 ${
+                  isAIMode
+                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600'
+                    : 'bg-gradient-to-r from-cyan-600 to-blue-600'
+                }`}
+              >
                 <Gift size={12} /> 1 Mes Gratis
               </div>
 
               <div className='mb-4 mt-2'>
-                <h3 className='font-bold text-slate-900 text-2xl'>PRO</h3>
-                <p className='text-xs'>Hoteles (4 a 12 Habs)</p>
-                <p className='text-sm text-cyan-600 font-bold'>
-                  Automatización Total
+                <h3 className='font-bold text-slate-900 text-2xl flex items-center gap-2'>
+                  PRO{' '}
+                  {isAIMode && (
+                    <span className='text-purple-600 text-sm bg-purple-50 px-2 py-0.5 rounded-full'>
+                      IA
+                    </span>
+                  )}
+                </h3>
+                <p className='text-xs font-bold text-slate-400 uppercase tracking-wide'>
+                  El más vendido (4-12 Habs)
+                </p>
+                <p
+                  className={`text-sm font-bold mt-2 leading-tight ${
+                    isAIMode ? 'text-purple-700' : 'text-cyan-700'
+                  }`}
+                >
+                  {isAIMode
+                    ? 'Tu Recepcionista por el 5% de un sueldo'
+                    : 'Automatización Total'}
                 </p>
               </div>
 
               <div className='mb-6'>
                 <div className='flex items-center gap-2 mb-1'>
                   <span className='text-lg text-slate-400 line-through font-medium'>
-                    $99.900
+                    {isAIMode ? '$139.900' : '$99.900'}
                   </span>
                   <span className='text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full'>
-                    AHORRAS 100%
+                    HOY $0
                   </span>
                 </div>
                 <span className='text-5xl font-black text-slate-900 tracking-tight'>
                   $0 COP
                 </span>
                 <p className='text-xs text-slate-500 mt-2 font-medium'>
-                  * Primer mes bonificado. Luego $99.9k/mes.
+                  * Primer mes bonificado. Luego{' '}
+                  <strong className='text-slate-800'>
+                    {isAIMode ? '$139.900' : '$99.900'}/mes
+                  </strong>
+                  .
                 </p>
               </div>
 
               <ul className='space-y-4 mb-8 text-sm font-medium text-slate-700'>
+                {/* 🏆 EL BENEFICIO VIP (SOLO PARA PRO/GROWTH) */}
+                <li className='flex gap-3 items-center bg-amber-50 p-2 rounded-lg border border-amber-100 mb-4'>
+                  <div className='bg-amber-100 p-1 rounded-full text-amber-600 shrink-0'>
+                    <Star size={14} />
+                  </div>
+                  <span className='font-bold text-amber-800 leading-tight text-xs'>
+                    Te entregamos el hotel configurado y listo para vender
+                    (Llave en mano)
+                  </span>
+                </li>
+
+                {isAIMode && (
+                  <>
+                    <motion.li
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      className='flex gap-3 items-center bg-purple-50 p-3 rounded-xl border border-purple-100'
+                    >
+                      <div className='bg-purple-100 p-1.5 rounded-full text-purple-600'>
+                        <Mic size={14} />
+                      </div>
+                      <span className='font-bold text-purple-900 leading-tight'>
+                        Atiende llamadas y chats 24/7 (Voz Real)
+                      </span>
+                    </motion.li>
+
+                    <motion.li
+                      initial={{ opacity: 0, x: -10 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      transition={{ delay: 0.1 }}
+                      className='flex gap-3 items-center'
+                    >
+                      <div className='bg-blue-100 p-1 rounded-full text-blue-600'>
+                        <ShoppingBag size={14} />
+                      </div>
+                      <span className='font-bold text-slate-900'>
+                        CRM & Motor de Ventas
+                      </span>
+                    </motion.li>
+                  </>
+                )}
+
                 <li className='flex gap-3 items-center'>
                   <div className='bg-green-100 p-1 rounded-full text-green-600'>
                     <CheckCircle2 size={14} />
                   </div>
-                  Reporte SIRE Automático
+                  Reporte SIRE Automático (0 Multas)
                 </li>
                 <li className='flex gap-3 items-center'>
                   <div className='bg-cyan-100 p-1 rounded-full text-cyan-600'>
-                    <CheckCircle2 size={14} />
+                    <ScanBarcode size={14} />
                   </div>
                   Check-in QR Express
-                </li>
-                <li className='flex gap-3 items-center'>
-                  <div className='bg-blue-100 p-1 rounded-full text-blue-600'>
-                    <CheckCircle2 size={14} />
-                  </div>
-                  Soporte Prioritario WhatsApp
                 </li>
               </ul>
 
               <button
-                onClick={() => scrollToForm('PRO')}
-                className='w-full py-4 rounded-xl bg-[#010512] text-white font-bold text-lg hover:shadow-lg hover:shadow-cyan-500/25 transition-all flex justify-center items-center gap-2 group'
+                onClick={() => scrollToForm(isAIMode ? 'PRO_AI' : 'PRO')}
+                className={`w-full py-4 rounded-xl text-white font-bold text-lg hover:shadow-xl hover:-translate-y-1 transition-all flex justify-center items-center gap-2 group ${
+                  isAIMode
+                    ? 'bg-[#2E1065] shadow-lg shadow-purple-900/20'
+                    : 'bg-[#010512] shadow-cyan-900/20'
+                }`}
               >
                 Reclamar Mes Gratis{' '}
                 <ChevronRight
@@ -552,49 +760,82 @@ const LandingPage = () => {
                   className='group-hover:translate-x-1 transition-transform'
                 />
               </button>
-              <p className='text-[10px] text-center text-slate-400 mt-3'>
-                Sin cláusulas de permanencia.
-              </p>
             </div>
 
-            {/* PLAN GROWTH */}
-            <div className='p-6 rounded-3xl border border-slate-200 bg-white relative'>
+            {/* 3. PLAN GROWTH - TRANSPARENCIA TOTAL */}
+            <div className='p-6 rounded-3xl border border-slate-200 bg-white relative transition-all duration-300 hover:border-blue-300'>
               <div className='mb-4'>
-                <h3 className='font-bold text-lg'>GROWTH</h3>
-                <p className='text-xs'>Hoteles (13 a 30 Habs)</p>
+                <h3 className='font-bold text-lg flex items-center gap-2'>
+                  GROWTH{' '}
+                  {isAIMode && (
+                    <span className='text-blue-600 text-xs bg-blue-50 px-2 py-0.5 rounded-full'>
+                      IA
+                    </span>
+                  )}
+                </h3>
+                <p className='text-xs font-medium text-slate-400'>
+                  Hoteles (13-30 Habs)
+                </p>
               </div>
               <div className='mb-6'>
                 <div className='flex items-center gap-2 mb-1'>
                   <span className='text-sm text-slate-400 line-through'>
-                    $159.900
+                    {isAIMode ? '$219.900' : '$159.900'}
+                  </span>
+                  <span className='text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full'>
+                    AHORRAS 100%
                   </span>
                 </div>
                 <span className='text-3xl font-black text-slate-900'>
                   $0 COP
                 </span>
-                <span className='text-xs text-slate-500 ml-1'>mes 1</span>
+                <p className='text-xs text-slate-500 mt-2 font-medium'>
+                  * Primer mes bonificado. Luego{' '}
+                  <strong>{isAIMode ? '$219.900' : '$159.900'}/mes</strong>.
+                </p>
               </div>
               <ul className='space-y-3 mb-8 text-sm text-slate-600'>
+                {/* BENEFICIO LLAVE EN MANO TAMBIÉN AQUÍ */}
+                <li className='flex gap-2 items-center text-amber-600 font-bold text-xs mb-2'>
+                  <Star size={12} /> Configuración VIP Incluida
+                </li>
+
+                {isAIMode && (
+                  <li className='flex gap-2 items-center font-bold text-blue-900'>
+                    <Mic
+                      size={14}
+                      className='text-blue-500'
+                    />{' '}
+                    Voz + Comandos Masivos
+                  </li>
+                )}
                 <li className='flex gap-2 items-center'>
                   <CheckCircle2
                     size={14}
                     className='text-blue-500'
                   />{' '}
-                  CRM Marketing
+                  CRM Marketing (Re-venta)
                 </li>
                 <li className='flex gap-2 items-center'>
                   <CheckCircle2
                     size={14}
                     className='text-blue-500'
                   />{' '}
-                  Bot WhatsApp
+                  Bot WhatsApp Pro
+                </li>
+                <li className='flex gap-2 items-center'>
+                  <CheckCircle2
+                    size={14}
+                    className='text-blue-500'
+                  />{' '}
+                  Facturación Electrónica
                 </li>
               </ul>
               <button
-                onClick={() => scrollToForm('GROWTH')}
-                className='w-full py-3 rounded-xl border border-slate-900 text-slate-900 font-bold text-sm hover:bg-slate-50'
+                onClick={() => scrollToForm(isAIMode ? 'GROWTH_AI' : 'GROWTH')}
+                className='w-full py-3 rounded-xl border border-slate-900 text-slate-900 font-bold text-sm hover:bg-slate-900 hover:text-white transition-all'
               >
-                Elegir Growth
+                Elegir {isAIMode ? 'Growth AI' : 'Growth'}
               </button>
             </div>
           </div>

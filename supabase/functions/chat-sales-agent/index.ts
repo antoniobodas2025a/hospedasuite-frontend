@@ -1,5 +1,5 @@
-// supabase/functions/chat-sales-agent/index.ts
 import { serve } from 'https://deno.land/std@0.168.0/http/server.ts';
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
@@ -7,13 +7,23 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type',
 };
 
-const SYSTEM_PROMPT_TEXT = `
-INSTRUCCIONES DE SISTEMA:
-ERES: "HospedaBot", experto comercial de HospedaSuite Elite.
-OBJETIVO: Vender software hotelero y resolver dudas de SIRE y Check-in.
-PRECIOS: Nano ($49k), Pro ($99k), Growth ($159k), Corp ($249k). Setup $0.
-ACTITUD: Profesional, empático y directo.
-REGLA DE ORO: Si detectas intención de compra o interés en precios, FINALIZA tu respuesta con: "[INTENT:PURCHASE]".
+// 🔥 EL CEREBRO DE VENTAS (MODO FRANCOTIRADOR)
+const SYSTEM_PROMPT = `
+ERES: "HospedaBot", el Consultor Senior de HospedaSuite Elite.
+TU META: Conseguir que el hotelero active su "Mes de Prueba Gratis". No solo informas, VENDES.
+
+DATOS CLAVE:
+- Beneficio: 1er Mes 100% GRATIS (Ahorro de $99k).
+- Planes: Nano ($49k), Pro ($99k), Growth ($159k).
+- Ventaja: Automatizamos el reporte a Migración Colombia (SIRE) y Check-in QR.
+
+REGLAS DE COMBATE (Psicología de Ventas):
+1. SI PREGUNTAN PRECIO: No lo des solo. Di: "El plan Pro cuesta $99k, PERO como eres hotel fundador en tu zona, tu primer mes es $0. ¿Te gustaría asegurar este cupo hoy?"
+2. SI PONEN OBJECIONES (Ej: "Muy caro", "Ya tengo Excel"): Responde: "¿Cuánto vale tu tiempo llenando el SIRE a mano? Por el precio de una noche, te ahorras 20 horas de trabajo al mes."
+3. CIERRE SIEMPRE: Termina cada respuesta con una pregunta que invite a la acción.
+4. DETECCIÓN DE COMPRA: Si el cliente dice "quiero", "me interesa", "cómo empiezo", termina tu mensaje con la etiqueta exacta: [INTENT:PURCHASE]
+
+TONO: Profesional pero persuasivo. Eres un aliado de negocios, no un robot de soporte.
 `;
 
 serve(async (req) => {
@@ -22,106 +32,52 @@ serve(async (req) => {
 
   try {
     const { message, history } = await req.json();
-    const apiKey = Deno.env.get('GEMINI_API_KEY');
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
 
-    if (!apiKey) throw new Error('Falta la GEMINI_API_KEY en Supabase Secrets');
+    // Construimos el historial para que la IA tenga memoria
+    const chatHistory = history
+      ? history.map((msg: any) => ({
+          role: msg.role === 'user' ? 'user' : 'model',
+          parts: [{ text: msg.content }],
+        }))
+      : [];
 
-    let contents = [];
+    // Agregamos el mensaje actual
+    chatHistory.push({ role: 'user', parts: [{ text: message }] });
 
-    // 1. Inyección de Contexto
-    contents.push({ role: 'user', parts: [{ text: SYSTEM_PROMPT_TEXT }] });
-    contents.push({
-      role: 'model',
-      parts: [{ text: 'Entendido. Soy HospedaBot.' }],
-    });
-
-    // 2. Historial (Con filtro de seguridad para evitar duplicados)
-    if (history && Array.isArray(history)) {
-      history.forEach((msg: any, index: number) => {
-        if (index === 0 && msg.role === 'assistant') return; // Ignorar saludo duplicado
-
-        const role = msg.role === 'assistant' ? 'model' : 'user';
-        const text = msg.content || '.';
-
-        // Evitar colisión de roles (User -> User)
-        const lastRole = contents[contents.length - 1].role;
-        if (lastRole === role) return; // Si se repite el rol, saltamos este mensaje para proteger la API
-
-        contents.push({ role: role, parts: [{ text: text }] });
-      });
-    }
-
-    // Asegurar alternancia antes de insertar el nuevo mensaje
-    if (contents[contents.length - 1].role === 'user') {
-      contents.push({ role: 'model', parts: [{ text: '...' }] });
-    }
-    contents.push({ role: 'user', parts: [{ text: message }] });
-
-    // 3. USO DEL MODELO CORRECTO (gemini-1.5-flash)
-    // El error mencionaba "2.5", eso fue un error. Usamos el estable 1.5.
-    const model = 'gemini-2.5-flash-lite';
-    const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
-
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: contents,
-        generationConfig: {
-          temperature: 0.3,
-          maxOutputTokens: 500,
-        },
-      }),
-    });
+    const response = await fetch(
+      `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: chatHistory,
+          systemInstruction: { parts: [{ text: SYSTEM_PROMPT }] }, // 👈 Aquí inyectamos la personalidad nueva
+        }),
+      }
+    );
 
     const data = await response.json();
-
-    // 4. MANEJO DE ERRORES DE CUOTA (RATE LIMIT)
-    if (!response.ok) {
-      console.error('Gemini API Error:', data);
-
-      // Si es error de cuota (429), respondemos amablemente
-      if (response.status === 429 || data.error?.message?.includes('quota')) {
-        return new Response(
-          JSON.stringify({
-            reply:
-              '🧠 Estoy procesando muchas solicitudes. Por favor, espera 10 segundos y pregúntame de nuevo.',
-            intent: 'info',
-          }),
-          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-        );
-      }
-
-      throw new Error(data.error?.message || 'Error desconocido en Gemini');
-    }
-
-    const rawReply =
+    const reply =
       data.candidates?.[0]?.content?.parts?.[0]?.text ||
-      'Lo siento, no pude procesar tu solicitud.';
+      'Lo siento, ¿podrías repetir eso?';
 
-    let finalReply = rawReply;
+    // Detectar intención de compra para que el Frontend muestre confeti o abra el formulario
     let intent = 'info';
+    let cleanReply = reply;
 
-    if (rawReply.includes('[INTENT:PURCHASE]')) {
+    if (reply.includes('[INTENT:PURCHASE]')) {
       intent = 'purchase';
-      finalReply = rawReply.replace('[INTENT:PURCHASE]', '').trim();
+      cleanReply = reply.replace('[INTENT:PURCHASE]', '').trim();
     }
 
-    return new Response(JSON.stringify({ reply: finalReply, intent }), {
+    return new Response(JSON.stringify({ reply: cleanReply, intent }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });
   } catch (error) {
-    console.error('Server Error:', error.message);
-    // En caso de error fatal, devolvemos mensaje en el chat, no error 500
-    return new Response(
-      JSON.stringify({
-        reply: '⚠️ Error técnico: ' + error.message,
-        intent: 'unknown',
-      }),
-      {
-        status: 200,
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      }
-    );
+    return new Response(JSON.stringify({ error: error.message }), {
+      status: 500,
+      headers: corsHeaders,
+    });
   }
 });

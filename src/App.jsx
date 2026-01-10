@@ -14,6 +14,7 @@ import MenuPage from './pages/MenuPage';
 import LoginPage from './pages/LoginPage';
 import SuperAdminPage from './pages/SuperAdminPage';
 import LandingPage from './pages/LandingPage';
+import HunterDashboard from './pages/HunterDashboard';
 
 function App() {
   return (
@@ -29,6 +30,11 @@ function App() {
         <Route
           path='/dashboard'
           element={<DashboardPage />}
+        />
+
+        <Route
+          path='/hunter'
+          element={<HunterDashboard />}
         />
 
         {/* OJO: Esta ruta debería estar protegida en el futuro */}

@@ -377,11 +377,24 @@ const BookingPage = () => {
                   <button
                     onClick={() => {
                       // 👇 PARCHE: Si la salida es antes o igual a la llegada, da error
-                      if (new Date(dates.checkOut) <= new Date(dates.checkIn)) {
+                      // 🛡️ [INICIO BLOQUE DEFENSIVO] 🛡️
+                      const checkInDate = new Date(dates.checkIn);
+                      const checkOutDate = new Date(dates.checkOut);
+                      const today = new Date();
+                      today.setHours(0, 0, 0, 0);
+
+                      if (checkInDate < today) {
                         return alert(
-                          '⚠️ Error: La fecha de salida debe ser posterior a la llegada.'
+                          '⚠️ Error: La fecha de llegada no puede ser en el pasado.'
                         );
                       }
+
+                      if (checkOutDate <= checkInDate) {
+                        return alert(
+                          '⚠️ Error Lógico: La fecha de salida debe ser posterior a la llegada (mínimo 1 noche).'
+                        );
+                      }
+                      // 🛡️ [FIN BLOQUE DEFENSIVO] 🛡️
                       setStep(2);
                     }}
                     className='bg-[#111] text-white px-12 py-5 rounded-full font-bold text-xs tracking-[0.2em] hover:bg-black hover:scale-105 transition-all shadow-xl flex items-center gap-4 group'

@@ -2,9 +2,10 @@ import React, { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import { jsPDF } from 'jspdf';
-import Papa from 'papaparse';
 import ICAL from 'ical.js';
 import { motion, AnimatePresence } from 'framer-motion';
+import CedulaOCR from '../components/CedulaOCR';
+import VoiceAgent from '../components/VoiceAgent'; //
 import {
   LayoutDashboard,
   Calendar as CalendarIcon,
@@ -52,7 +53,15 @@ import {
   Star,
   Dumbbell,
   PawPrint,
+  ScanBarcode,
+  ChevronLeft, // 👈 AGREGAR
+  ChevronRight, // 👈 AGREGAR
 } from 'lucide-react';
+// ... otros imports ...
+import { useMarketing } from '../hooks/useMarketing'; // <--- AGREGAR ESTO
+import MarketingPanel from '../components/dashboard/MarketingPanel'; // <--- AGREGAR ESTO
+import { useInventory } from '../hooks/useInventory'; // <--- AGREGAR
+import InventoryPanel from '../components/dashboard/InventoryPanel'; // <--- AGREGAR
 
 const GlobalStyles = () => (
   <style>{`
@@ -91,99 +100,10 @@ const GlobalStyles = () => (
 const DashboardPage = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
-
   // Estados Principales
   const [activeTab, setActiveTab] = useState('calendar');
   const [rooms, setRooms] = useState([]);
   // ... tus otros estados ...
-
-  // 👇 ESTADOS PARA EDICIÓN Y SUBIDA DE FOTOS
-  const [editingRoom, setEditingRoom] = useState(null);
-  const [uploading, setUploading] = useState(false); // Nuevo estado de carga
-  const [selectedFile, setSelectedFile] = useState(null); // Nuevo estado para el archivo
-
-  const [roomForm, setRoomForm] = useState({
-    name: '',
-    price: '',
-    description: '',
-    image_url: '',
-    amenities: [],
-  });
-
-  // 👇 FUNCIÓN PARA ABRIR EL MODAL (ACTUALIZADA)
-  const openEditRoom = (room) => {
-    setEditingRoom(room);
-    setSelectedFile(null);
-    setRoomForm({
-      name: room.name || '',
-      price: room.price || '',
-      description: room.description || '',
-      image_url: room.image_url || '',
-      amenities: room.amenities || [],
-      // 👇 DATOS NUEVOS
-      capacity: room.capacity || 2,
-      beds: room.beds || 1,
-      bedrooms: room.bedrooms || 1,
-      is_price_per_person: room.is_price_per_person || false,
-    });
-  };
-
-  // 👇 FUNCIÓN DE GUARDADO (ACTUALIZADA)
-  const handleUpdateRoom = async (e) => {
-    e.preventDefault();
-    if (!editingRoom) return;
-
-    setUploading(true);
-    let finalImageUrl = roomForm.image_url;
-
-    try {
-      // 1. Subida de Foto
-      if (selectedFile) {
-        const fileExt = selectedFile.name.split('.').pop();
-        const fileName = `${Date.now()}.${fileExt}`;
-        const filePath = `${fileName}`;
-
-        const { error: uploadError } = await supabase.storage
-          .from('room-images')
-          .upload(filePath, selectedFile);
-
-        if (uploadError) throw new Error('Falla en subida');
-
-        const { data: urlData } = supabase.storage
-          .from('room-images')
-          .getPublicUrl(filePath);
-
-        finalImageUrl = urlData.publicUrl;
-      }
-
-      // 2. Guardar en Base de Datos
-      const { error: updateError } = await supabase
-        .from('rooms')
-        .update({
-          name: roomForm.name,
-          price: parseFloat(roomForm.price),
-          description: roomForm.description,
-          image_url: finalImageUrl,
-          amenities: roomForm.amenities,
-          // 👇 GUARDANDO LO NUEVO
-          capacity: parseInt(roomForm.capacity),
-          beds: parseInt(roomForm.beds),
-          bedrooms: parseInt(roomForm.bedrooms),
-          is_price_per_person: roomForm.is_price_per_person,
-        })
-        .eq('id', editingRoom.id);
-
-      if (updateError) throw new Error(updateError.message);
-
-      alert('✅ Habitación actualizada');
-      setEditingRoom(null);
-      fetchOperationalData();
-    } catch (error) {
-      alert('❌ Error: ' + error.message);
-    } finally {
-      setUploading(false);
-    }
-  };
 
   const [guests, setGuests] = useState([]);
   const [bookings, setBookings] = useState([]);
@@ -206,15 +126,50 @@ const DashboardPage = () => {
 
   // Estados UI y Formularios
   const [currentDate, setCurrentDate] = useState(new Date());
+  const changeMonth = (offset) => {
+    const newDate = new Date(
+      currentDate.getFullYear(),
+      currentDate.getMonth() + offset,
+      1
+    );
+    setCurrentDate(newDate);
+  };
+
+  // Función para ir rápido a hoy
+  const goToToday = () => setCurrentDate(new Date());
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showScanner, setShowScanner] = useState(false);
+
+  const handleScanSuccess = (data) => {
+    // Aquí ocurre la MAGIA: Llenamos el formulario con los datos de la cédula
+    setBookingForm((prev) => ({
+      ...prev,
+      type: 'booking', // Aseguramos que sea tipo huésped
+      guestDoc: data.docNumber,
+      guestName: data.fullName,
+      notes: `Tipo Sangre: ${data.bloodType}. (Escaneado Digitalmente)`,
+      // Si el parser detecta más datos, los agregas aquí
+    }));
+
+    // Cerramos escáner y damos feedback
+    setShowScanner(false);
+    // Reproducir sonido de éxito (opcional)
+    const successAudio = new Audio(
+      'https://assets.mixkit.co/active_storage/sfx/2000/2000-preview.mp3'
+    );
+    successAudio.play().catch((e) => {});
+    alert(`✅ Cédula detectada: ${data.docNumber}`);
+  };
   const [selectedBooking, setSelectedBooking] = useState(null);
+
   const [modalTab, setModalTab] = useState('info');
   const [isEditing, setIsEditing] = useState(false);
 
   const [editForm, setEditForm] = useState({});
-  const [newRoomName, setNewRoomName] = useState('');
 
   const [targetRoomId, setTargetRoomId] = useState(null);
+
+  // 👇 ESTADO ORIGINAL RESTAURADO
   const [bookingForm, setBookingForm] = useState({
     type: 'booking',
     guestName: '',
@@ -229,11 +184,6 @@ const DashboardPage = () => {
     notes: '',
   });
 
-  const [paymentForm, setPaymentForm] = useState({
-    amount: '',
-    method: 'Efectivo',
-    notes: '',
-  });
   const [chargeForm, setChargeForm] = useState({ concept: '', price: '' });
   const [configForm, setConfigForm] = useState({
     name: '',
@@ -291,7 +241,11 @@ const DashboardPage = () => {
   };
 
   const springSoft = { type: 'spring', stiffness: 200, damping: 25 };
-  const menuLink = `${window.location.origin}/menu/hotel-demo`;
+
+  // 👇 CAMBIO: Enlace dinámico al motor de reservas del hotel actual
+  const menuLink = hotelInfo?.id
+    ? `${window.location.origin}/book/${hotelInfo.id}`
+    : '#';
 
   // --- CARGA INICIAL BLINDADA (CORREGIDA) ---
   useEffect(() => {
@@ -300,36 +254,38 @@ const DashboardPage = () => {
         const {
           data: { user },
         } = await supabase.auth.getUser();
-
-        // 👇 INICIO DEL PARCHE DE SEGURIDAD
-        // CAMBIO: .single() -> .maybeSingle() para tolerar 0 resultados sin error
-        const { data: hotel, error } = await supabase
+        // 👇 SOLUCIÓN PGRST116: Si hay duplicados, tomamos el más reciente
+        const { data: hotels, error } = await supabase
           .from('hotels')
           .select('*')
-          .eq('email', user.email) // Asegúrate que la tabla hotels tenga columna 'email'
-          .maybeSingle();
-
+          .eq('email', user.email)
+          .order('created_at', { ascending: false }) // El más nuevo primero
+          .limit(1); // Forzamos que solo traiga uno
         if (error) {
           console.error('Error buscando hotel:', error);
-          // Opcional: Mostrar toast de error
           return;
         }
+        const hotel = hotels?.[0]; // Tomamos el primero del array
 
+        // 🛡️ [INICIO BLOQUE DEFENSIVO] 🛡️
         // LÓGICA DE ONBOARDING: Si no existe hotel, hay que crearlo o redirigir
         if (!hotel) {
           console.warn(
             '⚠️ Usuario nuevo detectado. Redirigiendo a Onboarding...'
           );
-          // AQUÍ DEBERÍAS REDIRIGIR A UNA PÁGINA DE CREACIÓN DE HOTEL
-          // navigate('/onboarding');
 
-          // O para efectos de prueba, detener la carga para no romper la UI
+          // Detenemos carga para evitar crashes por acceder a hotel.id después
           setLoading(false);
+
+          // Opción A: Redirigir a una página de creación (si existiera)
+          // navigate('/create-hotel');
+
+          // Opción B (Actual): Mostrar alerta y NO continuar con fetchOrders
           return alert(
-            'Tu usuario no tiene un Hotel asociado. Por favor contacta soporte o ejecuta el script SQL de inicialización.'
+            '🛑 ATENCIÓN: Tu usuario ha sido creado, pero aún no tiene un Hotel asignado.\n\nPor favor contacta a soporte para activar tu instancia o espera la aprobación del SuperAdmin.'
           );
         }
-        // 👆 FIN DEL PARCHE DE SEGURIDAD
+        // 🛡️ [FIN BLOQUE DEFENSIVO] 🛡️
 
         // POLICÍA DE ACCESO
         if (hotel.status === 'suspended') {
@@ -363,8 +319,13 @@ const DashboardPage = () => {
   }, []);
 
   useEffect(() => {
-    fetchOperationalData();
-  }, [activeTab]);
+    // Solo intentamos buscar datos si YA tenemos el ID del hotel
+    if (hotelInfo?.id) {
+      fetchOperationalData();
+    }
+  }, [activeTab, hotelInfo]);
+  // 👆 AGREGADO: , hotelInfo
+  // Ahora, si 'hotelInfo' cambia (de null a tener datos), esto se dispara solo.
 
   // --- REALTIME ORDERS ---
   useEffect(() => {
@@ -436,18 +397,34 @@ const DashboardPage = () => {
             }
           });
           const myGuests = Array.from(uniqueGuestsMap.values());
+
           myGuests.sort(
             (a, b) => new Date(b.created_at) - new Date(a.created_at)
           );
           setGuests(myGuests);
 
-          // 4. Leads (Blindado)
-          if (['GROWTH', 'CORPORATE'].includes(hotelInfo?.subscription_plan)) {
-            const { data: leadData } = await supabase
-              .from('leads')
+          // 4. Leads (NUEVA ARQUITECTURA: Silos de Datos)
+          if (
+            [
+              'GROWTH',
+              'CORPORATE',
+              'PRO_AI',
+              'PRO', // 👈 AGREGAR ESTO
+              'NANO_AI',
+              'GROWTH_AI',
+              'CORPORATE_AI',
+            ].includes(hotelInfo?.subscription_plan)
+          ) {
+            // Consulta directa y limpia a la tabla de huéspedes
+            const { data: guestLeads } = await supabase
+              .from('hotel_guest_leads') //
               .select('*')
+              .eq('hotel_id', hotelInfo.id)
               .order('created_at', { ascending: false });
-            if (leadData) setLeads(leadData);
+
+            if (guestLeads) {
+              setLeads(guestLeads);
+            }
           } else {
             setLeads([]);
           }
@@ -459,6 +436,20 @@ const DashboardPage = () => {
       setLoading(false);
     }
   };
+
+  const marketingData = useMarketing({
+    hotelInfo,
+    leads,
+    setLeads,
+    fetchOperationalData,
+  });
+
+  const inventoryData = useInventory({
+    hotelInfo,
+    rooms,
+    setRooms,
+    fetchOperationalData,
+  });
 
   // --- HELPERS & STYLES ---
   const brandColor = hotelInfo?.primary_color || '#0891b2'; // Cyan-600 elegante
@@ -594,11 +585,32 @@ const DashboardPage = () => {
     doc.text(`Huésped: ${selectedBooking.guests?.full_name}`, 20, 30);
     doc.save('TRA.pdf');
   };
-  // --- GENERADOR SIRE: CUMPLIMIENTO MIGRACOLOMBIA 2025 ---
+  // --- GENERADOR SIRE BLINDADO (Auditoría 2026) ---
   const generateSIRE = () => {
     const reportDate = new Date().toISOString().split('T')[0];
     let content = '';
     let count = 0;
+
+    // Tabla Oficial de Migración Colombia (Códigos ISO Numéricos)
+    const sireCountryCodes = {
+      COL: 169,
+      USA: 245,
+      ESP: 724,
+      FRA: 250,
+      DEU: 276,
+      ARG: 32,
+      BRA: 76,
+      CHL: 152,
+      ECU: 218,
+      MEX: 484,
+      PER: 604,
+      VEN: 862,
+      CAN: 124,
+      GBR: 826,
+      ITA: 380,
+      PAN: 591,
+      CRI: 188,
+    };
 
     // Filtramos solo reservas confirmadas que tengan datos de huésped
     const activeBookings = bookings.filter(
@@ -614,62 +626,56 @@ const DashboardPage = () => {
     activeBookings.forEach((b) => {
       const g = b.guests;
 
-      // 1. Lógica de Detección de Documento (Blindaje Legal)
-      let docType = 'PA'; // Por defecto PA (Pasaporte) para extranjeros
-
+      // 1. Detección de Documento
+      let docType = 'PA'; // Pasaporte por defecto para extranjeros
       if (g.nationality === 'COL') {
-        // Si es colombiano:
-        // Asumimos CC, pero si el documento tiene 11 dígitos o más podría ser TI (Tarjeta Identidad)
-        // Lógica simplificada para MVP:
         docType = g.doc_number.length > 10 ? 'TI' : 'CC';
       } else {
-        // Extranjeros:
-        // Cédula de Extranjería (CE) suele ser numérica y de longitud similar a CC (6-7 dígitos antiguos, 10 nuevos)
-        // Pasaporte (PA) suele ser alfanumérico.
-        const isNumeric = /^\d+$/.test(g.doc_number);
-
-        // HEURÍSTICA DE DETECCIÓN:
-        // Si es numérico y tiene menos de 9 dígitos, probablemente es una CE antigua.
-        // De lo contrario, mantenemos PA como estándar seguro.
-        if (isNumeric && g.doc_number.length <= 9) {
+        // Extranjeros: Solo números y corto = CE, Alfanumérico = PA
+        if (/^\d+$/.test(g.doc_number) && g.doc_number.length < 10) {
           docType = 'CE';
         } else {
           docType = 'PA';
         }
       }
 
-      // 2. Limpieza de Datos Críticos
-      // SIRE exige fechas en formato YYYY-MM-DD sin hora.
-      const checkInSafe = b.check_in || reportDate;
-      const checkOutSafe = b.check_out || reportDate;
-      // Si no tenemos fecha de nacimiento, usamos una fecha placeholder legal (Migración lo permite en contingencia)
-      const birthSafe = g.birth_date || '1990-01-01';
+      // 2. Conversión Legal de Nacionalidad
+      // Si no encuentra el país, usa 999 (Otros) para evitar bloqueo
+      const countryCode = sireCountryCodes[g.nationality] || 999;
 
-      // Limpieza de caracteres prohibidos en nombres (tildes o ñ pueden romper el txt plano a veces)
+      // 3. Limpieza de Texto (Eliminar caracteres que rompen el TXT)
       const safeName = g.full_name
         .normalize('NFD')
-        .replace(/[\u0300-\u036f]/g, '');
+        .replace(/[\u0300-\u036f]/g, '') // Quita tildes
+        .toUpperCase()
+        .replace(/Ñ/g, 'N') // Quita Ñ
+        .replace(/[^A-Z0-9 ]/g, ''); // Solo letras y números
 
-      // 3. Construcción de la Trama (Estructura Plana SIRE)
-      // Formato: TipoDoc|NumDoc|NombreCompleto|Nacionalidad|FechaNac|Genero|CheckIn|CheckOut
-      content += `${docType}|${g.doc_number}|${safeName}|${
-        g.nationality
-      }|${birthSafe}|${g.gender || 'M'}|${checkInSafe}|${checkOutSafe}\n`;
+      // Fechas seguras
+      const checkInSafe = b.check_in || reportDate;
+      const checkOutSafe = b.check_out || reportDate;
+      const birthSafe = g.birth_date || '1990-01-01';
+
+      // 4. Construcción de la Trama
+      content += `${docType}|${
+        g.doc_number
+      }|${safeName}|${countryCode}|${birthSafe}|${
+        g.gender || 'M'
+      }|${checkInSafe}|${checkOutSafe}\n`;
       count++;
     });
 
-    // 4. Generación y Descarga del Archivo
+    // Descarga
     const blob = new Blob([content], { type: 'text/plain' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
-    // Nombre del archivo con estándar de archivo digital: SIRE_NombreHotel_Fecha.txt
     link.download = `SIRE_${
       hotelInfo?.name.replace(/\s+/g, '_') || 'HOTEL'
     }_${reportDate}.txt`;
     link.click();
 
     alert(
-      `✅ Archivo SIRE generado con ${count} registros.\nListo para subir a la plataforma de Migración Colombia.`
+      `✅ Archivo SIRE generado con ${count} registros (Códigos Numéricos Aplicados).`
     );
   };
 
@@ -681,19 +687,6 @@ const DashboardPage = () => {
       .eq('id', hotelInfo.id);
     setHotelInfo({ ...hotelInfo, ...configForm });
     alert('Guardado');
-  };
-
-  const handleCreateRoom = async (e) => {
-    e.preventDefault();
-    if (!newRoomName) return;
-    const { data, error } = await supabase
-      .from('rooms')
-      .insert([{ hotel_id: hotelInfo.id, name: newRoomName, price: 150000 }])
-      .select();
-    if (!error && data) {
-      setRooms([...rooms, data[0]]);
-      setNewRoomName('');
-    }
   };
 
   const handleCreateBooking = async (e) => {
@@ -788,34 +781,6 @@ const DashboardPage = () => {
     navigate('/login');
   };
 
-  // GESTIÓN DE LEADS
-  const updateLeadStatus = async (id, currentStatus) => {
-    const nextStatus = currentStatus === 'contacted' ? 'new' : 'contacted';
-    const { error } = await supabase
-      .from('leads')
-      .update({ status: nextStatus })
-      .eq('id', id);
-    if (!error) {
-      setLeads(
-        leads.map((l) => (l.id === id ? { ...l, status: nextStatus } : l))
-      );
-    }
-  };
-
-  const sendWhatsAppTemplate = (lead, templateType) => {
-    const phone = lead.phone?.replace(/\D/g, '');
-    const templates = {
-      welcome: `Hola *${lead.full_name}*, vi que te interesó el *Plan ${lead.metadata?.plan_interest}* para el hotel *${lead.hotel_name}* en HospedaSuite. ¿Te gustaría agendar una demo breve? 🚀`,
-      followup: `Hola *${lead.full_name}*, te escribo para dar seguimiento a tu postulación en *${lead.city_interest}*. ¿Tienes alguna duda técnica? 🛡️`,
-    };
-    window.open(
-      `https://wa.me/${phone}?text=${encodeURIComponent(
-        templates[templateType]
-      )}`,
-      '_blank'
-    );
-  };
-
   const recordAuditLog = async (action, details) => {
     try {
       const {
@@ -889,14 +854,66 @@ const DashboardPage = () => {
     reader.readAsText(file);
   };
 
-  if (accessDenied && hotelInfo) {
-    return (
-      <LockScreen
-        hotelName={hotelInfo.name}
-        reason={denyReason}
-      />
-    );
-  }
+  // 🧠 EJECUTOR DE COMANDOS DE VOZ (MEJORADO)
+  const handleVoiceAction = async (aiResponse) => {
+    const { action, data } = aiResponse;
+
+    if (action === 'CREATE_BOOKING') {
+      let targetRoomId = '';
+      let finalPrice = '';
+
+      if (data.roomId) {
+        const voiceInput = String(data.roomId).toLowerCase().trim();
+        const voiceNumbers = voiceInput.replace(/\D/g, '');
+
+        // ... (Tu lógica de búsqueda de habitación existente va aquí) ...
+
+        // Si tienes el console.log de auditoría, déjalo.
+        let found = null;
+        if (voiceNumbers.length > 0) {
+          found = rooms.find((r) => r.name.replace(/\D/g, '') === voiceNumbers);
+        }
+        if (!found) {
+          found = rooms.find((r) => r.name.toLowerCase().includes(voiceInput));
+        }
+
+        if (found) {
+          targetRoomId = found.id;
+          finalPrice = data.price || found.price;
+        }
+      }
+
+      // 👇 AQUÍ VA LA LÓGICA DE LLENADO (NO ARRIBA)
+      setBookingForm({
+        type: 'booking',
+        guestName: data.guestName || 'Huésped por Voz',
+        guestDoc: data.guestDoc
+          ? String(data.guestDoc).replace(/[^a-zA-Z0-9]/g, '')
+          : 'PENDIENTE',
+        guestPhone: data.guestPhone
+          ? String(data.guestPhone).replace(/\D/g, '')
+          : '',
+        roomId: targetRoomId,
+        checkIn: data.checkIn || new Date().toISOString().split('T')[0],
+        checkOut:
+          data.checkOut ||
+          new Date(Date.now() + 86400000).toISOString().split('T')[0],
+        price: finalPrice,
+      });
+
+      setShowBookingModal(true);
+
+      // Alerta si falló la búsqueda
+
+      if (!targetRoomId && data.roomId) {
+        alert(
+          `⚠️ El sistema escuchó "${data.roomId}" pero no logré asociarlo a ninguna habitación. Por favor selecciónala de la lista.`
+        );
+      }
+    } else if (action === 'BLOCK_ROOM') {
+      alert(`Bloqueando habitación por voz: ${data.reason}`);
+    }
+  };
 
   // --- RENDER UI ---
   return (
@@ -1000,11 +1017,45 @@ const DashboardPage = () => {
         </header>
 
         <div className='flex-1 bg-white/60 backdrop-blur-sm rounded-[2rem] border border-[#E5E0D8] shadow-sm overflow-hidden relative'>
-          {/* CALENDARIO */}
+          {/* CALENDARIO (ESTRUCTURA CORREGIDA) */}
           {activeTab === 'calendar' && (
-            <div className='h-full overflow-auto custom-scrollbar relative'>
+            <div className='h-full overflow-auto custom-scrollbar relative pb-32'>
+              {/* 👇 BARRA DE NAVEGACIÓN (NUEVA) 👇 */}
+              <div className='flex items-center justify-between px-6 py-4 sticky left-0 mb-4 bg-white/50 backdrop-blur-sm border-b border-[#E5E0D8] z-30'>
+                <div className='flex items-center gap-4'>
+                  <h2 className='text-2xl font-serif font-bold text-[#2C2C2C] capitalize'>
+                    {currentDate.toLocaleDateString('es-CO', {
+                      month: 'long',
+                      year: 'numeric',
+                    })}
+                  </h2>
+                  <div className='flex gap-1'>
+                    <button
+                      onClick={() => changeMonth(-1)}
+                      className='p-2 hover:bg-white rounded-full text-slate-600 transition-colors shadow-sm border border-transparent hover:border-slate-200'
+                      title='Mes Anterior'
+                    >
+                      <ChevronLeft size={20} />
+                    </button>
+                    <button
+                      onClick={goToToday}
+                      className='px-3 py-1 text-xs font-bold bg-white border border-slate-200 rounded-lg hover:bg-slate-50 text-slate-500'
+                    >
+                      Hoy
+                    </button>
+                    <button
+                      onClick={() => changeMonth(1)}
+                      className='p-2 hover:bg-white rounded-full text-slate-600 transition-colors shadow-sm border border-transparent hover:border-slate-200'
+                      title='Mes Siguiente'
+                    >
+                      <ChevronRight size={20} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               <div className='min-w-max pb-20'>
-                {/* Cabecera de Días */}
+                {/* Cabecera de Días (El código sigue igual aquí abajo...) */}
                 <div className='flex sticky top-0 z-10 bg-[#F9F7F2]/95 backdrop-blur border-b border-[#E5E0D8]'>
                   <div className='w-40 p-4 font-serif font-bold text-[#2C2C2C] sticky left-0 bg-[#F9F7F2] z-20 border-r border-[#E5E0D8] shadow-sm'>
                     Habitación
@@ -1036,7 +1087,7 @@ const DashboardPage = () => {
                   ))}
                 </div>
 
-                {/* CUADRÍCULA DE RESERVAS (EL CEREBRO DE LA AGENDA) */}
+                {/* CUADRÍCULA DE RESERVAS */}
                 <div className='divide-y divide-[#E5E0D8]'>
                   {rooms.map((room) => (
                     <div
@@ -1105,118 +1156,36 @@ const DashboardPage = () => {
                   ))}
                 </div>
               </div>
-
-              {/* Botón Flotante Agregar */}
-              <div className='absolute bottom-8 right-8 flex flex-col gap-4 z-30'>
-                <motion.button
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setShowBookingModal(true)}
-                  className='bg-[#2C2C2C] text-white p-5 rounded-full shadow-2xl flex items-center justify-center'
-                >
-                  <Plus size={24} />
-                </motion.button>
-              </div>
+              {/* AQUÍ YA NO ESTÁ EL BOTÓN FLOTANTE (ESTÁ CORRECTO) */}
             </div>
           )}
 
           {/* INVENTARIO */}
           {activeTab === 'inventory' && (
-            <div className='p-8 h-full overflow-auto'>
-              {/* Formulario Agregar Rápido */}
-              <div className='bg-white/80 p-8 rounded-[2rem] shadow-sm border border-[#E5E0D8] mb-8 max-w-2xl'>
-                <h3 className='font-serif text-2xl font-bold mb-6 text-[#2C2C2C]'>
-                  Agregar Habitación
-                </h3>
-                <form
-                  onSubmit={handleCreateRoom}
-                  className='flex gap-4'
-                >
-                  <input
-                    type='text'
-                    placeholder='Ej: Suite 505'
-                    className='flex-1 px-6 py-4 bg-[#F9F7F2] rounded-xl border-none outline-none font-bold text-[#2C2C2C] shadow-inner'
-                    value={newRoomName}
-                    onChange={(e) => setNewRoomName(e.target.value)}
-                  />
-                  <button
-                    className='text-white px-6 rounded-xl font-bold flex items-center justify-center shadow-lg hover:scale-105 transition-transform'
-                    style={brandStyle}
-                  >
-                    <Plus size={24} />
-                  </button>
-                </form>
-              </div>
-
-              {/* GRID DE HABITACIONES (CON FOTOS Y LÁPIZ) */}
-              <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6'>
-                {rooms.map((r) => (
-                  <motion.div
-                    initial={{ scale: 0.9, opacity: 0 }}
-                    animate={{ scale: 1, opacity: 1 }}
-                    key={r.id}
-                    className='bg-white p-4 rounded-[1.5rem] border border-[#E5E0D8] shadow-sm hover:shadow-md transition-all flex flex-col gap-4 group relative'
-                  >
-                    {/* FOTO + LÁPIZ DE EDICIÓN */}
-                    <div className='h-40 w-full bg-gray-100 rounded-2xl overflow-hidden relative'>
-                      {r.image_url ? (
-                        <img
-                          src={r.image_url}
-                          className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                          alt={r.name}
-                        />
-                      ) : (
-                        <div className='w-full h-full flex items-center justify-center text-gray-300 bg-slate-50'>
-                          <ImageIcon size={32} />
-                        </div>
-                      )}
-
-                      {/* EL LÁPIZ MÁGICO ✏️ */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          openEditRoom(r);
-                        }}
-                        className='absolute top-3 right-3 bg-white/90 p-2 rounded-full text-slate-700 shadow-sm hover:bg-black hover:text-white transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0'
-                        title='Editar habitación'
-                      >
-                        <Edit size={14} />
-                      </button>
-                    </div>
-
-                    {/* DATOS */}
-                    <div className='flex justify-between items-end'>
-                      <div>
-                        <span className='font-serif font-bold text-lg text-[#2C2C2C] block leading-tight mb-1'>
-                          {r.name}
-                        </span>
-                        <span className='text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded'>
-                          ${r.price?.toLocaleString()}
-                        </span>
-                      </div>
-                      <button
-                        onClick={() => {
-                          setTargetRoomId(r.id);
-                          fileInputRef.current.click();
-                        }}
-                        className='p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors'
-                        title='Sincronizar Airbnb'
-                      >
-                        <UploadCloud size={18} />
-                      </button>
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-            </div>
+            <InventoryPanel
+              rooms={rooms}
+              inventory={inventoryData}
+              onOpenSync={(id) => {
+                setTargetRoomId(id);
+                fileInputRef.current.click();
+              }}
+            />
           )}
 
           {/* MARKETING (LEADS) */}
           {activeTab === 'leads' && (
-            <div className='p-8 h-full overflow-auto custom-scrollbar'>
-              {!['GROWTH', 'CORPORATE'].includes(
-                hotelInfo?.subscription_plan
-              ) ? (
+            <div className='p-8 h-full overflow-auto custom-scrollbar pb-32'>
+              {/* 👇 AHORA INCLUIMOS TODOS LOS PLANES 'AI' EN EL ACCESO VIP 👇 */}
+
+              {![
+                'GROWTH',
+                'CORPORATE',
+                'PRO_AI',
+                'PRO', // 👈 AGREGAR ESTO PARA DESBLOQUEAR TU USUARIO ACTUAL
+                'NANO_AI',
+                'GROWTH_AI',
+                'CORPORATE_AI',
+              ].includes(hotelInfo?.subscription_plan) ? (
                 <div className='flex flex-col items-center justify-center h-full text-center max-w-md mx-auto'>
                   <div className='w-20 h-20 bg-cyan-100 text-cyan-600 rounded-3xl flex items-center justify-center mb-6 shadow-lg shadow-cyan-200/50 animate-bounce'>
                     <ShoppingBag size={40} />
@@ -1254,10 +1223,30 @@ const DashboardPage = () => {
                         Marketing Forense de Elite
                       </p>
                     </div>
-                    <div className='bg-cyan-50 border border-cyan-100 px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm'>
-                      <span className='text-[11px] font-black text-cyan-700 uppercase tracking-widest'>
-                        Leads Activos: {leads.length}
-                      </span>
+
+                    <div className='flex gap-3'>
+                      {/* 👇 BOTÓN DE IMPORTAR (NUEVO) */}
+                      <button
+                        onClick={() => importInputRef.current.click()}
+                        className='bg-white text-slate-600 border border-slate-300 px-4 py-3 rounded-xl font-bold text-xs shadow-sm hover:bg-slate-50 flex items-center gap-2 transition-all'
+                      >
+                        <UploadCloud size={16} /> Importar Excel
+                      </button>
+
+                      {/* Input oculto para el archivo */}
+                      <input
+                        type='file'
+                        accept='.csv,.xlsx'
+                        ref={importInputRef}
+                        className='hidden'
+                        onChange={handleImportLeads}
+                      />
+
+                      <div className='bg-cyan-50 border border-cyan-100 px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm'>
+                        <span className='text-[11px] font-black text-cyan-700 uppercase tracking-widest'>
+                          Leads Activos: {leads.length}
+                        </span>
+                      </div>
                     </div>
                   </div>
                   <div className='bg-white rounded-[2rem] shadow-sm border border-[#E5E0D8] overflow-hidden relative'>
@@ -1362,7 +1351,7 @@ const DashboardPage = () => {
 
           {/* HUÉSPEDES */}
           {activeTab === 'guests' && (
-            <div className='p-8 h-full overflow-auto'>
+            <div className='p-8 h-full overflow-auto pb-32'>
               <div className='flex justify-between items-end mb-8'>
                 <h2 className='font-serif text-3xl font-bold'>Huéspedes</h2>
                 <button
@@ -1410,7 +1399,7 @@ const DashboardPage = () => {
 
           {/* CONFIGURACIÓN */}
           {activeTab === 'settings' && (
-            <div className='p-10 max-w-3xl mx-auto h-full overflow-auto'>
+            <div className='p-10 max-w-3xl mx-auto h-full overflow-auto pb-32'>
               <div className='glass-panel p-10 rounded-[2rem] shadow-xl'>
                 <h2 className='font-serif text-3xl font-bold mb-8 text-[#2C2C2C]'>
                   Identidad & Configuración
@@ -1602,7 +1591,7 @@ const DashboardPage = () => {
                 animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
                 onClick={() => setShowOrdersModal(false)}
-                className='fixed inset-0 bg-[#2C2C2C]/30 backdrop-blur-sm z-40'
+                className='fixed inset-0 bg-[#2C2C2C]/30 backdrop-blur-sm z-60'
               />
               <motion.div
                 initial={{ x: '100%' }}
@@ -1673,7 +1662,7 @@ const DashboardPage = () => {
         {/* MODAL NUEVA RESERVA */}
         <AnimatePresence>
           {showBookingModal && (
-            <div className='fixed inset-0 bg-[#2C2C2C]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
+            <div className='fixed inset-0 bg-[#2C2C2C]/40 backdrop-blur-sm z-60 flex items-center justify-center p-4'>
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -1692,6 +1681,7 @@ const DashboardPage = () => {
                   onSubmit={handleCreateBooking}
                   className='p-8 space-y-5'
                 >
+                  {/* Tabs Tipo de Reserva */}
                   <div className='bg-white p-1 rounded-xl flex shadow-sm border border-[#E5E0D8]'>
                     <button
                       type='button'
@@ -1720,6 +1710,8 @@ const DashboardPage = () => {
                       Mantenimiento
                     </button>
                   </div>
+
+                  {/* Fechas */}
                   <div className='grid grid-cols-2 gap-4'>
                     <div>
                       <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
@@ -1756,6 +1748,8 @@ const DashboardPage = () => {
                       />
                     </div>
                   </div>
+
+                  {/* Selección de Habitación */}
                   <div>
                     <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
                       Habitación
@@ -1781,6 +1775,8 @@ const DashboardPage = () => {
                       ))}
                     </select>
                   </div>
+
+                  {/* Campos de Huésped (Solo si es tipo 'booking') */}
                   {bookingForm.type === 'booking' && (
                     <div className='space-y-3 mt-4'>
                       <div>
@@ -1800,31 +1796,45 @@ const DashboardPage = () => {
                           }
                         />
                       </div>
+
                       <div className='grid grid-cols-2 gap-4'>
+                        {/* 👇 BLOQUE DE DOCUMENTO CON BOTÓN DE ESCÁNER 👇 */}
                         <div>
                           <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
                             Documento ID
                           </label>
-                          <input
-                            required
-                            className='w-full p-3 bg-white rounded-xl border-none outline-none font-bold text-[#2C2C2C]'
-                            placeholder='CC 123...'
-                            value={bookingForm.guestDoc}
-                            onChange={(e) =>
-                              setBookingForm({
-                                ...bookingForm,
-                                guestDoc: e.target.value,
-                              })
-                            }
-                          />
+                          <div className='flex gap-2 mt-1'>
+                            <input
+                              required
+                              className='w-full p-3 bg-white rounded-xl border-none outline-none font-bold text-[#2C2C2C]'
+                              placeholder='CC 123...'
+                              value={bookingForm.guestDoc}
+                              onChange={(e) =>
+                                setBookingForm({
+                                  ...bookingForm,
+                                  guestDoc: e.target.value,
+                                })
+                              }
+                            />
+                            <button
+                              type='button'
+                              onClick={() => setShowScanner(true)}
+                              className='bg-cyan-500 hover:bg-cyan-600 text-white p-3 rounded-xl transition-colors shadow-lg flex items-center justify-center tooltip shrink-0'
+                              title='Escanear Cédula'
+                            >
+                              <ScanBarcode size={20} />
+                            </button>
+                          </div>
                         </div>
+                        {/* 👆 FIN BLOQUE ESCÁNER 👆 */}
+
                         <div>
                           <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
                             Celular
                           </label>
                           <input
                             required
-                            className='w-full p-3 bg-white rounded-xl border-none outline-none font-bold text-[#2C2C2C]'
+                            className='w-full mt-1 p-3 bg-white rounded-xl border-none outline-none font-bold text-[#2C2C2C]'
                             placeholder='300...'
                             value={bookingForm.guestPhone}
                             onChange={(e) =>
@@ -1836,6 +1846,7 @@ const DashboardPage = () => {
                           />
                         </div>
                       </div>
+
                       <div>
                         <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
                           Precio Total Pactado
@@ -1861,6 +1872,7 @@ const DashboardPage = () => {
                       </div>
                     </div>
                   )}
+
                   <button className='w-full bg-[#8C3A3A] text-white font-bold py-4 rounded-xl shadow-lg shadow-[#8C3A3A]/30 mt-2'>
                     Crear Reserva
                   </button>
@@ -1873,7 +1885,7 @@ const DashboardPage = () => {
         {/* MODAL DETALLES */}
         <AnimatePresence>
           {selectedBooking && (
-            <div className='fixed inset-0 bg-[#2C2C2C]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
+            <div className='fixed inset-0 bg-[#2C2C2C]/40 backdrop-blur-sm z-60 flex items-center justify-center p-4'>
               <motion.div
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
@@ -2362,97 +2374,6 @@ const DashboardPage = () => {
           )}
         </AnimatePresence>
 
-        {/* MODAL EDITAR HUÉSPED */}
-        <AnimatePresence>
-          {editingGuest && (
-            <div className='fixed inset-0 bg-[#2C2C2C]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className='bg-[#F9F7F2] rounded-[2rem] w-full max-w-sm shadow-2xl overflow-hidden'
-              >
-                <div className='p-6 border-b border-[#E5E0D8] flex justify-between items-center'>
-                  <h3 className='font-serif text-xl font-bold'>
-                    Editar Huésped
-                  </h3>
-                  <button onClick={() => setEditingGuest(null)}>
-                    <X />
-                  </button>
-                </div>
-                <form
-                  onSubmit={handleUpdateGuest}
-                  className='p-6 space-y-4'
-                >
-                  <div>
-                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                      Nombre
-                    </label>
-                    <input
-                      className='w-full p-3 bg-white rounded-xl border-none outline-none font-bold'
-                      value={editingGuest.full_name}
-                      onChange={(e) =>
-                        setEditingGuest({
-                          ...editingGuest,
-                          full_name: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                      Documento
-                    </label>
-                    <input
-                      className='w-full p-3 bg-white rounded-xl border-none outline-none font-bold'
-                      value={editingGuest.doc_number || ''}
-                      onChange={(e) =>
-                        setEditingGuest({
-                          ...editingGuest,
-                          doc_number: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                      Teléfono
-                    </label>
-                    <input
-                      className='w-full p-3 bg-white rounded-xl border-none outline-none font-bold'
-                      value={editingGuest.phone || ''}
-                      onChange={(e) =>
-                        setEditingGuest({
-                          ...editingGuest,
-                          phone: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                      Email
-                    </label>
-                    <input
-                      className='w-full p-3 bg-white rounded-xl border-none outline-none font-bold'
-                      value={editingGuest.email || ''}
-                      onChange={(e) =>
-                        setEditingGuest({
-                          ...editingGuest,
-                          email: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  <button className='w-full bg-[#8C3A3A] text-white font-bold py-3 rounded-xl mt-2'>
-                    Guardar Cambios
-                  </button>
-                </form>
-              </motion.div>
-            </div>
-          )}
-        </AnimatePresence>
-
         <input
           type='file'
           accept='.ics'
@@ -2460,250 +2381,31 @@ const DashboardPage = () => {
           className='hidden'
           onChange={handleIcalUpload}
         />
-        {/* MODAL EDITAR HABITACIÓN */}
+
+        {/* COMPONENTE ESCÁNER (Foto OCR) */}
         <AnimatePresence>
-          {editingRoom && (
-            <div className='fixed inset-0 bg-[#2C2C2C]/40 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
-              <motion.div
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                exit={{ scale: 0.9, opacity: 0 }}
-                className='bg-[#F9F7F2] rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden'
-              >
-                <div className='p-6 border-b border-[#E5E0D8] flex justify-between items-center'>
-                  <h3 className='font-serif text-xl font-bold'>
-                    Editar Detalles
-                  </h3>
-                  <button onClick={() => setEditingRoom(null)}>
-                    <X />
-                  </button>
-                </div>
-
-                <form
-                  onSubmit={handleUpdateRoom}
-                  className='p-6 space-y-4'
-                >
-                  {/* Nombre y Precio */}
-                  <div className='grid grid-cols-2 gap-4'>
-                    <div>
-                      <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                        Nombre
-                      </label>
-                      <input
-                        className='w-full p-3 bg-white rounded-xl border-none font-bold'
-                        value={roomForm.name}
-                        onChange={(e) =>
-                          setRoomForm({ ...roomForm, name: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                        Precio
-                      </label>
-                      <input
-                        type='number'
-                        className='w-full p-3 bg-white rounded-xl border-none font-bold'
-                        value={roomForm.price}
-                        onChange={(e) =>
-                          setRoomForm({ ...roomForm, price: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-                  {/* 👇 SWITCH PRECIO POR PERSONA */}
-                  <div className='flex items-center gap-2 mt-2'>
-                    <input
-                      type='checkbox'
-                      id='pricePerPerson'
-                      checked={roomForm.is_price_per_person}
-                      onChange={(e) =>
-                        setRoomForm({
-                          ...roomForm,
-                          is_price_per_person: e.target.checked,
-                        })
-                      }
-                      className='w-4 h-4 text-black rounded border-gray-300 focus:ring-black'
-                    />
-                    <label
-                      htmlFor='pricePerPerson'
-                      className='text-xs font-bold text-gray-600 select-none cursor-pointer'
-                    >
-                      Cobrar por persona (Mostrar "/ Persona" en la web)
-                    </label>
-                  </div>
-                  {/* FILA DE CAPACIDAD Y CAMAS */}
-                  <div className='grid grid-cols-3 gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 mt-4 mb-4'>
-                    <div>
-                      <label className='text-[9px] font-bold uppercase text-gray-500 tracking-widest'>
-                        Personas
-                      </label>
-                      <input
-                        type='number'
-                        className='w-full p-2 bg-white rounded-lg border-none font-bold text-center'
-                        value={roomForm.capacity}
-                        onChange={(e) =>
-                          setRoomForm({ ...roomForm, capacity: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className='text-[9px] font-bold uppercase text-gray-500 tracking-widest'>
-                        Camas
-                      </label>
-                      <input
-                        type='number'
-                        className='w-full p-2 bg-white rounded-lg border-none font-bold text-center'
-                        value={roomForm.beds}
-                        onChange={(e) =>
-                          setRoomForm({ ...roomForm, beds: e.target.value })
-                        }
-                      />
-                    </div>
-                    <div>
-                      <label className='text-[9px] font-bold uppercase text-gray-500 tracking-widest'>
-                        Habitaciones
-                      </label>
-                      <input
-                        type='number'
-                        className='w-full p-2 bg-white rounded-lg border-none font-bold text-center'
-                        value={roomForm.bedrooms}
-                        onChange={(e) =>
-                          setRoomForm({ ...roomForm, bedrooms: e.target.value })
-                        }
-                      />
-                    </div>
-                  </div>
-                  {/* Foto URL */}
-                  {/* SELECCIONAR FOTO */}
-                  <div className='bg-white p-4 rounded-xl border border-dashed border-gray-300'>
-                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest block mb-3'>
-                      Foto de la Habitación
-                    </label>
-
-                    {/* Botón para elegir archivo */}
-                    <input
-                      type='file'
-                      accept='image/*'
-                      onChange={(e) => setSelectedFile(e.target.files[0])}
-                      className='block w-full text-sm text-slate-500
-                          file:mr-4 file:py-2.5 file:px-4
-                          file:rounded-xl file:border-0
-                          file:text-xs file:font-bold
-                          file:bg-[#2C2C2C] file:text-white
-                          file:cursor-pointer hover:file:bg-black
-                          cursor-pointer mb-4'
-                    />
-
-                    {/* Campo de texto (Plan B) */}
-                    <div className='relative'>
-                      <span className='absolute top-2.5 left-3 text-[10px] font-bold text-gray-400'>
-                        URL
-                      </span>
-                      <input
-                        placeholder='O pega un enlace aquí...'
-                        className='w-full p-2 pl-10 bg-[#F9F7F2] rounded-lg border-none text-xs text-gray-600'
-                        value={roomForm.image_url}
-                        onChange={(e) =>
-                          setRoomForm({
-                            ...roomForm,
-                            image_url: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-
-                  {/* Descripción */}
-                  <div>
-                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                      Descripción
-                    </label>
-                    <textarea
-                      rows='3'
-                      className='w-full p-3 bg-white rounded-xl border-none text-sm'
-                      value={roomForm.description}
-                      onChange={(e) =>
-                        setRoomForm({
-                          ...roomForm,
-                          description: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-                  {/* --- BLOQUE DE COMODIDADES (AMENITIES) --- */}
-                  <div className='mb-6 bg-white p-4 rounded-xl border border-gray-100'>
-                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest block mb-3'>
-                      Comodidades de la Habitación
-                    </label>
-                    <div className='grid grid-cols-2 gap-3'>
-                      {[
-                        'Wifi',
-                        'TV',
-                        'Baño Privado',
-                        'Agua Caliente',
-                        'Vista',
-                        'Secador',
-                        'Aire Acondicionado',
-                        'Parqueadero',
-                        'Desayuno',
-                        'Piscina',
-                        'Minibar',
-                        'Gimnasio',
-                        'Pet Friendly',
-                      ].map((item) => (
-                        <label
-                          key={item}
-                          className='flex items-center gap-2 p-2 bg-[#F9F7F2] rounded-lg border border-transparent hover:border-gray-200 cursor-pointer transition-colors'
-                        >
-                          <input
-                            type='checkbox'
-                            checked={roomForm.amenities?.includes(item)}
-                            onChange={(e) => {
-                              const currentAmenities = roomForm.amenities || [];
-                              if (e.target.checked) {
-                                // Agregar si se marca
-                                setRoomForm({
-                                  ...roomForm,
-                                  amenities: [...currentAmenities, item],
-                                });
-                              } else {
-                                // Quitar si se desmarca
-                                setRoomForm({
-                                  ...roomForm,
-                                  amenities: currentAmenities.filter(
-                                    (i) => i !== item
-                                  ),
-                                });
-                              }
-                            }}
-                            className='w-4 h-4 rounded text-black focus:ring-black border-gray-300'
-                          />
-                          <span className='text-xs font-bold text-gray-600 select-none'>
-                            {item}
-                          </span>
-                        </label>
-                      ))}
-                    </div>
-                  </div>
-                  <button
-                    disabled={uploading}
-                    className={`w-full text-white font-bold py-4 rounded-xl transition-all shadow-lg ${
-                      uploading
-                        ? 'bg-gray-400 cursor-not-allowed'
-                        : 'bg-[#2C2C2C] hover:scale-[1.02]'
-                    }`}
-                  >
-                    {uploading ? '⏳ Subiendo Foto...' : 'Guardar Cambios'}
-                  </button>
-                </form>
-              </motion.div>
-            </div>
+          {showScanner && (
+            <CedulaOCR
+              onScanSuccess={handleScanSuccess}
+              onClose={() => setShowScanner(false)}
+            />
           )}
         </AnimatePresence>
+        {/* 👇👇 PEGAR AQUÍ (LÍNEA ~1664) - BOTÓN FLOTANTE GLOBAL (+) 👇👇 */}
+        <div className='fixed bottom-24 right-4 md:bottom-8 md:right-10 flex flex-col gap-4 z-50'>
+          <motion.button
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+            onClick={() => setShowBookingModal(true)}
+            className='bg-[#2C2C2C] text-white p-4 md:p-5 rounded-full shadow-[0_4px_20px_rgba(0,0,0,0.4)] flex items-center justify-center'
+          >
+            <Plus size={24} />
+          </motion.button>
+        </div>
+        <VoiceAgent onActionTriggered={handleVoiceAction} />
       </main>
       {/* Navegación Móvil */}
-      <nav className='md:hidden fixed bottom-0 left-0 w-full bg-white border-t flex justify-around p-3 z-50'>
+      <nav className='md:hidden fixed bottom-0 left-0 w-full bg-white/95 backdrop-blur border-t border-slate-200 flex justify-around p-3 pb-safe z-50 shadow-[0_-4px_20px_rgba(0,0,0,0.05)]'>
         <NavButton
           icon={<CalendarIcon />}
           label='Cal'
