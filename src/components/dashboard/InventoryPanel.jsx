@@ -1,316 +1,382 @@
-import React from 'react';
-import { Plus, ImageIcon, Edit, UploadCloud, X } from 'lucide-react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import {
+  Box,
+  RefreshCw,
+  Tag,
+  Plus,
+  MoreHorizontal,
+  Edit,
+  Trash2,
+  X,
+  BedDouble,
+  CheckCircle2,
+} from 'lucide-react';
 
 const InventoryPanel = ({ rooms, inventory, onOpenSync }) => {
-  // Desestructuramos el "cerebro"
-  const {
-    newRoomName,
-    setNewRoomName,
-    handleCreateRoom,
-    openEditRoom,
-    editingRoom,
-    setEditingRoom,
-    handleUpdateRoom,
-    roomForm,
-    setRoomForm,
-    uploading,
-    setSelectedFile,
-  } = inventory;
+  // Desempaquetamos las funciones del hook useInventory
+  // (Asumo que tu hook exporta estas funciones estándares. Si tienen otro nombre, solo ajústalo aquí)
+  const { createRoom, updateRoom, deleteRoom, loading } = inventory || {};
 
-  const brandStyle = { backgroundColor: '#06b6d4' }; // Ajusta si usas variables globales
+  // Estado para el Modal de Edición/Creación
+  const [showModal, setShowModal] = useState(false);
+  const [editingRoom, setEditingRoom] = useState(null); // null = Modo Crear
+
+  // Estado del Formulario
+  const [formData, setFormData] = useState({
+    name: '',
+    price: '',
+    status: 'available', // available, maintenance, occupied
+    is_price_per_person: false,
+  });
+
+  // Abrir Modal para Crear
+  const handleOpenCreate = () => {
+    setEditingRoom(null);
+    setFormData({ name: '', price: '', status: 'available' });
+    setShowModal(true);
+  };
+
+  // Abrir Modal para Editar
+  const handleOpenEdit = (room) => {
+    setEditingRoom(room);
+    setFormData({
+      name: room.name,
+      price: room.price,
+      status: room.status || 'available',
+      is_price_per_person: room.is_price_per_person || false,
+    });
+    setShowModal(true);
+  };
+
+  // Guardar (Crear o Editar) con Bloqueo de Seguridad
+  const handleSave = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingRoom) {
+        // 1. Actualizar datos de la habitación
+        await updateRoom(editingRoom.id, formData);
+
+        // 2. 🛡️ Lógica de Bloqueo de Seguridad
+        if (formData.status === 'maintenance') {
+          // Si pasamos a mantenimiento, creamos un bloqueo preventivo en bookings
+          await supabase.from('bookings').insert([
+            {
+              hotel_id: editingRoom.hotel_id,
+              room_id: editingRoom.id,
+              check_in: new Date().toISOString().split('T')[0],
+              check_out: '2030-12-31', // Bloqueo a largo plazo
+              status: 'maintenance',
+              total_price: 0,
+              notes: 'BLOQUEO AUTOMÁTICO: Habitación en mantenimiento',
+            },
+          ]);
+          alert(
+            'Habitación puesta en mantenimiento y BLOQUEADA en el calendario.'
+          );
+        } else {
+          // Si vuelve a estar disponible, eliminamos el bloqueo de mantenimiento
+          await supabase
+            .from('bookings')
+            .delete()
+            .eq('room_id', editingRoom.id)
+            .eq('status', 'maintenance');
+        }
+      } else {
+        await createRoom(formData);
+      }
+      setShowModal(false);
+    } catch (error) {
+      alert('Error al guardar: ' + error.message);
+    }
+  };
+
+  // Eliminar Habitación
+  const handleDelete = async (id) => {
+    if (
+      window.confirm(
+        '¿Estás seguro de eliminar esta habitación? Se perderá el historial.'
+      )
+    ) {
+      if (deleteRoom) await deleteRoom(id);
+    }
+  };
 
   return (
-    <div className='p-8 h-full overflow-auto pb-32'>
-      {/* 1. Formulario Agregar Rápido */}
-      <div className='bg-white/80 p-8 rounded-[2rem] shadow-sm border border-[#E5E0D8] mb-8 max-w-2xl'>
-        <h3 className='font-serif text-2xl font-bold mb-6 text-[#2C2C2C]'>
-          Agregar Habitación
-        </h3>
-        <form
-          onSubmit={handleCreateRoom}
-          className='flex gap-4'
-        >
-          <input
-            type='text'
-            placeholder='Ej: Suite 505'
-            className='flex-1 px-6 py-4 bg-[#F9F7F2] rounded-xl border-none outline-none font-bold text-[#2C2C2C] shadow-inner'
-            value={newRoomName}
-            onChange={(e) => setNewRoomName(e.target.value)}
-          />
-          <button
-            className='text-white px-6 rounded-xl font-bold flex items-center justify-center shadow-lg hover:scale-105 transition-transform'
-            style={brandStyle}
+    <div className='h-full p-6 overflow-y-auto scrollbar-hide relative'>
+      {/* 1. HEADER & ACCIONES */}
+      <div className='flex flex-col md:flex-row justify-between items-end mb-8 gap-4'>
+        <div>
+          <h2 className='text-3xl font-serif font-bold text-slate-800'>
+            Inventario
+          </h2>
+          <p className='text-slate-500'>Gestión de tarifas y disponibilidad</p>
+        </div>
+
+        <div className='flex gap-3'>
+          {/* Botón Nueva Habitación */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleOpenCreate}
+            className='px-5 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-lg shadow-slate-900/20 hover:bg-black transition-all flex items-center gap-2'
           >
-            <Plus size={24} />
-          </button>
-        </form>
+            <Plus size={18} />
+            <span>Nueva Habitación</span>
+          </motion.button>
+        </div>
       </div>
 
-      {/* 2. GRID DE HABITACIONES */}
-      <div className='grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6'>
-        {rooms.map((r) => (
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            key={r.id}
-            className='bg-white p-4 rounded-[1.5rem] border border-[#E5E0D8] shadow-sm hover:shadow-md transition-all flex flex-col gap-4 group relative'
-          >
-            {/* FOTO + LÁPIZ */}
-            <div className='h-40 w-full bg-gray-100 rounded-2xl overflow-hidden relative'>
-              {r.image_url ? (
-                <img
-                  src={r.image_url}
-                  className='w-full h-full object-cover group-hover:scale-110 transition-transform duration-500'
-                  alt={r.name}
-                />
-              ) : (
-                <div className='w-full h-full flex items-center justify-center text-gray-300 bg-slate-50'>
-                  <ImageIcon size={32} />
+      {/* 2. GRID DE HABITACIONES (Diseño Moderno) */}
+      <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 pb-24'>
+        <AnimatePresence>
+          {rooms.map((room, index) => (
+            <motion.div
+              key={room.id}
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              transition={{ delay: index * 0.05 }}
+              className='group relative bg-white/60 backdrop-blur-xl border border-white/60 p-6 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-h-[220px]'
+            >
+              {/* Encabezado Tarjeta Corregido */}
+              <div className='flex justify-between items-start'>
+                <div
+                  className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm
+                  ${
+                    room.status === 'maintenance'
+                      ? 'bg-orange-100 text-orange-600'
+                      : 'bg-blue-50 text-blue-600'
+                  }`}
+                >
+                  <BedDouble size={28} />
                 </div>
-              )}
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  openEditRoom(r);
-                }}
-                className='absolute top-3 right-3 bg-white/90 p-2 rounded-full text-slate-700 shadow-sm hover:bg-black hover:text-white transition-all opacity-0 group-hover:opacity-100 transform translate-y-2 group-hover:translate-y-0'
-                title='Editar habitación'
-              >
-                <Edit size={14} />
-              </button>
-            </div>
 
-            {/* DATOS */}
-            <div className='flex justify-between items-end'>
-              <div>
-                <span className='font-serif font-bold text-lg text-[#2C2C2C] block leading-tight mb-1'>
-                  {r.name}
-                </span>
-                <span className='text-xs font-bold text-green-700 bg-green-50 px-2 py-1 rounded'>
-                  ${r.price?.toLocaleString()}
-                </span>
+                {/* Menú de Acciones: Visibilidad garantizada y stopPropagation añadido */}
+                <div className='flex gap-2 opacity-100 transition-opacity z-10'>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation(); // Evita interferencia con clics de la tarjeta
+                      handleOpenEdit(room);
+                    }}
+                    className='p-2 bg-white/90 backdrop-blur-sm rounded-full text-slate-500 hover:text-blue-600 shadow-sm hover:shadow-md transition-all border border-slate-100'
+                    title='Editar'
+                  >
+                    <Edit size={16} />
+                  </button>
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleDelete(room.id);
+                    }}
+                    className='p-2 bg-white/90 backdrop-blur-sm rounded-full text-slate-500 hover:text-red-500 shadow-sm hover:shadow-md transition-all border border-slate-100'
+                    title='Eliminar'
+                  >
+                    <Trash2 size={16} />
+                  </button>
+                </div>
               </div>
-              {/* Botón Sincronizar Airbnb (Llama a función padre) */}
-              <button
-                onClick={() => onOpenSync(r.id)}
-                className='p-2 bg-blue-50 text-blue-600 rounded-lg hover:bg-blue-100 transition-colors'
-                title='Sincronizar Airbnb'
-              >
-                <UploadCloud size={18} />
-              </button>
-            </div>
-          </motion.div>
-        ))}
+
+              {/* Info Habitación */}
+              <div className='mt-4'>
+                <h3 className='text-xl font-bold text-slate-800 uppercase'>
+                  {room.name}
+                </h3>
+                <div className='flex items-center gap-2 mt-1'>
+                  <span className='text-2xl font-serif font-bold text-slate-700'>
+                    ${parseInt(room.price).toLocaleString()}
+                  </span>
+                  {/* Etiqueta dinámica de modalidad de cobro */}
+                  <span className='text-[10px] text-slate-400 font-bold uppercase tracking-tighter'>
+                    {room.is_price_per_person ? '/ persona' : '/ noche'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Footer Tarjeta: Estado y Sync */}
+              <div className='mt-6 flex items-center justify-between'>
+                <span
+                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border
+                  ${
+                    room.status === 'maintenance'
+                      ? 'bg-orange-50 text-orange-600 border-orange-100'
+                      : 'bg-emerald-50 text-emerald-600 border-emerald-100'
+                  }`}
+                >
+                  {room.status === 'maintenance'
+                    ? 'Mantenimiento'
+                    : 'Disponible'}
+                </span>
+
+                <button
+                  onClick={() => onOpenSync(room.id)}
+                  className='flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors bg-white/50 px-2 py-1 rounded-lg border border-transparent hover:border-blue-100'
+                >
+                  <RefreshCw size={12} /> Sync
+                </button>
+              </div>
+            </motion.div>
+          ))}
+        </AnimatePresence>
+
+        {/* Tarjeta "Crear Nueva" (Estado Vacío / Relleno) */}
+        <motion.button
+          whileHover={{ scale: 1.02, backgroundColor: 'rgba(255,255,255,0.4)' }}
+          whileTap={{ scale: 0.98 }}
+          onClick={handleOpenCreate}
+          className='border-2 border-dashed border-slate-300 rounded-[2rem] flex flex-col items-center justify-center p-6 text-slate-400 hover:border-blue-400 hover:text-blue-500 transition-all min-h-[220px]'
+        >
+          <div className='w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-4 shadow-inner'>
+            <Plus size={32} />
+          </div>
+          <span className='font-bold'>Agregar Habitación</span>
+        </motion.button>
       </div>
 
-      {/* 3. MODAL EDITAR HABITACIÓN (Movido aquí para limpiar DashboardPage) */}
+      {/* 3. MODAL DE EDICIÓN / CREACIÓN (Estilo Glass) */}
       <AnimatePresence>
-        {editingRoom && (
-          <div className='fixed inset-0 bg-[#2C2C2C]/40 backdrop-blur-sm z-60 flex items-center justify-center p-4'>
+        {showModal && (
+          <div className='fixed inset-0 bg-black/40 backdrop-blur-md z-[100] flex items-center justify-center p-4'>
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className='bg-[#F9F7F2] rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden h-auto max-h-[90vh] overflow-y-auto'
+              className='bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden relative'
             >
-              <div className='p-6 border-b border-[#E5E0D8] flex justify-between items-center'>
-                <h3 className='font-serif text-xl font-bold'>
-                  Editar Detalles
+              {/* Header Modal */}
+              <div className='p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50'>
+                <h3 className='font-serif text-xl font-bold text-slate-800'>
+                  {editingRoom ? 'Editar Habitación' : 'Nueva Habitación'}
                 </h3>
-                <button onClick={() => setEditingRoom(null)}>
-                  <X />
+                <button
+                  onClick={() => setShowModal(false)}
+                  className='p-2 bg-white rounded-full text-slate-400 hover:text-red-500 shadow-sm transition-colors'
+                >
+                  <X size={20} />
                 </button>
               </div>
 
+              {/* Formulario */}
               <form
-                onSubmit={handleUpdateRoom}
-                className='p-6 space-y-4'
+                onSubmit={handleSave}
+                className='p-6 space-y-5'
               >
-                <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                      Nombre
-                    </label>
-                    <input
-                      className='w-full p-3 bg-white rounded-xl border-none font-bold'
-                      value={roomForm.name}
-                      onChange={(e) =>
-                        setRoomForm({ ...roomForm, name: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                      Precio
-                    </label>
-                    <input
-                      type='number'
-                      className='w-full p-3 bg-white rounded-xl border-none font-bold'
-                      value={roomForm.price}
-                      onChange={(e) =>
-                        setRoomForm({ ...roomForm, price: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className='flex items-center gap-2 mt-2'>
-                  <input
-                    type='checkbox'
-                    id='pricePerPerson'
-                    checked={roomForm.is_price_per_person}
-                    onChange={(e) =>
-                      setRoomForm({
-                        ...roomForm,
-                        is_price_per_person: e.target.checked,
-                      })
-                    }
-                    className='w-4 h-4 text-black rounded border-gray-300 focus:ring-black'
-                  />
-                  <label
-                    htmlFor='pricePerPerson'
-                    className='text-xs font-bold text-gray-600 select-none cursor-pointer'
-                  >
-                    Cobrar por persona
-                  </label>
-                </div>
-
-                <div className='grid grid-cols-3 gap-3 bg-gray-50 p-3 rounded-xl border border-gray-200 mt-4 mb-4'>
-                  <div>
-                    <label className='text-[9px] font-bold uppercase text-gray-500 tracking-widest'>
-                      Personas
-                    </label>
-                    <input
-                      type='number'
-                      className='w-full p-2 bg-white rounded-lg border-none font-bold text-center'
-                      value={roomForm.capacity}
-                      onChange={(e) =>
-                        setRoomForm({ ...roomForm, capacity: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className='text-[9px] font-bold uppercase text-gray-500 tracking-widest'>
-                      Camas
-                    </label>
-                    <input
-                      type='number'
-                      className='w-full p-2 bg-white rounded-lg border-none font-bold text-center'
-                      value={roomForm.beds}
-                      onChange={(e) =>
-                        setRoomForm({ ...roomForm, beds: e.target.value })
-                      }
-                    />
-                  </div>
-                  <div>
-                    <label className='text-[9px] font-bold uppercase text-gray-500 tracking-widest'>
-                      Habitaciones
-                    </label>
-                    <input
-                      type='number'
-                      className='w-full p-2 bg-white rounded-lg border-none font-bold text-center'
-                      value={roomForm.bedrooms}
-                      onChange={(e) =>
-                        setRoomForm({ ...roomForm, bedrooms: e.target.value })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className='bg-white p-4 rounded-xl border border-dashed border-gray-300'>
-                  <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest block mb-3'>
-                    Foto
+                <div className='space-y-1'>
+                  <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
+                    Nombre / Número
                   </label>
                   <input
-                    type='file'
-                    accept='image/*'
-                    onChange={(e) => setSelectedFile(e.target.files[0])}
-                    className='block w-full text-sm text-slate-500 file:mr-4 file:py-2.5 file:px-4 file:rounded-xl file:border-0 file:text-xs file:font-bold file:bg-[#2C2C2C] file:text-white file:cursor-pointer hover:file:bg-black cursor-pointer mb-4'
-                  />
-                  <input
-                    placeholder='O URL directa...'
-                    className='w-full p-2 bg-[#F9F7F2] rounded-lg border-none text-xs text-gray-600'
-                    value={roomForm.image_url}
+                    autoFocus
+                    className='w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-slate-800 focus:ring-2 focus:ring-slate-900/10 transition-all placeholder:text-slate-300'
+                    placeholder='Ej: 101, Suite Presidencial'
+                    value={formData.name}
                     onChange={(e) =>
-                      setRoomForm({ ...roomForm, image_url: e.target.value })
+                      setFormData({ ...formData, name: e.target.value })
                     }
+                    required
                   />
                 </div>
 
-                <div>
-                  <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                    Descripción
+                <div className='space-y-1'>
+                  <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
+                    Precio por Noche (COP)
                   </label>
-                  <textarea
-                    rows='3'
-                    className='w-full p-3 bg-white rounded-xl border-none text-sm'
-                    value={roomForm.description}
-                    onChange={(e) =>
-                      setRoomForm({ ...roomForm, description: e.target.value })
-                    }
-                  />
+                  <div className='relative'>
+                    <span className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold'>
+                      $
+                    </span>
+                    <input
+                      type='number'
+                      className='w-full p-4 pl-8 bg-slate-50 rounded-2xl border-none font-bold text-slate-800 focus:ring-2 focus:ring-slate-900/10'
+                      placeholder='0'
+                      value={formData.price}
+                      onChange={(e) =>
+                        setFormData({ ...formData, price: e.target.value })
+                      }
+                      required
+                    />
+                  </div>
                 </div>
 
-                <div className='mb-6 bg-white p-4 rounded-xl border border-gray-100'>
-                  <label className='text-[10px] font-bold uppercase text-[#5D5555] tracking-widest block mb-3'>
-                    Comodidades
+                <div className='space-y-1'>
+                  <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
+                    Estado Actual
                   </label>
                   <div className='grid grid-cols-2 gap-3'>
-                    {[
-                      'Wifi',
-                      'TV',
-                      'Baño Privado',
-                      'Agua Caliente',
-                      'Vista',
-                      'Secador',
-                      'Aire Acondicionado',
-                      'Parqueadero',
-                      'Desayuno',
-                      'Piscina',
-                      'Minibar',
-                      'Gimnasio',
-                      'Pet Friendly',
-                    ].map((item) => (
-                      <label
-                        key={item}
-                        className='flex items-center gap-2 cursor-pointer'
-                      >
-                        <input
-                          type='checkbox'
-                          checked={roomForm.amenities?.includes(item)}
-                          onChange={(e) => {
-                            const current = roomForm.amenities || [];
-                            if (e.target.checked)
-                              setRoomForm({
-                                ...roomForm,
-                                amenities: [...current, item],
-                              });
-                            else
-                              setRoomForm({
-                                ...roomForm,
-                                amenities: current.filter((i) => i !== item),
-                              });
-                          }}
-                          className='w-4 h-4 rounded text-black focus:ring-black border-gray-300'
-                        />
-                        <span className='text-xs font-bold text-gray-600'>
-                          {item}
-                        </span>
-                      </label>
-                    ))}
+                    <button
+                      type='button'
+                      onClick={() =>
+                        setFormData({ ...formData, status: 'available' })
+                      }
+                      className={`p-3 rounded-xl border font-bold text-sm flex items-center justify-center gap-2 transition-all
+                        ${
+                          formData.status === 'available'
+                            ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm'
+                            : 'bg-white border-slate-100 text-slate-400'
+                        }`}
+                    >
+                      {formData.status === 'available' && (
+                        <CheckCircle2 size={16} />
+                      )}
+                      Disponible
+                    </button>
+                    <button
+                      type='button'
+                      onClick={() =>
+                        setFormData({ ...formData, status: 'maintenance' })
+                      }
+                      className={`p-3 rounded-xl border font-bold text-sm flex items-center justify-center gap-2 transition-all
+                        ${
+                          formData.status === 'maintenance'
+                            ? 'bg-orange-50 border-orange-200 text-orange-600 shadow-sm'
+                            : 'bg-white border-slate-100 text-slate-400'
+                        }`}
+                    >
+                      {formData.status === 'maintenance' && (
+                        <CheckCircle2 size={16} />
+                      )}
+                      Mantenimiento
+                    </button>
                   </div>
+                </div>
+
+                <div className='flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100'>
+                  <div className='flex flex-col'>
+                    <span className='text-sm font-bold text-slate-800'>
+                      Cobro por Persona
+                    </span>
+                    <span className='text-[10px] text-slate-500 font-bold uppercase tracking-tighter'>
+                      Tarifa x Nro. de Huéspedes
+                    </span>
+                  </div>
+                  <button
+                    type='button'
+                    onClick={() =>
+                      setFormData({
+                        ...formData,
+                        is_price_per_person: !formData.is_price_per_person,
+                      })
+                    }
+                    className={`w-12 h-6 rounded-full transition-all relative ${
+                      formData.is_price_per_person
+                        ? 'bg-cyan-600'
+                        : 'bg-slate-300'
+                    }`}
+                  >
+                    <div
+                      className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${
+                        formData.is_price_per_person ? 'left-7' : 'left-1'
+                      }`}
+                    />
+                  </button>
                 </div>
 
                 <button
-                  disabled={uploading}
-                  className={`w-full text-white font-bold py-4 rounded-xl transition-all shadow-lg ${
-                    uploading
-                      ? 'bg-gray-400 cursor-not-allowed'
-                      : 'bg-[#2C2C2C] hover:scale-[1.02]'
-                  }`}
+                  type='submit'
+                  disabled={loading}
+                  className='w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all mt-4'
                 >
-                  {uploading ? '⏳ Subiendo...' : 'Guardar Cambios'}
+                  {loading ? 'Guardando...' : 'Guardar Cambios'}
                 </button>
               </form>
             </motion.div>

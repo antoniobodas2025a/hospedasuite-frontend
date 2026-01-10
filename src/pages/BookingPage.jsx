@@ -7,7 +7,6 @@ import {
   useScroll,
   useTransform,
 } from 'framer-motion';
-import SignatureCanvas from 'react-signature-canvas';
 import {
   Calendar,
   Check,
@@ -72,7 +71,6 @@ const staggerContainer = {
 const BookingPage = () => {
   // 👇 CORRECCIÓN: Usamos hotelId en lugar de hotelSlug
   const { hotelId } = useParams();
-  const sigPad = useRef({});
   const containerRef = useRef(null);
 
   // Parallax Hero
@@ -135,35 +133,21 @@ const BookingPage = () => {
 
   const clearSig = () => sigPad.current.clear();
 
+  //
   const handleCreateBooking = async (e) => {
     e.preventDefault();
-    if (sigPad.current.isEmpty())
-      return alert('La firma es requerida para confirmar.');
-    // 👇 PARCHE: Si ponen más gente de la que cabe, da error
+
+    // 🚀 OPTIMIZACIÓN: Ya no pedimos firma aquí, solo validamos cupo.
     const maxCap = selectedRoom.capacity || 10;
     if (parseInt(guest.guestsCount) > maxCap) {
       return alert(
         `⚠️ Error de Cupo: Esta habitación solo permite un máximo de ${maxCap} personas.`
       );
     }
+
     setProcessing(true);
     try {
-      const signatureBlob = await new Promise((resolve) =>
-        sigPad.current.getCanvas().toBlob(resolve, 'image/png')
-      );
-      const fileName = `sig-${Date.now()}.png`;
-      const { error: upErr } = await supabase.storage
-        .from('signatures')
-        .upload(fileName, signatureBlob);
-
-      let publicUrl = null;
-      if (!upErr) {
-        const { data } = supabase.storage
-          .from('signatures')
-          .getPublicUrl(fileName);
-        publicUrl = data.publicUrl;
-      }
-
+      // 1. Crear el Huésped (Sin firma, solo datos básicos)
       const { data: gData, error: gError } = await supabase
         .from('guests')
         .insert([
@@ -173,7 +157,7 @@ const BookingPage = () => {
             email: guest.email,
             phone: guest.phone,
             nationality: 'COL',
-            signature_url: publicUrl,
+            // signature_url: publicUrl, // 👈 ELIMINADO: La firma se pedirá en el Check-in Digital
           },
         ])
         .select()
@@ -181,6 +165,7 @@ const BookingPage = () => {
 
       if (gError) throw gError;
 
+      // 2. Calcular noches
       const nights = Math.max(
         1,
         Math.ceil(
@@ -188,6 +173,7 @@ const BookingPage = () => {
         )
       );
 
+      // 3. Crear la Reserva
       const { error: bError } = await supabase.from('bookings').insert([
         {
           hotel_id: hotel.id,
@@ -202,9 +188,72 @@ const BookingPage = () => {
       ]);
 
       if (bError) throw bError;
-      setStep(4);
+      setStep(4); // Ir a pantalla de éxito
     } catch (error) {
-      alert(error.message);
+      alert('Ocurrió un error: ' + error.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // --- 🔍 VERIFICADOR DE DISPONIBILIDAD (NUEVO) ---
+  const checkAvailability = async () => {
+    // 1. Validaciones básicas de fechas
+    const checkInDate = new Date(dates.checkIn);
+    const checkOutDate = new Date(dates.checkOut);
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (checkInDate < today) {
+      return alert('⚠️ Error: La fecha de llegada no puede ser en el pasado.');
+    }
+    if (checkOutDate <= checkInDate) {
+      return alert(
+        '⚠️ Error: La fecha de salida debe ser posterior a la llegada.'
+      );
+    }
+
+    setProcessing(true); // Activamos spinner en el botón
+
+    try {
+      // 2. Buscamos las "Ovejas Negras" (Reservas que estorban)
+      // Lógica: Una reserva choca si (SuInicio < MiFin) Y (SuFin > MiInicio)
+      const { data: busyBookings, error } = await supabase
+        .from('bookings')
+        .select('room_id')
+        .eq('hotel_id', hotel.id)
+        .neq('status', 'cancelled') // Ignoramos las canceladas
+        .lt('check_in', dates.checkOut) // Empieza antes de que yo salga
+        .gt('check_out', dates.checkIn); // Termina después de que yo entre
+
+      if (error) throw error;
+
+      // Extraemos los IDs de las habitaciones ocupadas
+      const busyRoomIds = busyBookings.map((b) => b.room_id);
+
+      // 3. Traemos TODAS las habitaciones originales del hotel para filtrar
+      // (Hacemos esto para asegurar que filtramos sobre el total, no sobre un filtro previo)
+      const { data: allRooms } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('hotel_id', hotel.id);
+
+      // 4. Filtramos: Dejamos solo las que NO están en la lista negra
+      const availableRooms = allRooms.filter(
+        (room) => !busyRoomIds.includes(room.id)
+      );
+
+      if (availableRooms.length === 0) {
+        alert(
+          '😔 Lo sentimos, no hay disponibilidad para estas fechas. Intenta otras.'
+        );
+      } else {
+        setRooms(availableRooms); // Actualizamos la lista visible
+        setStep(2); // Avanzamos al siguiente paso
+      }
+    } catch (err) {
+      console.error('Error verificando disponibilidad:', err);
+      alert('Error de conexión al verificar fechas.');
     } finally {
       setProcessing(false);
     }
@@ -406,6 +455,32 @@ const BookingPage = () => {
                     />
                   </button>
                 </motion.div>
+                {/* ✅ AQUÍ INSERTAS TU CÓDIGO NUEVO: */}
+                <div className='flex justify-center'>
+                  <button
+                    onClick={checkAvailability} // 👈 AHORA LLAMA A LA FUNCIÓN REAL
+                    disabled={processing} // 👈 SE DESACTIVA MIENTRAS PIENSA
+                    className='bg-[#111] text-white px-12 py-5 rounded-full font-bold text-xs tracking-[0.2em] hover:bg-black hover:scale-105 transition-all shadow-xl flex items-center gap-4 group disabled:opacity-70 disabled:cursor-not-allowed'
+                  >
+                    {processing ? (
+                      <>
+                        <Loader
+                          className='animate-spin'
+                          size={16}
+                        />{' '}
+                        VERIFICANDO...
+                      </>
+                    ) : (
+                      <>
+                        VER DISPONIBILIDAD
+                        <ArrowRight
+                          size={16}
+                          className='group-hover:translate-x-1 transition-transform'
+                        />
+                      </>
+                    )}
+                  </button>
+                </div>
               </motion.div>
             )}
 
@@ -541,7 +616,7 @@ const BookingPage = () => {
               </motion.div>
             )}
 
-            {/* PASO 3: DATOS Y FIRMA */}
+            {/* PASO 3: DATOS Y CONFIRMACIÓN (Optimizado sin firma) */}
             {step === 3 && (
               <motion.div
                 key='step3'
@@ -622,7 +697,8 @@ const BookingPage = () => {
                           </label>
                         </div>
                       ))}
-                      {/* 👇 NUEVO: NÚMERO DE PERSONAS */}
+
+                      {/* NÚMERO DE PERSONAS */}
                       <div className='relative pt-2'>
                         <input
                           type='number'
@@ -633,10 +709,7 @@ const BookingPage = () => {
                           placeholder='1'
                           value={guest.guestsCount}
                           onChange={(e) =>
-                            setGuest({
-                              ...guest,
-                              guestsCount: e.target.value,
-                            })
+                            setGuest({ ...guest, guestsCount: e.target.value })
                           }
                         />
                         <label className='absolute left-0 -top-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 peer-focus:text-black transition-colors'>
@@ -644,7 +717,7 @@ const BookingPage = () => {
                         </label>
                       </div>
 
-                      {/* 👇 NUEVO: SOLICITUDES ESPECIALES */}
+                      {/* SOLICITUDES ESPECIALES */}
                       <div className='relative pt-2'>
                         <textarea
                           rows='2'
@@ -652,10 +725,7 @@ const BookingPage = () => {
                           placeholder='Ej: Alérgico a las plumas, Cama adicional...'
                           value={guest.comments}
                           onChange={(e) =>
-                            setGuest({
-                              ...guest,
-                              comments: e.target.value,
-                            })
+                            setGuest({ ...guest, comments: e.target.value })
                           }
                         />
                         <label className='absolute left-0 -top-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 peer-focus:text-black transition-colors'>
@@ -664,34 +734,36 @@ const BookingPage = () => {
                       </div>
                     </motion.div>
 
+                    {/* 👇 NUEVO BLOQUE: ACEPTACIÓN DE TÉRMINOS (Sin Firma) */}
                     <motion.div
                       variants={fadeInUp}
                       className='pt-6'
                     >
-                      <div className='flex justify-between items-center mb-4'>
-                        <span className='text-[10px] font-bold uppercase tracking-widest text-gray-500'>
-                          FIRMA DE ACEPTACIÓN
-                        </span>
-                        <button
-                          onClick={clearSig}
-                          className='text-[10px] text-red-500 hover:text-red-700 font-bold flex items-center gap-1 bg-red-50 px-2 py-1 rounded'
-                        >
-                          <Eraser size={12} /> BORRAR
-                        </button>
-                      </div>
-                      <div className='border border-gray-300 hover:border-gray-500 transition-colors bg-white rounded-lg shadow-inner'>
-                        <SignatureCanvas
-                          ref={sigPad}
-                          penColor='black'
-                          canvasProps={{ className: 'w-full h-32' }}
-                        />
-                      </div>
-                      <p className='text-[10px] text-gray-400 mt-2'>
-                        Al firmar aceptas los términos y condiciones del hotel.
-                      </p>
+                      <label className='flex items-start gap-4 cursor-pointer p-5 border border-gray-200 rounded-2xl hover:bg-white hover:shadow-md transition-all bg-gray-50/50 group'>
+                        <div className='relative flex items-center pt-1'>
+                          <input
+                            type='checkbox'
+                            required
+                            className='peer w-5 h-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 checked:border-black checked:bg-black transition-all'
+                          />
+                          <Check
+                            size={14}
+                            className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[30%] text-white opacity-0 peer-checked:opacity-100 pointer-events-none'
+                            strokeWidth={4}
+                          />
+                        </div>
+                        <div className='text-xs text-gray-500 leading-relaxed select-none'>
+                          <span className='font-bold text-gray-900 block mb-1 uppercase tracking-wider text-[10px]'>
+                            Términos y Condiciones
+                          </span>
+                          Acepto las políticas de cancelación, el reglamento del
+                          hotel y el tratamiento de mis datos personales.
+                        </div>
+                      </label>
                     </motion.div>
                   </div>
 
+                  {/* RESUMEN LATERAL */}
                   <div className='md:col-span-5'>
                     <motion.div
                       variants={fadeInUp}

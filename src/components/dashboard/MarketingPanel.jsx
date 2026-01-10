@@ -5,20 +5,27 @@ import {
   UploadCloud,
   Check,
   X,
+  Users,
+  TrendingUp,
+  Megaphone,
+  Plus,
+  Search,
+  Pencil, // <--- Nuevo icono
+  Trash2, // <--- Nuevo icono
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-const MarketingPanel = ({
-  leads,
-  hotelInfo,
-  marketing, // Este objeto contiene todo lo que nos devuelve el hook
-}) => {
-  // Desestructuramos para escribir menos código abajo
+const MarketingPanel = ({ leads, hotelInfo, marketing }) => {
+  // Desestructuración de funciones vitales (Actualizada)
   const {
     updateLeadStatus,
     sendWhatsAppTemplate,
     handleImportLeads,
-    handleCreateManualLead,
+    handleSaveLead, // <--- Reemplaza a handleCreateManualLead
+    openNewLeadModal, // <--- Nueva función de apertura limpia
+    prepareEdit, // <--- Nueva función de edición
+    handleDeleteLead, // <--- Nueva función de borrado
+    editingId, // <--- Estado para saber si editamos
     importInputRef,
     showLeadModal,
     setShowLeadModal,
@@ -26,7 +33,7 @@ const MarketingPanel = ({
     setLeadForm,
   } = marketing;
 
-  // Lista de planes que tienen acceso (Misma lógica que tenías)
+  // Control de Acceso
   const ALLOWED_PLANS = [
     'GROWTH',
     'CORPORATE',
@@ -36,57 +43,91 @@ const MarketingPanel = ({
     'GROWTH_AI',
     'CORPORATE_AI',
   ];
-
   const hasAccess = ALLOWED_PLANS.includes(hotelInfo?.subscription_plan);
 
+  // Stats Rápidos
+  const stats = [
+    {
+      label: 'Total Leads',
+      value: leads.length,
+      icon: Users,
+      color: 'text-blue-600',
+      bg: 'bg-blue-50',
+    },
+    {
+      label: 'Contactados',
+      value: leads.filter((l) => l.status === 'contacted').length,
+      icon: MessageCircle,
+      color: 'text-green-600',
+      bg: 'bg-green-50',
+    },
+    {
+      label: 'Pendientes',
+      value: leads.filter((l) => l.status !== 'contacted').length,
+      icon: TrendingUp,
+      color: 'text-orange-600',
+      bg: 'bg-orange-50',
+    },
+  ];
+
   return (
-    <div className='p-8 h-full overflow-auto custom-scrollbar pb-32'>
+    <div className='h-full p-6 overflow-y-auto scrollbar-hide'>
+      {/* 🔒 PANTALLA DE BLOQUEO */}
       {!hasAccess ? (
         <div className='flex flex-col items-center justify-center h-full text-center max-w-md mx-auto'>
-          <div className='w-20 h-20 bg-cyan-100 text-cyan-600 rounded-3xl flex items-center justify-center mb-6 shadow-lg shadow-cyan-200/50 animate-bounce'>
-            <ShoppingBag size={40} />
-          </div>
-          <h3 className='font-serif text-3xl font-bold mb-4 text-[#2C2C2C]'>
-            Desbloquea el Motor de Ventas
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            className='w-24 h-24 bg-gradient-to-tr from-cyan-100 to-blue-50 rounded-3xl flex items-center justify-center mb-8 shadow-xl shadow-cyan-500/20'
+          >
+            <ShoppingBag
+              size={48}
+              className='text-cyan-600'
+            />
+          </motion.div>
+
+          <h3 className='font-serif text-3xl font-bold mb-4 text-slate-800'>
+            Motor de Ventas Bloqueado
           </h3>
-          <p className='text-slate-500 mb-8 leading-relaxed text-sm'>
-            Estás en el <b>Plan {hotelInfo?.subscription_plan || 'NANO'}</b>.
-            Actualiza al Plan <b>GROWTH</b> para identificar quién visita tu
-            web.
+          <p className='text-slate-500 mb-8 leading-relaxed'>
+            Tu plan actual <b>{hotelInfo?.subscription_plan || 'NANO'}</b> no
+            incluye el módulo de CRM. Actualiza a <b>GROWTH</b> para desbloquear
+            campañas.
           </p>
+
           <button
             onClick={() =>
               window.open(
-                'https://wa.me/573213795015?text=Hola!%20Quiero%20hacer%20upgrade%20al%20Plan%20GROWTH%20en%20HospedaSuite',
+                'https://wa.me/573213795015?text=Upgrade%20GROWTH',
                 '_blank'
               )
             }
-            className='w-full bg-[#2C2C2C] text-white font-bold py-4 rounded-2xl shadow-xl hover:bg-black transition-all transform hover:scale-105 flex items-center justify-center gap-2'
+            className='w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg hover:bg-black transition-all flex items-center justify-center gap-3'
           >
-            <MessageCircle size={20} /> Hablar con un Consultor Elite
+            <MessageCircle size={20} />
+            <span>Hablar con un Asesor</span>
           </button>
         </div>
       ) : (
         <>
-          <div className='flex justify-between items-end mb-8'>
+          {/* HEADER & ACCIONES */}
+          <div className='flex flex-col md:flex-row justify-between items-end mb-8 gap-4'>
             <div>
-              <h2 className='font-serif text-3xl font-bold text-[#2C2C2C]'>
-                Prospectos & Campañas
+              <h2 className='text-3xl font-serif font-bold text-slate-800'>
+                Marketing
               </h2>
-              <p className='text-xs text-slate-500 mt-1 uppercase tracking-widest font-bold'>
-                Marketing Forense de Elite
-              </p>
+              <p className='text-slate-500'>Gestión de prospectos y campañas</p>
             </div>
 
             <div className='flex gap-3'>
               {/* Botón Importar */}
               <button
                 onClick={() => importInputRef.current.click()}
-                className='bg-white text-slate-600 border border-slate-300 px-4 py-3 rounded-xl font-bold text-xs shadow-sm hover:bg-slate-50 flex items-center gap-2 transition-all'
+                className='px-5 py-3 bg-white border border-slate-200 text-slate-600 font-bold rounded-xl shadow-sm hover:bg-slate-50 transition-all flex items-center gap-2'
               >
-                <UploadCloud size={16} /> Importar Excel
+                <UploadCloud size={18} />
+                <span className='hidden md:inline'>Importar Excel</span>
               </button>
-
               <input
                 type='file'
                 accept='.csv,.xlsx'
@@ -95,148 +136,209 @@ const MarketingPanel = ({
                 onChange={handleImportLeads}
               />
 
-              {/* Botón Nuevo Lead Manual (Trigger Modal) */}
+              {/* Botón Nuevo Lead (AHORA USA openNewLeadModal) */}
               <button
-                onClick={() => setShowLeadModal(true)}
-                className='bg-[#2C2C2C] text-white px-4 py-3 rounded-xl font-bold text-xs shadow-sm hover:bg-black flex items-center gap-2 transition-all'
+                onClick={openNewLeadModal}
+                className='px-5 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-lg shadow-slate-900/20 hover:bg-black transition-all flex items-center gap-2'
               >
-                + Nuevo
+                <Plus size={18} />
+                <span>Nuevo Lead</span>
               </button>
-
-              <div className='bg-cyan-50 border border-cyan-100 px-6 py-3 rounded-2xl flex items-center gap-3 shadow-sm'>
-                <span className='text-[11px] font-black text-cyan-700 uppercase tracking-widest'>
-                  Leads Activos: {leads.length}
-                </span>
-              </div>
             </div>
           </div>
 
+          {/* WIDGETS */}
+          <div className='grid grid-cols-3 gap-4 mb-8'>
+            {stats.map((stat, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className='bg-white/60 backdrop-blur-xl border border-white/50 p-5 rounded-[2rem] shadow-sm flex flex-col items-center justify-center text-center hover:bg-white/80 transition-colors'
+              >
+                <div
+                  className={`w-10 h-10 ${stat.bg} ${stat.color} rounded-full flex items-center justify-center mb-3`}
+                >
+                  <stat.icon size={20} />
+                </div>
+                <h3 className='text-2xl font-bold text-slate-800'>
+                  {stat.value}
+                </h3>
+                <p className='text-[10px] text-slate-500 font-bold uppercase tracking-widest'>
+                  {stat.label}
+                </p>
+              </motion.div>
+            ))}
+          </div>
+
           {/* TABLA DE LEADS */}
-          <div className='bg-white rounded-[2rem] shadow-sm border border-[#E5E0D8] overflow-hidden relative'>
-            <table className='w-full text-left border-collapse'>
-              <thead className='bg-[#F9F7F2] border-b border-[#E5E0D8] sticky top-0 z-10'>
-                <tr>
-                  <th className='p-5 text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                    Origen / Interesado
-                  </th>
-                  <th className='p-5 text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                    Ciudad / Plan Sugerido
-                  </th>
-                  <th className='p-5 text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                    Trazabilidad
-                  </th>
-                  <th className='p-5 text-[10px] font-bold uppercase text-[#5D5555] tracking-widest'>
-                    Gestión
-                  </th>
-                </tr>
-              </thead>
-              <tbody className='divide-y divide-[#F2F0E9]'>
-                {leads.map((l) => (
-                  <tr
-                    key={l.id}
-                    className={`transition-colors group ${
-                      l.status === 'contacted'
-                        ? 'bg-green-50/40'
-                        : 'hover:bg-slate-50/50'
-                    }`}
-                  >
-                    <td className='p-5'>
-                      <div className='flex items-center gap-4'>
-                        <button
-                          onClick={() => updateLeadStatus(l.id, l.status)}
-                          className={`w-7 h-7 rounded-full border-2 flex items-center justify-center transition-all shadow-sm ${
-                            l.status === 'contacted'
-                              ? 'bg-green-500 border-green-500 text-white'
-                              : 'border-slate-200'
-                          }`}
-                        >
-                          {l.status === 'contacted' && (
+          <div className='bg-white/50 backdrop-blur-xl rounded-[2.5rem] border border-white/60 shadow-sm overflow-hidden'>
+            <div className='overflow-x-auto'>
+              <table className='w-full text-left'>
+                <thead className='bg-white/40 border-b border-white/40 text-xs font-bold text-slate-500 uppercase tracking-widest'>
+                  <tr>
+                    <th className='p-6 pl-8'>Prospecto</th>
+                    <th className='p-6'>Interés</th>
+                    <th className='p-6'>Fuente</th>
+                    <th className='p-6 text-right pr-8'>Acciones</th>
+                  </tr>
+                </thead>
+                <tbody className='divide-y divide-white/40'>
+                  {leads.map((lead, i) => (
+                    <motion.tr
+                      key={lead.id}
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      transition={{ delay: i * 0.05 }}
+                      className='hover:bg-white/40 transition-colors group'
+                    >
+                      {/* COLUMNA 1: PROSPECTO */}
+                      <td className='p-5 pl-8'>
+                        <div className='flex items-center gap-4'>
+                          <button
+                            onClick={() =>
+                              updateLeadStatus(lead.id, lead.status)
+                            }
+                            className={`w-8 h-8 rounded-full flex items-center justify-center transition-all shadow-sm ${
+                              lead.status === 'contacted'
+                                ? 'bg-green-500 text-white ring-2 ring-green-100'
+                                : 'bg-white border border-slate-200 text-transparent hover:border-green-300'
+                            }`}
+                          >
                             <Check
                               size={14}
                               strokeWidth={4}
                             />
-                          )}
-                        </button>
-                        <div>
-                          <div className='font-serif font-bold text-slate-800 text-lg leading-tight'>
-                            {l.hotel_name || 'Hotel'}
-                          </div>
-                          <div className='text-xs font-bold text-slate-600'>
-                            {l.full_name || l.guest_name}
+                          </button>
+                          <div>
+                            <div className='font-bold text-slate-800 text-base'>
+                              {lead.full_name ||
+                                lead.guest_name ||
+                                'Sin Nombre'}
+                            </div>
+                            <div className='text-xs text-slate-500 font-medium'>
+                              {lead.hotel_name || 'Hotel General'}
+                            </div>
                           </div>
                         </div>
-                      </div>
-                    </td>
-                    <td className='p-5'>
-                      <span className='text-[10px] font-black uppercase bg-cyan-50 text-cyan-700 px-2 py-1 rounded'>
-                        {l.city_interest || 'N/A'}
-                      </span>
-                      <div className='mt-1 text-[9px] font-black text-slate-400'>
-                        TIER {l.metadata?.plan_interest || 'NANO'}
-                      </div>
-                    </td>
-                    <td className='p-5'>
-                      <div className='text-[9px] font-mono bg-slate-50 p-2 rounded border border-slate-100 text-slate-500 break-all leading-relaxed max-w-[220px]'>
-                        {l.metadata?.source_url || 'Tráfico Directo'}
-                      </div>
-                    </td>
-                    <td className='p-5'>
-                      <div className='flex flex-col gap-2'>
-                        <button
-                          onClick={() => sendWhatsAppTemplate(l, 'welcome')}
-                          className='bg-white text-green-600 px-3 py-1.5 rounded-lg border border-green-200 text-[10px] font-black uppercase shadow-sm'
-                        >
-                          Bienvenida
-                        </button>
-                        <button
-                          onClick={() => sendWhatsAppTemplate(l, 'followup')}
-                          className='bg-white text-blue-600 px-3 py-1.5 rounded-lg border border-blue-200 text-[10px] font-black uppercase shadow-sm'
-                        >
-                          Seguimiento
-                        </button>
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
+                      </td>
+
+                      {/* COLUMNA 2: INTERÉS */}
+                      <td className='p-5'>
+                        <span className='inline-flex items-center px-2.5 py-1 rounded-lg text-xs font-bold bg-blue-50 text-blue-700 border border-blue-100'>
+                          {lead.city_interest || lead.notes || 'General'}
+                        </span>
+                        <div className='text-[10px] font-bold text-slate-400 mt-1 pl-1'>
+                          {lead.metadata?.plan_interest
+                            ? `PLAN ${lead.metadata.plan_interest}`
+                            : 'MANUAL'}
+                        </div>
+                      </td>
+
+                      {/* COLUMNA 3: FUENTE */}
+                      <td className='p-5'>
+                        <div className='text-xs font-mono text-slate-500 bg-white/50 px-3 py-1.5 rounded-lg border border-white/50 inline-block max-w-[150px] truncate'>
+                          {lead.source ||
+                            lead.metadata?.source_url ||
+                            'Directo'}
+                        </div>
+                      </td>
+
+                      {/* COLUMNA 4: ACCIONES (NUEVOS BOTONES) */}
+                      <td className='p-5 pr-8 text-right'>
+                        <div className='flex justify-end gap-2 opacity-60 group-hover:opacity-100 transition-opacity'>
+                          {/* WhatsApp */}
+                          <button
+                            onClick={() =>
+                              sendWhatsAppTemplate(lead, 'welcome')
+                            }
+                            className='p-2 bg-green-100 text-green-600 rounded-xl hover:bg-green-200 transition-colors'
+                            title='Enviar Bienvenida'
+                          >
+                            <MessageCircle size={18} />
+                          </button>
+
+                          {/* Editar */}
+                          <button
+                            onClick={() => prepareEdit(lead)}
+                            className='p-2 bg-indigo-100 text-indigo-600 rounded-xl hover:bg-indigo-200 transition-colors'
+                            title='Editar Prospecto'
+                          >
+                            <Pencil size={18} />
+                          </button>
+
+                          {/* Borrar */}
+                          <button
+                            onClick={() => handleDeleteLead(lead.id)}
+                            className='p-2 bg-red-100 text-red-600 rounded-xl hover:bg-red-200 transition-colors'
+                            title='Eliminar Prospecto'
+                          >
+                            <Trash2 size={18} />
+                          </button>
+                        </div>
+                      </td>
+                    </motion.tr>
+                  ))}
+
+                  {leads.length === 0 && (
+                    <tr>
+                      <td
+                        colSpan='4'
+                        className='p-12 text-center text-slate-400'
+                      >
+                        <div className='flex flex-col items-center'>
+                          <Search
+                            size={40}
+                            className='mb-3 opacity-20'
+                          />
+                          <p>No hay leads registrados aún.</p>
+                        </div>
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </>
       )}
 
-      {/* MODAL NUEVO LEAD (Integramos el modal aquí mismo para limpiar DashboardPage) */}
+      {/* MODAL (CREAR / EDITAR) */}
       <AnimatePresence>
         {showLeadModal && (
-          <div className='fixed inset-0 bg-black/40 backdrop-blur-sm z-50 flex items-center justify-center p-4'>
+          <div className='fixed inset-0 bg-black/40 backdrop-blur-md z-[100] flex items-center justify-center p-4'>
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className='bg-white rounded-2xl shadow-2xl w-full max-w-md overflow-hidden'
+              className='bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden relative'
             >
-              <div className='p-6 border-b border-gray-100 flex justify-between items-center bg-gray-50'>
-                <h3 className='font-serif text-xl font-bold text-gray-800'>
-                  Nuevo Interesado
+              {/* Header Modal */}
+              <div className='p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50'>
+                <h3 className='font-serif text-xl font-bold text-slate-800'>
+                  {editingId ? 'Editar Prospecto' : 'Nuevo Prospecto'}
                 </h3>
-                <button onClick={() => setShowLeadModal(false)}>
-                  <X
-                    size={20}
-                    className='text-gray-400 hover:text-red-500'
-                  />
+                <button
+                  onClick={() => setShowLeadModal(false)}
+                  className='p-2 bg-white rounded-full text-slate-400 hover:text-red-500 shadow-sm transition-colors'
+                >
+                  <X size={20} />
                 </button>
               </div>
 
+              {/* Formulario (Usa handleSaveLead) */}
               <form
-                onSubmit={handleCreateManualLead}
-                className='p-6 space-y-4'
+                onSubmit={handleSaveLead}
+                className='p-6 space-y-5'
               >
-                <div>
-                  <label className='text-[10px] font-bold uppercase text-gray-500 tracking-widest'>
-                    Nombre
+                <div className='space-y-1'>
+                  <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
+                    Nombre Completo
                   </label>
                   <input
                     autoFocus
-                    className='w-full p-3 bg-gray-50 rounded-xl border-none font-bold text-gray-900 mt-1'
+                    className='w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-slate-800 focus:ring-2 focus:ring-slate-900/10 transition-all placeholder:text-slate-300'
                     placeholder='Ej: Laura Martínez'
                     value={leadForm.name}
                     onChange={(e) =>
@@ -244,13 +346,14 @@ const MarketingPanel = ({
                     }
                   />
                 </div>
+
                 <div className='grid grid-cols-2 gap-4'>
-                  <div>
-                    <label className='text-[10px] font-bold uppercase text-gray-500 tracking-widest'>
+                  <div className='space-y-1'>
+                    <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
                       Teléfono
                     </label>
                     <input
-                      className='w-full p-3 bg-gray-50 rounded-xl border-none font-bold text-gray-900 mt-1'
+                      className='w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-slate-800 focus:ring-2 focus:ring-slate-900/10'
                       placeholder='300...'
                       value={leadForm.phone}
                       onChange={(e) =>
@@ -258,12 +361,12 @@ const MarketingPanel = ({
                       }
                     />
                   </div>
-                  <div>
-                    <label className='text-[10px] font-bold uppercase text-gray-500 tracking-widest'>
+                  <div className='space-y-1'>
+                    <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
                       Email
                     </label>
                     <input
-                      className='w-full p-3 bg-gray-50 rounded-xl border-none font-bold text-gray-900 mt-1'
+                      className='w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-slate-800 focus:ring-2 focus:ring-slate-900/10'
                       placeholder='@...'
                       value={leadForm.email}
                       onChange={(e) =>
@@ -272,14 +375,15 @@ const MarketingPanel = ({
                     />
                   </div>
                 </div>
-                <div>
-                  <label className='text-[10px] font-bold uppercase text-gray-500 tracking-widest'>
-                    Notas
+
+                <div className='space-y-1'>
+                  <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
+                    Notas Adicionales
                   </label>
                   <textarea
-                    rows='2'
-                    className='w-full p-3 bg-gray-50 rounded-xl border-none text-sm mt-1'
-                    placeholder='Interesado en boda para diciembre...'
+                    rows='3'
+                    className='w-full p-4 bg-slate-50 rounded-2xl border-none text-slate-600 focus:ring-2 focus:ring-slate-900/10 resize-none'
+                    placeholder='Detalles sobre el interés del cliente...'
                     value={leadForm.notes}
                     onChange={(e) =>
                       setLeadForm({ ...leadForm, notes: e.target.value })
@@ -287,8 +391,8 @@ const MarketingPanel = ({
                   />
                 </div>
 
-                <button className='w-full bg-black text-white font-bold py-4 rounded-xl shadow-lg hover:scale-[1.02] transition-transform'>
-                  Guardar Lead
+                <button className='w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all'>
+                  {editingId ? 'Actualizar Lead' : 'Guardar Lead'}
                 </button>
               </form>
             </motion.div>

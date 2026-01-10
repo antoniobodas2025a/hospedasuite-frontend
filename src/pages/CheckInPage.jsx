@@ -371,7 +371,7 @@ const CheckInPage = () => {
             </div>
           </div>
 
-          {/* HABEAS DATA */}
+          {/* HABEAS DATA DINÁMICO */}
           <div className='bg-slate-50 p-4 rounded-xl border border-slate-200'>
             <label className='flex items-start gap-3 cursor-pointer'>
               <div className='pt-0.5'>
@@ -404,12 +404,19 @@ const CheckInPage = () => {
                 <span className='font-bold text-slate-700 block mb-1'>
                   Autorización Legal
                 </span>
+                {/* 🛡️ BLINDAJE DINÁMICO: 
+      1. Intenta mostrar el nombre de la base de datos (hotel.name).
+      2. Si no ha cargado, busca en el localStorage (branding guardado).
+      3. Como último recurso, usa un término legal genérico.
+  */}
                 Ley 1581: Autorizo a{' '}
                 <span
                   className='font-black uppercase'
                   style={textBrandStyle}
                 >
-                  {hotel?.name || 'EL HOTEL'}
+                  {hotel?.name ||
+                    JSON.parse(localStorage.getItem('hotel_branding'))?.name ||
+                    'EL ESTABLECIMIENTO'}
                 </span>{' '}
                 para el tratamiento de mis datos y reporte a autoridades.
               </div>
