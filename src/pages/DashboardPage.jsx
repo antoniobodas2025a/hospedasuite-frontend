@@ -240,23 +240,17 @@ const DashboardPage = () => {
         }
         const hotel = hotels?.[0]; // Tomamos el primero del array
 
-        // 🛡️ [INICIO BLOQUE DEFENSIVO] 🛡️
-        // LÓGICA DE ONBOARDING: Si no existe hotel, hay que crearlo o redirigir
+        /// 🛡️ [INICIO BLOQUE DEFENSIVO] 🛡️
+        // Si no existe hotel, redirigimos en lugar de alertar
         if (!hotel) {
           console.warn(
             '⚠️ Usuario nuevo detectado. Redirigiendo a Onboarding...'
           );
-
-          // Detenemos carga para evitar crashes por acceder a hotel.id después
           setLoading(false);
 
-          // Opción A: Redirigir a una página de creación (si existiera)
-          // navigate('/create-hotel');
-
-          // Opción B (Actual): Mostrar alerta y NO continuar con fetchOrders
-          return alert(
-            '🛑 ATENCIÓN: Tu usuario ha sido creado, pero aún no tiene un Hotel asignado.\n\nPor favor contacta a soporte para activar tu instancia o espera la aprobación del SuperAdmin.'
-          );
+          // 👇 CORRECCIÓN: Redirigir automáticamente
+          navigate('/onboarding');
+          return;
         }
         // 🛡️ [FIN BLOQUE DEFENSIVO] 🛡️
 
@@ -1163,50 +1157,7 @@ const DashboardPage = () => {
 
       {/* CONTENIDO PRINCIPAL (Centrado y Adaptado) */}
       <main className='flex-1 flex flex-col h-screen overflow-hidden relative w-full max-w-7xl p-4 md:p-8'>
-        {/* ENCABEZADO */}
-        <header className='flex-none px-8 py-5 flex justify-between items-center bg-white/80 backdrop-blur-md rounded-[2rem] shadow-sm mb-6 border border-white'>
-          <h1 className='text-3xl font-serif font-bold text-[#2C2C2C] italic capitalize'>
-            {activeTab === 'calendar'
-              ? 'Agenda'
-              : activeTab === 'inventory'
-              ? 'Inventario'
-              : activeTab === 'guests'
-              ? 'Huéspedes'
-              : activeTab === 'leads'
-              ? 'Marketing'
-              : activeTab === 'menu' // 👈 AGREGAR ESTO
-              ? 'Carta Digital' // 👈 Título elegante
-              : 'Configuración'}
-          </h1>
-
-          <div className='flex items-center gap-6'>
-            {/* Botón de Notificaciones */}
-            <motion.button
-              whileHover={{ scale: 1.1 }}
-              whileTap={{ scale: 0.9 }}
-              onClick={() => setShowOrdersModal(true)}
-              className='relative p-3 bg-white rounded-full shadow-sm hover:shadow-md transition-all text-[#8C3A3A]'
-            >
-              <Bell size={22} />
-              {pendingOrders.length > 0 && (
-                <span className='absolute top-0 right-0 w-3 h-3 bg-red-500 rounded-full animate-ping' />
-              )}
-            </motion.button>
-
-            {/* Fecha (Visible en PC) */}
-            <div className='hidden md:block text-right'>
-              <p className='text-xs font-bold text-[#8C3A3A] uppercase tracking-wider'>
-                {new Date().toLocaleDateString('es-CO', { weekday: 'long' })}
-              </p>
-              <p className='text-sm font-serif font-bold'>
-                {new Date().toLocaleDateString('es-CO', {
-                  day: 'numeric',
-                  month: 'long',
-                })}
-              </p>
-            </div>
-          </div>
-        </header>
+       
 
         {/* --- OPCIÓN B: BARRA COMPACTA (DYNAMIC ISLAND) --- */}
         <div className='mb-6 mx-1'>
@@ -1294,6 +1245,8 @@ const DashboardPage = () => {
                 setTargetRoomId(id);
                 fileInputRef.current.click();
               }}
+              // 👇 CORRECCIÓN CRÍTICA: Cambiar 'hotel' por 'hotelInfo'
+              hotelId={hotelInfo?.id}
             />
           )}
 
@@ -1360,235 +1313,203 @@ const DashboardPage = () => {
 
         {/* --- MODALES MOVIDOS AL PADRE (PARA QUE LA VOZ FUNCIONE) --- */}
 
-        {/* 1. MODAL NUEVA RESERVA */}
+        {/* 1. MODAL NUEVA RESERVA - ESTILO MAC 2026 BENTO EXPANDIDO */}
         {calendarData.showBookingModal &&
           createPortal(
-            <div className='fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-end md:items-center justify-center p-0 md:p-4'>
+            <div className='fixed inset-0 bg-[#0f172a]/60 backdrop-blur-xl z-[9999] flex items-center justify-center p-4'>
               <motion.div
-                initial={{ y: '100%', opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: '100%', opacity: 0 }}
-                className='bg-[#F8FAFC] rounded-t-[2rem] md:rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden h-[85vh] md:h-auto md:max-h-[90vh] flex flex-col relative'
+                initial={{ scale: 0.95, opacity: 0, y: 20 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 20 }}
+                transition={{ type: 'spring', duration: 0.5, bounce: 0.3 }}
+                // ⚡ CAMBIO 1: Ancho máximo aumentado drásticamente (5xl) y altura automática
+                className='bg-[#F8FAFC]/95 border border-white/60 rounded-[2.5rem] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col relative max-h-[90vh]'
               >
-                {/* Header */}
-                <div className='p-6 border-b border-slate-200/60 flex justify-between items-center bg-white/80 backdrop-blur-xl sticky top-0 z-20'>
-                  <h3 className='font-serif text-2xl font-bold text-slate-800'>
-                    Nueva Estadía
-                  </h3>
+                {/* HEADER: Título Grande Integrado */}
+                <div className='px-10 py-8 border-b border-slate-200/50 flex justify-between items-start bg-white/50 backdrop-blur-md'>
+                  <div>
+                    <h3 className='font-serif text-4xl font-bold text-slate-800 tracking-tight'>
+                      Nueva Estadía
+                    </h3>
+                    <p className='text-slate-500 mt-1 font-medium'>
+                      Configura los detalles de la reserva
+                    </p>
+                  </div>
                   <button
                     onClick={() => calendarData.setShowBookingModal(false)}
-                    className='p-2 bg-slate-100 rounded-full text-slate-400 hover:text-red-500 transition-colors'
+                    className='p-3 bg-white rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm border border-slate-100'
                   >
                     <X size={24} />
                   </button>
                 </div>
 
-                {/* Formulario */}
-                <div className='flex-1 overflow-y-auto custom-scrollbar p-6 pb-32'>
+                {/* BODY: Layout Bento Grid */}
+                <div className='flex-1 overflow-y-auto custom-scrollbar p-10'>
                   <form
                     onSubmit={calendarData.handleCreateBooking}
-                    className='space-y-6'
+                    className='grid grid-cols-1 lg:grid-cols-12 gap-8'
                   >
-                    {/* Tipo */}
-                    <div className='bg-slate-200/50 p-1.5 rounded-2xl flex'>
-                      <button
-                        type='button'
-                        onClick={() =>
-                          calendarData.setBookingForm({
-                            ...calendarData.bookingForm,
-                            type: 'booking',
-                          })
-                        }
-                        className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-                          calendarData.bookingForm.type === 'booking'
-                            ? 'bg-white text-slate-900 shadow-sm'
-                            : 'text-slate-500'
-                        }`}
-                      >
-                        Huésped
-                      </button>
-                      <button
-                        type='button'
-                        onClick={() =>
-                          calendarData.setBookingForm({
-                            ...calendarData.bookingForm,
-                            type: 'maintenance',
-                          })
-                        }
-                        className={`flex-1 py-3 rounded-xl text-sm font-bold transition-all ${
-                          calendarData.bookingForm.type === 'maintenance'
-                            ? 'bg-white text-slate-900 shadow-sm'
-                            : 'text-slate-500'
-                        }`}
-                      >
-                        Mantenimiento
-                      </button>
-                    </div>
-
-                    {/* Fechas */}
-                    <div className='grid grid-cols-2 gap-4'>
-                      <div className='space-y-1'>
-                        <label className='text-[10px] font-bold uppercase text-slate-400'>
-                          Entrada
-                        </label>
-                        <input
-                          type='date'
-                          className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-bold'
-                          value={calendarData.bookingForm.checkIn}
-                          onChange={(e) =>
-                            calendarData.setBookingForm({
-                              ...calendarData.bookingForm,
-                              checkIn: e.target.value,
-                            })
-                          }
-                        />
+                    {/* COLUMNA IZQUIERDA: Tipo y Fechas (span-7) */}
+                    <div className='lg:col-span-7 space-y-8'>
+                      {/* Selector de Tipo (Segmented Control Grande) */}
+                      <div className='bg-slate-200/50 p-2 rounded-[1.5rem] flex'>
+                        {['booking', 'maintenance'].map((t) => (
+                          <button
+                            key={t}
+                            type='button'
+                            onClick={() =>
+                              calendarData.setBookingForm({
+                                ...calendarData.bookingForm,
+                                type: t,
+                              })
+                            }
+                            className={`flex-1 py-4 rounded-[1.2rem] text-sm font-bold uppercase tracking-wider transition-all duration-300 ${
+                              calendarData.bookingForm.type === t
+                                ? 'bg-white text-slate-900 shadow-md transform scale-100'
+                                : 'text-slate-500 hover:bg-slate-200/50'
+                            }`}
+                          >
+                            {t === 'booking' ? 'Huésped' : 'Mantenimiento'}
+                          </button>
+                        ))}
                       </div>
-                      <div className='space-y-1'>
-                        <label className='text-[10px] font-bold uppercase text-slate-400'>
-                          Salida
-                        </label>
-                        <input
-                          type='date'
-                          className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-bold'
-                          value={calendarData.bookingForm.checkOut}
-                          onChange={(e) =>
-                            calendarData.setBookingForm({
-                              ...calendarData.bookingForm,
-                              checkOut: e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </div>
 
-                    {/* Contadores */}
-                    <div className='grid grid-cols-2 gap-4'>
-                      {['adults', 'children'].map((type) => (
-                        <div
-                          key={type}
-                          className='space-y-1'
-                        >
-                          <label className='text-[10px] font-bold uppercase text-slate-400'>
-                            {type === 'adults' ? 'Adultos' : 'Niños'}
+                      {/* Fechas en Grid */}
+                      <div className='grid grid-cols-2 gap-6'>
+                        <div className='space-y-2'>
+                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
+                            Entrada
                           </label>
-                          <div className='flex items-center bg-white border border-slate-100 rounded-2xl p-1'>
-                            <button
-                              type='button'
-                              onClick={() =>
-                                calendarData.setBookingForm((p) => ({
-                                  ...p,
-                                  [type]: Math.max(0, p[type] - 1),
-                                }))
-                              }
-                              className='w-10 h-10 hover:bg-slate-50 rounded-xl font-bold text-slate-500'
-                            >
-                              -
-                            </button>
-                            <input
-                              className='flex-1 text-center font-bold border-none bg-transparent outline-none'
-                              value={calendarData.bookingForm[type]}
-                              onChange={(e) => {
-                                const val = parseInt(e.target.value) || 0;
-                                calendarData.setBookingForm((p) => ({
-                                  ...p,
-                                  [type]: val,
-                                }));
-                              }}
-                              type='number'
-                            />
-                            <button
-                              type='button'
-                              onClick={() =>
-                                calendarData.setBookingForm((p) => ({
-                                  ...p,
-                                  [type]: p[type] + 1,
-                                }))
-                              }
-                              className='w-10 h-10 hover:bg-slate-50 rounded-xl font-bold text-slate-500'
-                            >
-                              +
-                            </button>
+                          <input
+                            type='date'
+                            className='w-full p-5 bg-white rounded-[1.5rem] border border-slate-100 font-bold text-lg text-slate-700 focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all shadow-sm'
+                            value={calendarData.bookingForm.checkIn}
+                            onChange={(e) =>
+                              calendarData.setBookingForm({
+                                ...calendarData.bookingForm,
+                                checkIn: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                        <div className='space-y-2'>
+                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
+                            Salida
+                          </label>
+                          <input
+                            type='date'
+                            className='w-full p-5 bg-white rounded-[1.5rem] border border-slate-100 font-bold text-lg text-slate-700 focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all shadow-sm'
+                            value={calendarData.bookingForm.checkOut}
+                            onChange={(e) =>
+                              calendarData.setBookingForm({
+                                ...calendarData.bookingForm,
+                                checkOut: e.target.value,
+                              })
+                            }
+                          />
+                        </div>
+                      </div>
+
+                      {/* Habitación y Personas */}
+                      <div className='grid grid-cols-12 gap-6'>
+                        <div className='col-span-8 space-y-2'>
+                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
+                            Habitación
+                          </label>
+                          <select
+                            className='w-full p-5 bg-white rounded-[1.5rem] border border-slate-100 font-bold text-lg text-slate-700 appearance-none shadow-sm'
+                            value={calendarData.bookingForm.roomId}
+                            onChange={(e) =>
+                              calendarData.setBookingForm({
+                                ...calendarData.bookingForm,
+                                roomId: e.target.value,
+                              })
+                            }
+                          >
+                            <option value=''>Seleccionar Habitación...</option>
+                            {calendarData.availableRoomsList.map((r) => (
+                              <option
+                                key={r.id}
+                                value={r.id}
+                              >
+                                {r.name} — ${parseInt(r.price).toLocaleString()}
+                              </option>
+                            ))}
+                          </select>
+                        </div>
+
+                        {/* Contadores Compactos */}
+                        <div className='col-span-4 space-y-2'>
+                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
+                            Huéspedes
+                          </label>
+                          <div className='bg-white border border-slate-100 rounded-[1.5rem] p-2 flex justify-between items-center h-[70px] shadow-sm'>
+                            <div className='flex flex-col items-center flex-1 border-r border-slate-100'>
+                              <span className='text-[10px] text-slate-400 font-bold'>
+                                ADULT
+                              </span>
+                              <input
+                                type='number'
+                                value={calendarData.bookingForm.adults}
+                                onChange={(e) =>
+                                  calendarData.setBookingForm((p) => ({
+                                    ...p,
+                                    adults: parseInt(e.target.value),
+                                  }))
+                                }
+                                className='w-full text-center font-bold text-lg bg-transparent border-none p-0 focus:ring-0'
+                              />
+                            </div>
+                            <div className='flex flex-col items-center flex-1'>
+                              <span className='text-[10px] text-slate-400 font-bold'>
+                                NIÑOS
+                              </span>
+                              <input
+                                type='number'
+                                value={calendarData.bookingForm.children}
+                                onChange={(e) =>
+                                  calendarData.setBookingForm((p) => ({
+                                    ...p,
+                                    children: parseInt(e.target.value),
+                                  }))
+                                }
+                                className='w-full text-center font-bold text-lg bg-transparent border-none p-0 focus:ring-0'
+                              />
+                            </div>
                           </div>
                         </div>
-                      ))}
+                      </div>
                     </div>
 
-                    {/* Habitación */}
-                    <div className='space-y-1'>
-                      <label className='text-[10px] font-bold uppercase text-slate-400'>
-                        Habitación
-                      </label>
-                      <select
-                        className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-bold appearance-none'
-                        value={calendarData.bookingForm.roomId}
-                        onChange={(e) =>
-                          calendarData.setBookingForm({
-                            ...calendarData.bookingForm,
-                            roomId: e.target.value,
-                          })
-                        }
-                      >
-                        <option value=''>Seleccionar...</option>
-                        {calendarData.availableRoomsList.map((r) => (
-                          <option
-                            key={r.id}
-                            value={r.id}
-                          >
-                            {r.name} - ${parseInt(r.price).toLocaleString()}
-                          </option>
-                        ))}
-                      </select>
-                    </div>
+                    {/* COLUMNA DERECHA: Datos Huésped y Resumen (span-5) */}
+                    <div className='lg:col-span-5 bg-white/60 rounded-[2rem] p-6 border border-white space-y-6'>
+                      {calendarData.bookingForm.type === 'booking' ? (
+                        <>
+                          <div className='flex items-center gap-3 mb-2'>
+                            <div className='w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600'>
+                              <User size={20} />
+                            </div>
+                            <h4 className='font-bold text-lg text-slate-700'>
+                              Datos del Cliente
+                            </h4>
+                          </div>
 
-                    {/* Huésped Info */}
-                    {calendarData.bookingForm.type === 'booking' && (
-                      <div className='space-y-4 pt-2'>
-                        {/* Campo: Nombre */}
-                        <div className='space-y-1'>
-                          <label className='text-[10px] font-bold uppercase text-slate-400'>
-                            Nombre
-                          </label>
-                          <input
-                            className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-bold'
-                            placeholder='Ej: Juan'
-                            value={calendarData.bookingForm.guestName}
-                            onChange={(e) =>
-                              calendarData.setBookingForm({
-                                ...calendarData.bookingForm,
-                                guestName: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-
-                        {/* 👇 NUEVO CAMPO: Teléfono / WhatsApp 👇 */}
-                        <div className='space-y-1'>
-                          <label className='text-[10px] font-bold uppercase text-slate-400'>
-                            Teléfono / WhatsApp
-                          </label>
-                          <input
-                            type='tel'
-                            className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-bold'
-                            placeholder='300 123 4567'
-                            value={calendarData.bookingForm.guestPhone}
-                            onChange={(e) =>
-                              calendarData.setBookingForm({
-                                ...calendarData.bookingForm,
-                                guestPhone: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-
-                        {/* Fila: Documento y Total */}
-                        <div className='grid grid-cols-2 gap-4'>
-                          <div className='space-y-1'>
-                            <label className='text-[10px] font-bold uppercase text-slate-400'>
-                              Doc
-                            </label>
-                            <div className='flex gap-2'>
+                          <div className='space-y-4'>
+                            <input
+                              className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-medium placeholder:text-slate-300 focus:ring-2 focus:ring-blue-100'
+                              placeholder='Nombre Completo'
+                              value={calendarData.bookingForm.guestName}
+                              onChange={(e) =>
+                                calendarData.setBookingForm({
+                                  ...calendarData.bookingForm,
+                                  guestName: e.target.value,
+                                })
+                              }
+                            />
+                            <div className='flex gap-3'>
                               <input
-                                className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-bold'
+                                className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-medium placeholder:text-slate-300'
+                                placeholder='Documento'
                                 value={calendarData.bookingForm.guestDoc}
                                 onChange={(e) =>
                                   calendarData.setBookingForm({
@@ -1600,48 +1521,87 @@ const DashboardPage = () => {
                               <button
                                 type='button'
                                 onClick={() => setShowScanner(true)}
-                                className='bg-blue-500 text-white p-3.5 rounded-2xl'
+                                className='p-4 bg-slate-800 text-white rounded-2xl hover:bg-black transition-colors'
                               >
                                 <ScanBarcode size={20} />
                               </button>
                             </div>
-                          </div>
-                          <div className='space-y-1'>
-                            <label className='text-[10px] font-bold uppercase text-slate-400'>
-                              Total
-                            </label>
                             <input
-                              type='number'
-                              className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-bold'
-                              value={calendarData.bookingForm.price}
+                              type='tel'
+                              className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-medium placeholder:text-slate-300'
+                              placeholder='Teléfono / WhatsApp'
+                              value={calendarData.bookingForm.guestPhone}
                               onChange={(e) =>
                                 calendarData.setBookingForm({
                                   ...calendarData.bookingForm,
-                                  price: e.target.value,
+                                  guestPhone: e.target.value,
                                 })
                               }
                             />
                           </div>
+
+                          {/* Tarjeta de Total */}
+                          <div className='mt-8 bg-slate-900 rounded-[1.5rem] p-6 text-white relative overflow-hidden'>
+                            <div className='absolute top-0 right-0 w-20 h-20 bg-blue-500/20 rounded-full blur-2xl'></div>
+                            <p className='text-slate-400 text-xs font-bold uppercase tracking-widest mb-1'>
+                              Total Estimado
+                            </p>
+                            <div className='flex items-baseline gap-1'>
+                              <span className='text-3xl font-serif font-bold'>
+                                $
+                              </span>
+                              <input
+                                type='number'
+                                className='bg-transparent border-none text-4xl font-serif font-bold text-white p-0 w-full focus:ring-0 placeholder:text-white/50'
+                                value={calendarData.bookingForm.price}
+                                onChange={(e) =>
+                                  calendarData.setBookingForm({
+                                    ...calendarData.bookingForm,
+                                    price: e.target.value,
+                                  })
+                                }
+                              />
+                            </div>
+                          </div>
+                        </>
+                      ) : (
+                        <div className='h-full flex flex-col items-center justify-center text-center p-6 opacity-50'>
+                          <Hammer
+                            size={48}
+                            className='mb-4 text-slate-400'
+                          />
+                          <p>Modo Mantenimiento Activo</p>
+                          <p className='text-sm'>
+                            La habitación quedará bloqueada.
+                          </p>
                         </div>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </form>
                 </div>
 
-                {/* Botón Final */}
-                <div className='p-4 border-t border-slate-100 bg-white sticky bottom-0 z-30'>
+                {/* FOOTER: Acciones */}
+                <div className='p-6 border-t border-slate-100 bg-white/80 backdrop-blur-xl sticky bottom-0 z-30 flex justify-end gap-4'>
+                  <button
+                    onClick={() => calendarData.setShowBookingModal(false)}
+                    className='px-8 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 transition-colors'
+                  >
+                    Cancelar
+                  </button>
                   <button
                     onClick={calendarData.handleCreateBooking}
-                    className='w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-xl flex justify-center items-center gap-2'
+                    className='px-10 py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3'
                   >
                     {calendarData.bookingForm.type === 'booking' ? (
                       <CheckCircle2 size={20} />
                     ) : (
                       <Hammer size={20} />
                     )}
-                    {calendarData.bookingForm.type === 'booking'
-                      ? 'Crear Reserva'
-                      : 'Bloquear'}
+                    <span>
+                      {calendarData.bookingForm.type === 'booking'
+                        ? 'Confirmar Reserva'
+                        : 'Bloquear Habitación'}
+                    </span>
                   </button>
                 </div>
               </motion.div>

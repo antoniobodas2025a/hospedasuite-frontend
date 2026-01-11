@@ -15,6 +15,7 @@ import LoginPage from './pages/LoginPage';
 import SuperAdminPage from './pages/SuperAdminPage';
 import LandingPage from './pages/LandingPage';
 import HunterDashboard from './pages/HunterDashboard';
+import OnboardingPage from './pages/OnboardingPage'; // 👈 Importar
 
 function App() {
   return (
@@ -30,6 +31,11 @@ function App() {
         <Route
           path='/dashboard'
           element={<DashboardPage />}
+        />
+
+        <Route
+          path='/onboarding'
+          element={<OnboardingPage />}
         />
 
         <Route

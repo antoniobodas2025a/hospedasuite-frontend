@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Calendar,
   UtensilsCrossed,
@@ -14,7 +14,6 @@ import {
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
-// Agrega "onOpenRoomService" a la lista de props
 const MobileNav = ({
   activeTab,
   setActiveTab,
@@ -25,19 +24,42 @@ const MobileNav = ({
   onOpenRoomService,
 }) => {
   const [showMenu, setShowMenu] = useState(false);
+  const [isVisible, setIsVisible] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(0);
 
-  // Módulos que irán dentro del Menú Desplegable
+  // 🧠 LÓGICA SCROLL-AWARE
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (showMenu) {
+        setIsVisible(true);
+        return;
+      }
+      if (Math.abs(currentScrollY - lastScrollY) < 10) return;
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        setIsVisible(false);
+      } else {
+        setIsVisible(true);
+      }
+      setLastScrollY(currentScrollY);
+    };
+    window.addEventListener('scroll', handleScroll);
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, [lastScrollY, showMenu]);
+
+  const handleMenuClick = (tabId) => {
+    setActiveTab(tabId);
+    setShowMenu(false);
+  };
+
   const menuItems = [
-    // 👇👇👇 NUEVO MÓDULO: CARTA DIGITAL 👇👇👇
     {
-      id: 'menu', // Esto activará setActiveTab('menu') en DashboardPage
+      id: 'menu',
       label: 'Carta Digital',
-      icon: UtensilsCrossed, // Reutilizamos el icono de comida para coherencia
+      icon: UtensilsCrossed,
       color: 'text-orange-500',
       bg: 'bg-orange-50',
     },
-    // 👆👆👆 FIN DEL NUEVO MÓDULO 👆👆👆
-
     {
       id: 'inventory',
       label: 'Inventario',
@@ -68,11 +90,6 @@ const MobileNav = ({
     },
   ];
 
-  const handleMenuClick = (tabId) => {
-    setActiveTab(tabId);
-    setShowMenu(false);
-  };
-
   return (
     <>
       {/* 1. OVERLAY DEL MENÚ GRID */}
@@ -82,18 +99,16 @@ const MobileNav = ({
             initial={{ opacity: 0, y: 100 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: 100 }}
-            className='fixed inset-0 z-[80] bg-white/95 backdrop-blur-xl flex flex-col justify-end pb-36 px-6'
-            onClick={() => setShowMenu(false)} // Cierra al tocar fuera
+            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+            className='fixed inset-0 z-[80] bg-white/95 backdrop-blur-2xl flex flex-col justify-end pb-36 px-6'
+            onClick={() => setShowMenu(false)}
           >
-            <div className='mb-6 text-center'>
-              <h3 className='text-lg font-serif font-bold text-slate-700'>
+            <div className='mb-8 text-center'>
+              <div className='w-12 h-1 bg-slate-200 rounded-full mx-auto mb-6'></div>
+              <h3 className='text-xl font-serif font-bold text-slate-800'>
                 Menú de Gestión
               </h3>
-              <p className='text-xs text-slate-400'>
-                Todo tu hotel en tu bolsillo
-              </p>
             </div>
-
             <div
               className='grid grid-cols-2 gap-4'
               onClick={(e) => e.stopPropagation()}
@@ -102,105 +117,118 @@ const MobileNav = ({
                 <button
                   key={item.id}
                   onClick={() => handleMenuClick(item.id)}
-                  className={`p-4 rounded-2xl flex flex-col items-center justify-center gap-2 border border-slate-100 shadow-sm transition-all active:scale-95 ${item.bg}`}
+                  className={`p-5 rounded-[24px] flex flex-col items-center justify-center gap-3 border border-slate-100 shadow-[0_4px_20px_rgba(0,0,0,0.02)] active:scale-95 transition-all ${item.bg}`}
                 >
                   <item.icon
                     size={28}
                     className={item.color}
+                    strokeWidth={1.5}
                   />
-                  <span className='text-sm font-bold text-slate-700'>
+                  <span className='text-xs font-bold text-slate-600 tracking-wide uppercase'>
                     {item.label}
                   </span>
                 </button>
               ))}
             </div>
-
-            {/* 🗑️ AQUÍ ELIMINÉ EL BOTÓN CERRAR FLOTANTE QUE SOBRABA */}
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 2. DOCK PRINCIPAL (SIEMPRE VISIBLE) */}
-      <div className='fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-[#2C2C2C] text-white rounded-[2rem] shadow-2xl px-6 py-4 flex justify-between items-center z-[90] border border-white/10'>
-        {/* AGENDA (Core) */}
-        <button
-          onClick={() => {
-            setActiveTab('calendar');
-            setShowMenu(false);
-          }}
-          className={`relative p-2 transition-all ${
-            activeTab === 'calendar'
-              ? 'text-cyan-400 scale-110'
-              : 'text-gray-400'
-          }`}
-        >
-          <Calendar size={24} />
-          {activeTab === 'calendar' && (
-            <span className='absolute -bottom-2 left-1/2 -translate-x-1/2 w-1 h-1 bg-cyan-400 rounded-full' />
-          )}
-        </button>
-
-        {/* ROOM SERVICE (Operativo) */}
-        <button
-          onClick={onOpenRoomService}
-          className='p-2 text-gray-400 hover:text-white transition-all'
-        >
-          <UtensilsCrossed size={24} />
-        </button>
-        {/* 🎙️ BOTÓN CENTRAL: IA DE VOZ */}
-        <div className='relative -top-0'>
-          <button
-            onClick={voiceAction}
-            disabled={isProcessing} // Desactivar click mientras piensa
-            className={`w-16 h-16 rounded-full flex items-center justify-center border-4 border-[#F8FAFC] transform transition-all duration-300 ${
-              isListening
-                ? 'bg-red-500 scale-110 shadow-[0_0_30px_rgba(239,68,68,0.6)]'
-                : isProcessing
-                ? 'bg-slate-800 scale-100' // Color oscuro mientras piensa
-                : 'bg-gradient-to-tr from-cyan-500 to-blue-600 shadow-[0_0_20px_rgba(6,182,212,0.4)] active:scale-95'
-            }`}
+      {/* 2. DOCK FLOTANTE INTELIGENTE (CORREGIDO) */}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.div
+            initial={{ y: 100, opacity: 0 }}
+            animate={{ y: 0, opacity: 1 }}
+            exit={{ y: 100, opacity: 0 }}
+            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+            // 👇 CORRECCIÓN INFALIBLE: 'left-0 right-0 mx-auto' fuerza el centrado sin importar el contexto
+            className='fixed bottom-6 left-0 right-0 mx-auto w-[90%] max-w-[380px] z-[90] h-[72px]'
           >
-            {/* Si está procesando mostramos SPINNER, si no el MIC */}
-            {isProcessing ? (
-              <Loader2
-                size={28}
-                className='text-cyan-400 animate-spin'
-              />
-            ) : (
-              <>
-                {isListening && (
-                  <span className='absolute inset-0 rounded-full border-2 border-white animate-ping opacity-75'></span>
-                )}
-                <Mic
-                  size={28}
-                  className={`text-white transition-transform ${
-                    isListening ? 'scale-110' : ''
+            <div className='w-full h-full bg-[#1a1a1a]/90 backdrop-blur-2xl text-white rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-4 flex justify-between items-center border border-white/10 relative'>
+              {/* IZQUIERDA */}
+              <div className='flex gap-1'>
+                <button
+                  onClick={() => {
+                    setActiveTab('calendar');
+                    setShowMenu(false);
+                  }}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                    activeTab === 'calendar'
+                      ? 'bg-white/10 text-cyan-400'
+                      : 'text-gray-400 hover:text-white'
                   }`}
-                />
-              </>
-            )}
-          </button>
-        </div>
+                >
+                  <Calendar
+                    size={22}
+                    strokeWidth={2}
+                  />
+                </button>
+                <button
+                  onClick={onOpenRoomService}
+                  className='w-12 h-12 rounded-2xl flex items-center justify-center text-gray-400 hover:text-white transition-all'
+                >
+                  <UtensilsCrossed
+                    size={22}
+                    strokeWidth={2}
+                  />
+                </button>
+              </div>
 
-        {/* ESCÁNER (Herramienta) */}
-        <button
-          onClick={onOpenScanner}
-          className='p-2 text-gray-400 hover:text-white transition-all'
-        >
-          <ScanBarcode size={24} />
-        </button>
+              {/* 🎙️ BOTÓN CENTRAL (FLOTANDO FUERA) */}
+              <div className='absolute left-1/2 -translate-x-1/2 -top-6'>
+                <button
+                  onClick={voiceAction}
+                  disabled={isProcessing}
+                  className={`w-16 h-16 rounded-[24px] flex items-center justify-center border-[4px] border-[#F3F4F6] transition-all shadow-xl ${
+                    isListening
+                      ? 'bg-red-500 scale-110 shadow-red-500/40'
+                      : isProcessing
+                      ? 'bg-slate-800 scale-100'
+                      : 'bg-gradient-to-tr from-cyan-500 to-blue-600 shadow-cyan-500/30 active:scale-95'
+                  }`}
+                >
+                  {isProcessing ? (
+                    <Loader2
+                      size={24}
+                      className='text-white animate-spin'
+                    />
+                  ) : (
+                    <Mic
+                      size={24}
+                      className='text-white'
+                      strokeWidth={2}
+                    />
+                  )}
+                </button>
+              </div>
 
-        {/* 🍔 MENÚ (El acceso al resto de la App) */}
-        <button
-          onClick={() => setShowMenu(!showMenu)}
-          className={`p-2 transition-all ${
-            showMenu ? 'text-cyan-400 rotate-90' : 'text-gray-400'
-          }`}
-        >
-          {/* Este botón ya cambia a X cuando el menú está abierto */}
-          {showMenu ? <X size={24} /> : <Menu size={24} />}
-        </button>
-      </div>
+              {/* DERECHA */}
+              <div className='flex gap-1'>
+                <button
+                  onClick={onOpenScanner}
+                  className='w-12 h-12 rounded-2xl flex items-center justify-center text-gray-400 hover:text-white transition-all'
+                >
+                  <ScanBarcode
+                    size={22}
+                    strokeWidth={2}
+                  />
+                </button>
+                <button
+                  onClick={() => setShowMenu(!showMenu)}
+                  className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
+                    showMenu
+                      ? 'bg-white/10 text-white rotate-90'
+                      : 'text-gray-400 hover:text-white'
+                  }`}
+                >
+                  {showMenu ? <X size={22} /> : <Menu size={22} />}
+                </button>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
     </>
   );
 };
