@@ -75,10 +75,33 @@ const CalendarPanel = ({
     style: scrollStyle,
   } = useDraggableScroll();
 
-  // Resetear scroll al cambiar de mes
+  // 👇 SCROLL INTELIGENTE: Si es el mes actual, viaja al día de hoy
   useEffect(() => {
     if (scrollRef.current) {
-      scrollRef.current.scrollLeft = 0;
+      const today = new Date();
+      // Verificamos si la vista actual corresponde al mes y año reales
+      const isCurrentMonth =
+        currentDate.getMonth() === today.getMonth() &&
+        currentDate.getFullYear() === today.getFullYear();
+
+      if (isCurrentMonth) {
+        // 🧮 CÁLCULO DE POSICIÓN
+        // w-16 de Tailwind son 4rem. Asumiendo 16px base = 64px por día.
+        const dayWidth = 64;
+        const currentDayIndex = today.getDate() - 1; // Restamos 1 porque el día 1 está en la posición 0
+
+        // Calculamos el scroll exacto
+        const targetScroll = currentDayIndex * dayWidth;
+
+        // Ejecutamos el scroll suave
+        scrollRef.current.scrollTo({
+          left: targetScroll,
+          behavior: 'smooth',
+        });
+      } else {
+        // Si navegas a otro mes (Enero -> Febrero), vuelve al inicio
+        scrollRef.current.scrollLeft = 0;
+      }
     }
   }, [currentDate]);
 

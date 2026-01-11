@@ -19,6 +19,8 @@ import {
   Edit,
   Trash2,
   Plus,
+  TrendingUp, // 👈 AGREGAR
+  Activity, // 👈 AGREGAR
 } from 'lucide-react';
 
 import { useCalendar } from '../hooks/useCalendar';
@@ -103,6 +105,7 @@ const GlobalStyles = () => (
     }
   `}</style>
 );
+
 const DashboardPage = () => {
   const navigate = useNavigate();
   const fileInputRef = useRef(null);
@@ -1157,72 +1160,6 @@ const DashboardPage = () => {
 
       {/* CONTENIDO PRINCIPAL (Centrado y Adaptado) */}
       <main className='flex-1 flex flex-col h-screen overflow-hidden relative w-full max-w-7xl p-4 md:p-8'>
-       
-
-        {/* --- OPCIÓN B: BARRA COMPACTA (DYNAMIC ISLAND) --- */}
-        <div className='mb-6 mx-1'>
-          <div className='bg-slate-900/90 backdrop-blur-xl text-white rounded-[20px] p-4 flex items-center justify-between shadow-xl border border-white/10'>
-            {/* Bloque 1: Ingresos */}
-            <div className='flex flex-col'>
-              <span className='text-[9px] font-bold uppercase text-emerald-400 tracking-wider mb-0.5'>
-                Caja
-              </span>
-              <span className='text-lg font-serif font-bold'>
-                ${(incomeToday / 1000).toFixed(0)}k
-              </span>
-            </div>
-
-            {/* Separador */}
-            <div className='w-px h-8 bg-white/10'></div>
-
-            {/* Bloque 2: Pendiente */}
-            <div className='flex flex-col items-center'>
-              <span className='text-[9px] font-bold uppercase text-orange-400 tracking-wider mb-0.5'>
-                Deuda
-              </span>
-              <span className='text-lg font-serif font-bold'>
-                ${(totalPending / 1000).toFixed(0)}k
-              </span>
-            </div>
-
-            {/* Separador */}
-            <div className='w-px h-8 bg-white/10'></div>
-
-            {/* Bloque 3: Ocupación */}
-            <div className='flex items-center gap-3'>
-              <div className='relative w-10 h-10'>
-                <svg
-                  className='w-full h-full -rotate-90'
-                  viewBox='0 0 36 36'
-                >
-                  <path
-                    className='text-slate-700'
-                    d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='3'
-                  />
-                  <path
-                    className='text-blue-500'
-                    strokeDasharray={`${occupancyRate}, 100`}
-                    d='M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831'
-                    fill='none'
-                    stroke='currentColor'
-                    strokeWidth='4'
-                    strokeLinecap='round'
-                  />
-                </svg>
-                <div className='absolute inset-0 flex items-center justify-center text-[10px] font-bold'>
-                  {occupancyRate}%
-                </div>
-              </div>
-            </div>
-          </div>
-          <p className='text-center text-[10px] text-slate-400 mt-2 opacity-60'>
-            Resumen financiero del día (Cifras en miles 'k')
-          </p>
-        </div>
-
         {/* PANEL CENTRAL (Calendario, etc.) */}
         <div className='flex-1 bg-white/60 backdrop-blur-sm rounded-[2.5rem] border border-[#E5E0D8] shadow-xl overflow-hidden relative mb-24'>
           {/* CALENDARIO */}
@@ -1275,12 +1212,32 @@ const DashboardPage = () => {
             />
           )}
 
-          {/* CONFIGURACIÓN */}
+          {/* CONFIGURACIÓN + FINANZAS (MENÚ DE GESTIÓN UNIFICADO) */}
           {activeTab === 'settings' && (
-            <SettingsPanel
-              hotelInfo={hotelInfo}
-              setHotelInfo={setHotelInfo}
-            />
+            <div className='h-full overflow-y-auto custom-scrollbar p-6'>
+              {/* 1. Título de Sección */}
+              <div className='mb-8'>
+                <h2 className='text-3xl font-serif font-bold text-slate-800'>
+                  Panel de Gestión
+                </h2>
+                <p className='text-slate-400 text-sm'>
+                  Finanzas y Configuración del Hotel
+                </p>
+              </div>
+
+              {/* 2. Bento Grid Financiero (Estilo Mac 2026) */}
+              <FinancialBento
+                income={incomeToday}
+                pending={totalPending}
+                occupancy={occupancyRate}
+              />
+
+              {/* 3. Panel de Ajustes (Debajo de las finanzas) */}
+              <SettingsPanel
+                hotelInfo={hotelInfo}
+                setHotelInfo={setHotelInfo}
+              />
+            </div>
           )}
         </div>
 
@@ -2066,5 +2023,71 @@ const DashboardPage = () => {
 }; // 👈 ¡ESTA LLAVE ES CRÍTICA! CIERRA EL COMPONENTE DashboardPage
 
 // --- COMPONENTES AUXILIARES (Deben estar FUERA de DashboardPage) ---
+// ✨ NUEVO COMPONENTE: TARJETAS FINANCIERAS MAC 2026
+const FinancialBento = ({ income, pending, occupancy }) => (
+  <div className='grid grid-cols-1 md:grid-cols-3 gap-4 mb-8 animate-in fade-in zoom-in duration-500'>
+    {/* 1. CAJA (WIDGET PRINCIPAL) */}
+    <div className='relative overflow-hidden bg-white/80 backdrop-blur-2xl border border-white/60 p-6 rounded-[2rem] shadow-xl shadow-slate-200/50 group hover:scale-[1.02] transition-all duration-300'>
+      <div className='absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity'>
+        <Banknote
+          size={80}
+          className='text-emerald-900'
+        />
+      </div>
+      <div className='relative z-10'>
+        <p className='text-xs font-bold text-slate-400 uppercase tracking-widest mb-1'>
+          Ingresos Hoy
+        </p>
+        <h3 className='text-4xl font-serif font-black text-slate-800 tracking-tight'>
+          ${(income / 1000).toFixed(0)}k
+        </h3>
+        <div className='mt-4 flex items-center gap-2'>
+          <span className='bg-emerald-100 text-emerald-700 text-[10px] font-bold px-2 py-1 rounded-full flex items-center gap-1'>
+            <TrendingUp size={10} /> +12%
+          </span>
+          <span className='text-[10px] text-slate-400'>vs ayer</span>
+        </div>
+      </div>
+    </div>
+
+    {/* 2. POR COBRAR (DEUDA) */}
+    <div className='relative overflow-hidden bg-white/60 backdrop-blur-xl border border-white/50 p-6 rounded-[2rem] shadow-lg shadow-slate-100/50 group hover:scale-[1.02] transition-all duration-300'>
+      <div className='absolute -bottom-4 -right-4 w-24 h-24 bg-orange-500/10 rounded-full blur-2xl'></div>
+      <p className='text-xs font-bold text-slate-400 uppercase tracking-widest mb-1'>
+        Por Cobrar
+      </p>
+      <h3 className='text-3xl font-serif font-bold text-slate-700'>
+        ${(pending / 1000).toFixed(0)}k
+      </h3>
+      <div className='mt-4 w-full bg-slate-100 h-1.5 rounded-full overflow-hidden'>
+        <div className='h-full bg-orange-400 w-[60%] rounded-full'></div>
+      </div>
+      <p className='text-[10px] text-slate-400 mt-2 text-right'>
+        60% Recuperado
+      </p>
+    </div>
+
+    {/* 3. OCUPACIÓN (MINIMALISTA) */}
+    <div className='relative bg-slate-900 text-white p-6 rounded-[2rem] shadow-2xl shadow-slate-900/20 flex flex-col justify-between group hover:scale-[1.02] transition-all duration-300'>
+      <div className='flex justify-between items-start'>
+        <p className='text-xs font-bold text-slate-400 uppercase tracking-widest'>
+          Ocupación
+        </p>
+        <Activity
+          size={16}
+          className='text-blue-400'
+        />
+      </div>
+      <div className='flex items-end gap-2'>
+        <h3 className='text-5xl font-sans font-light tracking-tighter'>
+          {occupancy}%
+        </h3>
+      </div>
+      <p className='text-[10px] text-slate-500 font-medium'>
+        Capacidad actual del hotel
+      </p>
+    </div>
+  </div>
+);
 
 export default DashboardPage;

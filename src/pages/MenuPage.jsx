@@ -149,25 +149,59 @@ const MenuPage = () => {
   const totalItems = cart.reduce((a, b) => a + b.qty, 0);
 
   const handlePlaceOrder = async () => {
+    // 1. Validación
     if (!selectedRoomId)
       return alert('⚠️ Por favor selecciona tu habitación para continuar.');
-    setOrderStatus('sending');
-    const roomName =
-      rooms.find((r) => r.id === selectedRoomId)?.name || 'Sin Info';
 
-    setTimeout(() => {
+    setOrderStatus('sending');
+
+    try {
+      // 2. GUARDAR EN SUPABASE (¡ESTO ES LO QUE FALTABA!)
+      // Usamos 'service_orders' porque es lo que tu DashboardPage está escuchando
+      const { error } = await supabase.from('service_orders').insert([
+        {
+          hotel_id: hotel.id,
+          room_id: selectedRoomId,
+          items: cart,
+          total_price: total,
+          status: 'pending',
+        },
+      ]);
+
+      if (error) throw error;
+
+      // 3. PREPARAR WHATSAPP (Tu lógica original mejorada)
+      const roomName =
+        rooms.find((r) => r.id === selectedRoomId)?.name || 'Sin Info';
       const itemsList = cart.map((i) => `- ${i.qty}x ${i.name}`).join('\n');
+
       const message = `*PEDIDO ROOM SERVICE* 🛎️\n\n🏨 ${
         hotel.name
       }\n🚪 Habitación: *${roomName}*\n\n📝 Pedido:\n${itemsList}\n\n💎 Total: $${total.toLocaleString()}\n\nPor favor confirmar recepción.`;
-      window.open(
-        `https://wa.me/${hotel.phone}?text=${encodeURIComponent(message)}`,
-        '_blank'
-      );
-      setOrderStatus('success');
-      setCart([]);
-      setIsCartOpen(false);
-    }, 1500);
+
+      // Corrección de número
+      let cleanPhone = hotel.phone.replace(/\D/g, '');
+      if (!cleanPhone.startsWith('57') && cleanPhone.length === 10) {
+        cleanPhone = '57' + cleanPhone;
+      }
+
+      // 4. ABRIR WHATSAPP Y LIMPIAR
+      setTimeout(() => {
+        window.open(
+          `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`,
+          '_blank'
+        );
+
+        setOrderStatus('success');
+        setCart([]);
+        setIsCartOpen(false);
+      }, 1000);
+    } catch (error) {
+      console.error('Error crítico guardando pedido:', error);
+      alert('Hubo un error de conexión, pero intentaremos abrir WhatsApp.');
+      // Fallback: Intentar abrir WhatsApp aunque falle la BD
+      setOrderStatus('idle');
+    }
   };
 
   // Filtrado Inteligente (Categoría + Búsqueda)

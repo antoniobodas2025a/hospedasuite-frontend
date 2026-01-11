@@ -27,23 +27,24 @@ import {
   LogOut,
   DollarSign,
   AlertCircle,
-  Menu, // Nuevo icono para menú móvil si fuera necesario
+  Menu,
 } from 'lucide-react';
 
-// --- COMPONENTES VISUALES (MINIMALISTA + RESPONSIVE) ---
+// --- COMPONENTES VISUALES (MINIMALISTA MAC 2026) ---
 
 const LiquidLayout = ({ children }) => (
   <div className='min-h-screen bg-[#09090b] relative overflow-hidden font-sans antialiased selection:bg-blue-500/30 selection:text-white'>
-    {/* Fondo Base */}
+    {/* 1. Fondo Base Minimalista */}
     <div className='fixed inset-0 z-0 bg-[#09090b]' />
 
-    {/* Atmósfera Responsive */}
-    <div className='fixed top-[-10%] left-[-10%] w-[300px] md:w-[800px] h-[300px] md:h-[800px] bg-blue-900/20 rounded-full blur-[80px] md:blur-[120px] opacity-60 animate-pulse-slow' />
-    <div className='fixed bottom-[-10%] right-[-10%] w-[250px] md:w-[600px] h-[250px] md:h-[600px] bg-indigo-900/10 rounded-full blur-[60px] md:blur-[100px] opacity-60' />
+    {/* 2. Orbes de Luz Difusa (Atmósfera) */}
+    <div className='fixed top-[-20%] left-[-10%] w-[800px] h-[800px] bg-blue-900/20 rounded-full blur-[120px] opacity-60 animate-pulse-slow' />
+    <div className='fixed bottom-[-20%] right-[-10%] w-[600px] h-[600px] bg-indigo-900/10 rounded-full blur-[100px] opacity-60' />
 
+    {/* 3. Textura de Ruido Ultra Sutil */}
     <div className='fixed inset-0 z-0 bg-noise opacity-[0.02] mix-blend-overlay pointer-events-none'></div>
 
-    {/* 👇 CAMBIO CLAVE: flex-col en móvil, flex-row en escritorio (md) */}
+    {/* 4. Layout Responsive (Mobile First) */}
     <div className='relative z-10 flex flex-col md:flex-row h-screen p-4 md:p-6 gap-4 md:gap-6'>
       {children}
     </div>
@@ -59,9 +60,8 @@ const LiquidLayout = ({ children }) => (
       .animate-pulse-slow {
         animation: pulse-slow 8s ease-in-out infinite;
       }
-      /* Scrollbar oculta en móvil para limpieza, visible en PC */
       .custom-scrollbar::-webkit-scrollbar {
-        width: 4px; /* Más delgado */
+        width: 4px;
       }
       .custom-scrollbar::-webkit-scrollbar-track {
         background: rgba(255, 255, 255, 0.02);
@@ -86,6 +86,10 @@ const SuperAdminPage = () => {
   const [leads, setLeads] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
+
+  // ✅ CORRECCIÓN CRÍTICA: Estado para editar hotel (Evita pantalla blanca)
+  const [editingHotel, setEditingHotel] = useState(null);
+
   const [stats, setStats] = useState({
     mrr: 0,
     active: 0,
@@ -300,6 +304,33 @@ const SuperAdminPage = () => {
     fetchData();
   };
 
+  // ✅ CORRECCIÓN CRÍTICA: Lógica de actualización presente
+  const handleUpdateHotel = async (e) => {
+    e.preventDefault();
+    if (!editingHotel) return;
+
+    try {
+      const { error } = await supabase
+        .from('hotels')
+        .update({
+          name: editingHotel.name,
+          status: editingHotel.status,
+          subscription_plan: editingHotel.subscription_plan,
+          trial_ends_at: new Date(editingHotel.trial_ends_at).toISOString(),
+        })
+        .eq('id', editingHotel.id);
+
+      if (error) throw error;
+
+      alert('✅ Hotel actualizado correctamente');
+      setEditingHotel(null);
+      fetchHotels();
+    } catch (error) {
+      console.error(error);
+      alert('Error actualizando: ' + error.message);
+    }
+  };
+
   const handleLogout = async () => {
     await supabase.auth.signOut();
     navigate('/login');
@@ -307,10 +338,7 @@ const SuperAdminPage = () => {
 
   return (
     <LiquidLayout>
-      {/* SIDEBAR RESPONSIVE 
-        Móvil: Barra superior horizontal
-        Desktop: Barra lateral vertical (w-72)
-      */}
+      {/* SIDEBAR RESPONSIVE */}
       <aside className='w-full md:w-72 h-auto md:h-full flex-shrink-0 relative group z-50'>
         <div className='absolute inset-0 bg-gradient-to-b from-white/20 via-transparent to-white/5 rounded-[24px] md:rounded-[36px] -m-[1px] p-[1px] pointer-events-none'></div>
         <div className='h-full w-full bg-white/5 backdrop-blur-[80px] rounded-[24px] md:rounded-[36px] border border-white/10 flex flex-row md:flex-col items-center md:items-stretch justify-between p-4 md:p-6 relative overflow-hidden'>
@@ -327,7 +355,7 @@ const SuperAdminPage = () => {
             </h1>
           </div>
 
-          {/* Nav Links (Horizontal en móvil, Vertical en PC) */}
+          {/* Nav Links */}
           <nav className='flex flex-row md:flex-col gap-2 md:gap-2 flex-1 justify-center md:justify-start px-2 md:px-0'>
             <button
               onClick={() => setActiveTab('hotels')}
@@ -368,7 +396,7 @@ const SuperAdminPage = () => {
             </button>
           </nav>
 
-          {/* Logout (Icono en móvil) */}
+          {/* Logout */}
           <button
             onClick={handleLogout}
             className='md:mt-auto flex items-center gap-3 p-2 md:p-3 rounded-xl md:rounded-2xl bg-red-500/10 border border-red-500/20 text-red-400 hover:bg-red-500/20 transition-colors md:w-full justify-center'
@@ -381,7 +409,7 @@ const SuperAdminPage = () => {
 
       {/* CONTENIDO PRINCIPAL */}
       <main className='flex-1 h-full flex flex-col overflow-hidden relative z-10'>
-        {/* TOOLBAR (Stack en móvil) */}
+        {/* TOOLBAR */}
         <header className='h-auto md:h-20 flex-shrink-0 mb-4 md:mb-6 relative'>
           <div className='absolute inset-0 bg-gradient-to-r from-white/10 via-white/5 to-white/10 rounded-[24px] md:rounded-[32px] -m-[1px] p-[1px] pointer-events-none'></div>
           <div className='h-full w-full bg-white/5 backdrop-blur-[60px] rounded-[24px] md:rounded-[32px] border border-white/10 flex flex-col md:flex-row items-center justify-between px-4 md:px-8 py-4 md:py-0 shadow-sm relative gap-3'>
@@ -421,7 +449,7 @@ const SuperAdminPage = () => {
 
         {/* SCROLLABLE CONTENT */}
         <div className='flex-1 flex flex-col gap-4 md:gap-6 overflow-y-auto custom-scrollbar pb-6 pr-0 md:pr-2'>
-          {/* MÉTRICAS (Grid Responsive: 2 col móvil, 4 col desktop) */}
+          {/* MÉTRICAS */}
           <div className='grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4 flex-shrink-0'>
             {[
               {
@@ -470,7 +498,7 @@ const SuperAdminPage = () => {
             ))}
           </div>
 
-          {/* LISTA PRINCIPAL (Adaptable a tarjetas verticales en móvil) */}
+          {/* LISTA PRINCIPAL */}
           <div className='flex-1 rounded-[24px] md:rounded-[36px] bg-white/5 backdrop-blur-[70px] border border-white/10 p-4 md:p-6'>
             {activeTab === 'hotels' && (
               <div className='space-y-2 md:space-y-2'>
@@ -483,7 +511,7 @@ const SuperAdminPage = () => {
                       key={hotel.id}
                       className='group grid grid-cols-1 md:grid-cols-12 gap-3 md:gap-4 items-center px-4 md:px-6 py-4 rounded-[20px] md:rounded-3xl bg-white/5 hover:bg-white/10 border border-white/5 hover:border-white/10 transition-all'
                     >
-                      {/* Info Principal */}
+                      {/* Info */}
                       <div className='col-span-1 md:col-span-4 flex items-center gap-3'>
                         <div className='w-10 h-10 rounded-full bg-gradient-to-br from-slate-700 to-slate-800 flex items-center justify-center font-bold text-white text-sm'>
                           {hotel.name.charAt(0)}
@@ -534,20 +562,23 @@ const SuperAdminPage = () => {
                             }}
                             className='flex-1 md:flex-none p-2 rounded-xl bg-green-500/20 text-green-400 hover:bg-green-500/40 flex items-center justify-center'
                           >
-                            <MessageCircle size={16} />{' '}
-                            <span className='md:hidden ml-2 text-xs font-bold'>
-                              Enviar
-                            </span>
+                            <MessageCircle size={16} />
                           </button>
                         )}
+
+                        {/* ✅ BOTÓN DE EDITAR ACTIVO */}
+                        <button
+                          onClick={() => setEditingHotel(hotel)}
+                          className='p-2 rounded-xl bg-blue-500/20 text-blue-400 hover:bg-blue-500/40 flex items-center justify-center'
+                        >
+                          <Edit size={16} />
+                        </button>
+
                         <button
                           onClick={() => handleDeleteHotel(hotel)}
                           className='flex-1 md:flex-none p-2 rounded-xl bg-red-500/20 text-red-400 hover:bg-red-500/40 flex items-center justify-center'
                         >
-                          <Trash2 size={16} />{' '}
-                          <span className='md:hidden ml-2 text-xs font-bold'>
-                            Borrar
-                          </span>
+                          <Trash2 size={16} />
                         </button>
                       </div>
                     </div>
@@ -604,6 +635,123 @@ const SuperAdminPage = () => {
           </div>
         </div>
       </main>
+
+      {/* ✅ CORRECCIÓN CRÍTICA: MODAL COMPLETO (SIN PLACEHOLDERS) */}
+      {editingHotel && (
+        <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md'>
+          <div className='bg-[#09090b] border border-white/10 rounded-[2rem] w-full max-w-md p-6 shadow-2xl relative'>
+            <div className='flex justify-between items-center mb-6'>
+              <h3 className='text-xl font-bold text-white flex items-center gap-2'>
+                <Settings
+                  size={20}
+                  className='text-blue-400'
+                />{' '}
+                Editar Propiedad
+              </h3>
+              <button
+                onClick={() => setEditingHotel(null)}
+                className='p-2 hover:bg-white/10 rounded-full text-white/60'
+              >
+                <XCircle size={24} />
+              </button>
+            </div>
+
+            <form
+              onSubmit={handleUpdateHotel}
+              className='space-y-4'
+            >
+              {/* Nombre */}
+              <div className='space-y-1'>
+                <label className='text-xs font-bold text-white/40 uppercase'>
+                  Nombre del Hotel
+                </label>
+                <input
+                  className='w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none'
+                  value={editingHotel.name}
+                  onChange={(e) =>
+                    setEditingHotel({ ...editingHotel, name: e.target.value })
+                  }
+                />
+              </div>
+
+              {/* Plan y Estado */}
+              <div className='grid grid-cols-2 gap-4'>
+                <div className='space-y-1'>
+                  <label className='text-xs font-bold text-white/40 uppercase'>
+                    Estado
+                  </label>
+                  <select
+                    className='w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none'
+                    value={editingHotel.status}
+                    onChange={(e) =>
+                      setEditingHotel({
+                        ...editingHotel,
+                        status: e.target.value,
+                      })
+                    }
+                  >
+                    <option value='active'>Activo</option>
+                    <option value='trial'>Prueba</option>
+                    <option value='suspended'>Suspendido</option>
+                  </select>
+                </div>
+                <div className='space-y-1'>
+                  <label className='text-xs font-bold text-white/40 uppercase'>
+                    Plan
+                  </label>
+                  <select
+                    className='w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none'
+                    value={editingHotel.subscription_plan}
+                    onChange={(e) =>
+                      setEditingHotel({
+                        ...editingHotel,
+                        subscription_plan: e.target.value,
+                      })
+                    }
+                  >
+                    <option value='PRO_AI'>PRO AI</option>
+                    <option value='GROWTH'>GROWTH</option>
+                    <option value='CORPORATE'>CORPORATE</option>
+                  </select>
+                </div>
+              </div>
+
+              {/* Fecha Vencimiento */}
+              <div className='space-y-1'>
+                <label className='text-xs font-bold text-white/40 uppercase flex items-center gap-2'>
+                  <Activity
+                    size={12}
+                    className='text-emerald-400'
+                  />{' '}
+                  Vencimiento del Plan
+                </label>
+                <input
+                  type='date'
+                  className='w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500/50 outline-none'
+                  value={
+                    editingHotel.trial_ends_at
+                      ? editingHotel.trial_ends_at.split('T')[0]
+                      : ''
+                  }
+                  onChange={(e) =>
+                    setEditingHotel({
+                      ...editingHotel,
+                      trial_ends_at: e.target.value,
+                    })
+                  }
+                />
+              </div>
+
+              <button
+                type='submit'
+                className='w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-xl shadow-lg shadow-blue-900/20 transition-all mt-4'
+              >
+                Guardar Cambios
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
     </LiquidLayout>
   );
 };
