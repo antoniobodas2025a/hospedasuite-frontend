@@ -140,23 +140,43 @@ export const useCalendar = ({
 
   const handleCreateBooking = async (e) => {
     e.preventDefault();
+
+    // 1. 🛡️ VALIDACIÓN INTERACTIVA (Lo que pediste)
+    // Usamos una variable local porque el estado no se actualiza inmediatamente
+    let finalName = bookingForm.guestName;
+    let finalDoc = bookingForm.guestDoc;
+
+    if (bookingForm.type === 'booking') {
+      // Si no hay nombre, lo pedimos obligatoriamente
+      if (!finalName || !finalName.trim()) {
+        finalName = window.prompt(
+          '⚠️ Falta el nombre del huésped.\n\nPor favor, escríbelo aquí para continuar:'
+        );
+
+        // Si el usuario da "Cancelar" o lo deja vacío, detenemos todo
+        if (!finalName) return;
+
+        // Actualizamos visualmente el formulario (para que el usuario vea que se llenó)
+        setBookingForm((prev) => ({ ...prev, guestName: finalName }));
+      }
+    }
+
     try {
       let gid = null;
       if (bookingForm.type === 'booking') {
-        // Verificar si el huésped ya existe para no duplicarlo innecesariamente
-        let existingGuest = guests.find(
-          (g) => g.doc_number === bookingForm.guestDoc
-        );
+        // Verificar si el huésped ya existe para no duplicarlo
+        let existingGuest = guests.find((g) => g.doc_number === finalDoc);
 
         if (existingGuest) {
           gid = existingGuest.id;
         } else {
+          // Crear nuevo huésped usando el nombre capturado (finalName)
           const { data: g, error } = await supabase
             .from('guests')
             .insert([
               {
-                full_name: bookingForm.guestName,
-                doc_number: bookingForm.guestDoc,
+                full_name: finalName, // 👈 Usamos la variable validada
+                doc_number: finalDoc || 'PENDIENTE',
                 nationality: bookingForm.guestNat,
                 phone: bookingForm.guestPhone,
                 email: bookingForm.guestEmail,
@@ -169,6 +189,7 @@ export const useCalendar = ({
         }
       }
 
+      // Crear la reserva
       await supabase.from('bookings').insert([
         {
           hotel_id: hotelInfo.id,
@@ -183,6 +204,25 @@ export const useCalendar = ({
 
       fetchOperationalData();
       setShowBookingModal(false);
+
+      // 2. 🧹 LIMPIEZA AUTOMÁTICA (Soluciona "me sale el anterior")
+      // Reseteamos el formulario para que la próxima vez esté vacío
+      setBookingForm({
+        type: 'booking',
+        guestName: '',
+        guestDoc: '',
+        guestNat: 'COL',
+        guestPhone: '',
+        guestEmail: '',
+        roomId: '',
+        checkIn: '',
+        checkOut: '',
+        price: '',
+        notes: '',
+      });
+
+      // Feedback sutil (opcional, puedes quitarlo si prefieres silencio)
+      // alert('✅ Reserva guardada correctamente');
     } catch (e) {
       alert('Error creando reserva: ' + e.message);
     }

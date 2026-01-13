@@ -14,6 +14,11 @@ import {
   Sparkles,
   Clock,
   Loader,
+  CreditCard,
+  Banknote,
+  Building,
+  CheckCircle,
+  AlertCircle,
 } from 'lucide-react';
 
 // --- ESTILOS "NEURO-GLASS 2026" ---
@@ -70,6 +75,9 @@ const MenuPage = () => {
   const [isCartOpen, setIsCartOpen] = useState(false);
   const [selectedRoomId, setSelectedRoomId] = useState('');
   const [orderStatus, setOrderStatus] = useState('idle');
+  const [isPaymentOpen, setIsPaymentOpen] = useState(false);
+  const [paymentMethod, setPaymentMethod] = useState('room_charge'); // 'room_charge' | 'cash' | 'card'
+  const [isProcessingPayment, setIsProcessingPayment] = useState(false);
 
   // --- 1. CEREBRO CONTEXTUAL ---
   useEffect(() => {
@@ -147,60 +155,78 @@ const MenuPage = () => {
 
   const total = cart.reduce((sum, item) => sum + item.price * item.qty, 0);
   const totalItems = cart.reduce((a, b) => a + b.qty, 0);
+  const initiateCheckout = () => {
+    // 1. Validación Defensiva (Bloqueo temprano)
+    if (!selectedRoomId || selectedRoomId === '') {
+      if (navigator.vibrate) navigator.vibrate([100, 50, 100]); // Haptic Feedback de error
+      return alert(
+        '⚠️ Por seguridad, selecciona tu habitación antes de continuar.'
+      );
+    }
+    if (cart.length === 0) return;
 
-  const handlePlaceOrder = async () => {
-    // 1. Validación
-    if (!selectedRoomId)
-      return alert('⚠️ Por favor selecciona tu habitación para continuar.');
+    // 2. Transición de Modales (UX Fluida)
+    setIsCartOpen(false);
+    setTimeout(() => setIsPaymentOpen(true), 150); // Pequeño delay para suavidad
+  };
 
-    setOrderStatus('sending');
+  const finalizeOrder = async () => {
+    setIsProcessingPayment(true);
 
     try {
-      // 2. GUARDAR EN SUPABASE (¡ESTO ES LO QUE FALTABA!)
-      // Usamos 'service_orders' porque es lo que tu DashboardPage está escuchando
-      const { error } = await supabase.from('service_orders').insert([
-        {
-          hotel_id: hotel.id,
-          room_id: selectedRoomId,
-          items: cart,
-          total_price: total,
-          status: 'pending',
+      // 1. Simulación de red segura (Sensación de proceso bancario)
+      await new Promise((resolve) => setTimeout(resolve, 800));
+
+      // 2. Insertar en Supabase (Payload enriquecido)
+      const payload = {
+        hotel_id: hotel.id,
+        room_id: selectedRoomId,
+        items: cart,
+        total_price: total,
+        status: 'pending',
+        payment_method: paymentMethod, // Dato clave para contabilidad
+        metadata: {
+          user_agent: navigator.userAgent,
+          timestamp: new Date().toISOString(),
         },
-      ]);
+      };
 
-      if (error) throw error;
+      const { error } = await supabase.from('service_orders').insert([payload]);
 
-      // 3. PREPARAR WHATSAPP (Tu lógica original mejorada)
+      if (error) throw new Error(`DB Error: ${error.message}`);
+
+      // 3. Generar Ticket para WhatsApp
       const roomName =
-        rooms.find((r) => r.id === selectedRoomId)?.name || 'Sin Info';
-      const itemsList = cart.map((i) => `- ${i.qty}x ${i.name}`).join('\n');
+        rooms.find((r) => r.id === selectedRoomId)?.name || 'N/A';
+      const itemsList = cart.map((i) => `▫ ${i.qty}x ${i.name}`).join('\n');
 
-      const message = `*PEDIDO ROOM SERVICE* 🛎️\n\n🏨 ${
-        hotel.name
-      }\n🚪 Habitación: *${roomName}*\n\n📝 Pedido:\n${itemsList}\n\n💎 Total: $${total.toLocaleString()}\n\nPor favor confirmar recepción.`;
+      const methodMap = {
+        room_charge: '🏨 Cargo a Habitación',
+        card: '💳 Datáfono / Link',
+        cash: '💵 Efectivo',
+      };
+      const methodText = methodMap[paymentMethod] || 'Pendiente';
 
-      // Corrección de número
+      const message = `*NUEVO PEDIDO* 🛎️\n\n📍 *${roomName}*\n${itemsList}\n\n💰 Total: *$${total.toLocaleString()}*\n💳 Pago: ${methodText}\n\nPor favor confirmar recepción.`;
+
+      // 4. Abrir WhatsApp y Limpiar
       let cleanPhone = hotel.phone.replace(/\D/g, '');
-      if (!cleanPhone.startsWith('57') && cleanPhone.length === 10) {
+      if (!cleanPhone.startsWith('57') && cleanPhone.length === 10)
         cleanPhone = '57' + cleanPhone;
-      }
 
-      // 4. ABRIR WHATSAPP Y LIMPIAR
-      setTimeout(() => {
-        window.open(
-          `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`,
-          '_blank'
-        );
+      window.open(
+        `https://wa.me/${cleanPhone}?text=${encodeURIComponent(message)}`,
+        '_blank'
+      );
 
-        setOrderStatus('success');
-        setCart([]);
-        setIsCartOpen(false);
-      }, 1000);
+      setCart([]);
+      setIsPaymentOpen(false);
+      setOrderStatus('success');
     } catch (error) {
-      console.error('Error crítico guardando pedido:', error);
-      alert('Hubo un error de conexión, pero intentaremos abrir WhatsApp.');
-      // Fallback: Intentar abrir WhatsApp aunque falle la BD
-      setOrderStatus('idle');
+      console.error('Critical Order Error:', error);
+      alert('Hubo un error procesando el pedido. Por favor intenta de nuevo.');
+    } finally {
+      setIsProcessingPayment(false);
     }
   };
 
@@ -491,18 +517,92 @@ const MenuPage = () => {
 
               <div className='p-6 bg-white border-t border-slate-100 pb-10'>
                 <button
-                  onClick={handlePlaceOrder}
+                  onClick={initiateCheckout}
                   disabled={orderStatus === 'sending'}
                   className='w-full bg-slate-900 text-white py-5 rounded-2xl font-bold shadow-xl shadow-slate-900/20 flex items-center justify-center gap-3 text-lg hover:scale-[1.01] active:scale-[0.99] transition-all'
                 >
-                  {orderStatus === 'sending' ? (
-                    <Loader className='animate-spin' />
-                  ) : (
-                    <>
-                      <MessageCircle size={22} /> Confirmar por WhatsApp
-                    </>
-                  )}
+                  Continuar al Pago <ChevronRight size={20} />
                 </button>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isPaymentOpen && (
+          <>
+            {/* Backdrop Darkened */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setIsPaymentOpen(false)}
+              className='fixed inset-0 bg-[#000]/40 backdrop-blur-md z-50'
+            />
+            {/* Glass Panel */}
+            <motion.div
+              initial={{ y: '100%', scale: 0.95 }}
+              animate={{ y: 0, scale: 1 }}
+              exit={{ y: '100%', scale: 0.95 }}
+              transition={{ type: 'spring', damping: 20, stiffness: 300 }}
+              className='fixed bottom-0 left-0 right-0 z-[60] bg-[#F2F4F6]/80 backdrop-blur-3xl rounded-t-[2.5rem] p-8 border-t border-white/50 shadow-[0_-50px_100px_rgba(0,0,0,0.1)]'
+            >
+              <div className='flex justify-between items-center mb-8'>
+                <h2 className='font-serif text-3xl font-bold text-slate-800'>
+                  Método de Pago
+                </h2>
+                <button
+                  onClick={() => setIsPaymentOpen(false)}
+                  className='p-2 bg-white/50 rounded-full hover:bg-white transition-colors'
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              <div className='space-y-4 mb-10'>
+                {/* Opción Única: Room Charge */}
+                <button
+                  onClick={() => setPaymentMethod('room_charge')}
+                  className='w-full p-5 rounded-[1.5rem] flex items-center gap-4 transition-all duration-300 border bg-slate-900 text-white border-slate-900 shadow-xl shadow-slate-900/20 scale-[1.02]'
+                >
+                  <div className='w-12 h-12 rounded-2xl flex items-center justify-center bg-white/20'>
+                    <Building size={24} />
+                  </div>
+                  <div className='text-left flex-1'>
+                    <div className='font-bold text-lg leading-tight'>
+                      Cargar a la Habitación
+                    </div>
+                    <div className='text-xs text-slate-300'>
+                      Pagar al Check-out
+                    </div>
+                  </div>
+                  <CheckCircle className='text-emerald-400' />
+                </button>
+              </div>
+
+              {/* Action Button */}
+              <button
+                onClick={finalizeOrder}
+                disabled={isProcessingPayment}
+                className='w-full bg-gradient-to-r from-slate-900 to-slate-800 text-white py-6 rounded-2xl font-bold shadow-2xl shadow-slate-900/30 flex items-center justify-center gap-3 text-xl relative overflow-hidden group'
+              >
+                {isProcessingPayment ? (
+                  <Loader className='animate-spin' />
+                ) : (
+                  <>
+                    <span className='relative z-10 flex items-center gap-2'>
+                      Confirmar Pedido{' '}
+                      <span className='text-slate-400 font-normal'>|</span> $
+                      {total.toLocaleString()}
+                    </span>
+                    <div className='absolute inset-0 bg-white/10 translate-y-full group-hover:translate-y-0 transition-transform duration-300' />
+                  </>
+                )}
+              </button>
+              <div className='text-center mt-6'>
+                <p className='text-[10px] uppercase tracking-widest text-slate-400 font-bold flex items-center justify-center gap-2'>
+                  <AlertCircle size={10} /> Transacción Segura SSL
+                </p>
               </div>
             </motion.div>
           </>

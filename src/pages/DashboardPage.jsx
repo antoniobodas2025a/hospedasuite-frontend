@@ -1400,7 +1400,7 @@ const DashboardPage = () => {
                           <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
                             Huéspedes
                           </label>
-                          <div className='bg-white border border-slate-100 rounded-[1.5rem] p-2 flex justify-between items-center h-[70px] shadow-sm'>
+                          <div className='bg-white border border-slate-100 rounded-[1.5rem] p-2 grid grid-cols-1 md:grid-cols-2 items-center h-auto md:h-[70px] shadow-sm gap-2'>
                             <div className='flex flex-col items-center flex-1 border-r border-slate-100'>
                               <span className='text-[10px] text-slate-400 font-bold'>
                                 ADULT
