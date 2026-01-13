@@ -1,4 +1,7 @@
 import React, { useState } from 'react';
+import { supabase } from '../../supabaseClient';
+import { UtensilsCrossed, Clock, X, Eye } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 
 // 👇 Asegúrate de tener importado 'Phone' y 'Smartphone' de lucide-react
 // import { Phone, Smartphone, ... } from 'lucide-react';
@@ -10,6 +13,83 @@ const GuestsPanel = ({
   onDeleteGuest,
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
+
+  // --- LÓGICA DE CONSUMOS (VERSION "RED DE ARRASTRE") ---
+  const [activeGuest, setActiveGuest] = useState(null);
+  const [consumptions, setConsumptions] = useState([]);
+  const [loadingConsumptions, setLoadingConsumptions] = useState(false);
+
+  React.useEffect(() => {
+    if (!activeGuest) return;
+
+    const fetchConsumptions = async () => {
+      setLoadingConsumptions(true);
+      console.log('🔍 Analizando consumos para:', activeGuest.full_name);
+
+      try {
+        // 1. Buscar la Reserva Activa
+        const { data: bookingData, error: bookingError } = await supabase
+          .from('bookings')
+          .select('id, room_id, check_in, status')
+          .eq('guest_id', activeGuest.id)
+          .in('status', ['checked_in', 'confirmed'])
+          .maybeSingle();
+
+        if (bookingError || !bookingData) {
+          console.warn(
+            '⚠️ No se encontró reserva activa. Mostrando historial vacío.'
+          );
+          setConsumptions([]);
+          return;
+        }
+
+        console.log('🏨 Habitación detectada:', bookingData.room_id);
+
+        // 2. Traer los últimos 50 pedidos de ESTA habitación (Sin filtro estricto de fecha en SQL)
+        // Esto evita que problemas de zona horaria oculten el pedido.
+        const { data: rawOrders, error: ordersError } = await supabase
+          .from('service_orders')
+          .select('*')
+          .eq('room_id', bookingData.room_id)
+          .order('created_at', { ascending: false })
+          .limit(50);
+
+        if (ordersError) throw ordersError;
+
+        // 3. Filtrado Inteligente en JS (Más seguro)
+        // Aceptamos pedidos del mismo día del check-in, incluso si la hora varía un poco.
+        const checkInTime = new Date(bookingData.check_in).getTime();
+
+        const validOrders = (rawOrders || []).filter((order) => {
+          const orderTime = new Date(order.created_at).getTime();
+          // Margen de tolerancia: Aceptamos pedidos hasta 24h antes del check-in oficial
+          // (Por si hicieron el pedido mientras esperaban la habitación)
+          return orderTime >= checkInTime - 86400000;
+        });
+
+        console.log(
+          `🍔 Pedidos: ${rawOrders?.length} brutos -> ${validOrders.length} válidos`
+        );
+        setConsumptions(validOrders);
+      } catch (e) {
+        console.error('🔥 Error cargando consumos:', e);
+      } finally {
+        setLoadingConsumptions(false);
+      }
+    };
+
+    fetchConsumptions();
+  }, [activeGuest]);
+
+  // --- CÁLCULO DE DEUDA (A PRUEBA DE FALLOS) ---
+  const consumptionsTotal = consumptions
+    .filter((o) => {
+      // Si payment_method es NULL o 'room_charge', se cobra.
+      // Si es 'cash' o 'card', NO se cobra (ya pagaron).
+      const method = o.payment_method || 'room_charge';
+      return method === 'room_charge';
+    })
+    .reduce((sum, order) => sum + (Number(order.total_price) || 0), 0);
 
   // 1. Lógica de Filtrado
   const filteredGuests = guests.filter((guest) => {
@@ -200,6 +280,14 @@ const GuestsPanel = ({
                       </div>
 
                       <div className='flex items-center gap-2 opacity-100 md:opacity-0 md:transform md:translate-x-4 transition-all duration-300 group-hover:opacity-100 group-hover:translate-x-0'>
+                        {/* Botón Ver Consumos */}
+                        <button
+                          onClick={() => setActiveGuest(guest)}
+                          className='p-3 bg-emerald-50 hover:bg-emerald-100 text-emerald-600 rounded-xl transition-colors group/btn shadow-sm'
+                          title='Ver Consumos'
+                        >
+                          <Eye size={18} />
+                        </button>
                         <button
                           onClick={() => onEditGuest(guest)}
                           className='p-3 bg-slate-100 hover:bg-blue-50 text-slate-400 hover:text-blue-600 rounded-xl transition-colors group/btn shadow-sm'
@@ -264,6 +352,130 @@ const GuestsPanel = ({
           )}
         </div>
       </div>
+      {/* --- MODAL DE DETALLES Y CONSUMOS --- */}
+      <AnimatePresence>
+        {activeGuest && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              onClick={() => setActiveGuest(null)}
+              className='fixed inset-0 bg-slate-900/40 backdrop-blur-sm z-40'
+            />
+            <motion.div
+              initial={{ x: '100%' }}
+              animate={{ x: 0 }}
+              exit={{ x: '100%' }}
+              transition={{ type: 'spring', damping: 25, stiffness: 300 }}
+              className='fixed top-0 right-0 h-full w-full md:w-[450px] bg-[#F2F4F6] z-50 shadow-2xl border-l border-white p-6 flex flex-col'
+            >
+              {/* Header Modal */}
+              <div className='flex justify-between items-center mb-8'>
+                <div>
+                  <h3 className='font-serif text-2xl font-bold text-slate-800'>
+                    {activeGuest.full_name}
+                  </h3>
+                  <span className='text-xs font-bold text-slate-400 uppercase tracking-widest'>
+                    Detalle de Estadía
+                  </span>
+                </div>
+                <button
+                  onClick={() => setActiveGuest(null)}
+                  className='p-2 bg-white rounded-full text-slate-400 hover:text-slate-800 shadow-sm'
+                >
+                  <X size={20} />
+                </button>
+              </div>
+
+              {/* === AQUÍ ENTRA TU CÓDIGO DE UI DE CONSUMOS === */}
+              <div className='flex-1 overflow-y-auto custom-scrollbar'>
+                <div className='bg-white/50 backdrop-blur-md rounded-2xl p-5 border border-white/60 shadow-sm'>
+                  <div className='flex justify-between items-center mb-4'>
+                    <h3 className='text-sm font-bold text-slate-700 flex items-center gap-2 uppercase tracking-wide'>
+                      <UtensilsCrossed
+                        size={16}
+                        className='text-slate-400'
+                      />
+                      Consumos Room Service
+                    </h3>
+                    <span className='bg-slate-900 text-white px-3 py-1 rounded-full text-xs font-bold shadow-md'>
+                      Deuda: ${consumptionsTotal.toLocaleString()}
+                    </span>
+                  </div>
+
+                  {loadingConsumptions ? (
+                    <div className='text-center py-4 text-xs text-slate-400 animate-pulse'>
+                      Cargando pedidos...
+                    </div>
+                  ) : consumptions.length > 0 ? (
+                    <div className='space-y-3'>
+                      {consumptions.map((order) => (
+                        <div
+                          key={order.id}
+                          className='bg-white p-3 rounded-xl border border-slate-100 shadow-sm flex flex-col gap-2'
+                        >
+                          <div className='flex justify-between items-start border-b border-slate-50 pb-2'>
+                            <div className='flex items-center gap-2 text-[10px] text-slate-400 font-bold uppercase tracking-wider'>
+                              <Clock size={10} />
+                              {new Date(order.created_at).toLocaleTimeString(
+                                [],
+                                { hour: '2-digit', minute: '2-digit' }
+                              )}
+                            </div>
+                            <span
+                              className={`text-[10px] font-bold px-2 py-0.5 rounded-full uppercase ${
+                                order.payment_method === 'room_charge'
+                                  ? 'bg-orange-100 text-orange-600'
+                                  : 'bg-emerald-100 text-emerald-600'
+                              }`}
+                            >
+                              {order.payment_method === 'room_charge'
+                                ? 'Por Pagar'
+                                : 'Pagado'}
+                            </span>
+                          </div>
+
+                          <div className='space-y-1'>
+                            {order.items.map((item, idx) => (
+                              <div
+                                key={idx}
+                                className='flex justify-between text-xs text-slate-600'
+                              >
+                                <span>
+                                  <span className='font-bold text-slate-800'>
+                                    {item.qty}x
+                                  </span>{' '}
+                                  {item.name}
+                                </span>
+                                <span className='font-medium text-slate-400'>
+                                  ${(item.price * item.qty).toLocaleString()}
+                                </span>
+                              </div>
+                            ))}
+                          </div>
+
+                          <div className='flex justify-end pt-1'>
+                            <span className='text-xs font-bold text-slate-800'>
+                              Total: ${order.total_price.toLocaleString()}
+                            </span>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className='text-center py-6 border-2 border-dashed border-slate-200 rounded-xl'>
+                      <p className='text-xs text-slate-400 font-medium italic'>
+                        Sin consumos registrados
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

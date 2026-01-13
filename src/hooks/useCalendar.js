@@ -322,44 +322,78 @@ export const useCalendar = ({
     }
   };
 
-  // --- NUEVA FUNCIÓN: Check-out con Auditoría de Deuda ---
+  // --- NUEVA FUNCIÓN: Check-out con Auditoría Financiera 360° ---
   const handleCheckOut = async () => {
     if (!selectedBooking) return;
 
-    // 1. Calculamos si debe dinero usando tu función existente
-    const financials = calculateFinancials(selectedBooking);
+    try {
+      // 1. [BASE] Calcular deuda de Alojamiento (Habitación + Extras manuales)
+      // Esta función ya existe en tu código, la reutilizamos para no romper nada.
+      const roomFinancials = calculateFinancials(selectedBooking);
+      const roomDebt = roomFinancials.pending;
 
-    // 2. Si debe dinero, lanzamos la ALERTA
-    if (financials.pending > 0) {
-      const confirmarDeuda = window.confirm(
-        `⚠️ ¡ALERTA DE DEUDA!\n\nEl huésped tiene un saldo pendiente de: $${financials.pending.toLocaleString(
-          'es-CO'
-        )}.\n\n¿Estás seguro de que deseas darle salida sin cobrar?`
+      // 2. [AUDITORÍA NUEVA] Escanear deuda de Room Service (Hamburguesas/Bebidas)
+      // Buscamos pedidos NO pagados ('room_charge') vinculados a esta habitación
+      const { data: serviceOrders, error: serviceError } = await supabase
+        .from('service_orders')
+        .select('total_price')
+        .eq('room_id', selectedBooking.room_id)
+        .gte('created_at', selectedBooking.check_in) // Desde que entró
+        .eq('payment_method', 'room_charge'); // Solo lo que cargó a la habitación
+
+      if (serviceError) throw serviceError;
+
+      // Sumamos la deuda de comida (Si no hay pedidos, es 0)
+      const serviceDebt = (serviceOrders || []).reduce(
+        (sum, order) => sum + (Number(order.total_price) || 0),
+        0
       );
-      // Si el recepcionista dice "Cancelar", detenemos todo.
-      if (!confirmarDeuda) return;
-    }
 
-    // 3. Si no debe nada (o si aceptaste la deuda), confirmamos la salida
-    if (
-      window.confirm(
-        '¿Finalizar estadía y liberar habitación? (Pasará a historial)'
-      )
-    ) {
-      try {
+      // 3. Deuda Total Unificada
+      const totalPending = roomDebt + serviceDebt;
+
+      // 4. EL GATEKEEPER: Si debe $1 peso, salta la alerta roja
+      if (totalPending > 0) {
+        const fmtRoom = roomDebt.toLocaleString('es-CO');
+        const fmtService = serviceDebt.toLocaleString('es-CO');
+        const fmtTotal = totalPending.toLocaleString('es-CO');
+
+        const mensajeAlerta =
+          `⚠️ ¡ALERTA DE DEUDA PENDIENTE!\n\n` +
+          `Este huésped no está a paz y salvo. Detalle:\n` +
+          `--------------------------------------\n` +
+          `🏨 Alojamiento:   $${fmtRoom}\n` +
+          `🍔 Room Service:  $${fmtService}\n` +
+          `--------------------------------------\n` +
+          `💰 TOTAL A COBRAR: $${fmtTotal}\n\n` +
+          `¿Ya recibiste el dinero? Al dar Aceptar, liberas la habitación.`;
+
+        const confirmarDeuda = window.confirm(mensajeAlerta);
+
+        // Si dice "Cancelar", abortamos todo (Protección contra error humano)
+        if (!confirmarDeuda) return;
+      }
+
+      // 5. [BASE] Confirmación Final y Liberación (Lógica original intacta)
+      if (
+        window.confirm(
+          '¿Confirmar salida definitiva? La habitación pasará a estado "Historial".'
+        )
+      ) {
         const { error } = await supabase
           .from('bookings')
-          .update({ status: 'checked_out' }) // 👈 Cambia estado a historial, NO borra
+          .update({ status: 'checked_out' })
           .eq('id', selectedBooking.id);
 
         if (error) throw error;
 
-        alert('✅ Salida registrada. La habitación está libre.');
+        alert('✅ Check-out exitoso. Habitación liberada.');
         setSelectedBooking(null); // Cerramos el modal
         fetchOperationalData(); // Actualizamos el calendario
-      } catch (e) {
-        alert('Error al registrar salida: ' + e.message);
       }
+    } catch (e) {
+      console.error(e);
+      alert('Error crítico validando deudas: ' + e.message);
     }
   };
 

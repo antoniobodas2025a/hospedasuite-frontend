@@ -162,6 +162,8 @@ const DashboardPage = () => {
     method: 'EFECTIVO', // EFECTIVO, TRANSFERENCIA, TARJETA
   });
 
+  const [currentBookingOrders, setCurrentBookingOrders] = useState([]);
+
   const [chargeForm, setChargeForm] = useState({
     concept: '', // Ej: Cerveza, Lavandería
     price: '',
@@ -484,29 +486,28 @@ const DashboardPage = () => {
   const brandStyle = { backgroundColor: brandColor };
   const textBrandStyle = { color: brandColor };
 
+  // En DashboardPage.jsx
   const calculateFinancials = (b) => {
-    // Si no hay reserva, valores en cero
     if (!b) return { total: 0, paid: 0, pending: 0 };
 
-    // 1. Precio base de la habitación
     const basePrice = Number(b.total_price) || 0;
 
-    // 2. 🍔 Sumar consumos extras (Hamburguesas, cervezas, etc.)
-    const extraCharges =
+    // Suma cargos manuales (Minibar manual, Lavandería, Daños)
+    const manualCharges =
       b.charges?.reduce((sum, c) => sum + (Number(c.price) || 0), 0) || 0;
 
-    // 3. 💰 Sumar abonos/pagos realizados
-    // Usamos Number() para asegurar que la suma de abonos sea reactiva
+    // ⚠️ ADVERTENCIA: Aquí el Dashboard no ve el Room Service automático
+    // porque no estamos trayendo 'service_orders' en la carga inicial para no hacerla lenta.
+    // El Check-out SÍ lo consultará en tiempo real.
+
     const totalPaid =
       b.payments?.reduce((sum, p) => sum + (Number(p.amount) || 0), 0) || 0;
-
-    // 4. Gran Total = Habitación + Extras
-    const grandTotal = basePrice + extraCharges;
+    const grandTotal = basePrice + manualCharges;
 
     return {
       total: grandTotal,
-      paid: totalPaid, // Este valor actualizará el recuadro verde
-      pending: grandTotal - totalPaid, // Este valor actualizará el recuadro naranja
+      paid: totalPaid,
+      pending: grandTotal - totalPaid,
     };
   };
 
@@ -898,6 +899,36 @@ const DashboardPage = () => {
     };
     reader.readAsText(file);
   };
+
+  // 🍔 LÓGICA DE RECUPERACIÓN DE PEDIDOS (RED DE ARRASTRE PARA EL MODAL)
+  useEffect(() => {
+    const fetchBookingOrders = async () => {
+      const selected = calendarData.selectedBooking;
+      if (!selected) {
+        setCurrentBookingOrders([]);
+        return;
+      }
+
+      // Estrategia: Buscar pedidos de la habitación desde el Check-in
+      const { data: orders } = await supabase
+        .from('service_orders')
+        .select('*')
+        .eq('room_id', selected.room_id)
+        // Margen de tolerancia: 24h antes del check-in (por si pidieron esperando)
+        .gte(
+          'created_at',
+          new Date(
+            new Date(selected.check_in).getTime() - 86400000
+          ).toISOString()
+        )
+        .order('created_at', { ascending: false });
+
+      setCurrentBookingOrders(orders || []);
+    };
+
+    fetchBookingOrders();
+  }, [calendarData.selectedBooking]);
+
   // --- LÓGICA DE VOZ (Faltaba esto) ---
 
   // ===========================================================================
@@ -1710,6 +1741,7 @@ const DashboardPage = () => {
                     <div className='space-y-6'>
                       {/* Estado Financiero Rápido */}
                       <div className='grid grid-cols-2 gap-3'>
+                        {/* TARJETA VERDE: PAGADO */}
                         <div className='bg-emerald-50 p-4 rounded-2xl border border-emerald-100'>
                           <span className='text-[9px] font-bold text-emerald-600 uppercase'>
                             Pagado
@@ -1721,17 +1753,93 @@ const DashboardPage = () => {
                             ).paid.toLocaleString()}{' '}
                           </p>
                         </div>
+
+                        {/* TARJETA NARANJA: PENDIENTE (SUMA HABITACIÓN + COMIDA) */}
                         <div className='bg-orange-50 p-4 rounded-2xl border border-orange-100'>
                           <span className='text-[9px] font-bold text-orange-600 uppercase'>
-                            Pendiente
+                            Pendiente Total
                           </span>
                           <p className='text-lg font-bold text-orange-700'>
                             $
-                            {calculateFinancials(
-                              calendarData.selectedBooking
-                            ).pending.toLocaleString()}{' '}
+                            {(
+                              calculateFinancials(calendarData.selectedBooking)
+                                .pending +
+                              currentBookingOrders.reduce(
+                                (acc, o) =>
+                                  acc +
+                                  (o.payment_method === 'room_charge'
+                                    ? o.total_price
+                                    : 0),
+                                0
+                              )
+                            ).toLocaleString()}
                           </p>
                         </div>
+                      </div>
+
+                      {/* --- LISTA DE PEDIDOS ROOM SERVICE --- */}
+                      <div className='bg-slate-50 p-4 rounded-2xl border border-slate-100 max-h-40 overflow-y-auto custom-scrollbar space-y-2'>
+                        <p className='text-[10px] font-bold text-slate-400 uppercase mb-2 flex justify-between'>
+                          <span>🍔 Room Service & Restaurante</span>
+                          <span>
+                            $
+                            {currentBookingOrders
+                              .reduce(
+                                (acc, o) =>
+                                  acc +
+                                  (o.payment_method === 'room_charge'
+                                    ? o.total_price
+                                    : 0),
+                                0
+                              )
+                              .toLocaleString()}
+                          </span>
+                        </p>
+
+                        {currentBookingOrders.length === 0 ? (
+                          <p className='text-xs text-slate-400 italic text-center py-2'>
+                            Sin pedidos registrados
+                          </p>
+                        ) : (
+                          currentBookingOrders.map((order) => (
+                            <div
+                              key={order.id}
+                              className='bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center'
+                            >
+                              <div>
+                                <p className='text-xs font-bold text-slate-700'>
+                                  {order.items
+                                    .map((i) => `${i.qty}x ${i.name}`)
+                                    .join(', ')}
+                                </p>
+                                <p className='text-[10px] text-slate-400'>
+                                  {new Date(
+                                    order.created_at
+                                  ).toLocaleTimeString([], {
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}
+                                </p>
+                              </div>
+                              <div className='text-right'>
+                                <p className='text-xs font-bold text-slate-800'>
+                                  ${order.total_price.toLocaleString()}
+                                </p>
+                                <span
+                                  className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
+                                    order.payment_method === 'room_charge'
+                                      ? 'bg-orange-100 text-orange-600'
+                                      : 'bg-emerald-100 text-emerald-600'
+                                  }`}
+                                >
+                                  {order.payment_method === 'room_charge'
+                                    ? 'Por Pagar'
+                                    : 'Pagado'}
+                                </span>
+                              </div>
+                            </div>
+                          ))
+                        )}
                       </div>
 
                       {/* Formulario de Cargos Extra  */}
@@ -1740,7 +1848,7 @@ const DashboardPage = () => {
                         className='bg-white p-4 rounded-2xl border border-slate-100 space-y-3'
                       >
                         <p className='text-[10px] font-bold text-slate-400 uppercase'>
-                          Añadir Consumo
+                          Añadir Consumo Manual
                         </p>
                         <div className='flex gap-2'>
                           <input
