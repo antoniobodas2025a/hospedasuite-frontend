@@ -13,37 +13,60 @@ import {
   Zap,
   CheckCircle2,
   Clock,
-  AlertTriangle,
   ChevronRight,
   Star,
-  Building2,
   Smartphone,
-  Server,
   ArrowLeft,
   User,
   Mail,
-  Camera,
-  UploadCloud,
-  FileText,
+  Building2,
   MapPin,
-  Gift, // Nuevo icono para el beneficio
-  Mic, // 👈 AGREGAR
+  Gift,
+  Mic,
   Sparkles,
   ScanBarcode,
   ShoppingBag,
-  AlertCircle,
+  Globe,
+  Lock,
 } from 'lucide-react';
 import SalesAgent from '../components/SalesAgent';
+
+// ==========================================
+// 🎨 ESTILOS & COMPONENTES VISUALES (MAC 2026)
+// ==========================================
+const GlassCard = ({ children, className = '' }) => (
+  <div
+    className={`bg-white/70 backdrop-blur-xl border border-white/40 shadow-2xl shadow-indigo-500/10 rounded-[2.5rem] ${className}`}
+  >
+    {children}
+  </div>
+);
+
+const Badge = ({ icon: Icon, text, color = 'blue' }) => {
+  const colors = {
+    blue: 'bg-blue-50 text-blue-700 border-blue-100',
+    amber: 'bg-amber-50 text-amber-700 border-amber-100',
+    purple: 'bg-purple-50 text-purple-700 border-purple-100',
+    green: 'bg-emerald-50 text-emerald-700 border-emerald-100',
+  };
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider border ${colors[color]}`}
+    >
+      {Icon && <Icon size={12} />}
+      {text}
+    </span>
+  );
+};
 
 const LandingPage = () => {
   const { city_slug } = useParams();
 
-  // 1. Limpieza total: Decodifica la URL y elimina comillas o caracteres extraños
+  // 1. Limpieza de URL
   const cleanCitySlug = city_slug
     ? decodeURIComponent(city_slug).replace(/['"]+/g, '').trim().toLowerCase()
     : 'villa-de-leyva';
 
-  // 2. Formateo visual para el título (H1)
   const cityName = cleanCitySlug
     .split('-')
     .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
@@ -57,8 +80,7 @@ const LandingPage = () => {
   const [loading, setLoading] = useState(false);
   const [formStatus, setFormStatus] = useState('idle');
   const [formStep, setFormStep] = useState(1);
-  const [selectedPlan, setSelectedPlan] = useState('PRO');
-  const [isAIMode, setIsAIMode] = useState(true);
+  const [selectedPlan, setSelectedPlan] = useState('PRO_AI'); // Por defecto Plan IA
 
   const [formData, setFormData] = useState({
     ownerName: '',
@@ -77,60 +99,39 @@ const LandingPage = () => {
     setIsNavHidden(latest > 100);
   });
 
-  // ---------------------------------------------------------
-  // LÓGICA DE ESCASEZ: "CAPACIDAD DE IMPLEMENTACIÓN LOCAL"
-  // ---------------------------------------------------------
+  // CARGA DE CUPOS (Supabase)
   useEffect(() => {
     const fetchLaunchData = async () => {
       try {
-        // Usamos la variable normalizada que definiste arriba
-        console.log('🔍 Buscando cupos para:', cleanCitySlug);
-
         const { data, error } = await supabase
           .from('launch_control')
           .select('total_spots, spots_taken')
           .eq('city_slug', cleanCitySlug)
           .maybeSingle();
 
-        if (error) throw error;
-
         const DEFAULT_TOTAL = 12;
-
-        // ⬇️⬇️ INSERTAR AQUÍ ⬇️⬇️
         if (data) {
-          // Si encontró la ciudad, usamos los datos reales
           setLaunchData({
             total: data.total_spots || DEFAULT_TOTAL,
             taken: data.spots_taken || 0,
           });
           setSpotsTaken(data.spots_taken || 0);
         } else {
-          // 🛡️ [INICIO BLOQUE DEFENSIVO] 🛡️
-          // ESTRATEGIA: Si la ciudad no existe en la DB todavía,
-          // mostramos 3/12 por defecto para no mostrar 0 (Efecto Social)
-          // Esto evita que el usuario vea "0/12 ASIGNADOS" y piense que nadie lo usa.
-          const FALLBACK_TAKEN = 3;
-          setLaunchData({ total: DEFAULT_TOTAL, taken: FALLBACK_TAKEN });
-          setSpotsTaken(FALLBACK_TAKEN);
-          console.warn(
-            `⚠️ Ciudad '${cleanCitySlug}' no encontrada en DB launch_control. Usando valores simulados (${FALLBACK_TAKEN}/${DEFAULT_TOTAL}) para mantener conversión.`
-          );
-          // 🛡️ [FIN BLOQUE DEFENSIVO] 🛡️
+          // Fallback defensivo para mantener la conversión
+          setLaunchData({ total: DEFAULT_TOTAL, taken: 3 });
+          setSpotsTaken(3);
         }
-        // ⬆️⬆️ FIN DE INSERCIÓN ⬆️⬆️
       } catch (error) {
-        console.error('❌ Error de conexión:', error);
-        setSpotsTaken(3); // Backup por error
+        console.error('Error:', error);
+        setSpotsTaken(3);
       }
     };
-
     fetchLaunchData();
-  }, [cleanCitySlug]); // 👈 CAMBIO CLAVE: Escuchamos a la versión limpia
+  }, [cleanCitySlug]);
 
-  const TOTAL_SPOTS = launchData.total;
-  const spotsLeft = Math.max(0, TOTAL_SPOTS - spotsTaken);
-  const isWaitlist = spotsTaken >= TOTAL_SPOTS;
-  const progressPercent = Math.min((spotsTaken / TOTAL_SPOTS) * 100, 100);
+  const spotsLeft = Math.max(0, launchData.total - spotsTaken);
+  const isWaitlist = spotsTaken >= launchData.total;
+  const progressPercent = Math.min((spotsTaken / launchData.total) * 100, 100);
 
   const scrollToForm = (plan) => {
     setSelectedPlan(plan);
@@ -145,10 +146,9 @@ const LandingPage = () => {
       alert('Por favor ingresa tu nombre completo.');
       return;
     }
-    const isValidPhone =
-      /^3\d{9}$/.test(cleanPhone) || /^573\d{9}$/.test(cleanPhone);
-    if (!isValidPhone) {
-      alert('Ingresa un WhatsApp válido para activar el mes de regalo.');
+    // Validación laxa para permitir números internacionales si es necesario
+    if (cleanPhone.length < 7) {
+      alert('Ingresa un número de WhatsApp válido.');
       return;
     }
     setFormStep(2);
@@ -156,15 +156,10 @@ const LandingPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData._honey) {
-      setFormStatus('success');
-      return;
-    }
+    if (formData._honey) return; // Honeypot trap
 
     setLoading(true);
     try {
-      // 3. Guardar en Supabase (TABLA DE VENTAS B2B)
-      // ⬇️⬇️ CAMBIO CRÍTICO: 'leads' -> 'platform_leads' ⬇️⬇️
       const { error } = await supabase.from('platform_leads').insert([
         {
           full_name: formData.ownerName,
@@ -175,18 +170,17 @@ const LandingPage = () => {
           metadata: {
             rooms: formData.rooms,
             software: formData.currentSoftware,
-            status: 'FOUNDER_APPLICANT', // Solicitante Fundador
+            status: 'FOUNDER_APPLICANT',
             source_url: window.location.href,
             plan_interest: selectedPlan,
-            offer_claimed: '1_MONTH_FREE', // Registro del beneficio
+            offer_claimed: '1_MONTH_FREE_AI',
           },
         },
       ]);
-      // ⬆️⬆️ FIN DEL CAMBIO ⬆️⬆️
 
-      // 👇 EL RESTO DEL CÓDIGO SE MANTIENE IGUAL 👇
-      if (!error && formData.phone) {
-        const welcomeMsg = `🎉 *¡Felicidades Socio Fundador!* \n\nHola ${formData.ownerName}, hemos reservado tu cupo de implementación en ${cityName}.\n\n🎁 *Beneficio Activado:* Tu primer mes es GRATIS ($0).\n\nEl ingeniero encargado te escribirá en breve para configurar tu cuenta.`;
+      if (!error) {
+        // Enviar WhatsApp de bienvenida (Edge Function)
+        const welcomeMsg = `🤖 *Hola ${formData.ownerName}*, soy el Agente de Ingreso de HospedaSuite.\n\nHe recibido tu solicitud para el *Plan Fundador (IA)* en ${cityName}.\n\nTu cupo está reservado temporalmente mientras un ingeniero valida la información.`;
 
         await supabase.functions.invoke('send-whatsapp', {
           body: {
@@ -194,696 +188,473 @@ const LandingPage = () => {
             message: welcomeMsg,
           },
         });
-      }
-      if (!error) {
-        // Truco Psicológico: Avanzamos la barra visualmente +1 de inmediato
-        setSpotsTaken((prev) => Math.min(prev + 1, launchData.total));
-      }
 
-      if (error) throw error;
-      setTimeout(() => {
-        setFormStatus('success');
-        setLoading(false);
-      }, 1500);
+        // Feedback visual inmediato
+        setSpotsTaken((prev) => Math.min(prev + 1, launchData.total));
+        setTimeout(() => {
+          setFormStatus('success');
+          setLoading(false);
+        }, 1500);
+      } else {
+        throw error;
+      }
     } catch (err) {
       console.error(err);
-      setFormStatus('error');
+      alert('Hubo un error al procesar tu solicitud. Intenta nuevamente.');
       setLoading(false);
     }
   };
 
   return (
-    <div className='min-h-screen text-slate-900 selection:bg-cyan-500/30 selection:text-cyan-900 overflow-x-hidden relative bg-[#F8FAFC]'>
+    <div className='min-h-screen text-slate-900 font-sans selection:bg-indigo-500/30 bg-[#F8FAFC] overflow-x-hidden'>
       <Helmet>
-        <title>Socios Fundadores | HospedaSuite {cityName}</title>
-        <meta
-          name='theme-color'
-          content='#010512'
-        />
+        <title>Programa Fundador IA | HospedaSuite {cityName}</title>
       </Helmet>
 
-      {/* Background FX */}
-      <div className='fixed inset-0 z-0 pointer-events-none overflow-hidden'>
-        <div className='hidden md:block absolute top-[-10%] left-[10%] w-[700px] h-[700px] bg-cyan-500/5 rounded-full blur-[120px]' />
-        <div className='hidden md:block absolute top-[5%] right-[-5%] w-[600px] h-[600px] bg-blue-600/5 rounded-full blur-[120px]' />
+      {/* BACKGROUND FX (AURORA BOREAL) */}
+      <div className='fixed inset-0 z-0 pointer-events-none'>
+        <div className='absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-cyan-400/10 rounded-full blur-[120px] animate-blob' />
+        <div className='absolute top-[10%] right-[-10%] w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[120px] animate-blob animation-delay-2000' />
+        <div className='absolute bottom-[-20%] left-[20%] w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-[120px] animate-blob animation-delay-4000' />
       </div>
 
-      {/* ========================================================
-          NAVBAR: LOGO GRANDE Y PRESENCIA
-         ======================================================== */}
+      {/* NAVBAR FLOTANTE */}
       <motion.nav
-        variants={{
-          visible: { y: 0, opacity: 1 },
-          hidden: { y: '-100%', opacity: 0 },
-        }}
-        animate={isNavHidden ? 'hidden' : 'visible'}
-        className='fixed top-0 w-full z-50 tech-nav h-auto py-4 shadow-xl bg-white/95 backdrop-blur-md border-b border-slate-100'
+        animate={isNavHidden ? { y: -100 } : { y: 0 }}
+        className='fixed top-6 left-0 right-0 z-50 flex justify-center px-4'
       >
-        <div className='max-w-7xl mx-auto px-6 h-full flex items-center justify-between'>
-          {/* LOGO MÁS GRANDE */}
-          <div className='flex items-center h-full'>
-            <img
-              src='/logo.png'
-              alt='HospedaSuite'
-              className='h-16 md:h-20 w-auto object-contain drop-shadow-sm'
-            />
-          </div>
-
-          <div className='hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-slate-900 text-cyan-400 text-[11px] font-bold uppercase tracking-widest shadow-lg shadow-slate-900/20'>
+        <div className='bg-white/80 backdrop-blur-md px-6 py-3 rounded-full shadow-xl shadow-slate-200/50 border border-white/50 flex items-center gap-4'>
+          <span className='font-serif font-bold text-xl tracking-tight text-slate-900'>
+            HospedaSuite
+          </span>
+          <div className='h-4 w-[1px] bg-slate-200' />
+          <div className='flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500'>
             <MapPin
               size={12}
-              className='text-cyan-500'
+              className='text-purple-500'
             />
-            Equipo en Zona: {cityName}
+            {cityName}
           </div>
         </div>
       </motion.nav>
 
-      <main className='relative z-10 pt-40 pb-20'>
+      <main className='relative z-10 pt-32 pb-20 px-6'>
         {/* ========================================================
-            1. HERO: ESCASEZ LOCAL + BENEFICIO "MES GRATIS"
+            1. HERO: PROMESA DE VALOR + ESCASEZ REAL
            ======================================================== */}
-        <div className='max-w-4xl mx-auto px-6 text-center mb-16'>
+        <div className='max-w-5xl mx-auto text-center mb-24'>
           <motion.div
-            initial={{ opacity: 0, y: 20 }}
+            initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6 }}
+            transition={{ duration: 0.8 }}
           >
-            {/* BADGE DE BENEFICIO EXCLUSIVO */}
-            <div className='inline-flex items-center gap-2 px-5 py-2 rounded-full bg-gradient-to-r from-amber-50 to-orange-50 border border-amber-200 text-amber-800 text-xs font-bold uppercase tracking-widest mb-8 shadow-sm cursor-default transform hover:scale-105 transition-transform'>
-              <Gift
-                size={14}
-                className='text-amber-600'
-              />
-              Oferta Socio Fundador
-            </div>
+            <Badge
+              icon={Sparkles}
+              text='Tecnología de Voz 2026'
+              color='purple'
+            />
 
-            <h1 className='text-4xl md:text-6xl lg:text-7xl font-serif-display font-bold text-slate-900 mb-6 leading-[1.1] tracking-tight'>
-              Buscamos 12 Hoteles <br className='hidden md:block' />
-              <span className='text-transparent bg-clip-text bg-gradient-to-r from-blue-700 via-cyan-600 to-blue-600'>
-                Líderes en {cityName}
+            <h1 className='text-5xl md:text-7xl font-serif font-bold text-slate-900 mt-6 mb-6 leading-[1.1] tracking-tight'>
+              Tu Hotel en <br />
+              <span className='text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500'>
+                Autopiloto con IA
               </span>
             </h1>
 
-            <p className='text-lg md:text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed font-light'>
-              Únase al programa de{' '}
-              <span className='font-bold text-slate-900 bg-cyan-50 px-2 rounded mx-1 border border-cyan-100'>
-                SOCIOS FUNDADORES
+            <p className='text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed font-light'>
+              El primer PMS que{' '}
+              <strong>escucha, gestiona y vende por ti.</strong>
+              <br />
+              Únase al programa{' '}
+              <span className='font-semibold text-slate-900'>
+                Founder's Circle
               </span>{' '}
-              <strong>+ Implementación Asistida</strong> y obtenga su
-              <span className='font-bold text-slate-900 bg-cyan-50 px-2 rounded mx-1 border border-cyan-100'>
-                Primer Mes 100% Bonificado.
-              </span>
-              .
-              <br className='hidden md:block' />
-              Nuestro equipo está configurando cuentas esta semana.
+              y obtenga implementación "Llave en Mano".
             </p>
-          </motion.div>
 
-          {/* STATUS CARD - PROGRESS BAR (ESCASEZ JUSTIFICADA) */}
-          <div className='max-w-md mx-auto bg-white rounded-2xl p-6 shadow-2xl shadow-cyan-900/10 border border-slate-200 relative overflow-hidden group'>
-            {/* Efecto de brillo superior */}
-            <div className='absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-50'></div>
-
-            <div className='flex justify-between items-end mb-3'>
-              <span className='text-[10px] font-extrabold text-slate-500 uppercase tracking-widest flex items-center gap-1'>
-                <MapPin size={10} /> Cupos en {cityName}
-              </span>
-              <span className='text-sm font-bold text-cyan-700 bg-cyan-50 px-3 py-1 rounded-full border border-cyan-100'>
-                {spotsTaken} / {TOTAL_SPOTS} ASIGNADOS
-              </span>
-            </div>
-
-            <div className='h-3 bg-slate-100 rounded-full overflow-hidden mb-4 shadow-inner'>
-              <motion.div
-                initial={{ width: 0 }}
-                animate={{ width: `${progressPercent}%` }}
-                transition={{ duration: 1.5, ease: 'easeOut' }}
-                className={`h-full relative ${
-                  progressPercent > 80
-                    ? 'bg-gradient-to-r from-amber-400 to-amber-500'
-                    : 'bg-gradient-to-r from-blue-600 to-cyan-400'
-                }`}
-              >
-                <div className='absolute top-0 right-0 bottom-0 w-full bg-gradient-to-l from-white/30 to-transparent' />
-              </motion.div>
-            </div>
-
-            {/* 👇 AQUÍ ESTÁ LA MAGIA DEL NEUROMARKETING */}
-            <p className='text-xs text-slate-600 font-medium leading-snug'>
-              {spotsLeft > 0 ? (
-                <>
-                  Nuestro equipo de soporte tiene capacidad humana para{' '}
-                  <strong className='text-slate-900'>
-                    {spotsLeft} implementaciones más
-                  </strong>{' '}
-                  en {cityName} esta semana.
-                  <span className='block mt-2 text-amber-700 bg-amber-50 p-1.5 rounded border border-amber-100'>
-                    ⚠️ <strong>Nota:</strong> Al llegar a 12, pasaremos
-                    automáticamente a Lista de Espera (Sin bonificación).
-                  </span>
-                </>
-              ) : (
-                <span className='text-red-600 font-bold'>
-                  ⛔ Capacidad operativa llena. Lista de espera habilitada.
+            {/* STATUS DE ESCASEZ (CONECTADO A SUPABASE) */}
+            <div className='inline-flex items-center gap-4 bg-white p-2 pr-6 rounded-full shadow-lg border border-slate-100 mb-12'>
+              <div className='relative w-12 h-12 flex items-center justify-center'>
+                <svg className='transform -rotate-90 w-12 h-12'>
+                  <circle
+                    cx='24'
+                    cy='24'
+                    r='20'
+                    stroke='#f1f5f9'
+                    strokeWidth='4'
+                    fill='transparent'
+                  />
+                  <circle
+                    cx='24'
+                    cy='24'
+                    r='20'
+                    stroke='#8b5cf6'
+                    strokeWidth='4'
+                    fill='transparent'
+                    strokeDasharray={125.6}
+                    strokeDashoffset={125.6 - (progressPercent / 100) * 125.6}
+                  />
+                </svg>
+                <span className='absolute text-[10px] font-bold text-purple-700'>
+                  {spotsLeft}
                 </span>
-              )}
-            </p>
-          </div>
+              </div>
+              <div className='text-left'>
+                <p className='text-[10px] font-bold text-slate-400 uppercase tracking-wider'>
+                  Cupos Fundadores
+                </p>
+                <p className='text-sm font-bold text-slate-800'>
+                  Disponibles en {cityName}
+                </p>
+              </div>
+            </div>
+          </motion.div>
         </div>
 
         {/* ========================================================
-            2. PAIN SECTION: SIRE Y TIEMPO (SIN DIAN)
+            2. PAIN VS GAIN (VISUAL)
            ======================================================== */}
-        <section className='max-w-5xl mx-auto px-6 mb-24'>
-          <div className='bg-slate-50 rounded-[2.5rem] p-8 md:p-12 border border-slate-200 relative overflow-hidden'>
-            {/* Background Icon Abstract */}
-            <div className='absolute -right-10 -top-10 text-slate-200 opacity-50 rotate-12'>
-              <FileText size={250} />
+        <section className='max-w-6xl mx-auto mb-32'>
+          <div className='grid md:grid-cols-2 gap-8 items-center'>
+            {/* EL DOLOR (PASADO) */}
+            <div className='p-8 rounded-[2.5rem] bg-slate-100 border border-slate-200 opacity-80 scale-95 hover:scale-100 transition-transform duration-500'>
+              <div className='flex items-center gap-3 mb-6 opacity-50'>
+                <Clock size={32} />
+                <h3 className='text-2xl font-serif font-bold'>El Pasado</h3>
+              </div>
+              <ul className='space-y-4 text-slate-500 font-medium'>
+                <li className='flex gap-3 items-center'>
+                  <span className='text-red-400'>✕</span> 20 mins por Check-in
+                </li>
+                <li className='flex gap-3 items-center'>
+                  <span className='text-red-400'>✕</span> Errores de digitación
+                  en SIRE
+                </li>
+                <li className='flex gap-3 items-center'>
+                  <span className='text-red-400'>✕</span> Overbooking (Airbnb vs
+                  Booking)
+                </li>
+                <li className='flex gap-3 items-center'>
+                  <span className='text-red-400'>✕</span> Recepción desatendida
+                </li>
+              </ul>
             </div>
 
-            <div className='relative z-10 grid md:grid-cols-2 gap-12 items-center'>
-              <div>
-                <div className='flex items-center gap-2 text-amber-600 font-bold mb-4 bg-amber-50 w-fit px-3 py-1 rounded-full border border-amber-100'>
-                  <AlertTriangle size={16} />
-                  <span>RIESGO OPERATIVO</span>
+            {/* LA SOLUCIÓN (FUTURO) */}
+            <GlassCard className='p-10 relative overflow-hidden group'>
+              <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full blur-3xl -z-10 group-hover:scale-150 transition-transform duration-700' />
+
+              <div className='flex items-center gap-3 mb-6'>
+                <div className='p-3 bg-slate-900 rounded-2xl text-white'>
+                  <Zap size={24} />
                 </div>
-                <h2 className='text-3xl md:text-4xl font-serif-display font-bold text-slate-900 mb-4'>
-                  ¿Sigue reportando a Migración manualmente?
-                </h2>
-                <p className='text-lg text-slate-600 mb-6 leading-relaxed'>
-                  Llenar el SIRE huésped por huésped es lento y peligroso. Un
-                  error en una fecha o un pasaporte mal digitado puede derivar
-                  en procesos administrativos desgastantes.
-                </p>
-                <p className='font-medium text-slate-800 mb-6'>
-                  Deje de perder 20 minutos diarios en tareas de "secretaría".
-                </p>
-
-                <div className='flex flex-col gap-3'>
-                  <div className='bg-white p-4 rounded-xl shadow-sm border border-slate-100 flex items-center gap-4 opacity-70'>
-                    <div className='bg-slate-100 p-3 rounded-lg text-slate-400'>
-                      <Clock size={24} />
-                    </div>
-                    <div>
-                      <p className='text-xs text-slate-400 font-bold uppercase line-through'>
-                        Método Tradicional
-                      </p>
-                      <p className='text-sm font-bold text-slate-500'>
-                        Carga manual en plataforma SIRE (Lento y propenso a
-                        errores)
-                      </p>
-                    </div>
-                  </div>
-
-                  <div className='bg-white p-4 rounded-xl shadow-lg border-l-4 border-cyan-500 flex items-center gap-4 transform translate-x-2'>
-                    <div className='bg-cyan-50 p-3 rounded-lg text-cyan-600'>
-                      <Zap size={24} />
-                    </div>
-                    <div>
-                      <p className='text-xs text-cyan-600 font-bold uppercase'>
-                        Modo Fundador
-                      </p>
-                      <p className='text-sm font-bold text-slate-900'>
-                        Escaneo de Cédula + Envío Automático (0 Errores)
-                      </p>
-                    </div>
-                  </div>
+                <div>
+                  <h3 className='text-2xl font-serif font-bold text-slate-900'>
+                    HospedaSuite AI
+                  </h3>
+                  <p className='text-xs font-bold text-purple-600 uppercase tracking-widest'>
+                    Modo Autopiloto
+                  </p>
                 </div>
               </div>
 
-              {/* Visual de "Alivio" */}
-              <div className='bg-white p-6 rounded-2xl shadow-xl border border-slate-100 relative'>
-                <div className='absolute -top-3 -right-3 bg-green-500 text-white px-3 py-1 rounded-full text-xs font-bold shadow-lg'>
-                  SOLUCIONADO
-                </div>
-                <div className='space-y-4 opacity-50 blur-[0.5px]'>
-                  <div className='h-4 bg-slate-100 rounded w-3/4'></div>
-                  <div className='h-4 bg-slate-100 rounded w-full'></div>
-                  <div className='h-4 bg-slate-100 rounded w-5/6'></div>
-                </div>
-                <div className='mt-6 pt-6 border-t border-slate-100'>
-                  <div className='flex items-center gap-3 text-green-700 bg-green-50 p-4 rounded-xl border border-green-100'>
-                    <CheckCircle2 className='shrink-0' />
-                    <p className='text-sm font-bold leading-tight'>
-                      Reporte de Extranjeros enviado exitosamente a Migración
-                      Colombia.
-                    </p>
+              <ul className='space-y-5'>
+                <li className='flex gap-4 items-center'>
+                  <div className='bg-purple-100 p-2 rounded-full text-purple-600'>
+                    <Mic size={18} />
                   </div>
-                </div>
-              </div>
-            </div>
+                  <span className='font-bold text-slate-800'>
+                    Comandos de Voz ("Reserva a Juan...")
+                  </span>
+                </li>
+                <li className='flex gap-4 items-center'>
+                  <div className='bg-blue-100 p-2 rounded-full text-blue-600'>
+                    <ScanBarcode size={18} />
+                  </div>
+                  <span className='font-bold text-slate-800'>
+                    Check-in con Escáner (10 seg)
+                  </span>
+                </li>
+                <li className='flex gap-4 items-center'>
+                  <div className='bg-emerald-100 p-2 rounded-full text-emerald-600'>
+                    <Globe size={18} />
+                  </div>
+                  <span className='font-bold text-slate-800'>
+                    Tu Web de Reservas (0% Comisión)
+                  </span>
+                </li>
+              </ul>
+            </GlassCard>
           </div>
         </section>
 
         {/* ========================================================
-            3. RELIEF SECTION: "LO HACEMOS POR USTED"
+            3. CASOS DE USO (REEMPLAZO DE TESTIMONIOS)
            ======================================================== */}
-        <section className='max-w-4xl mx-auto px-6 mb-24 text-center'>
-          <h2 className='text-3xl font-serif-display font-bold text-slate-900 mb-4'>
-            "No tengo tiempo para configurar sistemas..."
+        <section className='max-w-5xl mx-auto mb-32'>
+          <h2 className='text-3xl font-serif font-bold text-center mb-12'>
+            Diseñado para Operaciones Modernas
           </h2>
-          <p className='text-slate-600 mb-10 text-lg'>
-            Entendemos el trabajo duro del hotelero. Por eso, el beneficio de
-            Socio Fundador incluye
-            <strong className='text-cyan-700'>
-              {' '}
-              Servicio de Concierge Digital
-            </strong>
-            .
-          </p>
-
-          <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
+          <div className='grid md:grid-cols-3 gap-6'>
             {[
               {
-                icon: <Camera className='text-purple-500' />,
-                title: 'Carga de Fotos',
-                desc: 'Subimos sus habitaciones por usted.',
+                title: 'Glampings',
+                desc: 'Gestiona todo desde el celular. Sin recepción física.',
+                icon: Smartphone,
               },
               {
-                icon: <UploadCloud className='text-cyan-500' />,
-                title: 'Migración Reservas',
-                desc: 'Pasamos su cuaderno a digital hoy.',
+                title: 'Hoteles Boutique',
+                desc: 'Ofrece una experiencia VIP rápida y sin papeles.',
+                icon: Star,
               },
               {
-                icon: <Server className='text-amber-500' />,
-                title: 'Puesta en Marcha',
-                desc: 'Lo dejamos operando en 24h.',
+                title: 'Hostales',
+                desc: 'Control de caja y flujo de huéspedes en tiempo real.',
+                icon: User,
               },
             ].map((item, idx) => (
               <div
                 key={idx}
-                className='p-6 bg-white border border-slate-100 rounded-2xl shadow-sm hover:shadow-xl hover:-translate-y-1 transition-all duration-300'
+                className='bg-white p-6 rounded-3xl border border-slate-100 shadow-sm hover:shadow-lg transition-all'
               >
-                <div className='mb-4 flex justify-center scale-125'>
-                  {item.icon}
-                </div>
-                <h3 className='font-bold text-slate-900 text-lg mb-2'>
-                  {item.title}
-                </h3>
-                <p className='text-sm text-slate-500'>{item.desc}</p>
+                <item.icon
+                  className='mb-4 text-slate-400'
+                  size={32}
+                />
+                <h3 className='font-bold text-lg mb-2'>{item.title}</h3>
+                <p className='text-sm text-slate-500 leading-relaxed'>
+                  {item.desc}
+                </p>
               </div>
             ))}
           </div>
         </section>
 
         {/* ========================================================
-            4. PRICING: ESTRATEGIA "MES GRATIS" + IA UPGRADE
+            4. PRICING (SOLO IA - ESTRATEGIA FUNDADOR)
            ======================================================== */}
-        <section className='max-w-7xl mx-auto px-6 mb-24'>
-          <div className='text-center mb-8'>
-            <h2 className='text-3xl md:text-4xl font-serif-display font-bold text-slate-900'>
-              Elija su Nivel de Automatización
+        <section
+          className='max-w-6xl mx-auto mb-32'
+          id='pricing'
+        >
+          <div className='text-center mb-16'>
+            <Badge
+              icon={Gift}
+              text='Oferta Socio Fundador'
+              color='amber'
+            />
+            <h2 className='text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4'>
+              Configuración "Llave en Mano"
             </h2>
-            <p className='text-slate-500 mt-3 mb-8'>
-              Socios Fundadores no pagan nada el primer mes. Sin letra chica.
+            <p className='text-slate-500 mt-4 max-w-2xl mx-auto'>
+              Para los <strong>12 Socios Fundadores</strong>, nuestro equipo
+              configura habitaciones, tarifas y migra reservas históricas.{' '}
+              <br />
+              <span className='text-purple-600 font-bold'>
+                Tú no mueves un dedo.
+              </span>
             </p>
-
-            {/* 👇 SWITCH INTERRUPTOR DE IA (CON MARGEN AUMENTADO mb-20) 👇 */}
-            <div className='flex items-center justify-center gap-4 mb-20'>
-              <span
-                className={`text-sm font-bold ${
-                  !isAIMode ? 'text-slate-900' : 'text-slate-400'
-                }`}
-              >
-                Estándar
-              </span>
-              <button
-                onClick={() => setIsAIMode(!isAIMode)}
-                className={`relative w-16 h-8 rounded-full transition-colors duration-300 ${
-                  isAIMode ? 'bg-cyan-500' : 'bg-slate-300'
-                }`}
-              >
-                <div
-                  className={`absolute top-1 left-1 bg-white w-6 h-6 rounded-full shadow-md transform transition-transform duration-300 ${
-                    isAIMode ? 'translate-x-8' : 'translate-x-0'
-                  }`}
-                />
-              </button>
-              <span
-                className={`text-sm font-bold flex items-center gap-2 ${
-                  isAIMode ? 'text-cyan-700' : 'text-slate-400'
-                }`}
-              >
-                Con Inteligencia Artificial
-                {isAIMode && (
-                  <span className='bg-gradient-to-r from-amber-400 to-orange-500 text-white text-[9px] px-2 py-0.5 rounded-full animate-pulse'>
-                    RECOMENDADO
-                  </span>
-                )}
-              </span>
-            </div>
           </div>
 
-          {/* ==============================================================
-              GRILLA DE PRECIOS BLINDADA (ESTRATEGIA ANTIMORTEM 2.0)
-             ============================================================== */}
-          <div className='grid md:grid-cols-3 gap-6 max-w-5xl mx-auto items-center'>
-            {/* 1. PLAN NANO - FILTRO: AUTOSERVICIO */}
-            <div className='p-6 rounded-3xl border border-slate-200 bg-white text-slate-500 relative transition-all duration-300 hover:border-slate-300'>
-              <div className='mb-4'>
-                <h3 className='font-bold text-lg flex items-center gap-2'>
-                  NANO{' '}
-                  {isAIMode && (
-                    <span className='text-cyan-500 text-xs bg-cyan-50 px-2 py-0.5 rounded-full'>
-                      IA
-                    </span>
-                  )}
-                </h3>
-                <p className='text-xs font-medium text-slate-400'>
-                  Cabañas & Glampings (1-3 Habs)
-                </p>
-              </div>
-
-              <div className='mb-6 opacity-80'>
-                <div className='flex items-center gap-2 mb-1'>
-                  <span className='text-sm text-slate-400 line-through'>
-                    {isAIMode ? '$69.900' : '$49.900'}
-                  </span>
-                  <span className='text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full'>
-                    MES 1 GRATIS
-                  </span>
-                </div>
-                <span className='text-3xl font-black text-slate-700'>
-                  $0 COP
-                </span>
-                <p className='text-[10px] text-slate-400 mt-2 font-medium'>
-                  * Luego{' '}
-                  <strong>{isAIMode ? '$69.900' : '$49.900'}/mes</strong>.
-                </p>
-              </div>
-
-              <ul className='space-y-3 mb-8 text-sm'>
-                <li className='flex gap-2 items-center text-slate-700'>
-                  <CheckCircle2
-                    size={14}
-                    className='text-slate-400'
-                  />{' '}
-                  Calendario Digital
-                </li>
-
-                {isAIMode ? (
-                  <>
-                    <li className='flex gap-2 items-center text-cyan-700 font-bold'>
-                      <Sparkles size={14} /> Recepción por WhatsApp
-                    </li>
-                    <li className='flex gap-2 items-center text-slate-700'>
-                      <ShieldCheck
-                        size={14}
-                        className='text-green-500'
-                      />{' '}
-                      SIRE Automático (Ley)
-                    </li>
-                  </>
-                ) : (
-                  <>
-                    <li className='flex gap-2 items-center text-slate-400 line-through'>
-                      <ScanBarcode size={14} /> Recepción por WhatsApp
-                    </li>
-                    <li className='flex gap-2 items-center text-red-400 font-medium'>
-                      <AlertTriangle size={14} /> Reporte SIRE Manual
-                    </li>
-                  </>
-                )}
-
-                {/* 🛡️ EL FILTRO DE CALIDAD (DISUASIVO PARA CLIENTES BARATOS) */}
-                <li className='flex gap-2 items-start text-slate-500 text-xs bg-slate-100 p-2 rounded-lg mt-4'>
-                  <AlertCircle
-                    size={14}
-                    className='shrink-0 mt-0.5 text-slate-400'
-                  />
-                  <span>
-                    Configuración Manual (Autoservicio). <br />
-                    <strong>No incluye carga de datos asistida.</strong>
-                  </span>
-                </li>
-              </ul>
-
-              <button
-                onClick={() => scrollToForm(isAIMode ? 'NANO_AI' : 'NANO')}
-                className='w-full py-3 rounded-xl border border-slate-200 font-bold text-sm hover:bg-slate-50 transition-colors text-slate-600'
-              >
-                Elegir {isAIMode ? 'Nano AI' : 'Básico'}
-              </button>
-            </div>
-
-            {/* 2. PLAN PRO (EL HÉROE) - PROMESA: LLAVE EN MANO */}
-            <div
-              className={`p-8 rounded-[2rem] border-2 bg-white shadow-2xl relative transform md:scale-110 z-10 transition-all duration-500 ${
-                isAIMode
-                  ? 'border-purple-500 shadow-purple-500/20'
-                  : 'border-cyan-500 shadow-cyan-900/10'
-              }`}
-            >
-              <div
-                className={`absolute -top-4 left-1/2 -translate-x-1/2 text-white px-4 py-1.5 rounded-full text-xs font-bold uppercase tracking-wider shadow-lg flex items-center gap-2 ${
-                  isAIMode
-                    ? 'bg-gradient-to-r from-purple-600 to-indigo-600'
-                    : 'bg-gradient-to-r from-cyan-600 to-blue-600'
-                }`}
-              >
-                <Gift size={12} /> 1 Mes Gratis
-              </div>
-
-              <div className='mb-4 mt-2'>
-                <h3 className='font-bold text-slate-900 text-2xl flex items-center gap-2'>
-                  PRO{' '}
-                  {isAIMode && (
-                    <span className='text-purple-600 text-sm bg-purple-50 px-2 py-0.5 rounded-full'>
-                      IA
-                    </span>
-                  )}
-                </h3>
-                <p className='text-xs font-bold text-slate-400 uppercase tracking-wide'>
-                  El más vendido (4-12 Habs)
-                </p>
-                <p
-                  className={`text-sm font-bold mt-2 leading-tight ${
-                    isAIMode ? 'text-purple-700' : 'text-cyan-700'
-                  }`}
-                >
-                  {isAIMode
-                    ? 'Tu Recepcionista por el 5% de un sueldo'
-                    : 'Automatización Total'}
-                </p>
-              </div>
-
-              <div className='mb-6'>
-                <div className='flex items-center gap-2 mb-1'>
-                  <span className='text-lg text-slate-400 line-through font-medium'>
-                    {isAIMode ? '$139.900' : '$99.900'}
-                  </span>
-                  <span className='text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full'>
-                    HOY $0
-                  </span>
-                </div>
-                <span className='text-5xl font-black text-slate-900 tracking-tight'>
-                  $0 COP
-                </span>
-                <p className='text-xs text-slate-500 mt-2 font-medium'>
-                  * Primer mes bonificado. Luego{' '}
-                  <strong className='text-slate-800'>
-                    {isAIMode ? '$139.900' : '$99.900'}/mes
-                  </strong>
-                  .
-                </p>
-              </div>
-
-              <ul className='space-y-4 mb-8 text-sm font-medium text-slate-700'>
-                {/* 🏆 EL BENEFICIO VIP (SOLO PARA PRO/GROWTH) */}
-                <li className='flex gap-3 items-center bg-amber-50 p-2 rounded-lg border border-amber-100 mb-4'>
-                  <div className='bg-amber-100 p-1 rounded-full text-amber-600 shrink-0'>
-                    <Star size={14} />
-                  </div>
-                  <span className='font-bold text-amber-800 leading-tight text-xs'>
-                    Te entregamos el hotel configurado y listo para vender
-                    (Llave en mano)
-                  </span>
-                </li>
-
-                {isAIMode && (
-                  <>
-                    <motion.li
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className='flex gap-3 items-center bg-purple-50 p-3 rounded-xl border border-purple-100'
-                    >
-                      <div className='bg-purple-100 p-1.5 rounded-full text-purple-600'>
-                        <Mic size={14} />
-                      </div>
-                      <span className='font-bold text-purple-900 leading-tight'>
-                        Atiende llamadas y chats 24/7 (Voz Real)
-                      </span>
-                    </motion.li>
-
-                    <motion.li
-                      initial={{ opacity: 0, x: -10 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      transition={{ delay: 0.1 }}
-                      className='flex gap-3 items-center'
-                    >
-                      <div className='bg-blue-100 p-1 rounded-full text-blue-600'>
-                        <ShoppingBag size={14} />
-                      </div>
-                      <span className='font-bold text-slate-900'>
-                        CRM & Motor de Ventas
-                      </span>
-                    </motion.li>
-                  </>
-                )}
-
-                <li className='flex gap-3 items-center'>
-                  <div className='bg-green-100 p-1 rounded-full text-green-600'>
-                    <CheckCircle2 size={14} />
-                  </div>
-                  Reporte SIRE Automático (0 Multas)
-                </li>
-                <li className='flex gap-3 items-center'>
-                  <div className='bg-cyan-100 p-1 rounded-full text-cyan-600'>
-                    <ScanBarcode size={14} />
-                  </div>
-                  Check-in QR Express
-                </li>
-              </ul>
-
-              <button
-                onClick={() => scrollToForm(isAIMode ? 'PRO_AI' : 'PRO')}
-                className={`w-full py-4 rounded-xl text-white font-bold text-lg hover:shadow-xl hover:-translate-y-1 transition-all flex justify-center items-center gap-2 group ${
-                  isAIMode
-                    ? 'bg-[#2E1065] shadow-lg shadow-purple-900/20'
-                    : 'bg-[#010512] shadow-cyan-900/20'
-                }`}
-              >
-                Reclamar Mes Gratis{' '}
-                <ChevronRight
-                  size={18}
-                  className='group-hover:translate-x-1 transition-transform'
-                />
-              </button>
-            </div>
-
-            {/* 3. PLAN GROWTH - TRANSPARENCIA TOTAL */}
-            <div className='p-6 rounded-3xl border border-slate-200 bg-white relative transition-all duration-300 hover:border-blue-300'>
-              <div className='mb-4'>
-                <h3 className='font-bold text-lg flex items-center gap-2'>
-                  GROWTH{' '}
-                  {isAIMode && (
-                    <span className='text-blue-600 text-xs bg-blue-50 px-2 py-0.5 rounded-full'>
-                      IA
-                    </span>
-                  )}
-                </h3>
-                <p className='text-xs font-medium text-slate-400'>
-                  Hoteles (13-30 Habs)
-                </p>
-              </div>
-              <div className='mb-6'>
-                <div className='flex items-center gap-2 mb-1'>
-                  <span className='text-sm text-slate-400 line-through'>
-                    {isAIMode ? '$219.900' : '$159.900'}
-                  </span>
-                  <span className='text-[10px] font-bold bg-green-100 text-green-700 px-2 py-0.5 rounded-full'>
-                    AHORRAS 100%
-                  </span>
-                </div>
-                <span className='text-3xl font-black text-slate-900'>
-                  $0 COP
-                </span>
-                <p className='text-xs text-slate-500 mt-2 font-medium'>
-                  * Primer mes bonificado. Luego{' '}
-                  <strong>{isAIMode ? '$219.900' : '$159.900'}/mes</strong>.
+          <div className='grid md:grid-cols-3 gap-6 items-center'>
+            {/* PLAN NANO IA */}
+            <div className='p-8 rounded-[2.5rem] bg-white border border-slate-200 relative group hover:border-blue-300 transition-all'>
+              <h3 className='text-xl font-bold text-slate-900 mb-1'>Nano AI</h3>
+              <p className='text-xs font-bold text-slate-400 uppercase'>
+                1-3 Unidades
+              </p>
+              <div className='my-6'>
+                <span className='text-4xl font-serif font-bold'>$69.900</span>
+                <span className='text-sm text-slate-400'>/mes</span>
+                <p className='text-xs font-bold text-green-600 mt-2 bg-green-50 inline-block px-2 py-1 rounded'>
+                  MES 1 BONIFICADO ($0)
                 </p>
               </div>
               <ul className='space-y-3 mb-8 text-sm text-slate-600'>
-                {/* BENEFICIO LLAVE EN MANO TAMBIÉN AQUÍ */}
-                <li className='flex gap-2 items-center text-amber-600 font-bold text-xs mb-2'>
-                  <Star size={12} /> Configuración VIP Incluida
-                </li>
-
-                {isAIMode && (
-                  <li className='flex gap-2 items-center font-bold text-blue-900'>
-                    <Mic
-                      size={14}
-                      className='text-blue-500'
-                    />{' '}
-                    Voz + Comandos Masivos
-                  </li>
-                )}
-                <li className='flex gap-2 items-center'>
+                <li className='flex gap-2'>
                   <CheckCircle2
-                    size={14}
+                    size={16}
                     className='text-blue-500'
                   />{' '}
-                  CRM Marketing (Re-venta)
+                  Asistente de Voz IA
                 </li>
-                <li className='flex gap-2 items-center'>
+                <li className='flex gap-2'>
                   <CheckCircle2
-                    size={14}
+                    size={16}
                     className='text-blue-500'
                   />{' '}
-                  Bot WhatsApp Pro
+                  Calendario Inteligente
                 </li>
-                <li className='flex gap-2 items-center'>
+                <li className='flex gap-2'>
                   <CheckCircle2
-                    size={14}
+                    size={16}
                     className='text-blue-500'
                   />{' '}
-                  Facturación Electrónica
+                  Archivos SIRE
                 </li>
               </ul>
               <button
-                onClick={() => scrollToForm(isAIMode ? 'GROWTH_AI' : 'GROWTH')}
-                className='w-full py-3 rounded-xl border border-slate-900 text-slate-900 font-bold text-sm hover:bg-slate-900 hover:text-white transition-all'
+                onClick={() => scrollToForm('NANO_AI')}
+                className='w-full py-4 rounded-2xl border border-slate-200 font-bold hover:bg-slate-50'
               >
-                Elegir {isAIMode ? 'Growth AI' : 'Growth'}
+                Elegir Nano
+              </button>
+            </div>
+
+            {/* PLAN PRO IA (DESTACADO) */}
+            <div className='p-8 rounded-[2.5rem] bg-[#0f172a] text-white relative shadow-2xl shadow-purple-900/30 transform md:scale-110 z-10'>
+              <div className='absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-blue-600 text-white text-[10px] font-bold px-4 py-1 rounded-bl-2xl rounded-tr-2xl'>
+                MÁS ELEGIDO
+              </div>
+              <h3 className='text-2xl font-bold mb-1'>Pro AI</h3>
+              <p className='text-xs font-bold text-slate-400 uppercase'>
+                4-12 Habitaciones
+              </p>
+              <div className='my-6'>
+                <span className='text-5xl font-serif font-bold'>$139.900</span>
+                <span className='text-sm text-slate-400'>/mes</span>
+                <p className='text-xs font-bold text-purple-400 mt-2 bg-white/10 inline-block px-2 py-1 rounded'>
+                  MES 1 GRATIS ($0)
+                </p>
+              </div>
+              <ul className='space-y-4 mb-8 text-sm font-medium text-slate-300'>
+                <li className='flex gap-3 items-center text-white'>
+                  <Star
+                    size={16}
+                    className='text-amber-400'
+                  />{' '}
+                  Configuración VIP (Concierge)
+                </li>
+                <li className='flex gap-3'>
+                  <Mic
+                    size={16}
+                    className='text-purple-400'
+                  />{' '}
+                  IA Voz Avanzada
+                </li>
+                <li className='flex gap-3'>
+                  <ScanBarcode
+                    size={16}
+                    className='text-cyan-400'
+                  />{' '}
+                  Escáner Check-in
+                </li>
+                <li className='flex gap-3'>
+                  <Globe
+                    size={16}
+                    className='text-blue-400'
+                  />{' '}
+                  Web de Reservas Propia
+                </li>
+              </ul>
+              <button
+                onClick={() => scrollToForm('PRO_AI')}
+                className='w-full py-4 rounded-2xl bg-white text-slate-900 font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-shadow'
+              >
+                Reclamar Cupo
+              </button>
+            </div>
+
+            {/* PLAN GROWTH IA */}
+            <div className='p-8 rounded-[2.5rem] bg-white border border-slate-200 relative group hover:border-blue-300 transition-all'>
+              <h3 className='text-xl font-bold text-slate-900 mb-1'>
+                Growth AI
+              </h3>
+              <p className='text-xs font-bold text-slate-400 uppercase'>
+                13-30 Habitaciones
+              </p>
+              <div className='my-6'>
+                <span className='text-4xl font-serif font-bold'>$219.900</span>
+                <span className='text-sm text-slate-400'>/mes</span>
+                <p className='text-xs font-bold text-green-600 mt-2 bg-green-50 inline-block px-2 py-1 rounded'>
+                  MES 1 BONIFICADO ($0)
+                </p>
+              </div>
+              <ul className='space-y-3 mb-8 text-sm text-slate-600'>
+                <li className='flex gap-2'>
+                  <Star
+                    size={16}
+                    className='text-amber-500'
+                  />{' '}
+                  Configuración VIP
+                </li>
+                <li className='flex gap-2'>
+                  <CheckCircle2
+                    size={16}
+                    className='text-blue-500'
+                  />{' '}
+                  Multi-usuario
+                </li>
+                <li className='flex gap-2'>
+                  <CheckCircle2
+                    size={16}
+                    className='text-blue-500'
+                  />{' '}
+                  CRM Marketing
+                </li>
+              </ul>
+              <button
+                onClick={() => scrollToForm('GROWTH_AI')}
+                className='w-full py-4 rounded-2xl border border-slate-200 font-bold hover:bg-slate-50'
+              >
+                Elegir Growth
               </button>
             </div>
           </div>
         </section>
 
         {/* ========================================================
-            5. FORMULARIO DE CIERRE (ACTIVACIÓN INMEDIATA)
+            5. FORMULARIO DE ACTIVACIÓN (PASO 1 & 2 OPTIMIZADO)
            ======================================================== */}
         <section
           id='activation-form'
-          className='max-w-4xl mx-auto px-6'
+          className='max-w-3xl mx-auto'
         >
-          <div className='bg-white rounded-3xl shadow-2xl shadow-slate-200 border border-slate-100 overflow-hidden relative'>
-            <div className='absolute top-0 left-0 w-full h-1.5 bg-gradient-to-r from-blue-600 via-cyan-400 to-blue-600'></div>
+          <GlassCard className='overflow-hidden relative'>
+            {/* Barra de Progreso Superior */}
+            <div className='h-1.5 w-full bg-slate-100'>
+              <motion.div
+                className='h-full bg-gradient-to-r from-blue-600 to-purple-600'
+                animate={{ width: formStep === 1 ? '50%' : '100%' }}
+              />
+            </div>
 
             <div className='p-8 md:p-12'>
-              <div className='mb-8 text-center'>
-                <h3 className='text-2xl font-bold text-slate-900'>
-                  Activar Beneficio Fundador
+              <div className='text-center mb-10'>
+                <h3 className='text-3xl font-serif font-bold text-slate-900'>
+                  Activación Fundador
                 </h3>
-                <p className='text-slate-600 text-sm mt-1'>
-                  Paso {formStep} de 2: Asegurando su cupo en {cityName}.
+                <p className='text-slate-500 mt-2 flex items-center justify-center gap-2'>
+                  <Lock size={14} />{' '}
+                  {spotsLeft > 0
+                    ? `Quedan ${spotsLeft} cupos en ${cityName}`
+                    : 'Lista de Espera Activa'}
                 </p>
               </div>
 
               {formStatus === 'success' ? (
-                <div className='text-center py-12 bg-green-50 rounded-2xl border border-green-100 animate-in fade-in zoom-in'>
-                  <div className='w-20 h-20 bg-green-100 text-green-600 rounded-full flex items-center justify-center mx-auto mb-4 border-4 border-white shadow-sm'>
-                    <CheckCircle2 size={40} />
-                  </div>
-                  <h3 className='text-2xl font-bold text-slate-900 mb-2'>
-                    ¡Cupo Reservado!
-                  </h3>
-                  <p className='text-slate-600 px-6 mb-6'>
-                    Bienvenido al grupo de fundadores. <br />
-                    Su consultor local lo contactará en{' '}
-                    <strong>menos de 5 minutos</strong> para iniciar la carga de
-                    datos.
-                  </p>
-                  <div className='inline-block bg-white px-4 py-2 rounded-lg border border-slate-200 text-xs font-mono text-slate-500'>
-                    Ticket: FND-{Math.floor(Math.random() * 1000)}
-                  </div>
-                </div>
-              ) : (
-                <form
-                  onSubmit={handleSubmit}
-                  className='relative'
+                <motion.div
+                  initial={{ opacity: 0, scale: 0.9 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className='text-center py-10'
                 >
+                  <div className='w-24 h-24 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6'>
+                    <CheckCircle2
+                      size={48}
+                      className='text-green-600'
+                    />
+                  </div>
+                  <h3 className='text-2xl font-bold text-slate-900'>
+                    ¡Solicitud Recibida!
+                  </h3>
+                  <p className='text-slate-600 mt-2 mb-6'>
+                    Has asegurado tu posición en la lista de fundadores.
+                    <br />
+                    Revisa tu WhatsApp en breve.
+                  </p>
+                </motion.div>
+              ) : (
+                <form onSubmit={handleSubmit}>
                   <AnimatePresence mode='wait'>
                     {formStep === 1 && (
                       <motion.div
@@ -891,46 +662,66 @@ const LandingPage = () => {
                         initial={{ opacity: 0, x: -20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: -20 }}
-                        className='space-y-5 max-w-md mx-auto'
+                        className='space-y-6'
                       >
-                        <InputGroup
-                          label='Nombre Propietario / Admin'
-                          icon={<User size={18} />}
-                          placeholder='Ej: Juan Pérez'
-                          value={formData.ownerName}
-                          onChange={(e) =>
-                            setFormData({
-                              ...formData,
-                              ownerName: e.target.value,
-                            })
-                          }
-                        />
-                        <InputGroup
-                          label='WhatsApp (Para activar el regalo)'
-                          type='tel'
-                          icon={<Smartphone size={18} />}
-                          placeholder='300 123 4567'
-                          value={formData.phone}
-                          onChange={(e) =>
-                            setFormData({ ...formData, phone: e.target.value })
-                          }
-                        />
+                        {/* INPUTS GRANDES (MAC STYLE) */}
+                        <div className='space-y-2'>
+                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
+                            Tu Nombre
+                          </label>
+                          <div className='relative'>
+                            <User
+                              className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400'
+                              size={20}
+                            />
+                            <input
+                              type='text'
+                              required
+                              placeholder='Ej: Alejandro Magno'
+                              className='w-full p-4 pl-12 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-purple-500/20 font-medium text-lg'
+                              value={formData.ownerName}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  ownerName: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                        </div>
 
-                        <div className='bg-amber-50 p-3 rounded-lg border border-amber-100 flex gap-3 items-start mt-2'>
-                          <Star
-                            className='text-amber-500 shrink-0 mt-0.5'
-                            size={16}
-                          />
-                          <p className='text-xs text-amber-800 leading-tight'>
-                            Al dar clic, reservas uno de los{' '}
-                            <strong>{spotsLeft} cupos disponibles</strong> en{' '}
-                            {cityName} con el beneficio de 1 mes gratis.
+                        <div className='space-y-2'>
+                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
+                            WhatsApp
+                          </label>
+                          <div className='relative'>
+                            <Smartphone
+                              className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400'
+                              size={20}
+                            />
+                            <input
+                              type='tel'
+                              required
+                              placeholder='300 123 4567'
+                              className='w-full p-4 pl-12 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-purple-500/20 font-medium text-lg'
+                              value={formData.phone}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  phone: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <p className='text-[10px] text-slate-400 ml-2'>
+                            * Te enviaremos el acceso por este medio.
                           </p>
                         </div>
 
                         <button
+                          type='button'
                           onClick={handleNextStep}
-                          className='w-full py-4 mt-2 rounded-xl font-bold text-lg bg-[#010512] text-white flex items-center justify-center gap-2 hover:bg-slate-800 transition-colors shadow-xl shadow-slate-900/10'
+                          className='w-full py-5 rounded-2xl bg-slate-900 text-white font-bold text-lg shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform'
                         >
                           Verificar Disponibilidad <ChevronRight size={20} />
                         </button>
@@ -943,110 +734,112 @@ const LandingPage = () => {
                         initial={{ opacity: 0, x: 20 }}
                         animate={{ opacity: 1, x: 0 }}
                         exit={{ opacity: 0, x: 20 }}
-                        className='space-y-5'
+                        className='space-y-6'
                       >
-                        <div className='grid md:grid-cols-2 gap-4'>
-                          <InputGroup
-                            label='Nombre del Hotel'
-                            icon={<Building2 size={16} />}
-                            value={formData.hotelName}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                hotelName: e.target.value,
-                              })
-                            }
-                          />
-                          <InputGroup
-                            label='Email'
-                            type='email'
-                            icon={<Mail size={16} />}
-                            value={formData.email}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                email: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
                         <div className='grid grid-cols-2 gap-4'>
-                          <InputGroup
-                            label='Habitaciones'
-                            type='number'
-                            value={formData.rooms}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                rooms: e.target.value,
-                              })
-                            }
-                          />
-                          <div className='space-y-1.5'>
-                            <label className='text-[11px] font-bold text-slate-700 uppercase tracking-widest ml-1'>
-                              Gestión Actual
+                          <div className='space-y-1'>
+                            <label className='text-[10px] font-bold uppercase text-slate-400 ml-2'>
+                              Nombre Hotel
                             </label>
-                            <div className='relative'>
-                              <select
-                                className='w-full p-4 bg-slate-50 border border-slate-300 rounded-xl outline-none text-sm appearance-none font-medium'
-                                value={formData.currentSoftware}
-                                onChange={(e) =>
-                                  setFormData({
-                                    ...formData,
-                                    currentSoftware: e.target.value,
-                                  })
-                                }
-                              >
-                                <option value=''>Elegir...</option>
-                                <option value='Manual'>
-                                  Manual / Cuaderno
-                                </option>
-                                <option value='Excel'>Excel</option>
-                                <option value='Software'>Otro Software</option>
-                              </select>
-                              <div className='absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none text-slate-500'>
-                                ▼
-                              </div>
-                            </div>
+                            <input
+                              type='text'
+                              required
+                              className='w-full p-4 bg-slate-50 rounded-2xl border-none font-medium'
+                              value={formData.hotelName}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  hotelName: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className='space-y-1'>
+                            <label className='text-[10px] font-bold uppercase text-slate-400 ml-2'>
+                              Email
+                            </label>
+                            <input
+                              type='email'
+                              required
+                              className='w-full p-4 bg-slate-50 rounded-2xl border-none font-medium'
+                              value={formData.email}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  email: e.target.value,
+                                })
+                              }
+                            />
                           </div>
                         </div>
 
-                        {/* HONEYPOT */}
-                        <div className='opacity-0 absolute -z-10 h-0 w-0'>
-                          <input
-                            type='text'
-                            name='_honey'
-                            value={formData._honey}
-                            onChange={(e) =>
-                              setFormData({
-                                ...formData,
-                                _honey: e.target.value,
-                              })
-                            }
-                          />
+                        <div className='grid grid-cols-2 gap-4'>
+                          <div className='space-y-1'>
+                            <label className='text-[10px] font-bold uppercase text-slate-400 ml-2'>
+                              Habitaciones
+                            </label>
+                            <input
+                              type='number'
+                              required
+                              className='w-full p-4 bg-slate-50 rounded-2xl border-none font-medium'
+                              value={formData.rooms}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  rooms: e.target.value,
+                                })
+                              }
+                            />
+                          </div>
+                          <div className='space-y-1'>
+                            <label className='text-[10px] font-bold uppercase text-slate-400 ml-2'>
+                              Software Actual
+                            </label>
+                            <select
+                              className='w-full p-4 bg-slate-50 rounded-2xl border-none font-medium appearance-none'
+                              value={formData.currentSoftware}
+                              onChange={(e) =>
+                                setFormData({
+                                  ...formData,
+                                  currentSoftware: e.target.value,
+                                })
+                              }
+                            >
+                              <option value=''>Elegir...</option>
+                              <option value='Manual'>Papel / Excel</option>
+                              <option value='Software'>Otro PMS</option>
+                            </select>
+                          </div>
                         </div>
+
+                        {/* Honeypot oculto */}
+                        <input
+                          type='text'
+                          name='_honey'
+                          value={formData._honey}
+                          onChange={(e) =>
+                            setFormData({ ...formData, _honey: e.target.value })
+                          }
+                          className='hidden'
+                        />
 
                         <div className='flex gap-3 pt-4'>
                           <button
                             type='button'
                             onClick={() => setFormStep(1)}
-                            className='p-4 rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 transition-colors'
+                            className='p-4 rounded-2xl border border-slate-200 text-slate-500 hover:bg-slate-50'
                           >
-                            <ArrowLeft size={20} />
+                            <ArrowLeft size={24} />
                           </button>
                           <button
                             type='submit'
                             disabled={loading || isWaitlist}
-                            className='flex-1 py-4 rounded-xl font-bold text-lg bg-[#010512] text-white flex items-center justify-center gap-2 hover:shadow-lg hover:shadow-cyan-500/20 transition-all relative overflow-hidden'
+                            className='flex-1 py-5 rounded-2xl bg-gradient-to-r from-purple-700 to-blue-600 text-white font-bold text-lg shadow-xl shadow-purple-500/20 hover:shadow-purple-500/40 transition-all flex items-center justify-center gap-2'
                           >
                             {loading ? (
                               <Clock className='animate-spin' />
                             ) : (
-                              <>
-                                <span className='relative z-10'>
-                                  Activar Mes Gratis
-                                </span>
-                              </>
+                              'Activar Mes Gratis'
                             )}
                           </button>
                         </div>
@@ -1056,63 +849,14 @@ const LandingPage = () => {
                 </form>
               )}
             </div>
-          </div>
-          <p className='text-center text-xs text-slate-400 mt-6 mb-12'>
-            Sus datos viajan encriptados. Garantía de privacidad.
+          </GlassCard>
+          <p className='text-center text-xs text-slate-400 mt-6'>
+            Tus datos están protegidos por encriptación SSL de 256-bits.
           </p>
         </section>
       </main>
+
       <SalesAgent />
-    </div>
-  );
-};
-
-// Componente Auxiliar InputGroup
-const InputGroup = ({
-  label,
-  type = 'text',
-  placeholder,
-  value,
-  onChange,
-  icon,
-}) => {
-  const [focused, setFocused] = useState(false);
-  const inputId = useId();
-
-  return (
-    <div className='space-y-1.5'>
-      <label
-        htmlFor={inputId}
-        className={`text-[11px] font-bold uppercase tracking-widest ml-1 transition-colors ${
-          focused ? 'text-cyan-700' : 'text-slate-600'
-        }`}
-      >
-        {label}
-      </label>
-      <div className='relative group'>
-        <input
-          id={inputId}
-          type={type}
-          required
-          placeholder={placeholder}
-          className={`w-full p-4 pl-4 bg-slate-50 border rounded-xl outline-none transition-all duration-200 font-medium text-slate-900 placeholder:text-slate-300 ${
-            focused
-              ? 'bg-white border-cyan-500 ring-4 ring-cyan-500/10'
-              : 'border-slate-200 hover:border-slate-300'
-          }`}
-          value={value}
-          onChange={onChange}
-          onFocus={() => setFocused(true)}
-          onBlur={() => setFocused(false)}
-        />
-        <div
-          className={`absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none transition-colors ${
-            focused ? 'text-cyan-600' : 'text-slate-400'
-          }`}
-        >
-          {icon}
-        </div>
-      </div>
     </div>
   );
 };
