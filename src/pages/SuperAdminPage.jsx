@@ -394,6 +394,22 @@ const SuperAdminPage = () => {
                 Solicitudes
               </span>
             </button>
+            // Agrega este bloque debajo del botón de "Solicitudes"
+            <button
+              onClick={() => navigate('/hunter')}
+              className='flex items-center gap-2 md:gap-4 px-3 md:px-4 py-2 md:py-3.5 rounded-xl md:rounded-2xl transition-all text-white/60 hover:bg-white/5'
+            >
+              <div className='p-1 bg-red-500/10 rounded-lg'>
+                <Target
+                  size={18}
+                  className='text-red-500'
+                />{' '}
+                {/* Asegúrate de importar Target de lucide-react */}
+              </div>
+              <span className='font-medium text-xs md:text-sm hidden sm:inline'>
+                Hunter AI
+              </span>
+            </button>
           </nav>
 
           {/* Logout */}
