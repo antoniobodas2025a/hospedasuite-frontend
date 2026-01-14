@@ -28,6 +28,7 @@ import {
   DollarSign,
   AlertCircle,
   Menu,
+  Target,
 } from 'lucide-react';
 
 // --- COMPONENTES VISUALES (MINIMALISTA MAC 2026) ---
