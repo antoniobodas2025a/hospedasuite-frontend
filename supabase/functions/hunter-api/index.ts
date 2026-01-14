@@ -7,16 +7,16 @@ const corsHeaders = {
     'authorization, x-client-info, apikey, content-type',
 };
 
-// Función para convertir "Villa de Leyva" -> "villa-de-leyva"
+// Función para limpiar URLs
 const slugify = (text: string) => {
   return text
     .toString()
     .toLowerCase()
     .normalize('NFD')
-    .replace(/[\u0300-\u036f]/g, '') // Quitar tildes
-    .replace(/\s+/g, '-') // Espacios a guiones
-    .replace(/[^\w\-]+/g, '') // Quitar caracteres raros
-    .replace(/\-\-+/g, '-'); // Quitar guiones dobles
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, '-')
+    .replace(/[^\w\-]+/g, '')
+    .replace(/\-\-+/g, '-');
 };
 
 serve(async (req) => {
@@ -31,9 +31,8 @@ serve(async (req) => {
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
-    // 👇 AJUSTA ESTO SEGÚN DONDE ESTÉS PROBANDO
-    // const BASE_URL = "https://hospedasuite.com"; // Producción
-    const BASE_URL = 'https://hospedasuite.com'; // Pruebas Locales
+    // ✅ BLINDAJE DE DOMINIO: Forzamos producción siempre
+    const BASE_URL = 'https://hospedasuite.com';
 
     if (!GOOGLE_MAPS_KEY || !GEMINI_API_KEY)
       throw new Error('Faltan API Keys.');
@@ -41,7 +40,7 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL!, SUPABASE_KEY!);
     const citySlug = slugify(city);
 
-    // 🔥 CAMBIO AQUÍ: Link directo sin "/oferta"
+    // Link limpio: hospedasuite.com/villa-de-leyva
     const offerLink = `${BASE_URL}/${citySlug}`;
 
     console.log(`🦅 SNIPER ACTIVADO: Cazando en ${city} -> Link: ${offerLink}`);
@@ -85,7 +84,7 @@ serve(async (req) => {
       const hasWeb = !!place.websiteUri;
       let pitch = '';
 
-      // Extracción de Reseñas (Dolor)
+      // Extracción de Dolor (Malas reseñas)
       let reviewsContext = '';
       if (place.reviews && place.reviews.length > 0) {
         const badReviews = place.reviews
@@ -93,33 +92,36 @@ serve(async (req) => {
           .slice(0, 1);
         reviewsContext =
           badReviews.length > 0
-            ? `Queja reciente: "${badReviews[0].text?.text}"`
-            : '';
+            ? `Queja encontrada en sus redes: "${badReviews[0].text?.text}"`
+            : 'Check-in lento o procesos manuales';
       }
 
-      // 3. INTELIGENCIA ARTIFICIAL (Venta del Cupo Fundador)
+      // 3. INTELIGENCIA ARTIFICIAL (Prompt de Alta Conversión)
       try {
         const prompt = `
-          Eres un estratega comercial. Escribe un mensaje de WhatsApp para el dueño del hotel "${
+          Actúa como un Consultor de Crecimiento Hotelero experto en Neuromarketing.
+          Escribe un mensaje de WhatsApp para el dueño del negocio "${
             place.displayName.text
           }".
           
-          OBJETIVO: Que den clic en este enlace para reclamar un MES GRATIS: ${offerLink}
+          OBJETIVO: Que sientan "miedo a perderse la oportunidad" (FOMO) y den clic en: ${offerLink}
           
-          DATOS:
+          DATOS DEL OBJETIVO:
           - Ciudad: ${city}
-          - Web: ${hasWeb ? 'Sí' : 'No'}
-          - Contexto: ${reviewsContext}
+          - Dolor Detectado: ${reviewsContext}
+          - ¿Tiene Web?: ${hasWeb ? 'Sí' : 'No (Usar esto como dolor)'}
           
-          ESTRUCTURA OBLIGATORIA:
-          1. Saludo casual.
-          2. Gancho: "Abrimos 12 cupos de Socios Fundadores en ${city} y quiero apartarte uno."
-          3. Cierre: "Mira los beneficios y reclama el mes gratis aquí 👇"
+          ESTRUCTURA DE ALTA CONVERSIÓN (Sigue esto estrictamente):
+          1.  **El Gancho (Pain):** No saludes con "Hola". Empieza mencionando el problema o el potencial desperdiciado. Ej: "Vi que ${
+            place.displayName.text
+          } aún hace check-in manual..." o "Si no estás llenando entre semana...".
+          2.  **La Solución (Escasez):** "Lanzamos el programa 'Socios Fundadores' en ${city}. Solo hay 12 cupos para automatizar todo con IA."
+          3.  **El Cierre (CTA):** "Reclama el mes gratis antes de que se llenen los cupos aquí 👇"
           
-          REGLAS:
-          - Máximo 30 palabras (sin contar el link).
-          - NO pongas el link en el texto generado, yo lo pondré al final.
-          - Tono: Exclusivo y urgente.
+          REGLAS DE FORMATO:
+          - Máximo 35 palabras (Sé directo).
+          - Usa emojis de alerta (🚨, 🚀, 📉).
+          - NO inventes el link, yo lo agregaré al final. Solo dame el texto.
         `;
 
         const aiResp = await fetch(
@@ -142,9 +144,9 @@ serve(async (req) => {
         console.error('Fallo IA', err);
       }
 
-      // Fallback por si la IA falla
+      // Fallback de Emergencia (Si Gemini falla)
       if (!pitch) {
-        pitch = `Hola ${place.displayName.text}, seleccionamos 12 hoteles en ${city} para darles software GRATIS el primer mes. \n\nReclama tu cupo aquí: ${offerLink}`;
+        pitch = `🚨 Atención ${place.displayName.text}: Abrimos 12 Cupos de Socios Fundadores en ${city}. \n\nAutomatiza tu hotel con IA y obtén 1 Mes Gratis aquí (antes de que se agoten): \n👉 ${offerLink}`;
       }
 
       // Guardar en Supabase
