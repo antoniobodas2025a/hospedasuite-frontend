@@ -30,6 +30,8 @@ import {
   Lock,
 } from 'lucide-react';
 import SalesAgent from '../components/SalesAgent';
+// ... otros imports
+import logoHospeda from '../assets/logo.png'; // Asegúrate de tener la imagen aquí
 
 // ==========================================
 // 🎨 ESTILOS & COMPONENTES VISUALES (MAC 2026)
@@ -218,22 +220,47 @@ const LandingPage = () => {
         <div className='absolute bottom-[-20%] left-[20%] w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-[120px] animate-blob animation-delay-4000' />
       </div>
 
-      {/* NAVBAR FLOTANTE */}
+      {/* NAVBAR FLOTANTE ESTILO "DYNAMIC ISLAND" (MAC 2026) */}
       <motion.nav
         animate={isNavHidden ? { y: -100 } : { y: 0 }}
-        className='fixed top-6 left-0 right-0 z-50 flex justify-center px-4'
+        transition={{ type: 'spring', stiffness: 260, damping: 20 }}
+        className='fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none' // pointer-events-none permite clic a través de los lados
       >
-        <div className='bg-white/80 backdrop-blur-md px-6 py-3 rounded-full shadow-xl shadow-slate-200/50 border border-white/50 flex items-center gap-4'>
-          <span className='font-serif font-bold text-xl tracking-tight text-slate-900'>
-            HospedaSuite
-          </span>
-          <div className='h-4 w-[1px] bg-slate-200' />
-          <div className='flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-widest text-slate-500'>
-            <MapPin
-              size={12}
-              className='text-purple-500'
+        <div
+          className='pointer-events-auto group flex items-center gap-6 pl-4 pr-6 py-3 rounded-full 
+          bg-[#0f172a]/90 backdrop-blur-2xl 
+          border border-white/10 
+          shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)]
+          hover:scale-[1.02] transition-all duration-300 ease-out'
+        >
+          {/* LOGO CON EFECTO NEÓN BLENDING */}
+          <div className='relative h-10 w-32 flex items-center justify-center overflow-hidden'>
+            {/* Esta imagen debe tener FONDO NEGRO para que el truco funcione */}
+            <img
+              src={logoHospeda} // Asegúrate que sea la nueva imagen que te acabo de dar
+              alt='HospedaSuite AI'
+              className='h-full w-full object-contain mix-blend-screen scale-110 opacity-90'
             />
-            {cityName}
+
+            {/* Brillo ambiental extra detrás del logo */}
+            <div className='absolute inset-0 bg-cyan-500/20 blur-xl opacity-50 mix-blend-overlay' />
+          </div>
+
+          {/* SEPARADOR VERTICAL */}
+          <div className='h-8 w-[1px] bg-gradient-to-b from-transparent via-white/20 to-transparent' />
+
+          {/* UBICACIÓN */}
+          <div className='flex flex-col leading-tight'>
+            <span className='text-[8px] font-bold uppercase tracking-widest text-slate-400 mb-0.5'>
+              Ubicación
+            </span>
+            <div className='flex items-center gap-1.5 text-xs font-bold text-white tracking-wide'>
+              <MapPin
+                size={12}
+                className='text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]'
+              />
+              {cityName}
+            </div>
           </div>
         </div>
       </motion.nav>
