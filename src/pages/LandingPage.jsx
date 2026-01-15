@@ -28,13 +28,14 @@ import {
   ShoppingBag,
   Globe,
   Lock,
+  HeartHandshake, // Nuevo icono para cercanía
+  Coffee, // Nuevo icono para tranquilidad
 } from 'lucide-react';
 import SalesAgent from '../components/SalesAgent';
-// ... otros imports
-import logoHospeda from '../assets/logo.png'; // Asegúrate de tener la imagen aquí
+import logoHospeda from '../assets/logo.png';
 
 // ==========================================
-// 🎨 ESTILOS & COMPONENTES VISUALES (MAC 2026)
+// 🎨 ESTILOS & COMPONENTES VISUALES
 // ==========================================
 const GlassCard = ({ children, className = '' }) => (
   <div
@@ -64,10 +65,9 @@ const Badge = ({ icon: Icon, text, color = 'blue' }) => {
 const LandingPage = () => {
   const { city_slug } = useParams();
 
-  // 1. Limpieza de URL
   const cleanCitySlug = city_slug
     ? decodeURIComponent(city_slug).replace(/['"]+/g, '').trim().toLowerCase()
-    : 'villa-de-leyva';
+    : 'Boyacá';
 
   const cityName = cleanCitySlug
     .split('-')
@@ -75,14 +75,14 @@ const LandingPage = () => {
     .join(' ');
 
   // ==========================================
-  // 🔒 LÓGICA DE NEGOCIO & ESTADOS
+  // 🔒 LÓGICA DE NEGOCIO
   // ==========================================
   const [launchData, setLaunchData] = useState({ total: 12, taken: 0 });
   const [spotsTaken, setSpotsTaken] = useState(0);
   const [loading, setLoading] = useState(false);
   const [formStatus, setFormStatus] = useState('idle');
   const [formStep, setFormStep] = useState(1);
-  const [selectedPlan, setSelectedPlan] = useState('PRO_AI'); // Por defecto Plan IA
+  const [selectedPlan, setSelectedPlan] = useState('PRO_AI');
 
   const [formData, setFormData] = useState({
     ownerName: '',
@@ -101,7 +101,7 @@ const LandingPage = () => {
     setIsNavHidden(latest > 100);
   });
 
-  // CARGA DE CUPOS (Supabase)
+  // CARGA DE CUPOS
   useEffect(() => {
     const fetchLaunchData = async () => {
       try {
@@ -119,7 +119,6 @@ const LandingPage = () => {
           });
           setSpotsTaken(data.spots_taken || 0);
         } else {
-          // Fallback defensivo para mantener la conversión
           setLaunchData({ total: DEFAULT_TOTAL, taken: 3 });
           setSpotsTaken(3);
         }
@@ -145,12 +144,11 @@ const LandingPage = () => {
     e.preventDefault();
     const cleanPhone = formData.phone.replace(/\D/g, '');
     if (formData.ownerName.trim().length < 3) {
-      alert('Por favor ingresa tu nombre completo.');
+      alert('Por favor dinos cómo te llamas.');
       return;
     }
-    // Validación laxa para permitir números internacionales si es necesario
     if (cleanPhone.length < 7) {
-      alert('Ingresa un número de WhatsApp válido.');
+      alert('Necesitamos un WhatsApp válido para enviarte el acceso.');
       return;
     }
     setFormStep(2);
@@ -158,7 +156,7 @@ const LandingPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (formData._honey) return; // Honeypot trap
+    if (formData._honey) return;
 
     setLoading(true);
     try {
@@ -172,17 +170,16 @@ const LandingPage = () => {
           metadata: {
             rooms: formData.rooms,
             software: formData.currentSoftware,
-            status: 'FOUNDER_APPLICANT',
+            status: 'PROMO_APPLICANT', // Cambiado status interno
             source_url: window.location.href,
             plan_interest: selectedPlan,
-            offer_claimed: '1_MONTH_FREE_AI',
+            offer_claimed: '1_MONTH_FREE_FRIENDS',
           },
         },
       ]);
 
       if (!error) {
-        // Enviar WhatsApp de bienvenida (Edge Function)
-        const welcomeMsg = `🤖 *Hola ${formData.ownerName}*, soy el Agente de Ingreso de HospedaSuite.\n\nHe recibido tu solicitud para el *Plan Fundador (IA)* en ${cityName}.\n\nTu cupo está reservado temporalmente mientras un ingeniero valida la información.`;
+        const welcomeMsg = `👋 *Hola ${formData.ownerName}*, te saluda el equipo de HospedaSuite.\n\nVimos que quieres modernizar tu hotel en ${cityName} con el Mes de Regalo.\n\nYa separamos tu cupo. Un compañero te escribirá en breve para configurar tu cuenta.`;
 
         await supabase.functions.invoke('send-whatsapp', {
           body: {
@@ -191,7 +188,6 @@ const LandingPage = () => {
           },
         });
 
-        // Feedback visual inmediato
         setSpotsTaken((prev) => Math.min(prev + 1, launchData.total));
         setTimeout(() => {
           setFormStatus('success');
@@ -202,7 +198,7 @@ const LandingPage = () => {
       }
     } catch (err) {
       console.error(err);
-      alert('Hubo un error al procesar tu solicitud. Intenta nuevamente.');
+      alert('Algo salió mal. Por favor intenta de nuevo.');
       setLoading(false);
     }
   };
@@ -210,54 +206,39 @@ const LandingPage = () => {
   return (
     <div className='min-h-screen text-slate-900 font-sans selection:bg-indigo-500/30 bg-[#F8FAFC] overflow-x-hidden'>
       <Helmet>
-        <title>Programa Fundador IA | HospedaSuite {cityName}</title>
+        <title>Mes de Regalo | HospedaSuite {cityName}</title>
       </Helmet>
 
-      {/* BACKGROUND FX (AURORA BOREAL) */}
+      {/* BACKGROUND FX */}
       <div className='fixed inset-0 z-0 pointer-events-none'>
         <div className='absolute top-[-20%] left-[-10%] w-[800px] h-[800px] bg-cyan-400/10 rounded-full blur-[120px] animate-blob' />
         <div className='absolute top-[10%] right-[-10%] w-[600px] h-[600px] bg-purple-500/10 rounded-full blur-[120px] animate-blob animation-delay-2000' />
-        <div className='absolute bottom-[-20%] left-[20%] w-[600px] h-[600px] bg-blue-400/10 rounded-full blur-[120px] animate-blob animation-delay-4000' />
       </div>
 
-      {/* NAVBAR FLOTANTE ESTILO "DYNAMIC ISLAND" (MAC 2026) */}
+      {/* NAVBAR */}
       <motion.nav
         animate={isNavHidden ? { y: -100 } : { y: 0 }}
         transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-        className='fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none' // pointer-events-none permite clic a través de los lados
+        className='fixed top-6 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none'
       >
-        <div
-          className='pointer-events-auto group flex items-center gap-6 pl-4 pr-6 py-3 rounded-full 
-          bg-[#0f172a]/90 backdrop-blur-2xl 
-          border border-white/10 
-          shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)]
-          hover:scale-[1.02] transition-all duration-300 ease-out'
-        >
-          {/* LOGO CON EFECTO NEÓN BLENDING */}
+        <div className='pointer-events-auto group flex items-center gap-6 pl-4 pr-6 py-3 rounded-full bg-[#0f172a]/90 backdrop-blur-2xl border border-white/10 shadow-[0_20px_40px_-10px_rgba(0,0,0,0.3)] hover:scale-[1.02] transition-all duration-300 ease-out'>
           <div className='relative h-10 w-32 flex items-center justify-center overflow-hidden'>
-            {/* Esta imagen debe tener FONDO NEGRO para que el truco funcione */}
             <img
-              src={logoHospeda} // Asegúrate que sea la nueva imagen que te acabo de dar
+              src={logoHospeda}
               alt='HospedaSuite AI'
               className='h-full w-full object-contain mix-blend-screen scale-110 opacity-90'
             />
-
-            {/* Brillo ambiental extra detrás del logo */}
             <div className='absolute inset-0 bg-cyan-500/20 blur-xl opacity-50 mix-blend-overlay' />
           </div>
-
-          {/* SEPARADOR VERTICAL */}
           <div className='h-8 w-[1px] bg-gradient-to-b from-transparent via-white/20 to-transparent' />
-
-          {/* UBICACIÓN */}
           <div className='flex flex-col leading-tight'>
             <span className='text-[8px] font-bold uppercase tracking-widest text-slate-400 mb-0.5'>
-              Ubicación
+              Zona
             </span>
             <div className='flex items-center gap-1.5 text-xs font-bold text-white tracking-wide'>
               <MapPin
                 size={12}
-                className='text-cyan-400 drop-shadow-[0_0_8px_rgba(34,211,238,0.8)]'
+                className='text-cyan-400'
               />
               {cityName}
             </div>
@@ -267,7 +248,7 @@ const LandingPage = () => {
 
       <main className='relative z-10 pt-32 pb-20 px-6'>
         {/* ========================================================
-            1. HERO: PROMESA DE VALOR + ESCASEZ REAL
+            1. HERO: LENGUAJE CERCANO Y DIRECTO
            ======================================================== */}
         <div className='max-w-5xl mx-auto text-center mb-24'>
           <motion.div
@@ -276,30 +257,27 @@ const LandingPage = () => {
             transition={{ duration: 0.8 }}
           >
             <Badge
-              icon={Sparkles}
-              text='Tecnología de Voz 2026'
+              icon={HeartHandshake}
+              text='Tecnología Amigable'
               color='purple'
             />
 
             <h1 className='text-5xl md:text-7xl font-serif font-bold text-slate-900 mt-6 mb-6 leading-[1.1] tracking-tight'>
-              Tu Hotel en <br />
+              Maneja tu hotel <br />
               <span className='text-transparent bg-clip-text bg-gradient-to-r from-blue-600 via-purple-600 to-cyan-500'>
-                Autopiloto con IA
+                sin perder la cabeza
               </span>
             </h1>
 
             <p className='text-xl text-slate-600 max-w-2xl mx-auto mb-10 leading-relaxed font-light'>
-              El primer PMS que{' '}
-              <strong>escucha, gestiona y vende por ti.</strong>
+              Olvídate de las tablas de Excel, las multas por el SIRE y el caos
+              en recepción.
               <br />
-              Únase al programa{' '}
-              <span className='font-semibold text-slate-900'>
-                Founder's Circle
-              </span>{' '}
-              y obtenga implementación "Llave en Mano".
+              Te regalamos <strong>1 Mes de Prueba</strong> para que veas cómo
+              tu hotel puede funcionar solo.
             </p>
 
-            {/* STATUS DE ESCASEZ (CONECTADO A SUPABASE) */}
+            {/* STATUS DE ESCASEZ */}
             <div className='inline-flex items-center gap-4 bg-white p-2 pr-6 rounded-full shadow-lg border border-slate-100 mb-12'>
               <div className='relative w-12 h-12 flex items-center justify-center'>
                 <svg className='transform -rotate-90 w-12 h-12'>
@@ -328,10 +306,10 @@ const LandingPage = () => {
               </div>
               <div className='text-left'>
                 <p className='text-[10px] font-bold text-slate-400 uppercase tracking-wider'>
-                  Cupos Fundadores
+                  Cupos Disponibles
                 </p>
                 <p className='text-sm font-bold text-slate-800'>
-                  Disponibles en {cityName}
+                  Para hoteles en {cityName}
                 </p>
               </div>
             </div>
@@ -339,35 +317,39 @@ const LandingPage = () => {
         </div>
 
         {/* ========================================================
-            2. PAIN VS GAIN (VISUAL)
+            2. DOLORES REALES (LENGUAJE NATURAL)
            ======================================================== */}
         <section className='max-w-6xl mx-auto mb-32'>
           <div className='grid md:grid-cols-2 gap-8 items-center'>
-            {/* EL DOLOR (PASADO) */}
+            {/* EL DOLOR */}
             <div className='p-8 rounded-[2.5rem] bg-slate-100 border border-slate-200 opacity-80 scale-95 hover:scale-100 transition-transform duration-500'>
-              <div className='flex items-center gap-3 mb-6 opacity-50'>
-                <Clock size={32} />
-                <h3 className='text-2xl font-serif font-bold'>El Pasado</h3>
+              <div className='flex items-center gap-3 mb-6 opacity-60'>
+                <Coffee size={32} />
+                <h3 className='text-2xl font-serif font-bold'>
+                  Lo que te quita el sueño
+                </h3>
               </div>
-              <ul className='space-y-4 text-slate-500 font-medium'>
+              <ul className='space-y-4 text-slate-600 font-medium'>
                 <li className='flex gap-3 items-center'>
-                  <span className='text-red-400'>✕</span> 20 mins por Check-in
+                  <span className='text-red-400 text-xl'>•</span> "¿Llené bien
+                  el reporte de Migración Colombia?"
                 </li>
                 <li className='flex gap-3 items-center'>
-                  <span className='text-red-400'>✕</span> Errores de digitación
-                  en SIRE
+                  <span className='text-red-400 text-xl'>•</span> Vender la
+                  misma habitación en Booking y Airbnb.
                 </li>
                 <li className='flex gap-3 items-center'>
-                  <span className='text-red-400'>✕</span> Overbooking (Airbnb vs
-                  Booking)
+                  <span className='text-red-400 text-xl'>•</span> Estar pegado
+                  al WhatsApp respondiendo precios.
                 </li>
                 <li className='flex gap-3 items-center'>
-                  <span className='text-red-400'>✕</span> Recepción desatendida
+                  <span className='text-red-400 text-xl'>•</span> Cuentas que no
+                  cuadran a fin de mes.
                 </li>
               </ul>
             </div>
 
-            {/* LA SOLUCIÓN (FUTURO) */}
+            {/* LA SOLUCIÓN */}
             <GlassCard className='p-10 relative overflow-hidden group'>
               <div className='absolute top-0 right-0 w-64 h-64 bg-gradient-to-br from-purple-500/20 to-cyan-500/20 rounded-full blur-3xl -z-10 group-hover:scale-150 transition-transform duration-700' />
 
@@ -377,10 +359,10 @@ const LandingPage = () => {
                 </div>
                 <div>
                   <h3 className='text-2xl font-serif font-bold text-slate-900'>
-                    HospedaSuite AI
+                    La tranquilidad de HospedaSuite
                   </h3>
                   <p className='text-xs font-bold text-purple-600 uppercase tracking-widest'>
-                    Modo Autopiloto
+                    Tu nuevo mejor empleado
                   </p>
                 </div>
               </div>
@@ -391,7 +373,7 @@ const LandingPage = () => {
                     <Mic size={18} />
                   </div>
                   <span className='font-bold text-slate-800'>
-                    Comandos de Voz ("Reserva a Juan...")
+                    Le hablas y él hace las reservas por ti.
                   </span>
                 </li>
                 <li className='flex gap-4 items-center'>
@@ -399,7 +381,7 @@ const LandingPage = () => {
                     <ScanBarcode size={18} />
                   </div>
                   <span className='font-bold text-slate-800'>
-                    Check-in con Escáner (10 seg)
+                    Escanea cédulas y evita multas del SIRE.
                   </span>
                 </li>
                 <li className='flex gap-4 items-center'>
@@ -407,7 +389,7 @@ const LandingPage = () => {
                     <Globe size={18} />
                   </div>
                   <span className='font-bold text-slate-800'>
-                    Tu Web de Reservas (0% Comisión)
+                    Tu propia página web para no pagar comisiones.
                   </span>
                 </li>
               </ul>
@@ -416,27 +398,27 @@ const LandingPage = () => {
         </section>
 
         {/* ========================================================
-            3. CASOS DE USO (REEMPLAZO DE TESTIMONIOS)
+            3. CASOS DE USO
            ======================================================== */}
         <section className='max-w-5xl mx-auto mb-32'>
           <h2 className='text-3xl font-serif font-bold text-center mb-12'>
-            Diseñado para Operaciones Modernas
+            Pensado para negocios como el tuyo
           </h2>
           <div className='grid md:grid-cols-3 gap-6'>
             {[
               {
                 title: 'Glampings',
-                desc: 'Gestiona todo desde el celular. Sin recepción física.',
+                desc: 'Maneja todo desde el celular mientras recorres el terreno.',
                 icon: Smartphone,
               },
               {
                 title: 'Hoteles Boutique',
-                desc: 'Ofrece una experiencia VIP rápida y sin papeles.',
+                desc: 'Dale a tus huéspedes una atención VIP, rápida y sin papeles.',
                 icon: Star,
               },
               {
-                title: 'Hostales',
-                desc: 'Control de caja y flujo de huéspedes en tiempo real.',
+                title: 'Hostales y Posadas',
+                desc: 'Control total de la caja, aunque tú no estés presente.',
                 icon: User,
               },
             ].map((item, idx) => (
@@ -458,7 +440,7 @@ const LandingPage = () => {
         </section>
 
         {/* ========================================================
-            4. PRICING (SOLO IA - ESTRATEGIA FUNDADOR)
+            4. OFERTA ESPECIAL (NO "FOUNDER", SINO "AYUDA")
            ======================================================== */}
         <section
           className='max-w-6xl mx-auto mb-32'
@@ -467,18 +449,18 @@ const LandingPage = () => {
           <div className='text-center mb-16'>
             <Badge
               icon={Gift}
-              text='Oferta Socio Fundador'
+              text='Beca de Digitalización'
               color='amber'
             />
             <h2 className='text-4xl md:text-5xl font-serif font-bold text-slate-900 mt-4'>
-              Configuración "Llave en Mano"
+              Nosotros lo configuramos por ti
             </h2>
             <p className='text-slate-500 mt-4 max-w-2xl mx-auto'>
-              Para los <strong>12 Socios Fundadores</strong>, nuestro equipo
-              configura habitaciones, tarifas y migra reservas históricas.{' '}
-              <br />
+              Sabemos que no tienes tiempo. Por eso, para estas{' '}
+              <strong>12 Becas en {cityName}</strong>, nuestro equipo sube tus
+              habitaciones y tarifas. <br />
               <span className='text-purple-600 font-bold'>
-                Tú no mueves un dedo.
+                Te lo entregamos listo para trabajar.
               </span>
             </p>
           </div>
@@ -486,15 +468,16 @@ const LandingPage = () => {
           <div className='grid md:grid-cols-3 gap-6 items-center'>
             {/* PLAN NANO IA */}
             <div className='p-8 rounded-[2.5rem] bg-white border border-slate-200 relative group hover:border-blue-300 transition-all'>
-              <h3 className='text-xl font-bold text-slate-900 mb-1'>Nano AI</h3>
+              <h3 className='text-xl font-bold text-slate-900 mb-1'>Básico</h3>
               <p className='text-xs font-bold text-slate-400 uppercase'>
-                1-3 Unidades
+                1 a 3 habitaciones
               </p>
+              <p>Ideal para empezar</p>
               <div className='my-6'>
                 <span className='text-4xl font-serif font-bold'>$69.900</span>
                 <span className='text-sm text-slate-400'>/mes</span>
                 <p className='text-xs font-bold text-green-600 mt-2 bg-green-50 inline-block px-2 py-1 rounded'>
-                  MES 1 BONIFICADO ($0)
+                  PRIMER MES REGALADO ($0)
                 </p>
               </div>
               <ul className='space-y-3 mb-8 text-sm text-slate-600'>
@@ -502,46 +485,47 @@ const LandingPage = () => {
                   <CheckCircle2
                     size={16}
                     className='text-blue-500'
-                  />{' '}
-                  Asistente de Voz IA
+                  />
+                  Asistente de Voz
                 </li>
                 <li className='flex gap-2'>
                   <CheckCircle2
                     size={16}
                     className='text-blue-500'
-                  />{' '}
-                  Calendario Inteligente
+                  />
+                  Calendario Ordenado
                 </li>
                 <li className='flex gap-2'>
                   <CheckCircle2
                     size={16}
                     className='text-blue-500'
-                  />{' '}
-                  Archivos SIRE
+                  />
+                  Reportes SIRE Fáciles
                 </li>
               </ul>
               <button
                 onClick={() => scrollToForm('NANO_AI')}
                 className='w-full py-4 rounded-2xl border border-slate-200 font-bold hover:bg-slate-50'
               >
-                Elegir Nano
+                Probar este
               </button>
             </div>
 
             {/* PLAN PRO IA (DESTACADO) */}
             <div className='p-8 rounded-[2.5rem] bg-[#0f172a] text-white relative shadow-2xl shadow-purple-900/30 transform md:scale-110 z-10'>
               <div className='absolute top-0 right-0 bg-gradient-to-l from-purple-600 to-blue-600 text-white text-[10px] font-bold px-4 py-1 rounded-bl-2xl rounded-tr-2xl'>
-                MÁS ELEGIDO
+                RECOMENDADO
               </div>
-              <h3 className='text-2xl font-bold mb-1'>Pro AI</h3>
+              <h3 className='text-2xl font-bold mb-1'>Profesional</h3>
               <p className='text-xs font-bold text-slate-400 uppercase'>
-                4-12 Habitaciones
+                4 a 12 habitaciones
               </p>
+              <p>El que todo lo hace</p>
               <div className='my-6'>
                 <span className='text-5xl font-serif font-bold'>$139.900</span>
                 <span className='text-sm text-slate-400'>/mes</span>
                 <p className='text-xs font-bold text-purple-400 mt-2 bg-white/10 inline-block px-2 py-1 rounded'>
-                  MES 1 GRATIS ($0)
+                  PRIMER MES GRATIS ($0)
                 </p>
               </div>
               <ul className='space-y-4 mb-8 text-sm font-medium text-slate-300'>
@@ -549,52 +533,53 @@ const LandingPage = () => {
                   <Star
                     size={16}
                     className='text-amber-400'
-                  />{' '}
-                  Configuración VIP (Concierge)
+                  />
+                  Configuración hecha por nosotros
                 </li>
                 <li className='flex gap-3'>
                   <Mic
                     size={16}
                     className='text-purple-400'
-                  />{' '}
-                  IA Voz Avanzada
+                  />
+                  IA que entiende tus notas de voz
                 </li>
                 <li className='flex gap-3'>
                   <ScanBarcode
                     size={16}
                     className='text-cyan-400'
-                  />{' '}
-                  Escáner Check-in
+                  />
+                  Escáner rápido de documentos
                 </li>
                 <li className='flex gap-3'>
                   <Globe
                     size={16}
                     className='text-blue-400'
-                  />{' '}
-                  Web de Reservas Propia
+                  />
+                  Página web incluida
                 </li>
               </ul>
               <button
                 onClick={() => scrollToForm('PRO_AI')}
                 className='w-full py-4 rounded-2xl bg-white text-slate-900 font-bold hover:shadow-[0_0_20px_rgba(255,255,255,0.3)] transition-shadow'
               >
-                Reclamar Cupo
+                Quiero mi Mes Gratis
               </button>
             </div>
 
             {/* PLAN GROWTH IA */}
             <div className='p-8 rounded-[2.5rem] bg-white border border-slate-200 relative group hover:border-blue-300 transition-all'>
               <h3 className='text-xl font-bold text-slate-900 mb-1'>
-                Growth AI
+                Empresarial
               </h3>
               <p className='text-xs font-bold text-slate-400 uppercase'>
-                13-30 Habitaciones
+                13 a 30 habitaciones
               </p>
+              <p>Para crecer sin límites</p>
               <div className='my-6'>
                 <span className='text-4xl font-serif font-bold'>$219.900</span>
                 <span className='text-sm text-slate-400'>/mes</span>
                 <p className='text-xs font-bold text-green-600 mt-2 bg-green-50 inline-block px-2 py-1 rounded'>
-                  MES 1 BONIFICADO ($0)
+                  PRIMER MES REGALADO ($0)
                 </p>
               </div>
               <ul className='space-y-3 mb-8 text-sm text-slate-600'>
@@ -602,43 +587,43 @@ const LandingPage = () => {
                   <Star
                     size={16}
                     className='text-amber-500'
-                  />{' '}
-                  Configuración VIP
+                  />
+                  Soporte Prioritario
                 </li>
                 <li className='flex gap-2'>
                   <CheckCircle2
                     size={16}
                     className='text-blue-500'
-                  />{' '}
-                  Multi-usuario
+                  />
+                  Cuentas para tus empleados
                 </li>
                 <li className='flex gap-2'>
                   <CheckCircle2
                     size={16}
                     className='text-blue-500'
-                  />{' '}
-                  CRM Marketing
+                  />
+                  Herramientas de Marketing
                 </li>
               </ul>
               <button
                 onClick={() => scrollToForm('GROWTH_AI')}
                 className='w-full py-4 rounded-2xl border border-slate-200 font-bold hover:bg-slate-50'
               >
-                Elegir Growth
+                Ver opción Grande
               </button>
             </div>
           </div>
         </section>
 
         {/* ========================================================
-            5. FORMULARIO DE ACTIVACIÓN (PASO 1 & 2 OPTIMIZADO)
+            5. FORMULARIO AMIGABLE
            ======================================================== */}
         <section
           id='activation-form'
           className='max-w-3xl mx-auto'
         >
           <GlassCard className='overflow-hidden relative'>
-            {/* Barra de Progreso Superior */}
+            {/* Barra de Progreso */}
             <div className='h-1.5 w-full bg-slate-100'>
               <motion.div
                 className='h-full bg-gradient-to-r from-blue-600 to-purple-600'
@@ -649,13 +634,13 @@ const LandingPage = () => {
             <div className='p-8 md:p-12'>
               <div className='text-center mb-10'>
                 <h3 className='text-3xl font-serif font-bold text-slate-900'>
-                  Activación Fundador
+                  Vamos a modernizar tu hotel
                 </h3>
                 <p className='text-slate-500 mt-2 flex items-center justify-center gap-2'>
-                  <Lock size={14} />{' '}
+                  <Lock size={14} />
                   {spotsLeft > 0
-                    ? `Quedan ${spotsLeft} cupos en ${cityName}`
-                    : 'Lista de Espera Activa'}
+                    ? `Solo nos quedan ${spotsLeft} becas en ${cityName}`
+                    : 'Lista de espera activada'}
                 </p>
               </div>
 
@@ -672,12 +657,12 @@ const LandingPage = () => {
                     />
                   </div>
                   <h3 className='text-2xl font-bold text-slate-900'>
-                    ¡Solicitud Recibida!
+                    ¡Listo! Solicitud Enviada.
                   </h3>
                   <p className='text-slate-600 mt-2 mb-6'>
-                    Has asegurado tu posición en la lista de fundadores.
+                    Ya reservamos tu mes gratis.
                     <br />
-                    Revisa tu WhatsApp en breve.
+                    Revisa tu WhatsApp, te hablaremos por ahí.
                   </p>
                 </motion.div>
               ) : (
@@ -691,10 +676,9 @@ const LandingPage = () => {
                         exit={{ opacity: 0, x: -20 }}
                         className='space-y-6'
                       >
-                        {/* INPUTS GRANDES (MAC STYLE) */}
                         <div className='space-y-2'>
                           <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
-                            Tu Nombre
+                            ¿Cómo te llamas?
                           </label>
                           <div className='relative'>
                             <User
@@ -704,7 +688,7 @@ const LandingPage = () => {
                             <input
                               type='text'
                               required
-                              placeholder='Ej: Alejandro Magno'
+                              placeholder='Ej: Carlos Gomez'
                               className='w-full p-4 pl-12 bg-slate-50 rounded-2xl border-none focus:ring-2 focus:ring-purple-500/20 font-medium text-lg'
                               value={formData.ownerName}
                               onChange={(e) =>
@@ -719,7 +703,7 @@ const LandingPage = () => {
 
                         <div className='space-y-2'>
                           <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
-                            WhatsApp
+                            Tu WhatsApp (Para enviarte el acceso)
                           </label>
                           <div className='relative'>
                             <Smartphone
@@ -740,9 +724,6 @@ const LandingPage = () => {
                               }
                             />
                           </div>
-                          <p className='text-[10px] text-slate-400 ml-2'>
-                            * Te enviaremos el acceso por este medio.
-                          </p>
                         </div>
 
                         <button
@@ -750,7 +731,7 @@ const LandingPage = () => {
                           onClick={handleNextStep}
                           className='w-full py-5 rounded-2xl bg-slate-900 text-white font-bold text-lg shadow-xl shadow-slate-900/10 flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform'
                         >
-                          Verificar Disponibilidad <ChevronRight size={20} />
+                          Verificar mi Cupo <ChevronRight size={20} />
                         </button>
                       </motion.div>
                     )}
@@ -766,7 +747,7 @@ const LandingPage = () => {
                         <div className='grid grid-cols-2 gap-4'>
                           <div className='space-y-1'>
                             <label className='text-[10px] font-bold uppercase text-slate-400 ml-2'>
-                              Nombre Hotel
+                              Nombre del Hotel
                             </label>
                             <input
                               type='text'
@@ -783,7 +764,7 @@ const LandingPage = () => {
                           </div>
                           <div className='space-y-1'>
                             <label className='text-[10px] font-bold uppercase text-slate-400 ml-2'>
-                              Email
+                              Correo Electrónico
                             </label>
                             <input
                               type='email'
@@ -803,7 +784,7 @@ const LandingPage = () => {
                         <div className='grid grid-cols-2 gap-4'>
                           <div className='space-y-1'>
                             <label className='text-[10px] font-bold uppercase text-slate-400 ml-2'>
-                              Habitaciones
+                              Nro. Habitaciones
                             </label>
                             <input
                               type='number'
@@ -820,7 +801,7 @@ const LandingPage = () => {
                           </div>
                           <div className='space-y-1'>
                             <label className='text-[10px] font-bold uppercase text-slate-400 ml-2'>
-                              Software Actual
+                              ¿Cómo manejas reservas hoy?
                             </label>
                             <select
                               className='w-full p-4 bg-slate-50 rounded-2xl border-none font-medium appearance-none'
@@ -833,8 +814,10 @@ const LandingPage = () => {
                               }
                             >
                               <option value=''>Elegir...</option>
-                              <option value='Manual'>Papel / Excel</option>
-                              <option value='Software'>Otro PMS</option>
+                              <option value='Manual'>Cuaderno / Excel</option>
+                              <option value='Software'>
+                                Uso otro Software
+                              </option>
                             </select>
                           </div>
                         </div>
@@ -866,7 +849,7 @@ const LandingPage = () => {
                             {loading ? (
                               <Clock className='animate-spin' />
                             ) : (
-                              'Activar Mes Gratis'
+                              'Activar mi Mes Gratis'
                             )}
                           </button>
                         </div>
@@ -878,7 +861,7 @@ const LandingPage = () => {
             </div>
           </GlassCard>
           <p className='text-center text-xs text-slate-400 mt-6'>
-            Tus datos están protegidos por encriptación SSL de 256-bits.
+            Tranquilo, tus datos están seguros y no pedimos tarjeta de crédito.
           </p>
         </section>
       </main>
