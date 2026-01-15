@@ -1,140 +1,257 @@
-import React, { useState } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { supabase } from '../../supabaseClient'; // ✅ IMPORTACIÓN RESTAURADA
 import {
-  Box,
-  RefreshCw,
-  Tag,
   Plus,
-  MoreHorizontal,
-  Edit,
-  Trash2,
   X,
-  BedDouble,
   CheckCircle2,
+  Image as ImageIcon,
+  Wifi,
+  Tv,
+  Wind,
+  Coffee,
+  Lock,
+  Car,
+  Utensils,
+  Mountain,
+  Star,
+  Users,
+  BedDouble,
+  Scan,
+  UploadCloud,
+  RefreshCw,
+  Trash2,
+  Settings,
+  Sparkles,
+  MapPin,
+  Smartphone,
 } from 'lucide-react';
 
-const InventoryPanel = ({ rooms, inventory, onOpenSync, hotelId }) => {
-  // ✅ RECIBE hotelId
-  const { createRoom, updateRoom, deleteRoom, loading } = inventory || {};
-  const [showModal, setShowModal] = useState(false);
-  const [editingRoom, setEditingRoom] = useState(null);
+const AMENITIES_LIST = [
+  { id: 'Wifi', label: 'Wifi 5G', icon: Wifi },
+  { id: 'TV', label: 'Smart TV', icon: Tv },
+  { id: 'AC', label: 'Aire Acond.', icon: Wind },
+  { id: 'Agua Caliente', label: 'Agua Caliente', icon: Coffee },
+  { id: 'Caja Fuerte', label: 'Caja Fuerte', icon: Lock },
+  { id: 'Parqueadero', label: 'Parqueadero', icon: Car },
+  { id: 'Desayuno', label: 'Desayuno', icon: Utensils },
+  { id: 'Vista', label: 'Vista Panorámica', icon: Mountain },
+  { id: 'Baño Privado', label: 'Baño Privado', icon: Star },
+];
 
-  const [formData, setFormData] = useState({
+const BED_TYPES = ['King Size', 'Queen Size', 'Doble', 'Sencilla', 'Camarote'];
+
+const InventoryPanel = ({
+  rooms,
+  inventory,
+  onOpenSync,
+  hotelId,
+  hotelInfo,
+}) => {
+  const {
+    createRoom,
+    updateRoom,
+    deleteRoom,
+    updateHotelProfile,
+    loading,
+    uploading,
+  } = inventory || {};
+
+  // MODALES
+  const [showRoomModal, setShowRoomModal] = useState(false);
+  const [showHotelModal, setShowHotelModal] = useState(false);
+
+  const [editingRoom, setEditingRoom] = useState(null);
+  const fileInputRef = useRef(null);
+  const heroInputRef = useRef(null);
+
+  // ESTADO HABITACIÓN
+  const [roomData, setRoomData] = useState({
     name: '',
     price: '',
     status: 'available',
     is_price_per_person: false,
+    description: '',
+    capacity: 2,
+    beds: 1,
+    bed_type: 'Doble',
+    amenities: [],
+    images: [],
   });
+  const [newRoomFiles, setNewRoomFiles] = useState([]);
 
-  const handleOpenCreate = () => {
+  // ESTADO PERFIL HOTEL (Branding)
+  const [hotelData, setHotelData] = useState({
+    name: '',
+    tagline: '',
+    location: '',
+    phone: '',
+    instagram_url: '',
+    main_image_url: '',
+  });
+  const [newHeroFile, setNewHeroFile] = useState(null);
+
+  // Sincronizar datos del hotel cuando llegan
+  useEffect(() => {
+    if (hotelInfo) {
+      setHotelData({
+        name: hotelInfo.name || '',
+        tagline: hotelInfo.tagline || '',
+        location: hotelInfo.location || '',
+        phone: hotelInfo.phone || '',
+        instagram_url: hotelInfo.instagram_url || '',
+        main_image_url: hotelInfo.main_image_url || '',
+      });
+    }
+  }, [hotelInfo]);
+
+  // --- HANDLERS HABITACIÓN ---
+  const handleOpenCreateRoom = () => {
     setEditingRoom(null);
-    setFormData({ name: '', price: '', status: 'available' });
-    setShowModal(true);
+    setRoomData({
+      name: '',
+      price: '',
+      status: 'available',
+      is_price_per_person: false,
+      description: '',
+      capacity: 2,
+      beds: 1,
+      bed_type: 'Doble',
+      amenities: [],
+      images: [],
+    });
+    setNewRoomFiles([]);
+    setShowRoomModal(true);
   };
 
-  const handleOpenEdit = (room) => {
+  const handleOpenEditRoom = (room) => {
     setEditingRoom(room);
-    setFormData({
+    setRoomData({
       name: room.name,
       price: room.price,
       status: room.status || 'available',
       is_price_per_person: room.is_price_per_person || false,
+      description: room.description || '',
+      capacity: room.capacity || 2,
+      beds: room.beds || 1,
+      bed_type: room.bed_type || 'Doble',
+      amenities: room.amenities || [],
+      images: room.images || [],
     });
-    setShowModal(true);
+    setNewRoomFiles([]);
+    setShowRoomModal(true);
   };
 
-  // 👇 LÓGICA DE NEGOCIO RESTAURADA Y CORREGIDA
-  const handleSave = async (e) => {
+  const handleSaveRoom = async (e) => {
     e.preventDefault();
-
-    // 🛡️ VALIDACIÓN DE SEGURIDAD
-    if (!editingRoom && !hotelId) {
-      alert(
-        'Error Crítico: No se detectó el ID del Hotel. Por favor recarga la página.'
-      );
-      return;
-    }
-
+    if (!hotelId) return alert('Error Crítico: Falta ID Hotel.');
     try {
       if (editingRoom) {
-        // A. Actualizar datos básicos
-        await updateRoom(editingRoom.id, formData);
-
-        // B. Lógica de Calendario (Mantenimiento) - ✅ RESTAURADA
-        if (
-          formData.status === 'maintenance' &&
-          editingRoom.status !== 'maintenance'
-        ) {
-          const { error } = await supabase.from('bookings').insert([
-            {
-              hotel_id: editingRoom.hotel_id,
-              room_id: editingRoom.id,
-              check_in: new Date().toISOString().split('T')[0],
-              check_out: '2030-12-31', // Bloqueo largo plazo
-              status: 'maintenance',
-              total_price: 0,
-              notes: 'BLOQUEO AUTOMÁTICO: Mantenimiento',
-            },
-          ]);
-          if (!error)
-            alert('🔒 Habitación bloqueada en calendario por mantenimiento.');
-        } else if (
-          formData.status === 'available' &&
-          editingRoom.status === 'maintenance'
-        ) {
-          const { error } = await supabase
-            .from('bookings')
-            .delete()
-            .eq('room_id', editingRoom.id)
-            .eq('status', 'maintenance');
-
-          if (!error) alert('🔓 Habitación desbloqueada y disponible.');
-        }
+        await updateRoom(
+          editingRoom.id,
+          roomData,
+          newRoomFiles,
+          roomData.images,
+          editingRoom.status
+        );
       } else {
-        // C. Crear Habitación - ✅ CORREGIDO (Inyección hotel_id)
-        await createRoom({
-          ...formData,
-          hotel_id: hotelId,
-        });
+        await createRoom(roomData, newRoomFiles);
       }
-      setShowModal(false);
+      setShowRoomModal(false);
     } catch (error) {
-      console.error(error);
-      alert('Error al guardar: ' + error.message);
+      alert('Error: ' + error.message);
     }
   };
 
-  const handleDelete = async (id) => {
-    if (window.confirm('¿Estás seguro de eliminar esta habitación?')) {
-      if (deleteRoom) await deleteRoom(id);
+  // --- HANDLERS PERFIL HOTEL ---
+  const handleSaveHotel = async (e) => {
+    e.preventDefault();
+    try {
+      await updateHotelProfile(hotelData, newHeroFile);
+      alert('✅ Identidad del hotel actualizada con éxito.');
+      setShowHotelModal(false);
+    } catch (error) {
+      alert('Error: ' + error.message);
     }
   };
+
+  const handleHeroChange = (e) => {
+    if (e.target.files && e.target.files[0]) {
+      setNewHeroFile(e.target.files[0]);
+    }
+  };
+
+  // --- UTILS ---
+  const handleFileChange = (e) => {
+    if (e.target.files && e.target.files.length > 0)
+      setNewRoomFiles([...newRoomFiles, ...Array.from(e.target.files)]);
+  };
+  const toggleAmenity = (id) => {
+    setRoomData((prev) => ({
+      ...prev,
+      amenities: prev.amenities.includes(id)
+        ? prev.amenities.filter((a) => a !== id)
+        : [...prev.amenities, id],
+    }));
+  };
+  const handleDeleteRoom = async () => {
+    if (window.confirm(`⚠️ ¿Eliminar "${editingRoom.name}" permanentemente?`)) {
+      await deleteRoom(editingRoom.id);
+      setShowRoomModal(false);
+    }
+  };
+  const removeNewFile = (index) =>
+    setNewRoomFiles((prev) => prev.filter((_, i) => i !== index));
+  const removeExistingImage = (url) =>
+    setRoomData((prev) => ({
+      ...prev,
+      images: prev.images.filter((img) => img !== url),
+    }));
 
   return (
     <div className='h-full p-6 overflow-y-auto scrollbar-hide relative pb-32'>
-      {/* HEADER & ACCIONES */}
-      <div className='flex flex-col md:flex-row justify-between items-end mb-8 gap-4'>
+      {/* HEADER PRINCIPAL */}
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-end mb-8 gap-4'>
         <div>
-          <h2 className='text-3xl font-serif font-bold text-slate-800'>
-            Inventario
+          <h2 className='text-3xl font-serif font-bold text-slate-800 flex items-center gap-3'>
+            Inventario & Marca
+            {hotelInfo?.tagline && (
+              <span className='hidden md:block text-xs font-sans font-normal text-slate-400 bg-slate-100 px-2 py-1 rounded-lg italic'>
+                "{hotelInfo.tagline}"
+              </span>
+            )}
           </h2>
-          <p className='text-slate-500'>Gestión de tarifas y disponibilidad</p>
+          <p className='text-slate-500'>
+            Diseña la experiencia de tus huéspedes.
+          </p>
         </div>
         <div className='flex gap-3'>
+          {/* BOTÓN CONFIGURAR HOTEL (BRANDING) */}
           <motion.button
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.95 }}
-            onClick={handleOpenCreate}
-            className='px-5 py-3 bg-slate-900 text-white font-bold rounded-xl shadow-lg shadow-slate-900/20 hover:bg-black transition-all flex items-center gap-2'
+            onClick={() => setShowHotelModal(true)}
+            className='px-4 py-3 bg-white text-slate-700 border border-slate-200 font-bold rounded-2xl shadow-sm flex items-center gap-2 hover:bg-slate-50'
           >
-            <Plus size={18} />
-            <span>Nueva Habitación</span>
+            <Settings
+              size={18}
+              className='text-purple-600'
+            />{' '}
+            <span className='hidden md:inline'>Configurar Hotel</span>
+          </motion.button>
+
+          {/* BOTÓN NUEVA HABITACIÓN */}
+          <motion.button
+            whileHover={{ scale: 1.02 }}
+            whileTap={{ scale: 0.95 }}
+            onClick={handleOpenCreateRoom}
+            className='px-6 py-3 bg-slate-900 text-white font-bold rounded-2xl shadow-xl flex items-center gap-2'
+          >
+            <Plus size={18} /> Nueva Habitación
           </motion.button>
         </div>
       </div>
 
-      {/* GRID DE HABITACIONES */}
+      {/* GRID HABITACIONES */}
       <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
         <AnimatePresence>
           {rooms.map((room, index) => (
@@ -142,220 +259,527 @@ const InventoryPanel = ({ rooms, inventory, onOpenSync, hotelId }) => {
               key={room.id}
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.9 }}
               transition={{ delay: index * 0.05 }}
-              className='group relative bg-white/60 backdrop-blur-xl border border-white/60 p-6 rounded-[2rem] shadow-sm hover:shadow-xl transition-all duration-300 flex flex-col justify-between min-h-[220px]'
+              className='group relative bg-white rounded-[2rem] border border-slate-100 shadow-sm hover:shadow-2xl transition-all duration-300 overflow-hidden cursor-pointer'
+              onClick={() => handleOpenEditRoom(room)}
             >
-              <div className='flex justify-between items-start'>
-                <div
-                  className={`w-14 h-14 rounded-2xl flex items-center justify-center transition-transform group-hover:scale-110 shadow-sm ${
-                    room.status === 'maintenance'
-                      ? 'bg-orange-100 text-orange-600'
-                      : 'bg-blue-50 text-blue-600'
-                  }`}
-                >
-                  <BedDouble size={28} />
+              <div className='h-48 w-full bg-slate-100 relative'>
+                {room.images && room.images.length > 0 ? (
+                  <img
+                    src={room.images[0]}
+                    alt={room.name}
+                    className='w-full h-full object-cover transition-transform duration-700 group-hover:scale-110'
+                  />
+                ) : (
+                  <div className='w-full h-full flex items-center justify-center text-slate-300 bg-slate-50'>
+                    <ImageIcon size={40} />
+                  </div>
+                )}
+                <div className='absolute top-4 left-4'>
+                  <span
+                    className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase backdrop-blur-md border border-white/20 ${
+                      room.status === 'available'
+                        ? 'bg-emerald-500/90 text-white'
+                        : 'bg-orange-500/90 text-white'
+                    }`}
+                  >
+                    {room.status === 'available'
+                      ? 'Disponible'
+                      : 'Mantenimiento'}
+                  </span>
                 </div>
-                <div className='flex gap-2 opacity-100 transition-opacity z-10'>
+                <div className='absolute top-4 right-4'>
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
-                      handleOpenEdit(room);
+                      onOpenSync(room.id);
                     }}
-                    className='p-2 bg-white/90 backdrop-blur-sm rounded-full text-slate-500 hover:text-blue-600 shadow-sm border border-slate-100'
+                    className='p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-blue-600 transition-all shadow-sm z-10'
+                    title='Sync'
                   >
-                    <Edit size={16} />
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleDelete(room.id);
-                    }}
-                    className='p-2 bg-white/90 backdrop-blur-sm rounded-full text-slate-500 hover:text-red-500 shadow-sm border border-slate-100'
-                  >
-                    <Trash2 size={16} />
+                    <RefreshCw size={14} />
                   </button>
                 </div>
               </div>
-              <div className='mt-4'>
-                <h3 className='text-xl font-bold text-slate-800 uppercase'>
-                  {room.name}
-                </h3>
-                <div className='flex items-center gap-2 mt-1'>
-                  <span className='text-2xl font-serif font-bold text-slate-700'>
-                    ${parseInt(room.price).toLocaleString()}
+              <div className='p-5'>
+                <div className='flex justify-between items-start mb-2'>
+                  <h3 className='text-lg font-bold text-slate-800 line-clamp-1'>
+                    {room.name}
+                  </h3>
+                  <div className='text-right whitespace-nowrap ml-2'>
+                    <span className='block text-lg font-serif font-bold text-slate-900'>
+                      ${parseInt(room.price).toLocaleString()}
+                    </span>
+                  </div>
+                </div>
+                <div className='flex gap-2 flex-wrap'>
+                  <span className='px-2 py-1 bg-slate-50 rounded-md text-[10px] font-bold text-slate-500 border border-slate-100'>
+                    <Users
+                      size={10}
+                      className='inline mr-1'
+                    />{' '}
+                    {room.capacity}
                   </span>
-                  <span className='text-[10px] text-slate-400 font-bold uppercase tracking-tighter'>
-                    {room.is_price_per_person ? '/ persona' : '/ noche'}
+                  <span className='px-2 py-1 bg-slate-50 rounded-md text-[10px] font-bold text-slate-500 border border-slate-100 truncate max-w-[80px]'>
+                    {room.bed_type}
                   </span>
                 </div>
-              </div>
-              <div className='mt-6 flex items-center justify-between'>
-                <span
-                  className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border ${
-                    room.status === 'maintenance'
-                      ? 'bg-orange-50 text-orange-600 border-orange-100'
-                      : 'bg-emerald-50 text-emerald-600 border-emerald-100'
-                  }`}
-                >
-                  {room.status === 'maintenance'
-                    ? 'Mantenimiento'
-                    : 'Disponible'}
-                </span>
-                <button
-                  onClick={() => onOpenSync(room.id)}
-                  className='flex items-center gap-1.5 text-xs font-bold text-slate-400 hover:text-blue-600 transition-colors bg-white/50 px-2 py-1 rounded-lg border border-transparent hover:border-blue-100'
-                >
-                  <RefreshCw size={12} /> Sync
-                </button>
               </div>
             </motion.div>
           ))}
         </AnimatePresence>
       </div>
 
+      {/* === MODAL CONFIGURAR HOTEL (BRANDING) === */}
       <AnimatePresence>
-        {showModal && (
-          // 👇 Z-INDEX SUPREMO PARA EVITAR SOLAPAMIENTO CON DOCK
-          <div className='fixed inset-0 bg-black/40 backdrop-blur-md z-[9999] flex items-center justify-center p-4 overflow-y-auto'>
+        {showHotelModal && (
+          <div className='fixed inset-0 bg-slate-900/60 backdrop-blur-md z-[9999] flex items-center justify-center p-4 overflow-y-auto'>
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className='bg-white rounded-[2rem] shadow-2xl w-full max-w-md overflow-hidden relative mb-24 md:mb-0'
+              exit={{ scale: 0.95, opacity: 0 }}
+              className='bg-white rounded-[2rem] shadow-2xl w-full max-w-2xl p-8 relative overflow-hidden'
             >
-              <div className='p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50'>
-                <h3 className='font-serif text-xl font-bold text-slate-800'>
-                  {editingRoom ? 'Editar Habitación' : 'Nueva Habitación'}
-                </h3>
-                <button
-                  onClick={() => setShowModal(false)}
-                  className='p-2 bg-white rounded-full text-slate-400 hover:text-red-500 shadow-sm'
-                >
-                  <X size={20} />
-                </button>
-              </div>
+              <button
+                onClick={() => setShowHotelModal(false)}
+                className='absolute top-6 right-6 p-2 bg-slate-100 rounded-full hover:bg-slate-200'
+              >
+                <X size={20} />
+              </button>
+
+              <h3 className='font-serif text-2xl font-bold text-slate-800 mb-6 flex items-center gap-2'>
+                <Sparkles className='text-purple-600' /> Identidad del Hotel
+              </h3>
 
               <form
-                onSubmit={handleSave}
-                className='p-6 space-y-5'
+                onSubmit={handleSaveHotel}
+                className='space-y-6'
               >
-                <div className='space-y-1'>
-                  <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
-                    Nombre / Número
+                {/* HERO IMAGE UPLOAD */}
+                <div className='bg-slate-50 p-6 rounded-2xl border border-slate-100'>
+                  <label className='text-xs font-bold uppercase text-slate-400 mb-3 block'>
+                    Foto de Portada (Página de Reservas)
                   </label>
-                  <input
-                    autoFocus
-                    className='w-full p-4 bg-slate-50 rounded-2xl border-none font-bold text-slate-800 focus:ring-2 focus:ring-slate-900/10'
-                    placeholder='Ej: 101'
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                    required
-                  />
-                </div>
-
-                <div className='space-y-1'>
-                  <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
-                    Precio por Noche (COP)
-                  </label>
-                  <div className='relative'>
-                    <span className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold'>
-                      $
-                    </span>
-                    <input
-                      type='number'
-                      className='w-full p-4 pl-8 bg-slate-50 rounded-2xl border-none font-bold text-slate-800 focus:ring-2 focus:ring-slate-900/10'
-                      placeholder='0'
-                      value={formData.price}
-                      onChange={(e) =>
-                        setFormData({ ...formData, price: e.target.value })
-                      }
-                      required
-                    />
-                  </div>
-                </div>
-
-                <div className='space-y-1'>
-                  <label className='text-[10px] font-bold uppercase text-slate-400 tracking-widest ml-1'>
-                    Estado Actual
-                  </label>
-                  <div className='grid grid-cols-2 gap-3'>
-                    <button
-                      type='button'
-                      onClick={() =>
-                        setFormData({ ...formData, status: 'available' })
-                      }
-                      className={`p-3 rounded-xl border font-bold text-sm flex items-center justify-center gap-2 ${
-                        formData.status === 'available'
-                          ? 'bg-emerald-50 border-emerald-200 text-emerald-600 shadow-sm'
-                          : 'bg-white border-slate-100 text-slate-400'
-                      }`}
-                    >
-                      {formData.status === 'available' && (
-                        <CheckCircle2 size={16} />
-                      )}{' '}
-                      Disponible
-                    </button>
-                    <button
-                      type='button'
-                      onClick={() =>
-                        setFormData({ ...formData, status: 'maintenance' })
-                      }
-                      className={`p-3 rounded-xl border font-bold text-sm flex items-center justify-center gap-2 ${
-                        formData.status === 'maintenance'
-                          ? 'bg-orange-50 border-orange-200 text-orange-600 shadow-sm'
-                          : 'bg-white border-slate-100 text-slate-400'
-                      }`}
-                    >
-                      {formData.status === 'maintenance' && (
-                        <CheckCircle2 size={16} />
-                      )}{' '}
-                      Mantenimiento
-                    </button>
-                  </div>
-                </div>
-
-                <div className='flex items-center justify-between p-4 bg-slate-50 rounded-2xl border border-slate-100'>
-                  <div className='flex flex-col'>
-                    <span className='text-sm font-bold text-slate-800'>
-                      Cobro por Persona
-                    </span>
-                    <span className='text-[10px] text-slate-500 font-bold uppercase tracking-tighter'>
-                      Tarifa x Nro. de Huéspedes
-                    </span>
-                  </div>
-                  <button
-                    type='button'
-                    onClick={() =>
-                      setFormData({
-                        ...formData,
-                        is_price_per_person: !formData.is_price_per_person,
-                      })
-                    }
-                    className={`w-12 h-6 rounded-full transition-all relative ${
-                      formData.is_price_per_person
-                        ? 'bg-cyan-600'
-                        : 'bg-slate-300'
-                    }`}
-                  >
+                  <div className='flex items-start gap-6'>
                     <div
-                      className={`absolute top-1 w-4 h-4 bg-white rounded-full transition-all ${
-                        formData.is_price_per_person ? 'left-7' : 'left-1'
-                      }`}
+                      onClick={() => heroInputRef.current.click()}
+                      className='w-40 h-24 bg-white rounded-xl border-2 border-dashed border-slate-300 flex items-center justify-center cursor-pointer hover:border-purple-500 hover:text-purple-500 text-slate-400 transition-all relative overflow-hidden group'
+                    >
+                      {newHeroFile ? (
+                        <img
+                          src={URL.createObjectURL(newHeroFile)}
+                          className='w-full h-full object-cover'
+                        />
+                      ) : hotelData.main_image_url ? (
+                        <img
+                          src={hotelData.main_image_url}
+                          className='w-full h-full object-cover'
+                        />
+                      ) : (
+                        <div className='flex flex-col items-center gap-1'>
+                          <ImageIcon size={24} />
+                          <span className='text-[10px] font-bold'>Subir</span>
+                        </div>
+                      )}
+                      {/* Hover Overlay */}
+                      <div className='absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity'>
+                        <UploadCloud className='text-white' />
+                      </div>
+                    </div>
+                    <input
+                      type='file'
+                      ref={heroInputRef}
+                      className='hidden'
+                      accept='image/*'
+                      onChange={handleHeroChange}
                     />
-                  </button>
+
+                    <div className='flex-1 space-y-4'>
+                      <div className='space-y-1'>
+                        <label className='text-[10px] font-bold uppercase text-slate-400'>
+                          Tagline (Frase Emocional)
+                        </label>
+                        <input
+                          className='w-full p-3 bg-white border border-slate-200 rounded-xl font-serif italic text-slate-700 focus:ring-2 focus:ring-purple-200 outline-none'
+                          placeholder='Ej: "Donde el lujo toca la naturaleza"'
+                          value={hotelData.tagline}
+                          onChange={(e) =>
+                            setHotelData({
+                              ...hotelData,
+                              tagline: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                {/* DATOS DE CONTACTO PUBLICOS */}
+                <div className='grid grid-cols-2 gap-4'>
+                  <div className='space-y-1'>
+                    <label className='text-[10px] font-bold uppercase text-slate-400 flex items-center gap-1'>
+                      <MapPin size={10} /> Ubicación Pública
+                    </label>
+                    <input
+                      className='w-full p-3 bg-slate-50 rounded-xl text-sm font-bold text-slate-700 outline-none'
+                      value={hotelData.location}
+                      onChange={(e) =>
+                        setHotelData({ ...hotelData, location: e.target.value })
+                      }
+                      placeholder='Ej: Villa de Leyva, Km 2'
+                    />
+                  </div>
+                  <div className='space-y-1'>
+                    <label className='text-[10px] font-bold uppercase text-slate-400 flex items-center gap-1'>
+                      <Smartphone size={10} /> WhatsApp Reservas
+                    </label>
+                    <input
+                      className='w-full p-3 bg-slate-50 rounded-xl text-sm font-bold text-slate-700 outline-none'
+                      value={hotelData.phone}
+                      onChange={(e) =>
+                        setHotelData({ ...hotelData, phone: e.target.value })
+                      }
+                      placeholder='Ej: 573001234567'
+                    />
+                  </div>
                 </div>
 
                 <button
                   type='submit'
-                  disabled={loading}
-                  className='w-full bg-slate-900 text-white font-bold py-4 rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition-all mt-4'
+                  disabled={loading || uploading}
+                  className='w-full bg-slate-900 text-white py-4 rounded-xl font-bold shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-2'
                 >
-                  {loading ? 'Guardando...' : 'Guardar Cambios'}
+                  {uploading ? (
+                    <div className='animate-spin rounded-full h-4 w-4 border-2 border-white border-t-transparent' />
+                  ) : (
+                    <CheckCircle2 size={18} />
+                  )}
+                  Guardar Identidad
                 </button>
               </form>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* === MODAL HABITACIÓN (El original) === */}
+      <AnimatePresence>
+        {showRoomModal && (
+          <div className='fixed inset-0 bg-slate-900/40 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 overflow-y-auto'>
+            <motion.div
+              initial={{ scale: 0.95, opacity: 0, y: 20 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0 }}
+              className='bg-white rounded-[2.5rem] shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]'
+            >
+              <div className='flex-1 p-8 overflow-y-auto custom-scrollbar relative'>
+                <div className='flex justify-between items-center mb-8 sticky top-0 bg-white z-10 py-2'>
+                  <h3 className='font-serif text-2xl font-bold text-slate-800'>
+                    {editingRoom ? 'Editar Experiencia' : 'Nueva Habitación'}
+                  </h3>
+                  <button
+                    onClick={() => setShowRoomModal(false)}
+                    className='p-2 hover:bg-slate-100 rounded-full'
+                  >
+                    <X
+                      size={24}
+                      className='text-slate-400'
+                    />
+                  </button>
+                </div>
+                <form
+                  onSubmit={handleSaveRoom}
+                  className='space-y-8 pb-20'
+                >
+                  {/* ... FORMULARIO HABITACIÓN (Mismo que tenías) ... */}
+                  <div className='grid grid-cols-2 gap-4'>
+                    <div className='space-y-1'>
+                      <label className='text-[10px] font-bold uppercase text-slate-400'>
+                        Nombre
+                      </label>
+                      <input
+                        className='w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-800 outline-none'
+                        placeholder='Ej: Suite 101'
+                        value={roomData.name}
+                        onChange={(e) =>
+                          setRoomData({ ...roomData, name: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                    <div className='space-y-1'>
+                      <label className='text-[10px] font-bold uppercase text-slate-400'>
+                        Precio
+                      </label>
+                      <input
+                        type='number'
+                        className='w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-800 outline-none'
+                        placeholder='0'
+                        value={roomData.price}
+                        onChange={(e) =>
+                          setRoomData({ ...roomData, price: e.target.value })
+                        }
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className='grid grid-cols-2 gap-4'>
+                    <div className='space-y-1'>
+                      <label className='text-[10px] font-bold uppercase text-slate-400'>
+                        Cobro
+                      </label>
+                      <div className='flex items-center gap-3 p-3 bg-slate-50 rounded-xl'>
+                        <button
+                          type='button'
+                          onClick={() =>
+                            setRoomData({
+                              ...roomData,
+                              is_price_per_person:
+                                !roomData.is_price_per_person,
+                            })
+                          }
+                          className={`w-10 h-5 rounded-full transition-all relative ${
+                            roomData.is_price_per_person
+                              ? 'bg-blue-600'
+                              : 'bg-slate-300'
+                          }`}
+                        >
+                          <div
+                            className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${
+                              roomData.is_price_per_person ? 'left-6' : 'left-1'
+                            }`}
+                          />
+                        </button>
+                        <span className='text-xs font-bold text-slate-600'>
+                          {roomData.is_price_per_person
+                            ? 'Por Persona'
+                            : 'Por Habitación'}
+                        </span>
+                      </div>
+                    </div>
+                    <div className='space-y-1'>
+                      <label className='text-[10px] font-bold uppercase text-slate-400'>
+                        Estado
+                      </label>
+                      <select
+                        className={`w-full p-3 rounded-xl font-bold text-xs outline-none appearance-none ${
+                          roomData.status === 'available'
+                            ? 'bg-emerald-50 text-emerald-600'
+                            : 'bg-orange-50 text-orange-600'
+                        }`}
+                        value={roomData.status}
+                        onChange={(e) =>
+                          setRoomData({ ...roomData, status: e.target.value })
+                        }
+                      >
+                        <option value='available'>🟢 Disponible</option>
+                        <option value='maintenance'>🟠 Mantenimiento</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className='p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4'>
+                    <div className='flex items-center gap-2 mb-2'>
+                      <Scan
+                        size={16}
+                        className='text-blue-500'
+                      />
+                      <span className='text-xs font-bold uppercase text-blue-500'>
+                        Distribución
+                      </span>
+                    </div>
+                    <div className='grid grid-cols-3 gap-4'>
+                      <div>
+                        <label className='text-[10px] font-bold text-slate-400'>
+                          Pax
+                        </label>
+                        <input
+                          type='number'
+                          className='w-full p-2 bg-white rounded-lg border-none shadow-sm text-center'
+                          value={roomData.capacity}
+                          onChange={(e) =>
+                            setRoomData({
+                              ...roomData,
+                              capacity: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className='text-[10px] font-bold text-slate-400'>
+                          Camas
+                        </label>
+                        <input
+                          type='number'
+                          className='w-full p-2 bg-white rounded-lg border-none shadow-sm text-center'
+                          value={roomData.beds}
+                          onChange={(e) =>
+                            setRoomData({ ...roomData, beds: e.target.value })
+                          }
+                        />
+                      </div>
+                      <div>
+                        <label className='text-[10px] font-bold text-slate-400'>
+                          Tipo
+                        </label>
+                        <select
+                          className='w-full p-2 bg-white rounded-lg border-none shadow-sm text-xs'
+                          value={roomData.bed_type}
+                          onChange={(e) =>
+                            setRoomData({
+                              ...roomData,
+                              bed_type: e.target.value,
+                            })
+                          }
+                        >
+                          {BED_TYPES.map((t) => (
+                            <option
+                              key={t}
+                              value={t}
+                            >
+                              {t}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+                  </div>
+                  <div className='space-y-1'>
+                    <label className='text-[10px] font-bold uppercase text-slate-400'>
+                      Descripción
+                    </label>
+                    <textarea
+                      className='w-full p-4 bg-slate-50 rounded-xl text-sm text-slate-600 outline-none resize-none h-24'
+                      value={roomData.description}
+                      onChange={(e) =>
+                        setRoomData({
+                          ...roomData,
+                          description: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+                  <div>
+                    <label className='text-[10px] font-bold uppercase text-slate-400 mb-2 block'>
+                      Amenities
+                    </label>
+                    <div className='grid grid-cols-3 gap-2'>
+                      {AMENITIES_LIST.map((amenity) => (
+                        <button
+                          key={amenity.id}
+                          type='button'
+                          onClick={() => toggleAmenity(amenity.id)}
+                          className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all ${
+                            roomData.amenities.includes(amenity.id)
+                              ? 'bg-slate-900 text-white border-slate-900'
+                              : 'bg-white border-slate-100 text-slate-400'
+                          }`}
+                        >
+                          <amenity.icon size={16} />
+                          {amenity.label}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                </form>
+                {editingRoom && (
+                  <div className='mt-8 pt-8 border-t border-slate-100'>
+                    <button
+                      type='button'
+                      onClick={handleDeleteRoom}
+                      className='text-red-500 text-xs font-bold flex items-center gap-2 hover:bg-red-50 p-3 rounded-xl w-full justify-center'
+                    >
+                      <Trash2 size={14} /> Eliminar habitación
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* COLUMNA DERECHA: FOTOS ROOM (Igual que antes) */}
+              <div className='md:w-[400px] bg-slate-50 p-8 flex flex-col border-l border-slate-100'>
+                <div className='flex justify-between items-center mb-6'>
+                  <h4 className='font-bold text-slate-800'>Galería</h4>
+                  <button
+                    type='button'
+                    onClick={() => fileInputRef.current.click()}
+                    className='text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg'
+                  >
+                    + Agregar
+                  </button>
+                  <input
+                    type='file'
+                    multiple
+                    accept='image/*'
+                    ref={fileInputRef}
+                    className='hidden'
+                    onChange={handleFileChange}
+                  />
+                </div>
+                <div className='flex-1 overflow-y-auto space-y-4 pr-2'>
+                  {roomData.images.map((url, idx) => (
+                    <div
+                      key={idx}
+                      className='relative group rounded-2xl overflow-hidden aspect-video shadow-sm bg-white'
+                    >
+                      <img
+                        src={url}
+                        className='w-full h-full object-cover'
+                      />
+                      <button
+                        type='button'
+                        onClick={() => removeExistingImage(url)}
+                        className='absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity'
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  {newRoomFiles.map((file, idx) => (
+                    <div
+                      key={`new-${idx}`}
+                      className='relative group rounded-2xl overflow-hidden aspect-video shadow-sm border-2 border-blue-500/20 bg-white'
+                    >
+                      <img
+                        src={URL.createObjectURL(file)}
+                        className='w-full h-full object-cover opacity-80'
+                      />
+                      <button
+                        type='button'
+                        onClick={() => removeNewFile(idx)}
+                        className='absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full'
+                      >
+                        <X size={12} />
+                      </button>
+                    </div>
+                  ))}
+                  {roomData.images.length === 0 &&
+                    newRoomFiles.length === 0 && (
+                      <div
+                        onClick={() => fileInputRef.current.click()}
+                        className='border-2 border-dashed border-slate-300 rounded-3xl h-48 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:border-blue-400'
+                      >
+                        <UploadCloud
+                          size={32}
+                          className='mb-2'
+                        />
+                        <span className='text-xs font-bold'>Subir Fotos</span>
+                      </div>
+                    )}
+                </div>
+                <div className='mt-6 pt-6 border-t border-slate-200'>
+                  <button
+                    onClick={handleSaveRoom}
+                    disabled={loading || uploading}
+                    className='w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2'
+                  >
+                    {uploading
+                      ? 'Subiendo...'
+                      : loading
+                      ? 'Guardando...'
+                      : 'Confirmar Todo'}
+                  </button>
+                </div>
+              </div>
             </motion.div>
           </div>
         )}

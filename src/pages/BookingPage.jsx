@@ -11,29 +11,31 @@ import {
   Calendar,
   Check,
   ChevronLeft,
+  ChevronRight,
   MapPin,
   Wifi,
   ArrowRight,
   Loader,
-  Eraser,
   CreditCard,
   Coffee,
   Star,
   Tv,
   Wind,
-  Bath,
   Mountain,
   Car,
   Utensils,
-  Snowflake,
-  Waves,
-  Wine,
-  Dumbbell,
   PawPrint,
   X,
   Users,
   BedDouble,
-  DoorOpen,
+  Lock,
+  CloudSun,
+  ShieldCheck,
+  Thermometer,
+  Sun,
+  CloudRain,
+  CloudFog,
+  Image as ImageIcon,
 } from 'lucide-react';
 
 // --- ESTILOS GLOBALES ---
@@ -44,36 +46,209 @@ const GlobalStyles = () => (
     .font-display { fontFamily: 'Cinzel', serif; }
     .font-serif { fontFamily: 'Playfair Display', serif; }
     .font-sans { fontFamily: 'Lato', sans-serif; }
+    .scrollbar-hide::-webkit-scrollbar { display: none; }
+    .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
   `}</style>
 );
 
 const ROOM_PLACEHOLDER =
   'https://images.unsplash.com/photo-1578683010236-d716f9a3f461?ixlib=rb-4.0.3&auto=format&fit=crop&w=1470&q=80';
+const DEFAULT_HERO =
+  'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070';
 
-// --- ANIMACIONES FRAMER ---
-const fadeInUp = {
-  hidden: { opacity: 0, y: 30 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { type: 'spring', stiffness: 40, damping: 20 },
-  },
+// --- MAPEO DE ICONOS ---
+const AMENITY_ICONS = {
+  Wifi: Wifi,
+  TV: Tv,
+  AC: Wind,
+  'Agua Caliente': Coffee,
+  'Caja Fuerte': Lock,
+  Parqueadero: Car,
+  Desayuno: Utensils,
+  Vista: Mountain,
+  'Baño Privado': Star,
+  'Pet Friendly': PawPrint,
 };
 
-const staggerContainer = {
-  hidden: { opacity: 0 },
-  visible: {
-    opacity: 1,
-    transition: { staggerChildren: 0.1 },
-  },
+// --- COMPONENTE GALERÍA ---
+const ImageGallery = ({ images, title }) => {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const gallery = images && images.length > 0 ? images : [ROOM_PLACEHOLDER];
+
+  const next = (e) => {
+    e?.stopPropagation();
+    setCurrentIndex((prev) => (prev + 1) % gallery.length);
+  };
+  const prev = (e) => {
+    e?.stopPropagation();
+    setCurrentIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
+  };
+
+  return (
+    <div className='relative w-full h-full bg-gray-100 group'>
+      <img
+        src={gallery[currentIndex]}
+        alt={`${title} ${currentIndex}`}
+        className='w-full h-full object-cover transition-all duration-500'
+      />
+      {gallery.length > 1 && (
+        <>
+          <div className='absolute inset-0 flex justify-between items-center p-4 opacity-0 group-hover:opacity-100 transition-opacity'>
+            <button
+              onClick={prev}
+              className='p-2 bg-white/20 backdrop-blur rounded-full text-white hover:bg-white hover:text-black'
+            >
+              <ChevronLeft />
+            </button>
+            <button
+              onClick={next}
+              className='p-2 bg-white/20 backdrop-blur rounded-full text-white hover:bg-white hover:text-black'
+            >
+              <ChevronRight />
+            </button>
+          </div>
+          <div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2'>
+            {gallery.map((_, idx) => (
+              <div
+                key={idx}
+                className={`w-2 h-2 rounded-full transition-all ${
+                  idx === currentIndex ? 'bg-white w-4' : 'bg-white/50'
+                }`}
+              />
+            ))}
+          </div>
+        </>
+      )}
+    </div>
+  );
+};
+
+// --- WIDGET DE CLIMA INTELIGENTE (CORREGIDO CORS + VISIBLE MOBILE) ---
+const WeatherWidget = ({ location }) => {
+  const [weather, setWeather] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    if (!location) {
+      setLoading(false);
+      return;
+    }
+
+    const fetchWeather = async () => {
+      try {
+        // 1. Geocodificación (Texto -> Coordenadas)
+        // 🔥 USAMOS OPEN-METEO PARA EVITAR BLOQUEOS DE CORS
+        const geoRes = await fetch(
+          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+            location
+          )}&count=1&language=es&format=json`
+        );
+        const geoData = await geoRes.json();
+
+        if (!geoData.results || geoData.results.length === 0)
+          throw new Error('Ubicación no encontrada');
+
+        const { latitude, longitude } = geoData.results[0];
+
+        // 2. Clima (Coordenadas -> Datos)
+        const weatherRes = await fetch(
+          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+        );
+        const weatherData = await weatherRes.json();
+
+        setWeather(weatherData.current_weather);
+      } catch (error) {
+        console.warn('No se pudo cargar el clima:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchWeather();
+  }, [location]);
+
+  // Selección de Icono según código WMO
+  const getWeatherIcon = (code) => {
+    if (code === 0)
+      return (
+        <Sun
+          size={18}
+          className='text-yellow-400 animate-spin-slow'
+        />
+      );
+    if (code >= 1 && code <= 3)
+      return (
+        <CloudSun
+          size={18}
+          className='text-yellow-200'
+        />
+      );
+    if (code >= 45 && code <= 48)
+      return (
+        <CloudFog
+          size={18}
+          className='text-gray-300'
+        />
+      );
+    if (code >= 51)
+      return (
+        <CloudRain
+          size={18}
+          className='text-blue-300'
+        />
+      );
+    return (
+      <Thermometer
+        size={18}
+        className='text-white'
+      />
+    );
+  };
+
+  const getTemperatureText = (temp) => {
+    if (temp >= 25) return 'Clima Cálido';
+    if (temp >= 18) return 'Clima Perfecto';
+    if (temp >= 10) return 'Fresco & Acogedor';
+    return 'Frío de Montaña';
+  };
+
+  if (loading)
+    return (
+      <div className='bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 flex items-center gap-2 text-white/70'>
+        <Loader
+          size={14}
+          className='animate-spin'
+        />
+        <span className='text-xs'>Cargando...</span>
+      </div>
+    );
+
+  if (!weather) return null;
+
+  return (
+    <motion.div
+      initial={{ opacity: 0, y: -10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className='bg-white/10 backdrop-blur-md border border-white/20 rounded-full px-4 py-2 flex items-center gap-3 text-white shadow-lg cursor-default hover:bg-white/20 transition-colors'
+    >
+      <div className='flex items-center gap-2'>
+        {getWeatherIcon(weather.weathercode)}
+        <span className='text-sm font-bold'>
+          {Math.round(weather.temperature)}°C
+        </span>
+      </div>
+      <div className='w-px h-4 bg-white/20'></div>
+      {/* Texto visible solo en desktop para ahorrar espacio en móvil, icono siempre visible */}
+      <div className='text-xs font-medium opacity-90 hidden sm:block'>
+        {getTemperatureText(weather.temperature)}
+      </div>
+    </motion.div>
+  );
 };
 
 const BookingPage = () => {
-  // 👇 CORRECCIÓN: Usamos hotelId en lugar de hotelSlug
   const { hotelId } = useParams();
   const containerRef = useRef(null);
-
-  // Parallax Hero
   const { scrollY } = useScroll();
   const yHero = useTransform(scrollY, [0, 500], [0, 200]);
   const opacityHero = useTransform(scrollY, [0, 300], [1, 0]);
@@ -84,14 +259,12 @@ const BookingPage = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
-
   const [dates, setDates] = useState({
     checkIn: new Date().toISOString().split('T')[0],
     checkOut: new Date(Date.now() + 86400000).toISOString().split('T')[0],
   });
   const [selectedRoom, setSelectedRoom] = useState(null);
-  const [viewingRoom, setViewingRoom] = useState(null); // Memoria para el Modal de Detalles
-
+  const [viewingRoom, setViewingRoom] = useState(null);
   const [guest, setGuest] = useState({
     fullName: '',
     docNumber: '',
@@ -101,19 +274,16 @@ const BookingPage = () => {
     comments: '',
   });
 
-  // --- LOGICA CORREGIDA ---
+  // --- DATA FETCHING ---
   useEffect(() => {
     const fetchHotelData = async () => {
       try {
-        if (!hotelId) return; // Validación extra
-
-        // Buscamos por ID explícito
+        if (!hotelId) return;
         const { data: h } = await supabase
           .from('hotels')
           .select('*')
           .eq('id', hotelId)
           .single();
-
         if (h) {
           setHotel(h);
           const { data: r } = await supabase
@@ -123,31 +293,64 @@ const BookingPage = () => {
           if (r) setRooms(r);
         }
       } catch (error) {
-        console.error('Error cargando hotel:', error);
+        console.error(error);
       } finally {
         setLoading(false);
       }
     };
     fetchHotelData();
-  }, [hotelId]); // Dependencia corregida a hotelId
+  }, [hotelId]);
 
-  const clearSig = () => sigPad.current.clear();
-
-  //
-  const handleCreateBooking = async (e) => {
-    e.preventDefault();
-
-    // 🚀 OPTIMIZACIÓN: Ya no pedimos firma aquí, solo validamos cupo.
-    const maxCap = selectedRoom.capacity || 10;
-    if (parseInt(guest.guestsCount) > maxCap) {
-      return alert(
-        `⚠️ Error de Cupo: Esta habitación solo permite un máximo de ${maxCap} personas.`
-      );
-    }
+  // --- LOGICA DISPONIBILIDAD ---
+  const checkAvailability = async () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (new Date(dates.checkIn) < today) return alert('⚠️ Fecha pasada.');
+    if (new Date(dates.checkOut) <= new Date(dates.checkIn))
+      return alert('⚠️ Salida debe ser después de llegada.');
 
     setProcessing(true);
     try {
-      // 1. Crear el Huésped (Sin firma, solo datos básicos)
+      const { data: busy } = await supabase
+        .from('bookings')
+        .select('room_id')
+        .eq('hotel_id', hotel.id)
+        .neq('status', 'cancelled')
+        .lt('check_in', dates.checkOut)
+        .gt('check_out', dates.checkIn);
+
+      const busyIds = busy?.map((b) => b.room_id) || [];
+      const { data: all } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('hotel_id', hotel.id);
+
+      const available = all.filter(
+        (r) => !busyIds.includes(r.id) && r.status !== 'maintenance'
+      );
+
+      if (available.length === 0)
+        alert('😔 Sin disponibilidad para estas fechas.');
+      else {
+        setRooms(available);
+        setStep(2);
+      }
+    } catch (e) {
+      alert('Error de conexión.');
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // --- LOGICA RESERVA ---
+  const handleCreateBooking = async (e) => {
+    e.preventDefault();
+    const maxCap = selectedRoom.capacity || 2;
+    if (parseInt(guest.guestsCount) > maxCap)
+      return alert(`⚠️ La capacidad máxima es de ${maxCap} personas.`);
+
+    setProcessing(true);
+    try {
       const { data: gData, error: gError } = await supabase
         .from('guests')
         .insert([
@@ -157,23 +360,22 @@ const BookingPage = () => {
             email: guest.email,
             phone: guest.phone,
             nationality: 'COL',
-            // signature_url: publicUrl, // 👈 ELIMINADO: La firma se pedirá en el Check-in Digital
           },
         ])
         .select()
         .single();
-
       if (gError) throw gError;
 
-      // 2. Calcular noches
       const nights = Math.max(
         1,
         Math.ceil(
           (new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000
         )
       );
+      const multiplier = selectedRoom.is_price_per_person
+        ? parseInt(guest.guestsCount)
+        : 1;
 
-      // 3. Crear la Reserva
       const { error: bError } = await supabase.from('bookings').insert([
         {
           hotel_id: hotel.id,
@@ -183,77 +385,13 @@ const BookingPage = () => {
           check_out: dates.checkOut,
           total_price: (selectedRoom.price || 0) * nights * multiplier,
           status: 'confirmed',
-          notes: `Huéspedes: ${guest.guestsCount}. Solicitud: ${guest.comments}`,
+          notes: `Pax: ${guest.guestsCount}. Notas: ${guest.comments}`,
         },
       ]);
-
       if (bError) throw bError;
-      setStep(4); // Ir a pantalla de éxito
-    } catch (error) {
-      alert('Ocurrió un error: ' + error.message);
-    } finally {
-      setProcessing(false);
-    }
-  };
-
-  // --- 🔍 VERIFICADOR DE DISPONIBILIDAD (NUEVO) ---
-  const checkAvailability = async () => {
-    // 1. Validaciones básicas de fechas
-    const checkInDate = new Date(dates.checkIn);
-    const checkOutDate = new Date(dates.checkOut);
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    if (checkInDate < today) {
-      return alert('⚠️ Error: La fecha de llegada no puede ser en el pasado.');
-    }
-    if (checkOutDate <= checkInDate) {
-      return alert(
-        '⚠️ Error: La fecha de salida debe ser posterior a la llegada.'
-      );
-    }
-
-    setProcessing(true); // Activamos spinner en el botón
-
-    try {
-      // 2. Buscamos las "Ovejas Negras" (Reservas que estorban)
-      // Lógica: Una reserva choca si (SuInicio < MiFin) Y (SuFin > MiInicio)
-      const { data: busyBookings, error } = await supabase
-        .from('bookings')
-        .select('room_id')
-        .eq('hotel_id', hotel.id)
-        .neq('status', 'cancelled') // Ignoramos las canceladas
-        .lt('check_in', dates.checkOut) // Empieza antes de que yo salga
-        .gt('check_out', dates.checkIn); // Termina después de que yo entre
-
-      if (error) throw error;
-
-      // Extraemos los IDs de las habitaciones ocupadas
-      const busyRoomIds = busyBookings.map((b) => b.room_id);
-
-      // 3. Traemos TODAS las habitaciones originales del hotel para filtrar
-      // (Hacemos esto para asegurar que filtramos sobre el total, no sobre un filtro previo)
-      const { data: allRooms } = await supabase
-        .from('rooms')
-        .select('*')
-        .eq('hotel_id', hotel.id);
-
-      // 4. Filtramos: Dejamos solo las que NO están en la lista negra
-      const availableRooms = allRooms.filter(
-        (room) => !busyRoomIds.includes(room.id)
-      );
-
-      if (availableRooms.length === 0) {
-        alert(
-          '😔 Lo sentimos, no hay disponibilidad para estas fechas. Intenta otras.'
-        );
-      } else {
-        setRooms(availableRooms); // Actualizamos la lista visible
-        setStep(2); // Avanzamos al siguiente paso
-      }
-    } catch (err) {
-      console.error('Error verificando disponibilidad:', err);
-      alert('Error de conexión al verificar fechas.');
+      setStep(4);
+    } catch (e) {
+      alert(e.message);
     } finally {
       setProcessing(false);
     }
@@ -261,226 +399,140 @@ const BookingPage = () => {
 
   if (loading)
     return (
-      <div className='h-screen flex items-center justify-center bg-[#F9F8F6]'>
-        <Loader className='animate-spin text-black' />
+      <div className='h-screen flex items-center justify-center'>
+        <Loader className='animate-spin' />
       </div>
     );
 
-  // --- 🧮 CALCULADORA INTELIGENTE ---
   const totalNights = Math.max(
     1,
     Math.ceil((new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000)
   );
-
-  // Detectar si cobramos por persona o por habitación
-  const multiplier = selectedRoom?.is_price_per_person
-    ? parseInt(guest.guestsCount) || 1 // Si es por persona, usa el número de huéspedes
-    : 1; // Si no, multiplica por 1 (precio fijo)
-
-  const totalCost = (selectedRoom?.price || 0) * totalNights * multiplier;
-
-  // INDICADOR DE PASOS (Contrastado)
-  const StepIndicator = () => (
-    <div className='flex justify-center items-center gap-4 mb-12 text-[11px] font-display tracking-[0.2em] text-gray-400 font-bold'>
-      <span
-        className={
-          step >= 1
-            ? 'text-black border-b-2 border-black pb-1 transition-all'
-            : ''
-        }
-      >
-        FECHAS
-      </span>
-      <span className='w-8 h-[1px] bg-gray-300' />
-      <span
-        className={
-          step >= 2
-            ? 'text-black border-b-2 border-black pb-1 transition-all'
-            : ''
-        }
-      >
-        ESTANCIA
-      </span>
-      <span className='w-8 h-[1px] bg-gray-300' />
-      <span
-        className={
-          step >= 3
-            ? 'text-black border-b-2 border-black pb-1 transition-all'
-            : ''
-        }
-      >
-        DATOS
-      </span>
-    </div>
-  );
+  const totalCost =
+    (selectedRoom?.price || 0) *
+    totalNights *
+    (selectedRoom?.is_price_per_person ? parseInt(guest.guestsCount) || 1 : 1);
 
   return (
     <div
       ref={containerRef}
-      className='min-h-screen bg-[#F9F8F6] font-sans text-[#111111] selection:bg-black selection:text-white pb-20'
+      className='min-h-screen bg-[#F9F8F6] font-sans text-[#111] pb-20'
     >
       <GlobalStyles />
 
-      {/* --- HERO PARALLAX --- */}
-      <div className='relative h-[60vh] overflow-hidden bg-black'>
+      {/* HERO SECTION DINÁMICO */}
+      <div className='relative h-[65vh] bg-black overflow-hidden'>
         <motion.div
           style={{ y: yHero, opacity: opacityHero }}
           className='absolute inset-0'
         >
-          <div className='absolute inset-0 bg-gradient-to-b from-black/60 via-transparent to-[#F9F8F6] z-10' />
+          <div className='absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#F9F8F6] z-10' />
           <img
-            src='https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070&auto=format&fit=crop'
-            className='w-full h-full object-cover opacity-90'
-            alt='Luxury Hotel'
+            src={hotel?.main_image_url || DEFAULT_HERO}
+            className='w-full h-full object-cover opacity-90 transition-transform duration-[10s] hover:scale-105'
+            alt='Hotel Hero'
           />
         </motion.div>
 
-        <div className='absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-6 mt-10'>
+        {/* WIDGETS FLOTANTES */}
+        <div className='absolute top-6 left-6 z-20'>
+          <div className='flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-white border border-white/20 shadow-lg'>
+            <ShieldCheck
+              size={16}
+              className='text-emerald-400'
+            />
+            <span className='text-xs font-bold tracking-wider'>
+              EXCELENCIA 2026
+            </span>
+          </div>
+        </div>
+
+        {/* ✅ WIDGET CLIMA CONECTADO & VISIBLE EN MOBILE */}
+        <div className='absolute top-6 right-6 z-20'>
+          <WeatherWidget location={hotel?.location} />
+        </div>
+
+        {/* CONTENIDO HERO */}
+        <div className='absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-6 pt-10 text-white'>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 1, delay: 0.2 }}
           >
-            <span className='inline-block py-1 px-3 border border-white/40 bg-black/10 rounded-full text-white text-[10px] tracking-[0.3em] font-display backdrop-blur-md mb-6 font-bold shadow-sm'>
+            <span className='inline-block mb-4 text-[10px] font-bold tracking-[0.4em] uppercase opacity-80 border-b border-white/30 pb-1'>
               THE COLLECTION
             </span>
-            <h1 className='text-5xl md:text-7xl font-serif text-white mb-4 drop-shadow-md'>
+            <h1 className='text-5xl md:text-8xl font-serif mb-4 drop-shadow-2xl'>
               {hotel?.name}
             </h1>
-            <div className='flex items-center justify-center gap-2 text-white/90 font-medium tracking-wide text-sm drop-shadow-sm'>
+            {hotel?.tagline && (
+              <p className='text-lg md:text-2xl font-light italic font-serif text-white/90 mb-6 tracking-wide'>
+                "{hotel.tagline}"
+              </p>
+            )}
+            <div className='flex gap-2 text-sm justify-center items-center opacity-80'>
               <MapPin size={16} /> {hotel?.location || 'Colombia'}
             </div>
           </motion.div>
         </div>
       </div>
 
-      {/* --- CONTENIDO PRINCIPAL --- */}
-      <div className='max-w-5xl mx-auto px-6 -mt-20 relative z-30'>
+      {/* CONTENIDO PRINCIPAL */}
+      <div className='max-w-6xl mx-auto px-4 md:px-6 -mt-20 relative z-30'>
         <motion.div
-          initial={{ opacity: 0, y: 50 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8 }}
-          className='bg-white rounded-[2.5rem] shadow-[0_20px_50px_-12px_rgba(0,0,0,0.1)] p-8 md:p-16 border border-gray-200'
+          initial={{ y: 50, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          className='bg-white rounded-[2.5rem] shadow-2xl p-6 md:p-12 border border-gray-100'
         >
-          {step < 4 && <StepIndicator />}
-
           <AnimatePresence mode='wait'>
-            {/* PASO 1: SELECCIÓN DE FECHAS */}
+            {/* PASO 1: FECHAS */}
             {step === 1 && (
               <motion.div
                 key='step1'
-                variants={staggerContainer}
-                initial='hidden'
-                animate='visible'
-                exit={{ opacity: 0, y: -20 }}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                className='text-center max-w-2xl mx-auto'
               >
-                <motion.h2
-                  variants={fadeInUp}
-                  className='text-4xl font-serif text-center mb-3 text-black'
-                >
-                  Bienvenido
-                </motion.h2>
-                <motion.p
-                  variants={fadeInUp}
-                  className='text-center text-gray-600 mb-12 font-light text-lg'
-                >
-                  Selecciona las fechas para tu escapada.
-                </motion.p>
-
-                <div className='grid md:grid-cols-2 gap-10 mb-14'>
-                  {['Llegada', 'Salida'].map((label, i) => (
-                    <motion.div
-                      variants={fadeInUp}
-                      key={label}
-                      className='group relative'
+                <h2 className='text-3xl font-serif mb-8'>
+                  Tu Escapada Inicia Aquí
+                </h2>
+                <div className='grid md:grid-cols-2 gap-6 mb-8'>
+                  {['Llegada', 'Salida'].map((l, i) => (
+                    <div
+                      key={l}
+                      className='text-left border-b py-2 group focus-within:border-black transition-colors'
                     >
-                      <label className='text-[11px] font-bold tracking-widest text-gray-500 uppercase mb-2 block'>
-                        {label}
+                      <label className='text-[10px] font-bold uppercase text-gray-400 block mb-1'>
+                        {l}
                       </label>
-                      <div className='border-b-2 border-gray-300 group-focus-within:border-black transition-colors py-4 flex items-center gap-4'>
-                        <Calendar
-                          className='text-gray-500 group-focus-within:text-black transition-colors'
-                          size={22}
-                        />
-                        <input
-                          type='date'
-                          className='w-full bg-transparent outline-none font-serif text-3xl text-gray-900 cursor-pointer'
-                          value={i === 0 ? dates.checkIn : dates.checkOut}
-                          onChange={(e) =>
-                            setDates({
-                              ...dates,
-                              [i === 0 ? 'checkIn' : 'checkOut']:
-                                e.target.value,
-                            })
-                          }
-                        />
-                      </div>
-                    </motion.div>
+                      <input
+                        type='date'
+                        className='w-full font-serif text-2xl outline-none bg-transparent cursor-pointer'
+                        value={i === 0 ? dates.checkIn : dates.checkOut}
+                        onChange={(e) =>
+                          setDates({
+                            ...dates,
+                            [i === 0 ? 'checkIn' : 'checkOut']: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
                   ))}
                 </div>
-
-                <motion.div
-                  variants={fadeInUp}
-                  className='flex justify-center'
+                <button
+                  onClick={checkAvailability}
+                  disabled={processing}
+                  className='bg-black text-white px-10 py-4 rounded-full font-bold text-xs tracking-widest hover:scale-105 transition-transform flex items-center gap-3 mx-auto shadow-lg shadow-black/20'
                 >
-                  <button
-                    onClick={() => {
-                      // 👇 PARCHE: Si la salida es antes o igual a la llegada, da error
-                      // 🛡️ [INICIO BLOQUE DEFENSIVO] 🛡️
-                      const checkInDate = new Date(dates.checkIn);
-                      const checkOutDate = new Date(dates.checkOut);
-                      const today = new Date();
-                      today.setHours(0, 0, 0, 0);
-
-                      if (checkInDate < today) {
-                        return alert(
-                          '⚠️ Error: La fecha de llegada no puede ser en el pasado.'
-                        );
-                      }
-
-                      if (checkOutDate <= checkInDate) {
-                        return alert(
-                          '⚠️ Error Lógico: La fecha de salida debe ser posterior a la llegada (mínimo 1 noche).'
-                        );
-                      }
-                      // 🛡️ [FIN BLOQUE DEFENSIVO] 🛡️
-                      setStep(2);
-                    }}
-                    className='bg-[#111] text-white px-12 py-5 rounded-full font-bold text-xs tracking-[0.2em] hover:bg-black hover:scale-105 transition-all shadow-xl flex items-center gap-4 group'
-                  >
-                    VER DISPONIBILIDAD{' '}
-                    <ArrowRight
-                      size={16}
-                      className='group-hover:translate-x-1 transition-transform'
-                    />
-                  </button>
-                </motion.div>
-                {/* ✅ AQUÍ INSERTAS TU CÓDIGO NUEVO: */}
-                <div className='flex justify-center'>
-                  <button
-                    onClick={checkAvailability} // 👈 AHORA LLAMA A LA FUNCIÓN REAL
-                    disabled={processing} // 👈 SE DESACTIVA MIENTRAS PIENSA
-                    className='bg-[#111] text-white px-12 py-5 rounded-full font-bold text-xs tracking-[0.2em] hover:bg-black hover:scale-105 transition-all shadow-xl flex items-center gap-4 group disabled:opacity-70 disabled:cursor-not-allowed'
-                  >
-                    {processing ? (
-                      <>
-                        <Loader
-                          className='animate-spin'
-                          size={16}
-                        />{' '}
-                        VERIFICANDO...
-                      </>
-                    ) : (
-                      <>
-                        VER DISPONIBILIDAD
-                        <ArrowRight
-                          size={16}
-                          className='group-hover:translate-x-1 transition-transform'
-                        />
-                      </>
-                    )}
-                  </button>
-                </div>
+                  {processing ? (
+                    <Loader className='animate-spin' />
+                  ) : (
+                    <>
+                      VER DISPONIBILIDAD <ArrowRight size={16} />
+                    </>
+                  )}
+                </button>
               </motion.div>
             )}
 
@@ -488,398 +540,275 @@ const BookingPage = () => {
             {step === 2 && (
               <motion.div
                 key='step2'
-                variants={staggerContainer}
-                initial='hidden'
-                animate='visible'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <motion.button
+                <button
                   onClick={() => setStep(1)}
-                  className='mb-8 flex items-center text-xs font-bold tracking-widest text-gray-500 hover:text-black transition-colors'
+                  className='mb-6 text-xs font-bold text-gray-400 flex items-center gap-1 hover:text-black transition-colors'
                 >
-                  <ChevronLeft
-                    size={16}
-                    className='mr-1'
-                  />{' '}
-                  VOLVER
-                </motion.button>
-
-                <motion.h2
-                  variants={fadeInUp}
-                  className='text-3xl font-serif mb-10 text-black'
-                >
-                  Tu Santuario
-                </motion.h2>
-
-                <div className='grid gap-12'>
+                  <ChevronLeft size={14} /> VOLVER AL CALENDARIO
+                </button>
+                <div className='grid gap-8'>
                   {rooms.map((room) => (
-                    <motion.div
+                    <div
                       key={room.id}
-                      variants={fadeInUp}
-                      layoutId={`room-${room.id}`}
                       onClick={() => setSelectedRoom(room)}
-                      className={`group cursor-pointer relative overflow-hidden rounded-2xl border ${
+                      className={`cursor-pointer rounded-3xl overflow-hidden border transition-all duration-300 ${
                         selectedRoom?.id === room.id
                           ? 'border-black ring-1 ring-black shadow-2xl'
-                          : 'border-gray-200 shadow-lg hover:shadow-xl'
+                          : 'border-gray-100 hover:shadow-xl'
                       }`}
                     >
-                      <div className='grid md:grid-cols-2 gap-0'>
-                        <div className='h-64 md:h-80 overflow-hidden bg-gray-200'>
+                      <div className='grid md:grid-cols-2 h-full'>
+                        <div className='h-64 md:h-auto relative bg-gray-100'>
                           <img
-                            src={room.image_url || ROOM_PLACEHOLDER}
-                            className='w-full h-full object-cover group-hover:scale-105 transition-transform duration-700 ease-out'
+                            src={
+                              room.images?.[0] ||
+                              room.image_url ||
+                              ROOM_PLACEHOLDER
+                            }
+                            className='w-full h-full object-cover transition-transform duration-700 hover:scale-105'
                             alt={room.name}
                           />
+                          <span className='absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider'>
+                            {room.size ? `${room.size}m²` : 'Suite Exclusiva'}
+                          </span>
                         </div>
-                        <div className='p-8 md:p-12 bg-white flex flex-col justify-center'>
-                          <div className='flex justify-between items-start mb-4'>
-                            <h3 className='font-serif text-2xl md:text-3xl italic text-gray-900'>
-                              {room.name}
-                            </h3>
+                        <div className='p-8 flex flex-col justify-center'>
+                          <div className='flex justify-between items-start mb-2'>
+                            <h3 className='font-serif text-2xl'>{room.name}</h3>
                             <div className='text-right'>
-                              <span className='block font-display text-xl font-bold text-black'>
+                              <span className='block text-xl font-bold'>
                                 ${(room.price || 0).toLocaleString()}
                               </span>
-                              <span className='text-[10px] text-gray-500 uppercase tracking-widest font-bold'>
+                              <span className='text-[10px] uppercase font-bold text-gray-400'>
                                 {room.is_price_per_person
-                                  ? 'Por Persona'
-                                  : 'Por Noche'}
+                                  ? '/Persona'
+                                  : '/Noche'}
                               </span>
                             </div>
                           </div>
-                          {/* 👇 BARRA DE CAPACIDAD Y CAMAS */}
-                          <div className='flex gap-4 mt-4 mb-4 border-b border-gray-100 pb-4'>
-                            <div className='flex items-center gap-2 text-xs font-bold text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg'>
-                              <Users size={14} />
-                              <span>{room.capacity || 2} Personas</span>
-                            </div>
-                            <div className='flex items-center gap-2 text-xs font-bold text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg'>
-                              <BedDouble size={14} />
-                              <span>
-                                {room.beds || 1}{' '}
-                                {room.beds === 1 ? 'Cama' : 'Camas'}
-                              </span>
-                            </div>
-                            <div className='flex items-center gap-2 text-xs font-bold text-gray-700 bg-gray-50 px-3 py-1.5 rounded-lg'>
-                              <DoorOpen size={14} />
-                              <span>
-                                {room.bedrooms || 1}{' '}
-                                {room.bedrooms === 1 ? 'Cuarto' : 'Cuartos'}
-                              </span>
-                            </div>
+                          <div className='flex gap-3 mb-6 text-xs font-bold text-gray-500'>
+                            <span className='bg-gray-50 px-3 py-1.5 rounded-lg flex gap-1 items-center'>
+                              <Users size={12} /> {room.capacity} Pax
+                            </span>
+                            <span className='bg-gray-50 px-3 py-1.5 rounded-lg flex gap-1 items-center'>
+                              <BedDouble size={12} /> {room.beds}
+                            </span>
                           </div>
-                          <p className='text-gray-600 font-medium mb-6 line-clamp-3 text-sm leading-relaxed'>
+                          <p className='text-sm text-gray-500 line-clamp-2 mb-6'>
                             {room.description ||
-                              'Disfruta de una experiencia inigualable con diseño exclusivo, iluminación cálida y todos los servicios para tu confort.'}
+                              'Experiencia de lujo garantizada.'}
                           </p>
-                          <div className='flex gap-5 text-gray-400 mb-8'>
-                            <Wifi size={20} /> <Coffee size={20} />{' '}
-                            <Star size={20} />
-                          </div>
-
-                          <div className='flex items-center justify-between mt-auto pt-4 border-t border-gray-100'>
-                            {/* 👇 BOTÓN VER DETALLES ACTIVADO */}
-                            {/* BOTÓN VIVO PARA ABRIR DETALLES */}
+                          <div className='flex justify-between items-center mt-auto'>
                             <button
                               onClick={(e) => {
                                 e.stopPropagation();
                                 setViewingRoom(room);
                               }}
-                              className='text-xs font-bold text-black underline decoration-1 underline-offset-4 hover:text-gray-600 transition-colors z-20 relative'
+                              className='text-xs font-bold underline decoration-gray-300 underline-offset-4 hover:text-black'
                             >
-                              VER DETALLES
+                              VER GALERÍA
                             </button>
-                            {selectedRoom?.id === room.id ? (
-                              <motion.button
-                                initial={{ scale: 0 }}
-                                animate={{ scale: 1 }}
+                            {selectedRoom?.id === room.id && (
+                              <button
                                 onClick={(e) => {
                                   e.stopPropagation();
                                   setStep(3);
                                 }}
-                                className='bg-black text-white px-8 py-3 rounded-full text-xs font-bold tracking-widest hover:bg-[#222]'
+                                className='bg-black text-white px-8 py-3 rounded-xl text-xs font-bold tracking-widest hover:bg-gray-900 transition-colors'
                               >
-                                RESERVAR AHORA
-                              </motion.button>
-                            ) : (
-                              <div className='w-10 h-10 rounded-full border border-gray-300 flex items-center justify-center text-gray-400 group-hover:border-black group-hover:text-black transition-colors'>
-                                <ArrowRight size={16} />
-                              </div>
+                                CONTINUAR
+                              </button>
                             )}
                           </div>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))}
                 </div>
               </motion.div>
             )}
 
-            {/* PASO 3: DATOS Y CONFIRMACIÓN (Optimizado sin firma) */}
+            {/* PASO 3: DATOS */}
             {step === 3 && (
               <motion.div
                 key='step3'
-                variants={staggerContainer}
-                initial='hidden'
-                animate='visible'
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
                 exit={{ opacity: 0 }}
               >
-                <motion.button
+                <button
                   onClick={() => setStep(2)}
-                  className='mb-8 flex items-center text-xs font-bold tracking-widest text-gray-500 hover:text-black transition-colors'
+                  className='mb-6 text-xs font-bold text-gray-400 flex items-center gap-1 hover:text-black'
                 >
-                  <ChevronLeft
-                    size={16}
-                    className='mr-1'
-                  />{' '}
-                  CAMBIAR HABITACIÓN
-                </motion.button>
-
-                <div className='grid md:grid-cols-12 gap-12'>
-                  <div className='md:col-span-7 space-y-10'>
-                    <motion.h2
-                      variants={fadeInUp}
-                      className='text-3xl font-serif text-black'
-                    >
-                      Datos del Huésped
-                    </motion.h2>
-
-                    <motion.div
-                      variants={fadeInUp}
-                      className='space-y-8'
-                    >
-                      {[
-                        {
-                          label: 'Nombre Completo',
-                          key: 'fullName',
-                          type: 'text',
-                          placeholder: 'Ej. Juan Pérez',
-                        },
-                        {
-                          label: 'Documento de Identidad',
-                          key: 'docNumber',
-                          type: 'text',
-                          placeholder: 'C.C. / Pasaporte',
-                        },
-                        {
-                          label: 'Teléfono / WhatsApp',
-                          key: 'phone',
-                          type: 'tel',
-                          placeholder: '300 000 0000',
-                        },
-                        {
-                          label: 'Correo Electrónico',
-                          key: 'email',
-                          type: 'email',
-                          placeholder: 'nombre@email.com',
-                        },
-                      ].map((field) => (
-                        <div
-                          key={field.key}
-                          className='relative pt-2'
-                        >
-                          <input
-                            type={field.type}
-                            required
-                            className='w-full bg-transparent border-b-2 border-gray-300 py-3 text-lg text-gray-900 focus:border-black outline-none transition-colors peer placeholder-gray-300 font-serif'
-                            placeholder={field.placeholder}
-                            value={guest[field.key]}
-                            onChange={(e) =>
-                              setGuest({
-                                ...guest,
-                                [field.key]: e.target.value,
-                              })
-                            }
-                          />
-                          <label className='absolute left-0 -top-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 peer-focus:text-black transition-colors'>
-                            {field.label}
-                          </label>
-                        </div>
-                      ))}
-
-                      {/* NÚMERO DE PERSONAS */}
-                      <div className='relative pt-2'>
+                  <ChevronLeft size={14} /> VOLVER
+                </button>
+                <div className='grid md:grid-cols-12 gap-10'>
+                  <div className='md:col-span-7 space-y-8'>
+                    <h2 className='text-3xl font-serif'>Datos de Reserva</h2>
+                    {[
+                      { l: 'Nombre Completo', k: 'fullName', t: 'text' },
+                      { l: 'Documento ID', k: 'docNumber', t: 'text' },
+                      { l: 'Teléfono / WhatsApp', k: 'phone', t: 'tel' },
+                      { l: 'Correo Electrónico', k: 'email', t: 'email' },
+                    ].map((f) => (
+                      <div key={f.k}>
+                        <label className='text-[10px] font-bold uppercase text-gray-400 mb-1 block'>
+                          {f.l}
+                        </label>
+                        <input
+                          type={f.t}
+                          className='w-full border-b py-2 outline-none font-serif text-lg bg-transparent focus:border-black transition-colors'
+                          value={guest[f.k]}
+                          onChange={(e) =>
+                            setGuest({ ...guest, [f.k]: e.target.value })
+                          }
+                          required
+                        />
+                      </div>
+                    ))}
+                    <div className='flex gap-4'>
+                      <div className='flex-1'>
+                        <label className='text-[10px] font-bold uppercase text-gray-400 mb-1 block'>
+                          Huéspedes
+                        </label>
                         <input
                           type='number'
                           min='1'
-                          max={selectedRoom?.capacity || 10}
-                          required
-                          className='w-full bg-transparent border-b-2 border-gray-300 py-3 text-lg text-gray-900 focus:border-black outline-none transition-colors peer placeholder-gray-300 font-serif'
-                          placeholder='1'
+                          max={selectedRoom.capacity}
+                          className='w-full border-b py-2 outline-none font-serif text-lg bg-transparent focus:border-black'
                           value={guest.guestsCount}
                           onChange={(e) =>
                             setGuest({ ...guest, guestsCount: e.target.value })
                           }
                         />
-                        <label className='absolute left-0 -top-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 peer-focus:text-black transition-colors'>
-                          NÚMERO DE PERSONAS
-                        </label>
                       </div>
-
-                      {/* SOLICITUDES ESPECIALES */}
-                      <div className='relative pt-2'>
-                        <textarea
-                          rows='2'
-                          className='w-full bg-transparent border-b-2 border-gray-300 py-3 text-lg text-gray-900 focus:border-black outline-none transition-colors peer placeholder-gray-300 font-serif resize-none'
-                          placeholder='Ej: Alérgico a las plumas, Cama adicional...'
-                          value={guest.comments}
-                          onChange={(e) =>
-                            setGuest({ ...guest, comments: e.target.value })
-                          }
-                        />
-                        <label className='absolute left-0 -top-2 text-[10px] font-bold uppercase tracking-widest text-gray-500 peer-focus:text-black transition-colors'>
-                          SOLICITUDES ESPECIALES
-                        </label>
-                      </div>
-                    </motion.div>
-
-                    {/* 👇 NUEVO BLOQUE: ACEPTACIÓN DE TÉRMINOS (Sin Firma) */}
-                    <motion.div
-                      variants={fadeInUp}
-                      className='pt-6'
-                    >
-                      <label className='flex items-start gap-4 cursor-pointer p-5 border border-gray-200 rounded-2xl hover:bg-white hover:shadow-md transition-all bg-gray-50/50 group'>
-                        <div className='relative flex items-center pt-1'>
-                          <input
-                            type='checkbox'
-                            required
-                            className='peer w-5 h-5 cursor-pointer appearance-none rounded-md border-2 border-gray-300 checked:border-black checked:bg-black transition-all'
-                          />
-                          <Check
-                            size={14}
-                            className='absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-[30%] text-white opacity-0 peer-checked:opacity-100 pointer-events-none'
-                            strokeWidth={4}
-                          />
-                        </div>
-                        <div className='text-xs text-gray-500 leading-relaxed select-none'>
-                          <span className='font-bold text-gray-900 block mb-1 uppercase tracking-wider text-[10px]'>
-                            Términos y Condiciones
-                          </span>
-                          Acepto las políticas de cancelación, el reglamento del
-                          hotel y el tratamiento de mis datos personales.
-                        </div>
+                    </div>
+                    <div>
+                      <label className='text-[10px] font-bold uppercase text-gray-400 mb-1 block'>
+                        Peticiones Especiales
                       </label>
-                    </motion.div>
+                      <textarea
+                        className='w-full border-b py-2 outline-none bg-transparent resize-none focus:border-black'
+                        placeholder='Alergias, hora de llegada...'
+                        value={guest.comments}
+                        onChange={(e) =>
+                          setGuest({ ...guest, comments: e.target.value })
+                        }
+                      />
+                    </div>
+
+                    {/* ✅ CHECKBOX RESTAURADO */}
+                    <div className='pt-6'>
+                      <label className='flex items-start gap-3 cursor-pointer p-4 border rounded-xl hover:bg-gray-50 transition-colors'>
+                        <input
+                          type='checkbox'
+                          required
+                          className='mt-1 accent-black'
+                        />
+                        <span className='text-xs text-gray-500 leading-relaxed'>
+                          Acepto los{' '}
+                          <b className='text-black'>Términos y Condiciones</b>,
+                          políticas de cancelación y tratamiento de datos
+                          personales de {hotel.name}.
+                        </span>
+                      </label>
+                    </div>
                   </div>
 
-                  {/* RESUMEN LATERAL */}
                   <div className='md:col-span-5'>
-                    <motion.div
-                      variants={fadeInUp}
-                      className='bg-[#111] text-white p-8 rounded-3xl sticky top-8 shadow-2xl ring-1 ring-white/10'
-                    >
-                      <h3 className='font-display text-xl mb-6 border-b border-white/20 pb-4 tracking-widest'>
+                    <div className='bg-[#111] text-white p-8 rounded-3xl sticky top-8 shadow-2xl'>
+                      <h3 className='font-display text-lg mb-6 border-b border-white/20 pb-4 tracking-widest'>
                         RESUMEN
                       </h3>
-
-                      <div className='space-y-5 text-sm font-light text-gray-300 mb-10'>
+                      <div className='space-y-3 text-sm text-gray-400 mb-8 font-light'>
                         <div className='flex justify-between'>
-                          <span className='uppercase text-xs font-bold tracking-wider text-gray-500'>
-                            Entrada
-                          </span>
-                          <span className='text-white font-medium text-lg font-serif'>
+                          <span>Entrada</span>{' '}
+                          <span className='text-white font-medium'>
                             {dates.checkIn}
                           </span>
                         </div>
                         <div className='flex justify-between'>
-                          <span className='uppercase text-xs font-bold tracking-wider text-gray-500'>
-                            Salida
-                          </span>
-                          <span className='text-white font-medium text-lg font-serif'>
+                          <span>Salida</span>{' '}
+                          <span className='text-white font-medium'>
                             {dates.checkOut}
                           </span>
                         </div>
                         <div className='flex justify-between'>
-                          <span className='uppercase text-xs font-bold tracking-wider text-gray-500'>
-                            Duración
-                          </span>
+                          <span>Noches</span>{' '}
                           <span className='text-white font-medium'>
-                            {totalNights} Noches
+                            {totalNights}
                           </span>
                         </div>
-                        <div className='flex justify-between items-center pt-6 border-t border-white/10'>
-                          <span className='font-serif text-xl italic'>
-                            {selectedRoom?.name}
-                          </span>
+                        <div className='pt-4 text-white font-serif text-lg italic'>
+                          {selectedRoom.name}
                         </div>
                       </div>
-
                       <div className='flex justify-between items-end mb-8'>
-                        <span className='text-xs tracking-widest uppercase text-gray-500 font-bold'>
+                        <span className='text-xs font-bold uppercase text-gray-500'>
                           Total a Pagar
                         </span>
-                        <span className='text-4xl font-serif text-white'>
+                        <span className='text-4xl font-serif'>
                           ${totalCost.toLocaleString()}
                         </span>
                       </div>
-
                       <button
                         onClick={handleCreateBooking}
                         disabled={processing}
-                        className='w-full bg-white text-black py-4 rounded-xl font-bold tracking-[0.2em] text-xs hover:bg-gray-200 transition-colors disabled:opacity-50 shadow-lg'
+                        className='w-full bg-white text-black py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-gray-200 transition-colors'
                       >
-                        {processing ? 'PROCESANDO...' : 'CONFIRMAR RESERVA'}
+                        {processing ? 'CONFIRMANDO...' : 'FINALIZAR RESERVA'}
                       </button>
-                    </motion.div>
+                    </div>
                   </div>
                 </div>
               </motion.div>
             )}
 
-            {/* PASO 4: ÉXITO */}
+            {/* PASO 4: ÉXITO + QR */}
             {step === 4 && (
               <motion.div
                 key='step4'
                 initial={{ opacity: 0, scale: 0.95 }}
                 animate={{ opacity: 1, scale: 1 }}
-                className='text-center py-16'
+                className='text-center py-12'
               >
-                <div className='inline-block p-6 rounded-full bg-green-50 text-green-700 mb-8 shadow-sm'>
-                  <Check
-                    size={48}
-                    strokeWidth={1.5}
-                  />
+                <div className='inline-flex p-4 bg-green-50 text-green-600 rounded-full mb-6 ring-8 ring-green-50/50'>
+                  <Check size={40} />
                 </div>
-                <h1 className='font-serif text-5xl md:text-6xl mb-6 text-black'>
-                  ¡Todo Listo!
-                </h1>
-                <p className='text-gray-600 mb-12 font-light text-xl'>
-                  Tu reserva{' '}
-                  <strong className='text-black font-normal'>
+                <h2 className='text-4xl md:text-5xl font-serif mb-4'>
+                  ¡Reserva Confirmada!
+                </h2>
+                <p className='text-gray-500 text-lg mb-10'>
+                  Tu código de reserva es:{' '}
+                  <b className='text-black'>
                     #{Math.floor(1000 + Math.random() * 9000)}
-                  </strong>{' '}
-                  ha sido confirmada.
+                  </b>
                 </p>
 
-                <div className='max-w-md mx-auto bg-white border border-gray-200 p-8 rounded-3xl shadow-xl mb-10'>
-                  <p className='text-xs font-bold tracking-[0.2em] text-gray-400 uppercase mb-6 border-b pb-4'>
+                <div className='max-w-sm mx-auto bg-white border p-8 rounded-3xl shadow-xl mb-8 transform hover:scale-105 transition-transform duration-300'>
+                  <p className='text-[10px] font-bold uppercase text-gray-400 mb-6 tracking-widest'>
                     ANTICIPO REQUERIDO
                   </p>
-                  <div className='flex justify-center items-center gap-8 mb-6'>
-                    {/* QR Placeholder */}
-                    <div className='bg-white p-2 rounded-xl shadow-inner border'>
+                  <div className='flex items-center gap-6'>
+                    {/* ✅ QR GENERATOR */}
+                    <div className='bg-white p-2 rounded-xl border shadow-inner'>
                       <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${hotel?.phone}`}
-                        alt='QR'
-                        className='w-32 h-32 mix-blend-multiply'
+                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://wa.me/${hotel?.phone}`}
+                        alt='QR Pago'
+                        className='w-24 h-24 mix-blend-multiply'
                       />
                     </div>
-                    <div className='text-left space-y-3'>
-                      <div className='flex items-center gap-2 text-sm font-bold text-gray-700'>
-                        <CreditCard size={18} /> Nequi / Daviplata
+                    <div className='text-left'>
+                      <div className='text-xl font-serif text-black mb-1'>
+                        {hotel?.phone}
                       </div>
-                      <div className='text-2xl font-serif text-black'>
-                        {hotel?.phone || '300 000 0000'}
+                      <div className='text-xs text-gray-500 flex items-center gap-1 font-bold'>
+                        <CreditCard size={12} /> Nequi / Daviplata
                       </div>
-                      <button
-                        onClick={() =>
-                          navigator.clipboard.writeText(hotel?.phone)
-                        }
-                        className='text-[10px] font-bold text-gray-500 hover:text-black underline decoration-gray-300 underline-offset-4'
-                      >
-                        COPIAR NÚMERO
-                      </button>
                     </div>
                   </div>
                 </div>
@@ -887,137 +816,118 @@ const BookingPage = () => {
                 <button
                   onClick={() =>
                     window.open(
-                      `https://wa.me/${hotel?.phone}?text=Hola, acabo de reservar. Envío comprobante.`,
+                      `https://wa.me/${hotel?.phone}?text=Hola, envío comprobante de reserva.`,
                       '_blank'
                     )
                   }
-                  className='bg-[#25D366] text-white px-10 py-5 rounded-full font-bold shadow-xl hover:shadow-2xl transition-all hover:-translate-y-1 flex items-center gap-3 mx-auto tracking-wide text-sm'
+                  className='bg-[#25D366] text-white px-8 py-4 rounded-full font-bold text-sm shadow-lg shadow-green-500/30 hover:bg-[#128C7E] transition-all flex items-center gap-2 mx-auto'
                 >
-                  ENVIAR COMPROBANTE WHATSAPP
+                  Enviar Comprobante por WhatsApp
                 </button>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
-
-        <div className='text-center mt-16 opacity-30 text-[10px] font-display tracking-[0.4em] text-black'>
-          POWERED BY HOSPEDASUITE
+        <div className='text-center mt-12 opacity-30 text-[10px] font-bold tracking-[0.3em] uppercase'>
+          Powered by HospedaSuite
         </div>
       </div>
 
-      {/* --- MODAL DE DETALLES DE LUJO (INICIO) --- */}
+      {/* MODAL DETALLES */}
       <AnimatePresence>
         {viewingRoom && (
-          <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md'>
+          <div
+            className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md'
+            onClick={() => setViewingRoom(null)}
+          >
             <motion.div
-              initial={{ opacity: 0, scale: 0.95, y: 20 }}
-              animate={{ opacity: 1, scale: 1, y: 0 }}
-              exit={{ opacity: 0, scale: 0.95, y: 20 }}
+              initial={{ y: 50, opacity: 0 }}
+              animate={{ y: 0, opacity: 1 }}
+              exit={{ y: 50, opacity: 0 }}
               onClick={(e) => e.stopPropagation()}
-              className='bg-white w-full max-w-4xl max-h-[90vh] rounded-[2rem] overflow-hidden shadow-2xl flex flex-col md:flex-row relative'
+              className='bg-white w-full max-w-5xl h-[85vh] rounded-[2rem] overflow-hidden flex flex-col md:flex-row relative shadow-2xl'
             >
-              {/* Botón Cerrar */}
               <button
                 onClick={() => setViewingRoom(null)}
-                className='absolute top-4 right-4 z-10 bg-white/80 p-2 rounded-full hover:bg-black hover:text-white transition-colors backdrop-blur shadow-sm'
+                className='absolute top-4 right-4 z-20 bg-white/50 p-2 rounded-full hover:bg-black hover:text-white transition-colors backdrop-blur'
               >
                 <X size={20} />
               </button>
 
-              {/* COLUMNA 1: FOTO */}
-              <div className='md:w-1/2 h-64 md:h-auto bg-gray-100 relative'>
-                <img
-                  src={viewingRoom.image_url || ROOM_PLACEHOLDER}
-                  className='w-full h-full object-cover'
-                  alt={viewingRoom.name}
+              <div className='md:w-3/5 h-1/2 md:h-full bg-gray-100'>
+                <ImageGallery
+                  images={
+                    viewingRoom.images && viewingRoom.images.length > 0
+                      ? viewingRoom.images
+                      : [viewingRoom.image_url]
+                  }
+                  title={viewingRoom.name}
                 />
               </div>
 
-              {/* COLUMNA 2: INFO */}
-              <div className='md:w-1/2 p-8 md:p-10 overflow-y-auto bg-white flex flex-col'>
-                <span className='text-[10px] font-bold tracking-widest text-gray-400 uppercase mb-2'>
-                  HospedaSuite Collection
+              <div className='md:w-2/5 p-8 md:p-10 overflow-y-auto bg-white'>
+                <span className='text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block'>
+                  Colección Privada
                 </span>
-                <h2 className='font-serif text-3xl md:text-4xl text-black leading-tight mb-4'>
-                  {viewingRoom.name}
-                </h2>
-
-                <div className='mb-6 border-b border-gray-100 pb-6'>
-                  <span className='font-display text-2xl font-bold text-black'>
-                    ${viewingRoom.price?.toLocaleString()}
+                <h2 className='font-serif text-3xl mb-2'>{viewingRoom.name}</h2>
+                <div className='text-2xl font-bold mb-6'>
+                  ${(viewingRoom.price || 0).toLocaleString()}{' '}
+                  <span className='text-xs font-normal text-gray-500'>
+                    / Noche
                   </span>
-                  <span className='text-sm text-gray-500 ml-2'>/ Noche</span>
                 </div>
 
-                <div className='mb-8'>
-                  <p className='text-gray-600 leading-relaxed font-light text-sm'>
-                    {viewingRoom.description ||
-                      'Una experiencia inolvidable con todas las comodidades.'}
-                  </p>
+                <p className='text-sm text-gray-600 mb-8 leading-relaxed font-light'>
+                  {viewingRoom.description || 'Sin descripción.'}
+                </p>
+
+                <h3 className='text-xs font-bold uppercase mb-4 tracking-wider'>
+                  Comodidades
+                </h3>
+                <div className='grid grid-cols-2 gap-3 mb-8'>
+                  {(viewingRoom.amenities || []).map((a) => {
+                    const I = AMENITY_ICONS[a] || Star;
+                    return (
+                      <div
+                        key={a}
+                        className='flex gap-2 text-xs bg-gray-50 p-2 rounded-lg text-gray-600'
+                      >
+                        <I size={14} /> {a}
+                      </div>
+                    );
+                  })}
                 </div>
 
-                {/* LISTA DE ICONOS INTELIGENTE */}
-                <div className='mb-10'>
-                  <h3 className='font-bold text-xs uppercase tracking-widest text-gray-900 mb-4'>
-                    Comodidades Incluidas
-                  </h3>
-
-                  {viewingRoom.amenities && viewingRoom.amenities.length > 0 ? (
-                    <div className='grid grid-cols-2 gap-y-4 gap-x-2'>
-                      {viewingRoom.amenities.map((item) => {
-                        let Icon = Star;
-                        if (item === 'Wifi') Icon = Wifi;
-                        if (item === 'TV') Icon = Tv;
-                        if (item === 'Baño Privado') Icon = Bath;
-                        if (item === 'Agua Caliente') Icon = Coffee;
-                        if (item === 'Vista') Icon = Mountain;
-                        if (item === 'Secador') Icon = Wind;
-                        if (item === 'Aire Acondicionado') Icon = Snowflake;
-                        if (item === 'Parqueadero') Icon = Car;
-                        if (item === 'Desayuno') Icon = Utensils;
-                        if (item === 'Piscina') Icon = Waves;
-                        if (item === 'Minibar') Icon = Wine;
-                        if (item === 'Gimnasio') Icon = Dumbbell;
-                        if (item === 'Pet Friendly') Icon = PawPrint;
-
-                        return (
-                          <div
-                            key={item}
-                            className='flex items-center gap-3 text-gray-600 text-sm group'
-                          >
-                            <div className='p-1.5 bg-gray-50 rounded-lg group-hover:bg-black group-hover:text-white transition-colors'>
-                              <Icon size={16} />
-                            </div>
-                            <span>{item}</span>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  ) : (
-                    <p className='text-gray-400 text-xs italic'>
-                      Servicios estándar incluidos.
-                    </p>
-                  )}
+                <div className='border-t border-gray-100 pt-6 text-xs text-gray-500 space-y-2 mb-8'>
+                  <div className='flex justify-between'>
+                    <span>Capacidad Máxima</span>{' '}
+                    <b className='text-black'>
+                      {viewingRoom.capacity} Personas
+                    </b>
+                  </div>
+                  <div className='flex justify-between'>
+                    <span>Configuración</span>{' '}
+                    <b className='text-black'>
+                      {viewingRoom.beds} {viewingRoom.bed_type}
+                    </b>
+                  </div>
                 </div>
 
-                <div className='mt-auto pt-6'>
-                  <button
-                    onClick={() => {
-                      setSelectedRoom(viewingRoom);
-                      setViewingRoom(null);
-                      setStep(3);
-                    }}
-                    className='w-full bg-black text-white py-4 rounded-xl font-bold tracking-widest text-xs hover:bg-gray-800 transition-transform hover:scale-[1.02] shadow-lg'
-                  >
-                    RESERVAR AHORA
-                  </button>
-                </div>
+                <button
+                  onClick={() => {
+                    setSelectedRoom(viewingRoom);
+                    setViewingRoom(null);
+                    setStep(3);
+                  }}
+                  className='w-full bg-black text-white py-4 rounded-xl font-bold text-xs tracking-widest hover:scale-[1.02] transition-transform'
+                >
+                  RESERVAR AHORA
+                </button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-      {/* --- MODAL DE DETALLES DE LUJO (FIN) --- */}
     </div>
   );
 };
