@@ -18,12 +18,14 @@ const HotelCard = ({ hotel }) => {
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -5 }}
       className='group relative aspect-[4/5] md:aspect-[3/4] rounded-[2rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500'
-      onClick={() => navigate(`/hotel/${hotel.id}`)} // ✅ Conecta con tu BookingPage actual
+      onClick={() => navigate(`/hotel/${hotel.id}`)}
     >
-      {/* IMAGEN DE FONDO */}
+      {/* IMAGEN DE FONDO OPTIMIZADA (OPCIÓN 3) */}
       <img
         src={bgImage}
         alt={hotel.name}
+        loading='lazy' // 🔥 CLAVE: Carga solo cuando aparece en pantalla
+        decoding='async' // 🔥 CLAVE: Descomprime sin congelar el scroll
         className='absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110'
       />
 

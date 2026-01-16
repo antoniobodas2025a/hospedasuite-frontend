@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { supabase } from '../supabaseClient';
 import { v4 as uuidv4 } from 'uuid';
+import imageCompression from 'browser-image-compression'; //
 
 export const useInventory = ({
   hotelInfo,
@@ -11,24 +12,55 @@ export const useInventory = ({
   const [loading, setLoading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  // --- SUBIDA DE IMÁGENES ---
+  // --- SUBIDA DE IMÁGENES OPTIMIZADA (OPCIÓN 1) ---
   const uploadImages = async (files, roomId, bucket = 'room-images') => {
     if (!files || files.length === 0) return [];
 
     setUploading(true);
     const uploadedUrls = [];
 
+    // Configuración de compresión: Calidad web alta pero ligera
+    const compressionOptions = {
+      maxSizeMB: 1, // Máximo 1MB por foto
+      maxWidthOrHeight: 1920, // Full HD es suficiente para web
+      useWebWorker: true, // Usa hilos paralelos para no congelar la pantalla
+      fileType: 'image/webp', // Intenta convertir a WebP si es posible (opcional)
+    };
+
     try {
       for (const file of files) {
-        const fileExt = file.name.split('.').pop();
+        // 1. Comprimir la imagen antes de subir
+        let fileToUpload = file;
+        try {
+          // Solo comprimimos imágenes, ignoramos si es otro tipo por seguridad
+          if (file.type.startsWith('image/')) {
+            console.log(
+              `Comprimiendo ${file.name} de ${(file.size / 1024 / 1024).toFixed(
+                2
+              )}MB...`
+            );
+            fileToUpload = await imageCompression(file, compressionOptions);
+            console.log(
+              `Comprimido a: ${(fileToUpload.size / 1024 / 1024).toFixed(2)}MB`
+            );
+          }
+        } catch (compressionError) {
+          console.warn(
+            'Falló la compresión, subiendo original:',
+            compressionError
+          );
+        }
+
+        const fileExt = fileToUpload.name.split('.').pop();
         const fileName = `${uuidv4()}.${fileExt}`;
         // Estructura segura: hotel_id / (room_id o 'hero') / archivo
         const folder = roomId || 'general';
         const filePath = `${hotelInfo.id}/${folder}/${fileName}`;
 
+        // 2. Subir el archivo (posiblemente comprimido)
         const { error: uploadError } = await supabase.storage
           .from(bucket)
-          .upload(filePath, file);
+          .upload(filePath, fileToUpload);
 
         if (uploadError) throw uploadError;
 
@@ -46,7 +78,7 @@ export const useInventory = ({
     }
   };
 
-  // --- NUEVA FUNCIÓN: ACTUALIZAR PERFIL DEL HOTEL (HERO + TAGLINE) ---
+  // --- ACTUALIZAR PERFIL DEL HOTEL (HERO + TAGLINE) ---
   const updateHotelProfile = async (updates, heroFile) => {
     try {
       setLoading(true);

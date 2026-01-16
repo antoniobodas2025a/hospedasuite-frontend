@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { supabase } from '../supabaseClient';
 import {
   motion,
@@ -8,7 +8,6 @@ import {
   useTransform,
 } from 'framer-motion';
 import {
-  Calendar,
   Check,
   ChevronLeft,
   ChevronRight,
@@ -35,7 +34,7 @@ import {
   Sun,
   CloudRain,
   CloudFog,
-  Image as ImageIcon,
+  Info,
 } from 'lucide-react';
 
 // --- ESTILOS GLOBALES ---
@@ -90,6 +89,8 @@ const ImageGallery = ({ images, title }) => {
         src={gallery[currentIndex]}
         alt={`${title} ${currentIndex}`}
         className='w-full h-full object-cover transition-all duration-500'
+        loading='lazy'
+        decoding='async'
       />
       {gallery.length > 1 && (
         <>
@@ -123,7 +124,7 @@ const ImageGallery = ({ images, title }) => {
   );
 };
 
-// --- WIDGET DE CLIMA INTELIGENTE (CORREGIDO "VÍA" + FALLBACK) ---
+// --- WIDGET DE CLIMA ---
 const WeatherWidget = ({ location }) => {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -133,51 +134,44 @@ const WeatherWidget = ({ location }) => {
       setLoading(false);
       return;
     }
-
-    const fetchWeather = async () => {
-      try {
-        // 1. Limpieza de ubicación (Heurística MEJORADA)
-        // Convertimos a minúsculas y normalizamos 'vía' para que coincida con 'via'
-        let query = location
-          .toLowerCase()
-          .replace('vía', 'via') // 🔥 CLAVE: Cambia 'vía' (con tilde) por 'via'
-          .split(',')[0] // Corta antes de la coma (ej: "Paipa, Boyaca")
-          .split(' via ')[0] // Corta antes de 'via'
-          .trim();
-
-        // 🔥 USAMOS OPEN-METEO (Sin problemas de CORS)
-        let geoRes = await fetch(
-          `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-            query
-          )}&count=1&language=es&format=json`
-        );
-        let geoData = await geoRes.json();
-
-        // 2. Fallback: Si falla la ciudad específica, intenta "Colombia"
-        if (!geoData.results || geoData.results.length === 0) {
-          console.warn(`Ubicación '${query}' no encontrada. Usando respaldo.`);
-          geoRes = await fetch(
-            `https://geocoding-api.open-meteo.com/v1/search?name=Colombia&count=1&language=es&format=json`
+    const timer = setTimeout(() => {
+      const fetchWeather = async () => {
+        try {
+          let query = location
+            .toLowerCase()
+            .replace('vía', 'via')
+            .split(',')[0]
+            .split(' via ')[0]
+            .trim();
+          let geoRes = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
+              query
+            )}&count=1&language=es&format=json`
           );
-          geoData = await geoRes.json();
+          let geoData = await geoRes.json();
+          if (!geoData.results || geoData.results.length === 0) {
+            geoRes = await fetch(
+              `https://geocoding-api.open-meteo.com/v1/search?name=Colombia&count=1&language=es&format=json`
+            );
+            geoData = await geoRes.json();
+          }
+          if (geoData.results && geoData.results.length > 0) {
+            const { latitude, longitude } = geoData.results[0];
+            const weatherRes = await fetch(
+              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+            );
+            const weatherData = await weatherRes.json();
+            setWeather(weatherData.current_weather);
+          }
+        } catch (error) {
+          console.warn('Error widget clima:', error);
+        } finally {
+          setLoading(false);
         }
-
-        if (geoData.results && geoData.results.length > 0) {
-          const { latitude, longitude } = geoData.results[0];
-          const weatherRes = await fetch(
-            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
-          );
-          const weatherData = await weatherRes.json();
-          setWeather(weatherData.current_weather);
-        }
-      } catch (error) {
-        console.warn('Error widget clima (silencioso):', error);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchWeather();
+      };
+      fetchWeather();
+    }, 1500);
+    return () => clearTimeout(timer);
   }, [location]);
 
   const getWeatherIcon = (code) => {
@@ -250,7 +244,6 @@ const WeatherWidget = ({ location }) => {
         </span>
       </div>
       <div className='w-px h-4 bg-white/20'></div>
-      {/* Visible en móvil */}
       <div className='text-xs font-medium opacity-90'>
         {getTemperatureText(weather.temperature)}
       </div>
@@ -260,6 +253,7 @@ const WeatherWidget = ({ location }) => {
 
 const BookingPage = () => {
   const { hotelId } = useParams();
+  const [searchParams] = useSearchParams();
   const containerRef = useRef(null);
   const { scrollY } = useScroll();
   const yHero = useTransform(scrollY, [0, 500], [0, 200]);
@@ -270,6 +264,10 @@ const BookingPage = () => {
   const [rooms, setRooms] = useState([]);
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
+
+  const [origin, setOrigin] = useState('direct');
+  const [paymentOption, setPaymentOption] = useState('deposit');
+
   const [dates, setDates] = useState({
     checkIn: new Date().toISOString().split('T')[0],
     checkOut: new Date(Date.now() + 86400000).toISOString().split('T')[0],
@@ -286,21 +284,24 @@ const BookingPage = () => {
   });
 
   useEffect(() => {
+    const utmSource = searchParams.get('origen');
+    if (utmSource) {
+      setOrigin(utmSource);
+      console.log('🏁 Origen detectado:', utmSource);
+    }
+  }, [searchParams]);
+
+  useEffect(() => {
     const fetchHotelData = async () => {
       try {
         if (!hotelId) return;
-        const { data: h } = await supabase
-          .from('hotels')
-          .select('*')
-          .eq('id', hotelId)
-          .single();
-        if (h) {
-          setHotel(h);
-          const { data: r } = await supabase
-            .from('rooms')
-            .select('*')
-            .eq('hotel_id', h.id);
-          if (r) setRooms(r);
+        const [hotelRes, roomsRes] = await Promise.all([
+          supabase.from('hotels').select('*').eq('id', hotelId).single(),
+          supabase.from('rooms').select('*').eq('hotel_id', hotelId),
+        ]);
+        if (hotelRes.data) {
+          setHotel(hotelRes.data);
+          if (roomsRes.data) setRooms(roomsRes.data);
         }
       } catch (error) {
         console.error(error);
@@ -382,6 +383,11 @@ const BookingPage = () => {
       const multiplier = selectedRoom.is_price_per_person
         ? parseInt(guest.guestsCount)
         : 1;
+      const totalRoomPrice = (selectedRoom.price || 0) * nights * multiplier;
+
+      const amountPaid =
+        paymentOption === 'full' ? totalRoomPrice : totalRoomPrice / 2;
+      const balanceDue = totalRoomPrice - amountPaid;
 
       const { error: bError } = await supabase.from('bookings').insert([
         {
@@ -390,11 +396,14 @@ const BookingPage = () => {
           guest_id: gData.id,
           check_in: dates.checkIn,
           check_out: dates.checkOut,
-          total_price: (selectedRoom.price || 0) * nights * multiplier,
+          total_price: totalRoomPrice,
           status: 'confirmed',
-          notes: `Pax: ${guest.guestsCount}. Notas: ${guest.comments}`,
+          notes: `Pax: ${guest.guestsCount}. Origen: ${origin}. Pago: ${
+            paymentOption === 'full' ? '100%' : '50%'
+          }. Saldo Pendiente: $${balanceDue}. Notas: ${guest.comments}`,
         },
       ]);
+
       if (bError) throw bError;
       setStep(4);
     } catch (e) {
@@ -419,6 +428,8 @@ const BookingPage = () => {
     (selectedRoom?.price || 0) *
     totalNights *
     (selectedRoom?.is_price_per_person ? parseInt(guest.guestsCount) || 1 : 1);
+  const amountToPay = paymentOption === 'full' ? totalCost : totalCost / 2;
+  const balanceDue = totalCost - amountToPay;
 
   return (
     <div
@@ -427,6 +438,7 @@ const BookingPage = () => {
     >
       <GlobalStyles />
 
+      {/* HERO SECTION */}
       <div className='relative h-[65vh] bg-black overflow-hidden'>
         <motion.div
           style={{ y: yHero, opacity: opacityHero }}
@@ -437,6 +449,7 @@ const BookingPage = () => {
             src={hotel?.main_image_url || DEFAULT_HERO}
             className='w-full h-full object-cover opacity-90'
             alt='Hotel Hero'
+            fetchpriority='high'
           />
         </motion.div>
 
@@ -447,7 +460,7 @@ const BookingPage = () => {
               className='text-emerald-400'
             />
             <span className='text-xs font-bold tracking-wider'>
-              EXCELENCIA 2026
+              GARANTÍA OFICIAL
             </span>
           </div>
         </div>
@@ -463,7 +476,7 @@ const BookingPage = () => {
             transition={{ duration: 1, delay: 0.2 }}
           >
             <span className='inline-block mb-4 text-[10px] font-bold tracking-[0.4em] uppercase opacity-80 border-b border-white/30 pb-1'>
-              THE COLLECTION
+              RESERVA DIRECTA
             </span>
             <h1 className='text-5xl md:text-8xl font-serif mb-4 drop-shadow-2xl'>
               {hotel?.name}
@@ -487,6 +500,7 @@ const BookingPage = () => {
           className='bg-white rounded-[2.5rem] shadow-2xl p-6 md:p-12 border border-gray-100'
         >
           <AnimatePresence mode='wait'>
+            {/* STEP 1: FECHAS */}
             {step === 1 && (
               <motion.div
                 key='step1'
@@ -537,6 +551,7 @@ const BookingPage = () => {
               </motion.div>
             )}
 
+            {/* STEP 2: HABITACIONES */}
             {step === 2 && (
               <motion.div
                 key='step2'
@@ -571,6 +586,8 @@ const BookingPage = () => {
                             }
                             className='w-full h-full object-cover'
                             alt={room.name}
+                            loading='lazy'
+                            decoding='async'
                           />
                           <span className='absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-[10px] font-bold uppercase'>
                             {room.size ? `${room.size}m²` : 'Suite'}
@@ -631,6 +648,7 @@ const BookingPage = () => {
               </motion.div>
             )}
 
+            {/* STEP 3: DATOS Y PAGO (CON BLINDAJE LEGAL) */}
             {step === 3 && (
               <motion.div
                 key='step3'
@@ -699,17 +717,82 @@ const BookingPage = () => {
                     </div>
 
                     <div className='pt-6'>
+                      <h3 className='text-lg font-serif mb-4'>
+                        Opciones de Pago
+                      </h3>
+                      <div className='grid grid-cols-2 gap-4'>
+                        <div
+                          onClick={() => setPaymentOption('deposit')}
+                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                            paymentOption === 'deposit'
+                              ? 'border-black bg-gray-50'
+                              : 'border-gray-100'
+                          }`}
+                        >
+                          <div className='flex items-center gap-2 mb-2'>
+                            <div
+                              className={`w-4 h-4 rounded-full border border-black ${
+                                paymentOption === 'deposit'
+                                  ? 'bg-black'
+                                  : 'bg-transparent'
+                              }`}
+                            />
+                            <span className='font-bold text-sm'>
+                              Abonar 50%
+                            </span>
+                          </div>
+                          <p className='text-xs text-gray-500'>
+                            Asegura tu reserva y paga el resto en el hotel.
+                          </p>
+                        </div>
+                        <div
+                          onClick={() => setPaymentOption('full')}
+                          className={`p-4 rounded-xl border-2 cursor-pointer transition-all ${
+                            paymentOption === 'full'
+                              ? 'border-black bg-gray-50'
+                              : 'border-gray-100'
+                          }`}
+                        >
+                          <div className='flex items-center gap-2 mb-2'>
+                            <div
+                              className={`w-4 h-4 rounded-full border border-black ${
+                                paymentOption === 'full'
+                                  ? 'bg-black'
+                                  : 'bg-transparent'
+                              }`}
+                            />
+                            <span className='font-bold text-sm'>
+                              Pagar 100%
+                            </span>
+                          </div>
+                          <p className='text-xs text-gray-500'>
+                            Deja todo listo y olvídate de pagos al llegar.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className='pt-6'>
                       <label className='flex items-start gap-3 cursor-pointer p-4 border rounded-xl hover:bg-gray-50'>
                         <input
                           type='checkbox'
                           required
                           className='mt-1'
                         />
-                        <span className='text-xs text-gray-500'>
-                          Acepto los{' '}
-                          <b className='text-black'>Términos y Condiciones</b>{' '}
-                          del hotel.
-                        </span>
+                        <div className='text-xs text-gray-500'>
+                          <p className='mb-2'>
+                            Acepto los{' '}
+                            <b className='text-black'>Términos y Condiciones</b>{' '}
+                            y la Política de Privacidad.
+                          </p>
+                          <p className='text-[10px] text-gray-400 leading-tight'>
+                            <strong>Mandato de Gestión de Cobro:</strong>{' '}
+                            Autorizo a HospedaSuite a recaudar el pago en nombre
+                            de <b>{hotel.name}</b>. Entiendo que HospedaSuite
+                            actúa como intermediario tecnológico y que la
+                            factura final será emitida por el hotel.
+                          </p>
+                        </div>
                       </label>
                     </div>
                   </div>
@@ -736,20 +819,31 @@ const BookingPage = () => {
                           {selectedRoom.name}
                         </div>
                       </div>
-                      <div className='flex justify-between items-end mb-8'>
+                      <div className='flex justify-between items-end mb-8 pt-4 border-t border-white/20'>
                         <span className='text-xs font-bold uppercase text-gray-500'>
-                          Total
+                          A Pagar Hoy (
+                          {paymentOption === 'full' ? '100%' : '50%'})
                         </span>
-                        <span className='text-4xl font-serif'>
-                          ${totalCost.toLocaleString()}
+                        <span className='text-4xl font-serif text-emerald-400'>
+                          ${amountToPay.toLocaleString()}
                         </span>
                       </div>
+                      {balanceDue > 0 && (
+                        <div className='mb-6 p-3 bg-red-900/30 border border-red-500/30 rounded-lg flex justify-between items-center'>
+                          <span className='text-xs text-red-300 uppercase font-bold'>
+                            Saldo Pendiente
+                          </span>
+                          <span className='text-lg font-bold text-red-300'>
+                            ${balanceDue.toLocaleString()}
+                          </span>
+                        </div>
+                      )}
                       <button
                         onClick={handleCreateBooking}
                         disabled={processing}
                         className='w-full bg-white text-black py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-gray-200'
                       >
-                        {processing ? 'CONFIRMANDO...' : 'FINALIZAR RESERVA'}
+                        {processing ? 'CONFIRMANDO...' : 'IR A PAGAR'}
                       </button>
                     </div>
                   </div>
@@ -757,6 +851,7 @@ const BookingPage = () => {
               </motion.div>
             )}
 
+            {/* STEP 4: CONFIRMACIÓN (CON SEMÁFORO GIGANTE) */}
             {step === 4 && (
               <motion.div
                 key='step4'
@@ -776,45 +871,93 @@ const BookingPage = () => {
                     #{Math.floor(1000 + Math.random() * 9000)}
                   </b>
                 </p>
-                <div className='max-w-sm mx-auto bg-white border p-8 rounded-3xl shadow-xl mb-8'>
-                  <p className='text-[10px] font-bold uppercase text-gray-400 mb-6'>
-                    ANTICIPO REQUERIDO
-                  </p>
-                  <div className='flex items-center gap-6'>
-                    <div className='bg-white p-2 rounded-xl border shadow-inner'>
-                      <img
-                        src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://wa.me/${hotel?.phone}`}
-                        alt='QR Pago'
-                        className='w-24 h-24 mix-blend-multiply'
-                      />
-                    </div>
+
+                <div className='max-w-md mx-auto bg-white border p-8 rounded-3xl shadow-xl mb-8 relative overflow-hidden'>
+                  {/* SEMÁFORO VISUAL */}
+                  <div
+                    className={`absolute top-0 left-0 right-0 h-2 ${
+                      balanceDue > 0 ? 'bg-red-500' : 'bg-emerald-500'
+                    }`}
+                  />
+
+                  <div className='flex justify-between items-center mb-6 border-b pb-6'>
                     <div className='text-left'>
-                      <div className='text-xl font-serif text-black mb-1'>
-                        {hotel?.phone}
-                      </div>
-                      <div className='text-xs text-gray-500 flex items-center gap-1 font-bold'>
-                        <CreditCard size={12} /> Nequi / Daviplata
-                      </div>
+                      <p className='text-[10px] font-bold uppercase text-gray-400'>
+                        TOTAL RESERVA
+                      </p>
+                      <p className='text-xl font-bold'>
+                        ${totalCost.toLocaleString()}
+                      </p>
+                    </div>
+                    <div className='text-right'>
+                      <p className='text-[10px] font-bold uppercase text-gray-400'>
+                        PAGADO HOY
+                      </p>
+                      <p className='text-xl font-bold text-emerald-600'>
+                        ${amountToPay.toLocaleString()}
+                      </p>
                     </div>
                   </div>
+
+                  {/* 🔥 SEMÁFORO DE TEXTO EXACTO SOLICITADO */}
+                  {balanceDue > 0 ? (
+                    <div className='bg-red-50 p-4 rounded-xl border border-red-100 flex items-center gap-4'>
+                      <div className='bg-red-100 p-2 rounded-full text-red-600'>
+                        <Info size={20} />
+                      </div>
+                      <div className='text-left'>
+                        <p className='text-xs font-bold text-red-600 uppercase mb-1'>
+                          🔴 PENDIENTE DE PAGO
+                        </p>
+                        <p className='text-2xl font-bold text-red-700'>
+                          ${balanceDue.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className='bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center gap-4'>
+                      <div className='bg-emerald-100 p-2 rounded-full text-emerald-600'>
+                        <Check size={20} />
+                      </div>
+                      <div className='text-left'>
+                        <p className='text-xs font-bold text-emerald-600 uppercase mb-1'>
+                          🟢 PAGADO TOTALMENTE
+                        </p>
+                        <p className='text-xs text-gray-500'>
+                          No debes pagar nada al llegar.
+                        </p>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className='mt-8 pt-6 border-t'>
+                    <p className='text-[10px] font-bold uppercase text-gray-400 mb-4'>
+                      COMPLETAR PAGO AHORA
+                    </p>
+                    <button
+                      onClick={() =>
+                        window.open(
+                          `https://wa.me/${
+                            hotel?.phone
+                          }?text=Hola, envío comprobante de reserva por valor de $${amountToPay.toLocaleString()} (${
+                            paymentOption === 'full' ? 'Total' : '50%'
+                          }).`,
+                          '_blank'
+                        )
+                      }
+                      className='w-full bg-[#25D366] text-white px-8 py-4 rounded-full font-bold text-sm shadow-lg hover:bg-[#128C7E] flex items-center justify-center gap-2'
+                    >
+                      <CreditCard size={16} /> Enviar Comprobante WhatsApp
+                    </button>
+                  </div>
                 </div>
-                <button
-                  onClick={() =>
-                    window.open(
-                      `https://wa.me/${hotel?.phone}?text=Hola, envío comprobante de reserva.`,
-                      '_blank'
-                    )
-                  }
-                  className='bg-[#25D366] text-white px-8 py-4 rounded-full font-bold text-sm shadow-lg hover:bg-[#128C7E]'
-                >
-                  Enviar Comprobante por WhatsApp
-                </button>
               </motion.div>
             )}
           </AnimatePresence>
         </motion.div>
       </div>
 
+      {/* MODAL GALERÍA (INTACTO) */}
       <AnimatePresence>
         {viewingRoom && (
           <div

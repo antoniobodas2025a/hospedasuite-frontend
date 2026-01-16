@@ -12,6 +12,7 @@
   "dependencies": {
     "@supabase/supabase-js": "^2.89.0",
     "@zxing/browser": "^0.1.5",
+    "browser-image-compression": "^2.0.2",
     "clsx": "^2.1.1",
     "framer-motion": "^12.23.26",
     "ical.js": "^2.2.1",

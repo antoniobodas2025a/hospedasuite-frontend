@@ -463,24 +463,29 @@ const InventoryPanel = ({
         )}
       </AnimatePresence>
 
-      {/* === MODAL HABITACIÓN (El original) === */}
+      {/* === MODAL HABITACIÓN (CORREGIDO: SCROLL DESBLOQUEADO EN MÓVIL) === */}
       <AnimatePresence>
         {showRoomModal && (
-          <div className='fixed inset-0 bg-slate-900/40 backdrop-blur-xl z-[9999] flex items-center justify-center p-4 overflow-y-auto'>
+          // CORRECCIÓN CLAVE 1: items-start en vez de items-center.
+          // Esto evita que el tope del modal se corte si es más alto que la pantalla.
+          <div className='fixed inset-0 bg-slate-900/40 backdrop-blur-xl z-[9999] flex justify-center p-0 md:p-4 overflow-y-auto items-start md:items-center'>
             <motion.div
               initial={{ scale: 0.95, opacity: 0, y: 20 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
               exit={{ scale: 0.95, opacity: 0 }}
-              className='bg-white rounded-[2.5rem] shadow-2xl w-full max-w-5xl overflow-hidden flex flex-col md:flex-row max-h-[90vh]'
+              // CORRECCIÓN CLAVE 2: Estructura responsiva (flex-col + min-h-screen en móvil)
+              className='bg-white md:rounded-[2.5rem] shadow-2xl w-full max-w-5xl flex flex-col md:flex-row relative min-h-screen md:min-h-0 md:h-[85vh] md:overflow-hidden'
             >
-              <div className='flex-1 p-8 overflow-y-auto custom-scrollbar relative'>
-                <div className='flex justify-between items-center mb-8 sticky top-0 bg-white z-10 py-2'>
+              {/* COLUMNA IZQUIERDA: FORMULARIO */}
+              <div className='flex-1 p-6 md:p-8 md:overflow-y-auto custom-scrollbar relative order-1'>
+                {/* HEADER LÍQUIDO (No sticky en móvil para ganar espacio) */}
+                <div className='flex justify-between items-center mb-6 md:sticky md:top-0 bg-white z-20 py-2'>
                   <h3 className='font-serif text-2xl font-bold text-slate-800'>
                     {editingRoom ? 'Editar Experiencia' : 'Nueva Habitación'}
                   </h3>
                   <button
                     onClick={() => setShowRoomModal(false)}
-                    className='p-2 hover:bg-slate-100 rounded-full'
+                    className='p-2 hover:bg-slate-100 rounded-full bg-slate-50 md:bg-transparent'
                   >
                     <X
                       size={24}
@@ -488,18 +493,19 @@ const InventoryPanel = ({
                     />
                   </button>
                 </div>
+
                 <form
                   onSubmit={handleSaveRoom}
-                  className='space-y-8 pb-20'
+                  className='space-y-6 pb-10'
                 >
-                  {/* ... FORMULARIO HABITACIÓN (Mismo que tenías) ... */}
+                  {/* BLOQUE DATOS */}
                   <div className='grid grid-cols-2 gap-4'>
                     <div className='space-y-1'>
                       <label className='text-[10px] font-bold uppercase text-slate-400'>
                         Nombre
                       </label>
                       <input
-                        className='w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-800 outline-none'
+                        className='w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-800 outline-none focus:ring-2 focus:ring-slate-200'
                         placeholder='Ej: Suite 101'
                         value={roomData.name}
                         onChange={(e) =>
@@ -514,7 +520,7 @@ const InventoryPanel = ({
                       </label>
                       <input
                         type='number'
-                        className='w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-800 outline-none'
+                        className='w-full p-3 bg-slate-50 rounded-xl font-bold text-slate-800 outline-none focus:ring-2 focus:ring-slate-200'
                         placeholder='0'
                         value={roomData.price}
                         onChange={(e) =>
@@ -524,37 +530,46 @@ const InventoryPanel = ({
                       />
                     </div>
                   </div>
+
+                  {/* BLOQUE CONFIGURACIÓN */}
                   <div className='grid grid-cols-2 gap-4'>
                     <div className='space-y-1'>
                       <label className='text-[10px] font-bold uppercase text-slate-400'>
                         Cobro
                       </label>
-                      <div className='flex items-center gap-3 p-3 bg-slate-50 rounded-xl'>
-                        <button
-                          type='button'
-                          onClick={() =>
-                            setRoomData({
-                              ...roomData,
-                              is_price_per_person:
-                                !roomData.is_price_per_person,
-                            })
-                          }
-                          className={`w-10 h-5 rounded-full transition-all relative ${
-                            roomData.is_price_per_person
-                              ? 'bg-blue-600'
-                              : 'bg-slate-300'
-                          }`}
-                        >
+                      <div
+                        onClick={() =>
+                          setRoomData({
+                            ...roomData,
+                            is_price_per_person: !roomData.is_price_per_person,
+                          })
+                        }
+                        className='flex flex-col justify-center p-3 bg-slate-50 rounded-xl cursor-pointer border border-transparent hover:border-slate-200'
+                      >
+                        <div className='flex items-center gap-2 mb-1'>
                           <div
-                            className={`absolute top-1 w-3 h-3 bg-white rounded-full transition-all ${
-                              roomData.is_price_per_person ? 'left-6' : 'left-1'
+                            className={`w-8 h-4 rounded-full transition-all relative ${
+                              roomData.is_price_per_person
+                                ? 'bg-blue-600'
+                                : 'bg-slate-300'
                             }`}
-                          />
-                        </button>
-                        <span className='text-xs font-bold text-slate-600'>
+                          >
+                            <div
+                              className={`absolute top-0.5 w-3 h-3 bg-white rounded-full transition-all ${
+                                roomData.is_price_per_person
+                                  ? 'left-4.5'
+                                  : 'left-0.5'
+                              }`}
+                            />
+                          </div>
+                          <span className='text-[10px] font-bold uppercase text-slate-400'>
+                            Modo
+                          </span>
+                        </div>
+                        <span className='text-xs font-bold text-slate-700 leading-tight'>
                           {roomData.is_price_per_person
                             ? 'Por Persona'
-                            : 'Por Habitación'}
+                            : 'Por Noche'}
                         </span>
                       </div>
                     </div>
@@ -578,8 +593,10 @@ const InventoryPanel = ({
                       </select>
                     </div>
                   </div>
-                  <div className='p-5 bg-slate-50 rounded-2xl border border-slate-100 space-y-4'>
-                    <div className='flex items-center gap-2 mb-2'>
+
+                  {/* BLOQUE DISTRIBUCIÓN */}
+                  <div className='p-4 bg-slate-50 rounded-2xl border border-slate-100 space-y-3'>
+                    <div className='flex items-center gap-2'>
                       <Scan
                         size={16}
                         className='text-blue-500'
@@ -588,14 +605,14 @@ const InventoryPanel = ({
                         Distribución
                       </span>
                     </div>
-                    <div className='grid grid-cols-3 gap-4'>
+                    <div className='grid grid-cols-3 gap-3'>
                       <div>
-                        <label className='text-[10px] font-bold text-slate-400'>
+                        <label className='text-[10px] font-bold text-slate-400 block mb-1'>
                           Pax
                         </label>
                         <input
                           type='number'
-                          className='w-full p-2 bg-white rounded-lg border-none shadow-sm text-center'
+                          className='w-full p-2 bg-white rounded-lg border-none shadow-sm text-center text-sm'
                           value={roomData.capacity}
                           onChange={(e) =>
                             setRoomData({
@@ -606,12 +623,12 @@ const InventoryPanel = ({
                         />
                       </div>
                       <div>
-                        <label className='text-[10px] font-bold text-slate-400'>
+                        <label className='text-[10px] font-bold text-slate-400 block mb-1'>
                           Camas
                         </label>
                         <input
                           type='number'
-                          className='w-full p-2 bg-white rounded-lg border-none shadow-sm text-center'
+                          className='w-full p-2 bg-white rounded-lg border-none shadow-sm text-center text-sm'
                           value={roomData.beds}
                           onChange={(e) =>
                             setRoomData({ ...roomData, beds: e.target.value })
@@ -619,11 +636,11 @@ const InventoryPanel = ({
                         />
                       </div>
                       <div>
-                        <label className='text-[10px] font-bold text-slate-400'>
+                        <label className='text-[10px] font-bold text-slate-400 block mb-1'>
                           Tipo
                         </label>
                         <select
-                          className='w-full p-2 bg-white rounded-lg border-none shadow-sm text-xs'
+                          className='w-full p-2 bg-white rounded-lg border-none shadow-sm text-[10px]'
                           value={roomData.bed_type}
                           onChange={(e) =>
                             setRoomData({
@@ -644,12 +661,14 @@ const InventoryPanel = ({
                       </div>
                     </div>
                   </div>
+
+                  {/* DESCRIPCIÓN OPTIMIZADA */}
                   <div className='space-y-1'>
                     <label className='text-[10px] font-bold uppercase text-slate-400'>
                       Descripción
                     </label>
                     <textarea
-                      className='w-full p-4 bg-slate-50 rounded-xl text-sm text-slate-600 outline-none resize-none h-24'
+                      className='w-full min-h-[120px] p-4 bg-slate-50 rounded-xl text-sm text-slate-600 outline-none resize-y border-2 border-transparent focus:border-slate-200 focus:bg-white transition-colors'
                       value={roomData.description}
                       onChange={(e) =>
                         setRoomData({
@@ -657,11 +676,14 @@ const InventoryPanel = ({
                           description: e.target.value,
                         })
                       }
+                      placeholder='Describe la experiencia...'
                     />
                   </div>
+
+                  {/* AMENITIES */}
                   <div>
                     <label className='text-[10px] font-bold uppercase text-slate-400 mb-2 block'>
-                      Amenities
+                      Comodidades
                     </label>
                     <div className='grid grid-cols-3 gap-2'>
                       {AMENITIES_LIST.map((amenity) => (
@@ -669,21 +691,22 @@ const InventoryPanel = ({
                           key={amenity.id}
                           type='button'
                           onClick={() => toggleAmenity(amenity.id)}
-                          className={`p-2 rounded-xl border text-xs font-bold flex flex-col items-center gap-1 transition-all ${
+                          className={`p-2 rounded-xl border text-[10px] font-bold flex flex-col items-center gap-1 transition-all ${
                             roomData.amenities.includes(amenity.id)
                               ? 'bg-slate-900 text-white border-slate-900'
                               : 'bg-white border-slate-100 text-slate-400'
                           }`}
                         >
-                          <amenity.icon size={16} />
+                          <amenity.icon size={14} />
                           {amenity.label}
                         </button>
                       ))}
                     </div>
                   </div>
                 </form>
+
                 {editingRoom && (
-                  <div className='mt-8 pt-8 border-t border-slate-100'>
+                  <div className='pt-6 border-t border-slate-100'>
                     <button
                       type='button'
                       onClick={handleDeleteRoom}
@@ -695,16 +718,16 @@ const InventoryPanel = ({
                 )}
               </div>
 
-              {/* COLUMNA DERECHA: FOTOS ROOM (Igual que antes) */}
-              <div className='md:w-[400px] bg-slate-50 p-8 flex flex-col border-l border-slate-100'>
-                <div className='flex justify-between items-center mb-6'>
+              {/* COLUMNA DERECHA: FOTOS ROOM (Apilada al final en móvil) */}
+              <div className='md:w-[380px] bg-slate-50 p-6 md:p-8 flex flex-col border-t md:border-t-0 md:border-l border-slate-100 order-2'>
+                <div className='flex justify-between items-center mb-4'>
                   <h4 className='font-bold text-slate-800'>Galería</h4>
                   <button
                     type='button'
                     onClick={() => fileInputRef.current.click()}
                     className='text-xs font-bold text-blue-600 bg-blue-50 px-3 py-1 rounded-lg'
                   >
-                    + Agregar
+                    + Foto
                   </button>
                   <input
                     type='file'
@@ -715,11 +738,29 @@ const InventoryPanel = ({
                     onChange={handleFileChange}
                   />
                 </div>
-                <div className='flex-1 overflow-y-auto space-y-4 pr-2'>
+
+                {/* Scroll de fotos */}
+                <div className='flex-1 md:overflow-y-auto space-y-3 pb-4'>
+                  {roomData.images.length === 0 &&
+                    newRoomFiles.length === 0 && (
+                      <div
+                        onClick={() => fileInputRef.current.click()}
+                        className='border-2 border-dashed border-slate-300 rounded-3xl h-32 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:border-blue-400 bg-white'
+                      >
+                        <UploadCloud
+                          size={24}
+                          className='mb-2'
+                        />
+                        <span className='text-[10px] font-bold'>
+                          Toca para subir
+                        </span>
+                      </div>
+                    )}
+
                   {roomData.images.map((url, idx) => (
                     <div
                       key={idx}
-                      className='relative group rounded-2xl overflow-hidden aspect-video shadow-sm bg-white'
+                      className='relative group rounded-xl overflow-hidden aspect-video shadow-sm bg-white'
                     >
                       <img
                         src={url}
@@ -728,55 +769,44 @@ const InventoryPanel = ({
                       <button
                         type='button'
                         onClick={() => removeExistingImage(url)}
-                        className='absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full opacity-0 group-hover:opacity-100 transition-opacity'
+                        className='absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-lg'
                       >
                         <X size={12} />
                       </button>
                     </div>
                   ))}
+
                   {newRoomFiles.map((file, idx) => (
                     <div
                       key={`new-${idx}`}
-                      className='relative group rounded-2xl overflow-hidden aspect-video shadow-sm border-2 border-blue-500/20 bg-white'
+                      className='relative group rounded-xl overflow-hidden aspect-video shadow-sm border-2 border-blue-500/20 bg-white'
                     >
                       <img
                         src={URL.createObjectURL(file)}
-                        className='w-full h-full object-cover opacity-80'
+                        className='w-full h-full object-cover opacity-90'
                       />
                       <button
                         type='button'
                         onClick={() => removeNewFile(idx)}
-                        className='absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full'
+                        className='absolute top-2 right-2 bg-red-500 text-white p-1.5 rounded-full shadow-lg'
                       >
                         <X size={12} />
                       </button>
                     </div>
                   ))}
-                  {roomData.images.length === 0 &&
-                    newRoomFiles.length === 0 && (
-                      <div
-                        onClick={() => fileInputRef.current.click()}
-                        className='border-2 border-dashed border-slate-300 rounded-3xl h-48 flex flex-col items-center justify-center text-slate-400 cursor-pointer hover:border-blue-400'
-                      >
-                        <UploadCloud
-                          size={32}
-                          className='mb-2'
-                        />
-                        <span className='text-xs font-bold'>Subir Fotos</span>
-                      </div>
-                    )}
                 </div>
-                <div className='mt-6 pt-6 border-t border-slate-200'>
+
+                <div className='pt-4 mt-auto border-t border-slate-200 sticky bottom-0 bg-slate-50 pb-safe'>
                   <button
                     onClick={handleSaveRoom}
                     disabled={loading || uploading}
-                    className='w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2'
+                    className='w-full bg-slate-900 text-white py-4 rounded-2xl font-bold shadow-xl flex items-center justify-center gap-2 hover:scale-[1.02] transition-transform'
                   >
                     {uploading
                       ? 'Subiendo...'
                       : loading
                       ? 'Guardando...'
-                      : 'Confirmar Todo'}
+                      : 'Guardar Todo'}
                   </button>
                 </div>
               </div>
