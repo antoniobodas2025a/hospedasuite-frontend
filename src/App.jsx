@@ -15,7 +15,8 @@ import LoginPage from './pages/LoginPage';
 import SuperAdminPage from './pages/SuperAdminPage';
 import LandingPage from './pages/LandingPage';
 import HunterDashboard from './pages/HunterDashboard';
-import OnboardingPage from './pages/OnboardingPage'; // 👈 Importar
+import OnboardingPage from './pages/OnboardingPage';
+import HomePage from './pages/HomePage'; // ✅ Buscador OTA
 
 function App() {
   return (
@@ -32,27 +33,30 @@ function App() {
           path='/dashboard'
           element={<DashboardPage />}
         />
-
         <Route
           path='/onboarding'
           element={<OnboardingPage />}
         />
-
         <Route
           path='/hunter'
           element={<HunterDashboard />}
         />
-
-        {/* OJO: Esta ruta debería estar protegida en el futuro */}
         <Route
           path='/super-secret-admin'
           element={<SuperAdminPage />}
         />
 
         {/* =========================================
-            2. RUTAS OPERATIVAS (HUÉSPED)
+            2. RUTAS OPERATIVAS (HUÉSPED & OTA)
            ========================================= */}
-        {/* Reserva (Español e Inglés) */}
+
+        {/* ✅ NUEVA RUTA OTA: Detalle del Hotel */}
+        <Route
+          path='/hotel/:hotelId'
+          element={<BookingPage />}
+        />
+
+        {/* Rutas Legacy de Reserva (Mantenidas por compatibilidad QR) */}
         <Route
           path='/reservar/:hotelId'
           element={<BookingPage />}
@@ -62,7 +66,7 @@ function App() {
           element={<BookingPage />}
         />
 
-        {/* Procesos */}
+        {/* Procesos Operativos */}
         <Route
           path='/checkin'
           element={<CheckInPage />}
@@ -73,42 +77,51 @@ function App() {
         />
 
         {/* =========================================
-            3. LANDING PAGES (MARKETING)
+            3. HOME & MARKETING (ESTRUCTURA HÍBRIDA)
            ========================================= */}
-        {/* Rutas específicas de Landing */}
+
+        {/* A. LA NUEVA HOME (Buscador OTA) */}
+        <Route
+          path='/'
+          element={<HomePage />}
+        />
+
+        {/* B. NUEVA LANDING DE VENTAS ("Soy Hotelero") */}
+        <Route
+          path='/soy-hotelero'
+          element={<LandingPage />}
+        />
+        <Route
+          path='/soy-hotelero/:city_slug'
+          element={<LandingPage />}
+        />
+
+        {/* C. RUTAS LEGACY (RECUPERADAS PARA NO ROMPER CAMPAÑAS) */}
+        {/* Campaña "Elite" sigue funcionando */}
         <Route
           path='/elite/:city_slug'
           element={<LandingPage />}
         />
+
+        {/* Enlaces antiguos de /landing con ciudad siguen funcionando */}
         <Route
           path='/landing/:city_slug'
           element={<LandingPage />}
         />
+
+        {/* Redirección suave: /landing sola va a /soy-hotelero */}
         <Route
           path='/landing'
-          element={<LandingPage />}
+          element={
+            <Navigate
+              to='/soy-hotelero'
+              replace
+            />
+          }
         />
 
         {/* =========================================
-            4. RUTAS RAÍZ Y DINÁMICAS (CATCH-ALL)
-           ========================================= */}
-        {/* Home */}
-        <Route
-          path='/'
-          element={<LandingPage />}
-        />
-
-        {/* ⚠️ CUIDADO: Esta ruta atrapa cualquier cosa (ej: tudominio.com/lo-que-sea)
-            React Router v6 prioriza las rutas específicas de arriba (como /login), 
-            así que esto funcionará bien para ciudades como /medellin */}
-        <Route
-          path='/:city_slug'
-          element={<LandingPage />}
-        />
-
-        {/* =========================================
-            5. MANEJO DE ERRORES (404)
-            SIEMPRE DEBE IR AL FINAL ABSOLUTO
+            4. MANEJO DE ERRORES (404)
            ========================================= */}
         <Route
           path='*'

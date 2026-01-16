@@ -123,7 +123,7 @@ const ImageGallery = ({ images, title }) => {
   );
 };
 
-// --- WIDGET DE CLIMA INTELIGENTE (CORREGIDO CORS + VISIBLE MOBILE) ---
+// --- WIDGET DE CLIMA INTELIGENTE (CORREGIDO "VÍA" + FALLBACK) ---
 const WeatherWidget = ({ location }) => {
   const [weather, setWeather] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -136,29 +136,42 @@ const WeatherWidget = ({ location }) => {
 
     const fetchWeather = async () => {
       try {
-        // 1. Geocodificación (Texto -> Coordenadas)
-        // 🔥 USAMOS OPEN-METEO PARA EVITAR BLOQUEOS DE CORS
-        const geoRes = await fetch(
+        // 1. Limpieza de ubicación (Heurística MEJORADA)
+        // Convertimos a minúsculas y normalizamos 'vía' para que coincida con 'via'
+        let query = location
+          .toLowerCase()
+          .replace('vía', 'via') // 🔥 CLAVE: Cambia 'vía' (con tilde) por 'via'
+          .split(',')[0] // Corta antes de la coma (ej: "Paipa, Boyaca")
+          .split(' via ')[0] // Corta antes de 'via'
+          .trim();
+
+        // 🔥 USAMOS OPEN-METEO (Sin problemas de CORS)
+        let geoRes = await fetch(
           `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-            location
+            query
           )}&count=1&language=es&format=json`
         );
-        const geoData = await geoRes.json();
+        let geoData = await geoRes.json();
 
-        if (!geoData.results || geoData.results.length === 0)
-          throw new Error('Ubicación no encontrada');
+        // 2. Fallback: Si falla la ciudad específica, intenta "Colombia"
+        if (!geoData.results || geoData.results.length === 0) {
+          console.warn(`Ubicación '${query}' no encontrada. Usando respaldo.`);
+          geoRes = await fetch(
+            `https://geocoding-api.open-meteo.com/v1/search?name=Colombia&count=1&language=es&format=json`
+          );
+          geoData = await geoRes.json();
+        }
 
-        const { latitude, longitude } = geoData.results[0];
-
-        // 2. Clima (Coordenadas -> Datos)
-        const weatherRes = await fetch(
-          `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
-        );
-        const weatherData = await weatherRes.json();
-
-        setWeather(weatherData.current_weather);
+        if (geoData.results && geoData.results.length > 0) {
+          const { latitude, longitude } = geoData.results[0];
+          const weatherRes = await fetch(
+            `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+          );
+          const weatherData = await weatherRes.json();
+          setWeather(weatherData.current_weather);
+        }
       } catch (error) {
-        console.warn('No se pudo cargar el clima:', error);
+        console.warn('Error widget clima (silencioso):', error);
       } finally {
         setLoading(false);
       }
@@ -167,7 +180,6 @@ const WeatherWidget = ({ location }) => {
     fetchWeather();
   }, [location]);
 
-  // Selección de Icono según código WMO
   const getWeatherIcon = (code) => {
     if (code === 0)
       return (
@@ -238,8 +250,8 @@ const WeatherWidget = ({ location }) => {
         </span>
       </div>
       <div className='w-px h-4 bg-white/20'></div>
-      {/* Texto visible solo en desktop para ahorrar espacio en móvil, icono siempre visible */}
-      <div className='text-xs font-medium opacity-90 hidden sm:block'>
+      {/* Visible en móvil */}
+      <div className='text-xs font-medium opacity-90'>
         {getTemperatureText(weather.temperature)}
       </div>
     </motion.div>
@@ -253,7 +265,6 @@ const BookingPage = () => {
   const yHero = useTransform(scrollY, [0, 500], [0, 200]);
   const opacityHero = useTransform(scrollY, [0, 300], [1, 0]);
 
-  // --- ESTADOS ---
   const [step, setStep] = useState(1);
   const [hotel, setHotel] = useState(null);
   const [rooms, setRooms] = useState([]);
@@ -274,7 +285,6 @@ const BookingPage = () => {
     comments: '',
   });
 
-  // --- DATA FETCHING ---
   useEffect(() => {
     const fetchHotelData = async () => {
       try {
@@ -301,7 +311,6 @@ const BookingPage = () => {
     fetchHotelData();
   }, [hotelId]);
 
-  // --- LOGICA DISPONIBILIDAD ---
   const checkAvailability = async () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -329,8 +338,7 @@ const BookingPage = () => {
         (r) => !busyIds.includes(r.id) && r.status !== 'maintenance'
       );
 
-      if (available.length === 0)
-        alert('😔 Sin disponibilidad para estas fechas.');
+      if (available.length === 0) alert('😔 Sin disponibilidad.');
       else {
         setRooms(available);
         setStep(2);
@@ -342,12 +350,11 @@ const BookingPage = () => {
     }
   };
 
-  // --- LOGICA RESERVA ---
   const handleCreateBooking = async (e) => {
     e.preventDefault();
     const maxCap = selectedRoom.capacity || 2;
     if (parseInt(guest.guestsCount) > maxCap)
-      return alert(`⚠️ La capacidad máxima es de ${maxCap} personas.`);
+      return alert(`⚠️ Máximo ${maxCap} personas.`);
 
     setProcessing(true);
     try {
@@ -420,7 +427,6 @@ const BookingPage = () => {
     >
       <GlobalStyles />
 
-      {/* HERO SECTION DINÁMICO */}
       <div className='relative h-[65vh] bg-black overflow-hidden'>
         <motion.div
           style={{ y: yHero, opacity: opacityHero }}
@@ -429,12 +435,11 @@ const BookingPage = () => {
           <div className='absolute inset-0 bg-gradient-to-b from-black/40 via-transparent to-[#F9F8F6] z-10' />
           <img
             src={hotel?.main_image_url || DEFAULT_HERO}
-            className='w-full h-full object-cover opacity-90 transition-transform duration-[10s] hover:scale-105'
+            className='w-full h-full object-cover opacity-90'
             alt='Hotel Hero'
           />
         </motion.div>
 
-        {/* WIDGETS FLOTANTES */}
         <div className='absolute top-6 left-6 z-20'>
           <div className='flex items-center gap-2 bg-white/20 backdrop-blur-md px-4 py-2 rounded-full text-white border border-white/20 shadow-lg'>
             <ShieldCheck
@@ -447,12 +452,10 @@ const BookingPage = () => {
           </div>
         </div>
 
-        {/* ✅ WIDGET CLIMA CONECTADO & VISIBLE EN MOBILE */}
         <div className='absolute top-6 right-6 z-20'>
           <WeatherWidget location={hotel?.location} />
         </div>
 
-        {/* CONTENIDO HERO */}
         <div className='absolute inset-0 z-20 flex flex-col items-center justify-center text-center p-6 pt-10 text-white'>
           <motion.div
             initial={{ opacity: 0, y: 30 }}
@@ -477,7 +480,6 @@ const BookingPage = () => {
         </div>
       </div>
 
-      {/* CONTENIDO PRINCIPAL */}
       <div className='max-w-6xl mx-auto px-4 md:px-6 -mt-20 relative z-30'>
         <motion.div
           initial={{ y: 50, opacity: 0 }}
@@ -485,7 +487,6 @@ const BookingPage = () => {
           className='bg-white rounded-[2.5rem] shadow-2xl p-6 md:p-12 border border-gray-100'
         >
           <AnimatePresence mode='wait'>
-            {/* PASO 1: FECHAS */}
             {step === 1 && (
               <motion.div
                 key='step1'
@@ -536,7 +537,6 @@ const BookingPage = () => {
               </motion.div>
             )}
 
-            {/* PASO 2: HABITACIONES */}
             {step === 2 && (
               <motion.div
                 key='step2'
@@ -546,7 +546,7 @@ const BookingPage = () => {
               >
                 <button
                   onClick={() => setStep(1)}
-                  className='mb-6 text-xs font-bold text-gray-400 flex items-center gap-1 hover:text-black transition-colors'
+                  className='mb-6 text-xs font-bold text-gray-400 flex items-center gap-1 hover:text-black'
                 >
                   <ChevronLeft size={14} /> VOLVER AL CALENDARIO
                 </button>
@@ -555,7 +555,7 @@ const BookingPage = () => {
                     <div
                       key={room.id}
                       onClick={() => setSelectedRoom(room)}
-                      className={`cursor-pointer rounded-3xl overflow-hidden border transition-all duration-300 ${
+                      className={`cursor-pointer rounded-3xl overflow-hidden border transition-all ${
                         selectedRoom?.id === room.id
                           ? 'border-black ring-1 ring-black shadow-2xl'
                           : 'border-gray-100 hover:shadow-xl'
@@ -569,11 +569,11 @@ const BookingPage = () => {
                               room.image_url ||
                               ROOM_PLACEHOLDER
                             }
-                            className='w-full h-full object-cover transition-transform duration-700 hover:scale-105'
+                            className='w-full h-full object-cover'
                             alt={room.name}
                           />
-                          <span className='absolute top-4 left-4 bg-white/90 backdrop-blur px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider'>
-                            {room.size ? `${room.size}m²` : 'Suite Exclusiva'}
+                          <span className='absolute top-4 left-4 bg-white/90 px-3 py-1 rounded-full text-[10px] font-bold uppercase'>
+                            {room.size ? `${room.size}m²` : 'Suite'}
                           </span>
                         </div>
                         <div className='p-8 flex flex-col justify-center'>
@@ -591,16 +591,15 @@ const BookingPage = () => {
                             </div>
                           </div>
                           <div className='flex gap-3 mb-6 text-xs font-bold text-gray-500'>
-                            <span className='bg-gray-50 px-3 py-1.5 rounded-lg flex gap-1 items-center'>
+                            <span className='bg-gray-50 px-3 py-1.5 rounded-lg flex gap-1'>
                               <Users size={12} /> {room.capacity} Pax
                             </span>
-                            <span className='bg-gray-50 px-3 py-1.5 rounded-lg flex gap-1 items-center'>
+                            <span className='bg-gray-50 px-3 py-1.5 rounded-lg flex gap-1'>
                               <BedDouble size={12} /> {room.beds}
                             </span>
                           </div>
                           <p className='text-sm text-gray-500 line-clamp-2 mb-6'>
-                            {room.description ||
-                              'Experiencia de lujo garantizada.'}
+                            {room.description || 'Experiencia de lujo.'}
                           </p>
                           <div className='flex justify-between items-center mt-auto'>
                             <button
@@ -608,7 +607,7 @@ const BookingPage = () => {
                                 e.stopPropagation();
                                 setViewingRoom(room);
                               }}
-                              className='text-xs font-bold underline decoration-gray-300 underline-offset-4 hover:text-black'
+                              className='text-xs font-bold underline'
                             >
                               VER GALERÍA
                             </button>
@@ -618,7 +617,7 @@ const BookingPage = () => {
                                   e.stopPropagation();
                                   setStep(3);
                                 }}
-                                className='bg-black text-white px-8 py-3 rounded-xl text-xs font-bold tracking-widest hover:bg-gray-900 transition-colors'
+                                className='bg-black text-white px-8 py-3 rounded-xl text-xs font-bold'
                               >
                                 CONTINUAR
                               </button>
@@ -632,7 +631,6 @@ const BookingPage = () => {
               </motion.div>
             )}
 
-            {/* PASO 3: DATOS */}
             {step === 3 && (
               <motion.div
                 key='step3'
@@ -642,7 +640,7 @@ const BookingPage = () => {
               >
                 <button
                   onClick={() => setStep(2)}
-                  className='mb-6 text-xs font-bold text-gray-400 flex items-center gap-1 hover:text-black'
+                  className='mb-6 text-xs font-bold text-gray-400 flex items-center gap-1'
                 >
                   <ChevronLeft size={14} /> VOLVER
                 </button>
@@ -652,16 +650,16 @@ const BookingPage = () => {
                     {[
                       { l: 'Nombre Completo', k: 'fullName', t: 'text' },
                       { l: 'Documento ID', k: 'docNumber', t: 'text' },
-                      { l: 'Teléfono / WhatsApp', k: 'phone', t: 'tel' },
-                      { l: 'Correo Electrónico', k: 'email', t: 'email' },
+                      { l: 'Teléfono', k: 'phone', t: 'tel' },
+                      { l: 'Email', k: 'email', t: 'email' },
                     ].map((f) => (
                       <div key={f.k}>
-                        <label className='text-[10px] font-bold uppercase text-gray-400 mb-1 block'>
+                        <label className='text-[10px] font-bold uppercase text-gray-400'>
                           {f.l}
                         </label>
                         <input
                           type={f.t}
-                          className='w-full border-b py-2 outline-none font-serif text-lg bg-transparent focus:border-black transition-colors'
+                          className='w-full border-b py-2 outline-none font-serif text-lg bg-transparent'
                           value={guest[f.k]}
                           onChange={(e) =>
                             setGuest({ ...guest, [f.k]: e.target.value })
@@ -672,14 +670,14 @@ const BookingPage = () => {
                     ))}
                     <div className='flex gap-4'>
                       <div className='flex-1'>
-                        <label className='text-[10px] font-bold uppercase text-gray-400 mb-1 block'>
+                        <label className='text-[10px] font-bold uppercase text-gray-400'>
                           Huéspedes
                         </label>
                         <input
                           type='number'
                           min='1'
                           max={selectedRoom.capacity}
-                          className='w-full border-b py-2 outline-none font-serif text-lg bg-transparent focus:border-black'
+                          className='w-full border-b py-2 outline-none font-serif text-lg bg-transparent'
                           value={guest.guestsCount}
                           onChange={(e) =>
                             setGuest({ ...guest, guestsCount: e.target.value })
@@ -688,12 +686,11 @@ const BookingPage = () => {
                       </div>
                     </div>
                     <div>
-                      <label className='text-[10px] font-bold uppercase text-gray-400 mb-1 block'>
-                        Peticiones Especiales
+                      <label className='text-[10px] font-bold uppercase text-gray-400'>
+                        Peticiones
                       </label>
                       <textarea
-                        className='w-full border-b py-2 outline-none bg-transparent resize-none focus:border-black'
-                        placeholder='Alergias, hora de llegada...'
+                        className='w-full border-b py-2 outline-none bg-transparent resize-none'
                         value={guest.comments}
                         onChange={(e) =>
                           setGuest({ ...guest, comments: e.target.value })
@@ -701,19 +698,17 @@ const BookingPage = () => {
                       />
                     </div>
 
-                    {/* ✅ CHECKBOX RESTAURADO */}
                     <div className='pt-6'>
-                      <label className='flex items-start gap-3 cursor-pointer p-4 border rounded-xl hover:bg-gray-50 transition-colors'>
+                      <label className='flex items-start gap-3 cursor-pointer p-4 border rounded-xl hover:bg-gray-50'>
                         <input
                           type='checkbox'
                           required
-                          className='mt-1 accent-black'
+                          className='mt-1'
                         />
-                        <span className='text-xs text-gray-500 leading-relaxed'>
+                        <span className='text-xs text-gray-500'>
                           Acepto los{' '}
-                          <b className='text-black'>Términos y Condiciones</b>,
-                          políticas de cancelación y tratamiento de datos
-                          personales de {hotel.name}.
+                          <b className='text-black'>Términos y Condiciones</b>{' '}
+                          del hotel.
                         </span>
                       </label>
                     </div>
@@ -721,27 +716,21 @@ const BookingPage = () => {
 
                   <div className='md:col-span-5'>
                     <div className='bg-[#111] text-white p-8 rounded-3xl sticky top-8 shadow-2xl'>
-                      <h3 className='font-display text-lg mb-6 border-b border-white/20 pb-4 tracking-widest'>
+                      <h3 className='font-display text-lg mb-6 border-b border-white/20 pb-4'>
                         RESUMEN
                       </h3>
-                      <div className='space-y-3 text-sm text-gray-400 mb-8 font-light'>
+                      <div className='space-y-3 text-sm text-gray-400 mb-8'>
                         <div className='flex justify-between'>
                           <span>Entrada</span>{' '}
-                          <span className='text-white font-medium'>
-                            {dates.checkIn}
-                          </span>
+                          <span className='text-white'>{dates.checkIn}</span>
                         </div>
                         <div className='flex justify-between'>
                           <span>Salida</span>{' '}
-                          <span className='text-white font-medium'>
-                            {dates.checkOut}
-                          </span>
+                          <span className='text-white'>{dates.checkOut}</span>
                         </div>
                         <div className='flex justify-between'>
                           <span>Noches</span>{' '}
-                          <span className='text-white font-medium'>
-                            {totalNights}
-                          </span>
+                          <span className='text-white'>{totalNights}</span>
                         </div>
                         <div className='pt-4 text-white font-serif text-lg italic'>
                           {selectedRoom.name}
@@ -749,7 +738,7 @@ const BookingPage = () => {
                       </div>
                       <div className='flex justify-between items-end mb-8'>
                         <span className='text-xs font-bold uppercase text-gray-500'>
-                          Total a Pagar
+                          Total
                         </span>
                         <span className='text-4xl font-serif'>
                           ${totalCost.toLocaleString()}
@@ -758,7 +747,7 @@ const BookingPage = () => {
                       <button
                         onClick={handleCreateBooking}
                         disabled={processing}
-                        className='w-full bg-white text-black py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-gray-200 transition-colors'
+                        className='w-full bg-white text-black py-4 rounded-xl font-bold text-xs tracking-widest hover:bg-gray-200'
                       >
                         {processing ? 'CONFIRMANDO...' : 'FINALIZAR RESERVA'}
                       </button>
@@ -768,7 +757,6 @@ const BookingPage = () => {
               </motion.div>
             )}
 
-            {/* PASO 4: ÉXITO + QR */}
             {step === 4 && (
               <motion.div
                 key='step4'
@@ -783,18 +771,16 @@ const BookingPage = () => {
                   ¡Reserva Confirmada!
                 </h2>
                 <p className='text-gray-500 text-lg mb-10'>
-                  Tu código de reserva es:{' '}
+                  Código:{' '}
                   <b className='text-black'>
                     #{Math.floor(1000 + Math.random() * 9000)}
                   </b>
                 </p>
-
-                <div className='max-w-sm mx-auto bg-white border p-8 rounded-3xl shadow-xl mb-8 transform hover:scale-105 transition-transform duration-300'>
-                  <p className='text-[10px] font-bold uppercase text-gray-400 mb-6 tracking-widest'>
+                <div className='max-w-sm mx-auto bg-white border p-8 rounded-3xl shadow-xl mb-8'>
+                  <p className='text-[10px] font-bold uppercase text-gray-400 mb-6'>
                     ANTICIPO REQUERIDO
                   </p>
                   <div className='flex items-center gap-6'>
-                    {/* ✅ QR GENERATOR */}
                     <div className='bg-white p-2 rounded-xl border shadow-inner'>
                       <img
                         src={`https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=https://wa.me/${hotel?.phone}`}
@@ -812,7 +798,6 @@ const BookingPage = () => {
                     </div>
                   </div>
                 </div>
-
                 <button
                   onClick={() =>
                     window.open(
@@ -820,7 +805,7 @@ const BookingPage = () => {
                       '_blank'
                     )
                   }
-                  className='bg-[#25D366] text-white px-8 py-4 rounded-full font-bold text-sm shadow-lg shadow-green-500/30 hover:bg-[#128C7E] transition-all flex items-center gap-2 mx-auto'
+                  className='bg-[#25D366] text-white px-8 py-4 rounded-full font-bold text-sm shadow-lg hover:bg-[#128C7E]'
                 >
                   Enviar Comprobante por WhatsApp
                 </button>
@@ -828,12 +813,8 @@ const BookingPage = () => {
             )}
           </AnimatePresence>
         </motion.div>
-        <div className='text-center mt-12 opacity-30 text-[10px] font-bold tracking-[0.3em] uppercase'>
-          Powered by HospedaSuite
-        </div>
       </div>
 
-      {/* MODAL DETALLES */}
       <AnimatePresence>
         {viewingRoom && (
           <div
@@ -849,11 +830,10 @@ const BookingPage = () => {
             >
               <button
                 onClick={() => setViewingRoom(null)}
-                className='absolute top-4 right-4 z-20 bg-white/50 p-2 rounded-full hover:bg-black hover:text-white transition-colors backdrop-blur'
+                className='absolute top-4 right-4 z-20 bg-white/50 p-2 rounded-full hover:bg-black hover:text-white transition-colors'
               >
                 <X size={20} />
               </button>
-
               <div className='md:w-3/5 h-1/2 md:h-full bg-gray-100'>
                 <ImageGallery
                   images={
@@ -864,11 +844,7 @@ const BookingPage = () => {
                   title={viewingRoom.name}
                 />
               </div>
-
               <div className='md:w-2/5 p-8 md:p-10 overflow-y-auto bg-white'>
-                <span className='text-[10px] font-bold uppercase tracking-widest text-gray-400 mb-2 block'>
-                  Colección Privada
-                </span>
                 <h2 className='font-serif text-3xl mb-2'>{viewingRoom.name}</h2>
                 <div className='text-2xl font-bold mb-6'>
                   ${(viewingRoom.price || 0).toLocaleString()}{' '}
@@ -876,12 +852,10 @@ const BookingPage = () => {
                     / Noche
                   </span>
                 </div>
-
-                <p className='text-sm text-gray-600 mb-8 leading-relaxed font-light'>
+                <p className='text-sm text-gray-600 mb-8 leading-relaxed'>
                   {viewingRoom.description || 'Sin descripción.'}
                 </p>
-
-                <h3 className='text-xs font-bold uppercase mb-4 tracking-wider'>
+                <h3 className='text-xs font-bold uppercase mb-4'>
                   Comodidades
                 </h3>
                 <div className='grid grid-cols-2 gap-3 mb-8'>
@@ -897,29 +871,13 @@ const BookingPage = () => {
                     );
                   })}
                 </div>
-
-                <div className='border-t border-gray-100 pt-6 text-xs text-gray-500 space-y-2 mb-8'>
-                  <div className='flex justify-between'>
-                    <span>Capacidad Máxima</span>{' '}
-                    <b className='text-black'>
-                      {viewingRoom.capacity} Personas
-                    </b>
-                  </div>
-                  <div className='flex justify-between'>
-                    <span>Configuración</span>{' '}
-                    <b className='text-black'>
-                      {viewingRoom.beds} {viewingRoom.bed_type}
-                    </b>
-                  </div>
-                </div>
-
                 <button
                   onClick={() => {
                     setSelectedRoom(viewingRoom);
                     setViewingRoom(null);
                     setStep(3);
                   }}
-                  className='w-full bg-black text-white py-4 rounded-xl font-bold text-xs tracking-widest hover:scale-[1.02] transition-transform'
+                  className='w-full bg-black text-white py-4 rounded-xl font-bold text-xs tracking-widest'
                 >
                   RESERVAR AHORA
                 </button>
