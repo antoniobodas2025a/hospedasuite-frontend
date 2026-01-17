@@ -35,6 +35,7 @@ import {
   CloudRain,
   CloudFog,
   Info,
+  Hand, // Icono para indicar gesto
 } from 'lucide-react';
 
 // --- ESTILOS GLOBALES ---
@@ -69,54 +70,118 @@ const AMENITY_ICONS = {
   'Pet Friendly': PawPrint,
 };
 
-// --- COMPONENTE GALERÍA ---
+// --- COMPONENTE GALERÍA MOBILE FIRST (SWIPEABLE) ---
 const ImageGallery = ({ images, title }) => {
+  const scrollRef = useRef(null);
   const [currentIndex, setCurrentIndex] = useState(0);
   const gallery = images && images.length > 0 ? images : [ROOM_PLACEHOLDER];
 
+  // Sincronizar índice con el scroll
+  const handleScroll = () => {
+    if (scrollRef.current) {
+      const index = Math.round(
+        scrollRef.current.scrollLeft / scrollRef.current.clientWidth
+      );
+      setCurrentIndex(index);
+    }
+  };
+
+  const scrollToIndex = (index) => {
+    if (scrollRef.current) {
+      scrollRef.current.scrollTo({
+        left: index * scrollRef.current.clientWidth,
+        behavior: 'smooth',
+      });
+    }
+  };
+
   const next = (e) => {
     e?.stopPropagation();
-    setCurrentIndex((prev) => (prev + 1) % gallery.length);
+    if (currentIndex < gallery.length - 1) {
+      scrollToIndex(currentIndex + 1);
+    }
   };
+
   const prev = (e) => {
     e?.stopPropagation();
-    setCurrentIndex((prev) => (prev - 1 + gallery.length) % gallery.length);
+    if (currentIndex > 0) {
+      scrollToIndex(currentIndex - 1);
+    }
   };
 
   return (
     <div className='relative w-full h-full bg-gray-100 group'>
-      <img
-        src={gallery[currentIndex]}
-        alt={`${title} ${currentIndex}`}
-        className='w-full h-full object-cover transition-all duration-500'
-        loading='lazy'
-        decoding='async'
-      />
+      {/* Contenedor con Scroll Snap para gesto táctil */}
+      <div
+        ref={scrollRef}
+        onScroll={handleScroll}
+        className='w-full h-full flex overflow-x-auto snap-x snap-mandatory scrollbar-hide'
+      >
+        {gallery.map((img, idx) => (
+          <div
+            key={idx}
+            className='w-full h-full flex-shrink-0 snap-center relative'
+          >
+            <img
+              src={img}
+              alt={`${title} ${idx}`}
+              className='w-full h-full object-cover'
+              loading={idx === 0 ? 'eager' : 'lazy'}
+              decoding='async'
+            />
+            {/* Gradiente sutil para mejorar lectura de controles */}
+            <div className='absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none' />
+          </div>
+        ))}
+      </div>
+
       {gallery.length > 1 && (
         <>
-          <div className='absolute inset-0 flex justify-between items-center p-4 opacity-0 group-hover:opacity-100 transition-opacity'>
+          {/* Botones de Navegación (Desktop) */}
+          <div className='absolute inset-0 flex justify-between items-center p-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none'>
             <button
               onClick={prev}
-              className='p-2 bg-white/20 backdrop-blur rounded-full text-white hover:bg-white hover:text-black'
+              className={`p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black pointer-events-auto transition-all shadow-lg ${
+                currentIndex === 0 ? 'opacity-0 invisible' : ''
+              }`}
             >
-              <ChevronLeft />
+              <ChevronLeft size={24} />
             </button>
             <button
               onClick={next}
-              className='p-2 bg-white/20 backdrop-blur rounded-full text-white hover:bg-white hover:text-black'
+              className={`p-2 bg-white/20 backdrop-blur-md rounded-full text-white hover:bg-white hover:text-black pointer-events-auto transition-all shadow-lg ${
+                currentIndex === gallery.length - 1 ? 'opacity-0 invisible' : ''
+              }`}
             >
-              <ChevronRight />
+              <ChevronRight size={24} />
             </button>
           </div>
-          <div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2'>
+
+          {/* Indicadores (Dots) */}
+          <div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10'>
             {gallery.map((_, idx) => (
-              <div
+              <button
                 key={idx}
-                className={`w-2 h-2 rounded-full transition-all ${
-                  idx === currentIndex ? 'bg-white w-4' : 'bg-white/50'
+                onClick={(e) => {
+                  e.stopPropagation();
+                  scrollToIndex(idx);
+                }}
+                className={`h-2 rounded-full transition-all shadow-sm ${
+                  idx === currentIndex
+                    ? 'bg-white w-6'
+                    : 'bg-white/50 w-2 hover:bg-white/80'
                 }`}
               />
             ))}
+          </div>
+
+          {/* Indicador visual de Swipe (Solo visible brevemente en móvil o hover) */}
+          <div className='absolute bottom-10 left-1/2 -translate-x-1/2 md:hidden pointer-events-none opacity-60 text-white text-[10px] flex items-center gap-1 bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm'>
+            <Hand
+              size={10}
+              className='animate-pulse'
+            />{' '}
+            Desliza
           </div>
         </>
       )}
@@ -957,7 +1022,7 @@ const BookingPage = () => {
         </motion.div>
       </div>
 
-      {/* MODAL GALERÍA (INTACTO) */}
+      {/* MODAL GALERÍA (SWIPEABLE) */}
       <AnimatePresence>
         {viewingRoom && (
           <div
