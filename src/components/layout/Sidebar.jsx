@@ -1,18 +1,12 @@
-// src/components/layout/Sidebar.jsx
 import React from 'react';
-import {
-  Calendar as CalendarIcon,
-  LayoutDashboard,
-  Users,
-  ShoppingBag,
-  Settings,
-  LogOut,
-} from 'lucide-react';
-import NavButton from '../ui/NavButton';
+import { LogOut } from 'lucide-react';
+import NavButton from '../ui/NavButton'; //
+import { MENU_ITEMS } from '../../config/menuItems'; // 👈 Importamos la configuración
 
 const Sidebar = ({ hotelInfo, activeTab, setActiveTab, onLogout }) => {
   return (
     <aside className='hidden md:flex w-72 bg-[#010512] text-slate-300 flex-col shadow-2xl z-20 rounded-r-[2rem] my-4 ml-4 h-[calc(100vh-2rem)] border-r border-slate-800'>
+      {/* HEADER DEL HOTEL */}
       <div className='p-8 border-b border-[#444] flex items-center gap-4'>
         <div className='w-10 h-10 rounded-full bg-cyan-600 text-white flex items-center justify-center font-serif font-bold text-lg shadow-lg shadow-cyan-500/30'>
           H
@@ -26,42 +20,25 @@ const Sidebar = ({ hotelInfo, activeTab, setActiveTab, onLogout }) => {
           </p>
         </div>
       </div>
-      <nav className='flex-1 p-6 space-y-3'>
-        <NavButton
-          icon={<CalendarIcon size={18} />}
-          label='Agenda'
-          active={activeTab === 'calendar'}
-          onClick={() => setActiveTab('calendar')}
-        />
-        <NavButton
-          icon={<LayoutDashboard size={18} />}
-          label='Inventario'
-          active={activeTab === 'inventory'}
-          onClick={() => setActiveTab('inventory')}
-        />
-        <NavButton
-          icon={<Users size={18} />}
-          label='Huéspedes'
-          active={activeTab === 'guests'}
-          onClick={() => setActiveTab('guests')}
-        />
-        <NavButton
-          icon={<ShoppingBag size={18} />}
-          label='Marketing (Leads)'
-          active={activeTab === 'leads'}
-          onClick={() => setActiveTab('leads')}
-        />
-        <NavButton
-          icon={<Settings size={18} />}
-          label='Configuración'
-          active={activeTab === 'settings'}
-          onClick={() => setActiveTab('settings')}
-        />
+
+      {/* NAVEGACIÓN AUTOMÁTICA (Bucle Map) */}
+      <nav className='flex-1 p-6 space-y-3 overflow-y-auto custom-scrollbar'>
+        {MENU_ITEMS.map((item) => (
+          <NavButton
+            key={item.id}
+            icon={<item.icon size={18} />}
+            label={item.label}
+            active={activeTab === item.id}
+            onClick={() => setActiveTab(item.id)}
+          />
+        ))}
       </nav>
-      <div className='p-6'>
+
+      {/* FOOTER */}
+      <div className='p-6 border-t border-[#222]'>
         <button
           onClick={onLogout}
-          className='flex items-center gap-3 text-[#E5E0D8] hover:text-[#8C3A3A] transition-colors text-sm font-bold'
+          className='flex items-center gap-3 text-[#E5E0D8] hover:text-[#8C3A3A] transition-colors text-sm font-bold w-full'
         >
           <LogOut size={18} /> Cerrar Sesión
         </button>

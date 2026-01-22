@@ -11,6 +11,7 @@ import {
   Box,
   Megaphone,
   Settings,
+  BookOpenCheck, // ✨ 1. NUEVA IMPORTACIÓN
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -27,7 +28,7 @@ const MobileNav = ({
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
 
-  // 🧠 LÓGICA SCROLL-AWARE
+  // 🧠 LÓGICA SCROLL-AWARE (INTACTA)
   useEffect(() => {
     const handleScroll = () => {
       const currentScrollY = window.scrollY;
@@ -74,6 +75,14 @@ const MobileNav = ({
       color: 'text-purple-500',
       bg: 'bg-purple-50',
     },
+    // ✨ 2. NUEVO ÍTEM: LIBRO DE REGISTRO
+    {
+      id: 'forensic-book',
+      label: 'Libro Registro',
+      icon: BookOpenCheck,
+      color: 'text-emerald-500',
+      bg: 'bg-emerald-50',
+    },
     {
       id: 'leads',
       label: 'Marketing',
@@ -109,6 +118,7 @@ const MobileNav = ({
                 Menú de Gestión
               </h3>
             </div>
+            {/* Grid ajustado automáticamente */}
             <div
               className='grid grid-cols-2 gap-4'
               onClick={(e) => e.stopPropagation()}
@@ -134,7 +144,7 @@ const MobileNav = ({
         )}
       </AnimatePresence>
 
-      {/* 2. DOCK FLOTANTE INTELIGENTE (CORREGIDO) */}
+      {/* 2. DOCK FLOTANTE INTELIGENTE (INTACTO) */}
       <AnimatePresence>
         {isVisible && (
           <motion.div
@@ -142,7 +152,7 @@ const MobileNav = ({
             animate={{ y: 0, opacity: 1 }}
             exit={{ y: 100, opacity: 0 }}
             transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            // 👇 CORRECCIÓN INFALIBLE: 'left-0 right-0 mx-auto' fuerza el centrado sin importar el contexto
+            // 👇 MANTIENE LA CORRECCIÓN DE CENTRADO
             className='fixed bottom-6 left-0 right-0 mx-auto w-[90%] max-w-[380px] z-[90] h-[72px]'
           >
             <div className='w-full h-full bg-[#1a1a1a]/90 backdrop-blur-2xl text-white rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-4 flex justify-between items-center border border-white/10 relative'>
@@ -175,7 +185,7 @@ const MobileNav = ({
                 </button>
               </div>
 
-              {/* 🎙️ BOTÓN CENTRAL (FLOTANDO FUERA) */}
+              {/* 🎙️ BOTÓN CENTRAL (FLOTANDO FUERA) - LÓGICA CONSERVADA */}
               <div className='absolute left-1/2 -translate-x-1/2 -top-6'>
                 <button
                   onClick={voiceAction}
@@ -184,8 +194,8 @@ const MobileNav = ({
                     isListening
                       ? 'bg-red-500 scale-110 shadow-red-500/40'
                       : isProcessing
-                      ? 'bg-slate-800 scale-100'
-                      : 'bg-gradient-to-tr from-cyan-500 to-blue-600 shadow-cyan-500/30 active:scale-95'
+                        ? 'bg-slate-800 scale-100'
+                        : 'bg-gradient-to-tr from-cyan-500 to-blue-600 shadow-cyan-500/30 active:scale-95'
                   }`}
                 >
                   {isProcessing ? (

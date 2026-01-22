@@ -80,7 +80,7 @@ const ImageGallery = ({ images, title }) => {
   const handleScroll = () => {
     if (scrollRef.current) {
       const index = Math.round(
-        scrollRef.current.scrollLeft / scrollRef.current.clientWidth
+        scrollRef.current.scrollLeft / scrollRef.current.clientWidth,
       );
       setCurrentIndex(index);
     }
@@ -210,20 +210,20 @@ const WeatherWidget = ({ location }) => {
             .trim();
           let geoRes = await fetch(
             `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(
-              query
-            )}&count=1&language=es&format=json`
+              query,
+            )}&count=1&language=es&format=json`,
           );
           let geoData = await geoRes.json();
           if (!geoData.results || geoData.results.length === 0) {
             geoRes = await fetch(
-              `https://geocoding-api.open-meteo.com/v1/search?name=Colombia&count=1&language=es&format=json`
+              `https://geocoding-api.open-meteo.com/v1/search?name=Colombia&count=1&language=es&format=json`,
             );
             geoData = await geoRes.json();
           }
           if (geoData.results && geoData.results.length > 0) {
             const { latitude, longitude } = geoData.results[0];
             const weatherRes = await fetch(
-              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`
+              `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}&current_weather=true`,
             );
             const weatherData = await weatherRes.json();
             setWeather(weatherData.current_weather);
@@ -401,7 +401,7 @@ const BookingPage = () => {
         .eq('hotel_id', hotel.id);
 
       const available = all.filter(
-        (r) => !busyIds.includes(r.id) && r.status !== 'maintenance'
+        (r) => !busyIds.includes(r.id) && r.status !== 'maintenance',
       );
 
       if (available.length === 0) alert('😔 Sin disponibilidad.');
@@ -442,8 +442,8 @@ const BookingPage = () => {
       const nights = Math.max(
         1,
         Math.ceil(
-          (new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000
-        )
+          (new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000,
+        ),
       );
       const multiplier = selectedRoom.is_price_per_person
         ? parseInt(guest.guestsCount)
@@ -487,7 +487,7 @@ const BookingPage = () => {
 
   const totalNights = Math.max(
     1,
-    Math.ceil((new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000)
+    Math.ceil((new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000),
   );
   const totalCost =
     (selectedRoom?.price || 0) *
@@ -1007,7 +1007,7 @@ const BookingPage = () => {
                           }?text=Hola, envío comprobante de reserva por valor de $${amountToPay.toLocaleString()} (${
                             paymentOption === 'full' ? 'Total' : '50%'
                           }).`,
-                          '_blank'
+                          '_blank',
                         )
                       }
                       className='w-full bg-[#25D366] text-white px-8 py-4 rounded-full font-bold text-sm shadow-lg hover:bg-[#128C7E] flex items-center justify-center gap-2'

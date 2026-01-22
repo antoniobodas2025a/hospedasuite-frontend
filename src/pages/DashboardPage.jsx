@@ -34,11 +34,14 @@ import MarketingPanel from '../components/dashboard/MarketingPanel';
 import GuestsPanel from '../components/dashboard/GuestsPanel';
 import SettingsPanel from '../components/dashboard/SettingsPanel';
 import MenuManager from '../components/dashboard/MenuManager';
+import ForensicBookPanel from '../components/dashboard/ForensicBookPanel';
 
 import MobileNav from '../components/layout/MobileNav';
 
 import RoomServiceModal from '../components/modals/RoomServiceModal';
 import ScannerModal from '../components/modals/ScannerModal';
+import BookingWizardModal from '../components/modals/BookingWizardModal';
+import BookingDetailModal from '../components/modals/BookingDetailModal';
 
 import LockScreen from '../components/auth/LockScreen';
 
@@ -137,7 +140,7 @@ const DashboardPage = () => {
 
   // 1. Audio para Room Service - Actualizado con URL estable y precarga
   const [audio] = useState(
-    new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3')
+    new Audio('https://www.soundjay.com/buttons/sounds/button-3.mp3'),
   );
 
   // Efecto para asegurar la carga del audio y evitar errores de caché
@@ -205,7 +208,7 @@ const DashboardPage = () => {
   const handleDeleteGuest = async (guestId) => {
     if (
       !window.confirm(
-        '¿Seguro que deseas eliminar este huésped? Sus reservas históricas se mantendrán, pero su perfil se borrará.'
+        '¿Seguro que deseas eliminar este huésped? Sus reservas históricas se mantendrán, pero su perfil se borrará.',
       )
     )
       return;
@@ -249,7 +252,7 @@ const DashboardPage = () => {
         // Si no existe hotel, redirigimos en lugar de alertar
         if (!hotel) {
           console.warn(
-            '⚠️ Usuario nuevo detectado. Redirigiendo a Onboarding...'
+            '⚠️ Usuario nuevo detectado. Redirigiendo a Onboarding...',
           );
           setLoading(false);
 
@@ -302,7 +305,7 @@ const DashboardPage = () => {
         (payload) => {
           audio.play().catch((e) => console.log('Audio interaction needed'));
           if (hotelInfo?.id) fetchOrders(hotelInfo.id);
-        }
+        },
       )
       .subscribe();
     return () => {
@@ -364,7 +367,7 @@ const DashboardPage = () => {
           const myGuests = Array.from(uniqueGuestsMap.values());
 
           myGuests.sort(
-            (a, b) => new Date(b.created_at) - new Date(a.created_at)
+            (a, b) => new Date(b.created_at) - new Date(a.created_at),
           );
           setGuests(myGuests);
 
@@ -603,7 +606,7 @@ const DashboardPage = () => {
     // A. VALIDACIÓN DE CAMPOS VACÍOS (Evita el warning "Uncontrolled input")
     if (!bookingForm.roomId || !bookingForm.checkIn || !bookingForm.checkOut) {
       alert(
-        '⚠️ Por favor selecciona una habitación y las fechas de entrada/salida.'
+        '⚠️ Por favor selecciona una habitación y las fechas de entrada/salida.',
       );
       return;
     }
@@ -612,12 +615,12 @@ const DashboardPage = () => {
     const isAvailable = await checkAvailability(
       bookingForm.roomId,
       bookingForm.checkIn,
-      bookingForm.checkOut
+      bookingForm.checkOut,
     );
 
     if (!isAvailable) {
       alert(
-        '⛔ ¡ALERTA DE OVERBOOKING!\n\nLa habitación ya está ocupada en estas fechas. Por favor selecciona otra habitación o cambia las fechas.'
+        '⛔ ¡ALERTA DE OVERBOOKING!\n\nLa habitación ya está ocupada en estas fechas. Por favor selecciona otra habitación o cambia las fechas.',
       );
       return; // Detiene el guardado
     }
@@ -669,7 +672,7 @@ const DashboardPage = () => {
       // E. ÉXITO
       // Sonido de confirmación (Opcional)
       new Audio(
-        'https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3'
+        'https://assets.mixkit.co/sfx/preview/mixkit-software-interface-start-2574.mp3',
       )
         .play()
         .catch(() => {});
@@ -679,7 +682,7 @@ const DashboardPage = () => {
       alert(
         bookingForm.type === 'booking'
           ? '✅ Reserva creada con éxito'
-          : '🛠️ Mantenimiento agendado'
+          : '🛠️ Mantenimiento agendado',
       );
     } catch (e) {
       console.error(e);
@@ -867,7 +870,7 @@ const DashboardPage = () => {
           const exists = bookings.some(
             (b) =>
               b.room_id === targetRoomId &&
-              (b.check_in === startDate || b.check_out === endDate)
+              (b.check_in === startDate || b.check_out === endDate),
           );
           if (!exists) {
             newBookings.push({
@@ -918,8 +921,8 @@ const DashboardPage = () => {
         .gte(
           'created_at',
           new Date(
-            new Date(selected.check_in).getTime() - 86400000
-          ).toISOString()
+            new Date(selected.check_in).getTime() - 86400000,
+          ).toISOString(),
         )
         .order('created_at', { ascending: false });
 
@@ -1024,7 +1027,7 @@ const DashboardPage = () => {
             // Lanzamos la sugerencia
             setTimeout(() => {
               const confirmed = window.confirm(
-                `✅ Lead Guardado: ${finalName}\n📞 Tel: ${finalPhone}\n\n🤖 La IA sugiere enviar este WhatsApp:\n"${smartMessage}"\n\n¿Enviar ahora?`
+                `✅ Lead Guardado: ${finalName}\n📞 Tel: ${finalPhone}\n\n🤖 La IA sugiere enviar este WhatsApp:\n"${smartMessage}"\n\n¿Enviar ahora?`,
               );
 
               if (confirmed) {
@@ -1034,7 +1037,7 @@ const DashboardPage = () => {
           } else {
             // Feedback si faltó el número (para que sepas por qué no salió el WA)
             console.warn(
-              'Lead guardado sin teléfono, omitiendo WhatsApp automático.'
+              'Lead guardado sin teléfono, omitiendo WhatsApp automático.',
             );
           }
         } catch (err) {
@@ -1083,7 +1086,7 @@ const DashboardPage = () => {
       try {
         const { data, error } = await supabase.functions.invoke(
           'process-voice-command',
-          { body: { command: transcript, type: 'VOICE' } }
+          { body: { command: transcript, type: 'VOICE' } },
         );
 
         if (error) throw error;
@@ -1116,7 +1119,7 @@ const DashboardPage = () => {
     try {
       // Usamos una URL de Google muy estable como respaldo principal
       const audio = new Audio(
-        'https://actions.google.com/sounds/v1/science_fiction/beep_short.ogg'
+        'https://actions.google.com/sounds/v1/science_fiction/beep_short.ogg',
       );
       audio.volume = 0.5;
 
@@ -1125,7 +1128,7 @@ const DashboardPage = () => {
         playPromise.catch((error) => {
           // Capturamos el error silenciosamente para que NO salga rojo en consola
           console.warn(
-            'Audio silenciado por el navegador (normal sin interacción previa).'
+            'Audio silenciado por el navegador (normal sin interacción previa).',
           );
         });
       }
@@ -1156,14 +1159,14 @@ const DashboardPage = () => {
     // Sumamos esos pagos
     const sumPayments = todaysPayments.reduce(
       (acc, p) => acc + (Number(p.amount) || 0),
-      0
+      0,
     );
     return total + sumPayments;
   }, 0);
 
   // Calculamos la ocupación actual
   const activeBookingsCount = bookings.filter(
-    (b) => b.status === 'checked_in'
+    (b) => b.status === 'checked_in',
   ).length;
   const occupancyRate =
     rooms.length > 0
@@ -1243,6 +1246,12 @@ const DashboardPage = () => {
             />
           )}
 
+          {/* 👇 2. INSERTAR AQUÍ EL BLOQUE DEL LIBRO DE REGISTRO 👇 */}
+          {activeTab === 'forensic-book' && (
+            <ForensicBookPanel hotelId={hotelInfo?.id} />
+          )}
+          {/* 👆 FIN DE LA INSERCIÓN 👆 */}
+
           {/* CONFIGURACIÓN + FINANZAS (MENÚ DE GESTIÓN UNIFICADO) */}
           {activeTab === 'settings' && (
             <div className='h-full overflow-y-auto custom-scrollbar p-6'>
@@ -1301,748 +1310,27 @@ const DashboardPage = () => {
 
         {/* --- MODALES MOVIDOS AL PADRE (PARA QUE LA VOZ FUNCIONE) --- */}
 
-        {/* 1. MODAL NUEVA RESERVA - ESTILO MAC 2026 BENTO EXPANDIDO */}
-        {calendarData.showBookingModal &&
-          createPortal(
-            <div className='fixed inset-0 bg-[#0f172a]/60 backdrop-blur-xl z-[9999] flex items-center justify-center p-4'>
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0, y: 20 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.95, opacity: 0, y: 20 }}
-                transition={{ type: 'spring', duration: 0.5, bounce: 0.3 }}
-                // ⚡ CAMBIO 1: Ancho máximo aumentado drásticamente (5xl) y altura automática
-                className='bg-[#F8FAFC]/95 border border-white/60 rounded-[2.5rem] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col relative max-h-[90vh]'
-              >
-                {/* HEADER: Título Grande Integrado */}
-                <div className='px-10 py-8 border-b border-slate-200/50 flex justify-between items-start bg-white/50 backdrop-blur-md'>
-                  <div>
-                    <h3 className='font-serif text-4xl font-bold text-slate-800 tracking-tight'>
-                      Nueva Estadía
-                    </h3>
-                    <p className='text-slate-500 mt-1 font-medium'>
-                      Configura los detalles de la reserva
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => calendarData.setShowBookingModal(false)}
-                    className='p-3 bg-white rounded-full text-slate-400 hover:text-red-500 hover:bg-red-50 transition-all shadow-sm border border-slate-100'
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
+        {/* 1. MODAL NUEVA RESERVA (EXTRAÍDO) */}
+        {calendarData.showBookingModal && (
+          <BookingWizardModal
+            calendarData={calendarData}
+            onClose={() => calendarData.setShowBookingModal(false)}
+            onOpenScanner={() => setShowScanner(true)}
+          />
+        )}
 
-                {/* BODY: Layout Bento Grid */}
-                <div className='flex-1 overflow-y-auto custom-scrollbar p-10'>
-                  <form
-                    onSubmit={calendarData.handleCreateBooking}
-                    className='grid grid-cols-1 lg:grid-cols-12 gap-8'
-                  >
-                    {/* COLUMNA IZQUIERDA: Tipo y Fechas (span-7) */}
-                    <div className='lg:col-span-7 space-y-8'>
-                      {/* Selector de Tipo (Segmented Control Grande) */}
-                      <div className='bg-slate-200/50 p-2 rounded-[1.5rem] flex'>
-                        {['booking', 'maintenance'].map((t) => (
-                          <button
-                            key={t}
-                            type='button'
-                            onClick={() =>
-                              calendarData.setBookingForm({
-                                ...calendarData.bookingForm,
-                                type: t,
-                              })
-                            }
-                            className={`flex-1 py-4 rounded-[1.2rem] text-sm font-bold uppercase tracking-wider transition-all duration-300 ${
-                              calendarData.bookingForm.type === t
-                                ? 'bg-white text-slate-900 shadow-md transform scale-100'
-                                : 'text-slate-500 hover:bg-slate-200/50'
-                            }`}
-                          >
-                            {t === 'booking' ? 'Huésped' : 'Mantenimiento'}
-                          </button>
-                        ))}
-                      </div>
-
-                      {/* Fechas en Grid */}
-                      <div className='grid grid-cols-2 gap-6'>
-                        <div className='space-y-2'>
-                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
-                            Entrada
-                          </label>
-                          <input
-                            type='date'
-                            className='w-full p-5 bg-white rounded-[1.5rem] border border-slate-100 font-bold text-lg text-slate-700 focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all shadow-sm'
-                            value={calendarData.bookingForm.checkIn}
-                            onChange={(e) =>
-                              calendarData.setBookingForm({
-                                ...calendarData.bookingForm,
-                                checkIn: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                        <div className='space-y-2'>
-                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
-                            Salida
-                          </label>
-                          <input
-                            type='date'
-                            className='w-full p-5 bg-white rounded-[1.5rem] border border-slate-100 font-bold text-lg text-slate-700 focus:ring-4 focus:ring-blue-100 focus:border-blue-300 transition-all shadow-sm'
-                            value={calendarData.bookingForm.checkOut}
-                            onChange={(e) =>
-                              calendarData.setBookingForm({
-                                ...calendarData.bookingForm,
-                                checkOut: e.target.value,
-                              })
-                            }
-                          />
-                        </div>
-                      </div>
-
-                      {/* Habitación y Personas */}
-                      <div className='grid grid-cols-12 gap-6'>
-                        <div className='col-span-8 space-y-2'>
-                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
-                            Habitación
-                          </label>
-                          <select
-                            className='w-full p-5 bg-white rounded-[1.5rem] border border-slate-100 font-bold text-lg text-slate-700 appearance-none shadow-sm'
-                            value={calendarData.bookingForm.roomId}
-                            onChange={(e) =>
-                              calendarData.setBookingForm({
-                                ...calendarData.bookingForm,
-                                roomId: e.target.value,
-                              })
-                            }
-                          >
-                            <option value=''>Seleccionar Habitación...</option>
-                            {calendarData.availableRoomsList.map((r) => (
-                              <option
-                                key={r.id}
-                                value={r.id}
-                              >
-                                {r.name} — ${parseInt(r.price).toLocaleString()}
-                              </option>
-                            ))}
-                          </select>
-                        </div>
-
-                        {/* Contadores Compactos */}
-                        <div className='col-span-4 space-y-2'>
-                          <label className='text-xs font-bold uppercase text-slate-400 ml-2'>
-                            Huéspedes
-                          </label>
-                          <div className='bg-white border border-slate-100 rounded-[1.5rem] p-2 grid grid-cols-1 md:grid-cols-2 items-center h-auto md:h-[70px] shadow-sm gap-2'>
-                            <div className='flex flex-col items-center flex-1 border-r border-slate-100'>
-                              <span className='text-[10px] text-slate-400 font-bold'>
-                                ADULT
-                              </span>
-                              <input
-                                type='number'
-                                value={calendarData.bookingForm.adults}
-                                onChange={(e) =>
-                                  calendarData.setBookingForm((p) => ({
-                                    ...p,
-                                    adults: parseInt(e.target.value),
-                                  }))
-                                }
-                                className='w-full text-center font-bold text-lg bg-transparent border-none p-0 focus:ring-0'
-                              />
-                            </div>
-                            <div className='flex flex-col items-center flex-1'>
-                              <span className='text-[10px] text-slate-400 font-bold'>
-                                NIÑOS
-                              </span>
-                              <input
-                                type='number'
-                                value={calendarData.bookingForm.children}
-                                onChange={(e) =>
-                                  calendarData.setBookingForm((p) => ({
-                                    ...p,
-                                    children: parseInt(e.target.value),
-                                  }))
-                                }
-                                className='w-full text-center font-bold text-lg bg-transparent border-none p-0 focus:ring-0'
-                              />
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* COLUMNA DERECHA: Datos Huésped y Resumen (span-5) */}
-                    <div className='lg:col-span-5 bg-white/60 rounded-[2rem] p-6 border border-white space-y-6'>
-                      {calendarData.bookingForm.type === 'booking' ? (
-                        <>
-                          <div className='flex items-center gap-3 mb-2'>
-                            <div className='w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center text-blue-600'>
-                              <User size={20} />
-                            </div>
-                            <h4 className='font-bold text-lg text-slate-700'>
-                              Datos del Cliente
-                            </h4>
-                          </div>
-
-                          <div className='space-y-4'>
-                            <input
-                              className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-medium placeholder:text-slate-300 focus:ring-2 focus:ring-blue-100'
-                              placeholder='Nombre Completo'
-                              value={calendarData.bookingForm.guestName}
-                              onChange={(e) =>
-                                calendarData.setBookingForm({
-                                  ...calendarData.bookingForm,
-                                  guestName: e.target.value,
-                                })
-                              }
-                            />
-                            <div className='flex gap-3'>
-                              <input
-                                className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-medium placeholder:text-slate-300'
-                                placeholder='Documento'
-                                value={calendarData.bookingForm.guestDoc}
-                                onChange={(e) =>
-                                  calendarData.setBookingForm({
-                                    ...calendarData.bookingForm,
-                                    guestDoc: e.target.value,
-                                  })
-                                }
-                              />
-                              <button
-                                type='button'
-                                onClick={() => setShowScanner(true)}
-                                className='p-4 bg-slate-800 text-white rounded-2xl hover:bg-black transition-colors'
-                              >
-                                <ScanBarcode size={20} />
-                              </button>
-                            </div>
-                            <input
-                              type='tel'
-                              className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-medium placeholder:text-slate-300'
-                              placeholder='Teléfono / WhatsApp'
-                              value={calendarData.bookingForm.guestPhone}
-                              onChange={(e) =>
-                                calendarData.setBookingForm({
-                                  ...calendarData.bookingForm,
-                                  guestPhone: e.target.value,
-                                })
-                              }
-                            />
-                          </div>
-
-                          {/* Tarjeta de Total */}
-                          <div className='mt-8 bg-slate-900 rounded-[1.5rem] p-6 text-white relative overflow-hidden'>
-                            <div className='absolute top-0 right-0 w-20 h-20 bg-blue-500/20 rounded-full blur-2xl'></div>
-                            <p className='text-slate-400 text-xs font-bold uppercase tracking-widest mb-1'>
-                              Total Estimado
-                            </p>
-                            <div className='flex items-baseline gap-1'>
-                              <span className='text-3xl font-serif font-bold'>
-                                $
-                              </span>
-                              <input
-                                type='number'
-                                className='bg-transparent border-none text-4xl font-serif font-bold text-white p-0 w-full focus:ring-0 placeholder:text-white/50'
-                                value={calendarData.bookingForm.price}
-                                onChange={(e) =>
-                                  calendarData.setBookingForm({
-                                    ...calendarData.bookingForm,
-                                    price: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-                          </div>
-                        </>
-                      ) : (
-                        <div className='h-full flex flex-col items-center justify-center text-center p-6 opacity-50'>
-                          <Hammer
-                            size={48}
-                            className='mb-4 text-slate-400'
-                          />
-                          <p>Modo Mantenimiento Activo</p>
-                          <p className='text-sm'>
-                            La habitación quedará bloqueada.
-                          </p>
-                        </div>
-                      )}
-                    </div>
-                  </form>
-                </div>
-
-                {/* FOOTER: Acciones */}
-                <div className='p-6 border-t border-slate-100 bg-white/80 backdrop-blur-xl sticky bottom-0 z-30 flex justify-end gap-4'>
-                  <button
-                    onClick={() => calendarData.setShowBookingModal(false)}
-                    className='px-8 py-4 rounded-2xl font-bold text-slate-500 hover:bg-slate-100 transition-colors'
-                  >
-                    Cancelar
-                  </button>
-                  <button
-                    onClick={calendarData.handleCreateBooking}
-                    className='px-10 py-4 bg-slate-900 text-white font-bold rounded-2xl shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-3'
-                  >
-                    {calendarData.bookingForm.type === 'booking' ? (
-                      <CheckCircle2 size={20} />
-                    ) : (
-                      <Hammer size={20} />
-                    )}
-                    <span>
-                      {calendarData.bookingForm.type === 'booking'
-                        ? 'Confirmar Reserva'
-                        : 'Bloquear Habitación'}
-                    </span>
-                  </button>
-                </div>
-              </motion.div>
-            </div>,
-            document.body
-          )}
-
-        {/* 2. MODAL DETALLES ACTUALIZADO: Gestión, Consumos y Pagos */}
-        {calendarData.selectedBooking &&
-          createPortal(
-            <div className='fixed inset-0 bg-black/60 backdrop-blur-md z-[9999] flex items-end md:items-center justify-center p-0 md:p-4'>
-              <motion.div
-                initial={{ y: '100%', opacity: 0 }}
-                animate={{ y: 0, opacity: 1 }}
-                exit={{ y: '100%', opacity: 0 }}
-                className='bg-[#F8FAFC] rounded-t-[2rem] md:rounded-[2rem] w-full max-w-md shadow-2xl overflow-hidden h-[85vh] md:h-auto md:max-h-[90vh] flex flex-col relative'
-              >
-                {/* Header Dinámico con ID de Reserva */}
-                <div className='p-6 border-b border-slate-200/60 flex justify-between items-center bg-white/80 backdrop-blur-xl'>
-                  <div>
-                    <h3 className='font-serif text-2xl font-bold text-slate-800'>
-                      Estadía Activa
-                    </h3>
-                    <p className='text-[10px] font-bold text-slate-400 uppercase tracking-widest'>
-                      Reserva #{calendarData.selectedBooking.id.slice(0, 8)}{' '}
-                      [cite: 31, 32]
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      calendarData.setSelectedBooking(null);
-                      setActiveDetailTab('info');
-                    }}
-                    className='p-2 bg-slate-100 rounded-full text-slate-400 hover:text-red-500 transition-colors'
-                  >
-                    <X size={24} />
-                  </button>
-                </div>
-
-                {/* Tabs de Navegación Interna */}
-                <div className='flex border-b border-slate-100 bg-white'>
-                  {[
-                    { id: 'info', label: 'Gestión', icon: <Edit size={14} /> },
-                    {
-                      id: 'billing',
-                      label: 'Consumos',
-                      icon: <CreditCard size={14} />,
-                    },
-                  ].map((tab) => (
-                    <button
-                      key={tab.id}
-                      onClick={() => setActiveDetailTab(tab.id)}
-                      className={`flex-1 py-3 text-xs font-bold uppercase tracking-tighter flex items-center justify-center gap-2 transition-all ${
-                        activeDetailTab === tab.id
-                          ? 'text-slate-900 border-b-2 border-slate-900'
-                          : 'text-slate-400'
-                      }`}
-                    >
-                      {tab.icon} {tab.label}
-                    </button>
-                  ))}
-                </div>
-
-                {/* Contenido según Tab Seleccionada */}
-                <div className='flex-1 overflow-y-auto p-6 space-y-6 pb-24'>
-                  {activeDetailTab === 'info' && (
-                    <div className='space-y-6'>
-                      {/* Info del Huésped (Cruce de Datos) */}
-                      <div className='bg-white p-4 rounded-2xl border border-slate-100 shadow-sm'>
-                        <label className='text-[10px] font-bold text-slate-400 uppercase block mb-1'>
-                          Huésped [cite: 32]
-                        </label>
-                        <div className='flex items-center gap-3'>
-                          <div className='w-10 h-10 bg-slate-800 rounded-xl flex items-center justify-center text-white font-bold'>
-                            {calendarData.selectedBooking.guests
-                              ?.full_name?.[0] || 'H'}
-                          </div>
-                          <div>
-                            <p className='font-bold text-slate-800 leading-tight'>
-                              {calendarData.selectedBooking.guests?.full_name ||
-                                'Huésped Anónimo'}
-                            </p>
-                            <p className='text-xs text-slate-500'>
-                              {calendarData.selectedBooking.guests
-                                ?.doc_number || 'Sin documento'}
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Mover Habitación */}
-                      <div className='space-y-1'>
-                        <label className='text-[10px] font-bold text-slate-400 uppercase ml-2'>
-                          Habitación
-                        </label>
-                        <select
-                          className='w-full p-4 bg-white rounded-2xl border border-slate-100 font-bold text-slate-800'
-                          value={calendarData.selectedBooking.room_id}
-                          onChange={async (e) => {
-                            const { error } = await supabase
-                              .from('bookings')
-                              .update({ room_id: e.target.value })
-                              .eq('id', calendarData.selectedBooking.id);
-                            if (!error) fetchOperationalData();
-                          }}
-                        >
-                          {rooms.map((r) => (
-                            <option
-                              key={r.id}
-                              value={r.id}
-                            >
-                              {r.name} - ${parseInt(r.price).toLocaleString()}
-                            </option>
-                          ))}
-                        </select>
-                      </div>
-
-                      {/* Fechas */}
-                      <div className='grid grid-cols-2 gap-4'>
-                        <input
-                          type='date'
-                          className='p-4 bg-white rounded-2xl border border-slate-100 font-bold text-xs'
-                          value={calendarData.selectedBooking.check_in}
-                          onChange={async (e) => {
-                            await supabase
-                              .from('bookings')
-                              .update({ check_in: e.target.value })
-                              .eq('id', calendarData.selectedBooking.id);
-                            fetchOperationalData();
-                          }}
-                        />
-                        <input
-                          type='date'
-                          className='p-4 bg-white rounded-2xl border border-slate-100 font-bold text-xs'
-                          value={calendarData.selectedBooking.check_out}
-                          onChange={async (e) => {
-                            await supabase
-                              .from('bookings')
-                              .update({ check_out: e.target.value })
-                              .eq('id', calendarData.selectedBooking.id);
-                            fetchOperationalData();
-                          }}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {activeDetailTab === 'billing' && (
-                    <div className='space-y-6'>
-                      {/* Estado Financiero Rápido */}
-                      <div className='grid grid-cols-2 gap-3'>
-                        {/* TARJETA VERDE: PAGADO */}
-                        <div className='bg-emerald-50 p-4 rounded-2xl border border-emerald-100'>
-                          <span className='text-[9px] font-bold text-emerald-600 uppercase'>
-                            Pagado
-                          </span>
-                          <p className='text-lg font-bold text-emerald-700'>
-                            $
-                            {calculateFinancials(
-                              calendarData.selectedBooking
-                            ).paid.toLocaleString()}{' '}
-                          </p>
-                        </div>
-
-                        {/* TARJETA NARANJA: PENDIENTE (SUMA HABITACIÓN + COMIDA) */}
-                        <div className='bg-orange-50 p-4 rounded-2xl border border-orange-100'>
-                          <span className='text-[9px] font-bold text-orange-600 uppercase'>
-                            Pendiente Total
-                          </span>
-                          <p className='text-lg font-bold text-orange-700'>
-                            $
-                            {(
-                              calculateFinancials(calendarData.selectedBooking)
-                                .pending +
-                              currentBookingOrders.reduce(
-                                (acc, o) =>
-                                  acc +
-                                  (o.payment_method === 'room_charge'
-                                    ? o.total_price
-                                    : 0),
-                                0
-                              )
-                            ).toLocaleString()}
-                          </p>
-                        </div>
-                      </div>
-
-                      {/* --- LISTA DE PEDIDOS ROOM SERVICE --- */}
-                      <div className='bg-slate-50 p-4 rounded-2xl border border-slate-100 max-h-40 overflow-y-auto custom-scrollbar space-y-2'>
-                        <p className='text-[10px] font-bold text-slate-400 uppercase mb-2 flex justify-between'>
-                          <span>🍔 Room Service & Restaurante</span>
-                          <span>
-                            $
-                            {currentBookingOrders
-                              .reduce(
-                                (acc, o) =>
-                                  acc +
-                                  (o.payment_method === 'room_charge'
-                                    ? o.total_price
-                                    : 0),
-                                0
-                              )
-                              .toLocaleString()}
-                          </span>
-                        </p>
-
-                        {currentBookingOrders.length === 0 ? (
-                          <p className='text-xs text-slate-400 italic text-center py-2'>
-                            Sin pedidos registrados
-                          </p>
-                        ) : (
-                          currentBookingOrders.map((order) => (
-                            <div
-                              key={order.id}
-                              className='bg-white p-2 rounded-xl border border-slate-200 shadow-sm flex justify-between items-center'
-                            >
-                              <div>
-                                <p className='text-xs font-bold text-slate-700'>
-                                  {order.items
-                                    .map((i) => `${i.qty}x ${i.name}`)
-                                    .join(', ')}
-                                </p>
-                                <p className='text-[10px] text-slate-400'>
-                                  {new Date(
-                                    order.created_at
-                                  ).toLocaleTimeString([], {
-                                    hour: '2-digit',
-                                    minute: '2-digit',
-                                  })}
-                                </p>
-                              </div>
-                              <div className='text-right'>
-                                <p className='text-xs font-bold text-slate-800'>
-                                  ${order.total_price.toLocaleString()}
-                                </p>
-                                <span
-                                  className={`text-[8px] px-1.5 py-0.5 rounded-full font-bold uppercase ${
-                                    order.payment_method === 'room_charge'
-                                      ? 'bg-orange-100 text-orange-600'
-                                      : 'bg-emerald-100 text-emerald-600'
-                                  }`}
-                                >
-                                  {order.payment_method === 'room_charge'
-                                    ? 'Por Pagar'
-                                    : 'Pagado'}
-                                </span>
-                              </div>
-                            </div>
-                          ))
-                        )}
-                      </div>
-
-                      {/* Formulario de Cargos Extra  */}
-                      <form
-                        onSubmit={handleAddCharge}
-                        className='bg-white p-4 rounded-2xl border border-slate-100 space-y-3'
-                      >
-                        <p className='text-[10px] font-bold text-slate-400 uppercase'>
-                          Añadir Consumo Manual
-                        </p>
-                        <div className='flex gap-2'>
-                          <input
-                            placeholder='Item (Cerveza, etc.)'
-                            className='flex-1 p-3 text-sm rounded-xl'
-                            value={chargeForm.concept}
-                            onChange={(e) =>
-                              setChargeForm({
-                                ...chargeForm,
-                                concept: e.target.value,
-                              })
-                            }
-                          />
-                          <input
-                            type='number'
-                            placeholder='$'
-                            className='w-24 p-3 text-sm rounded-xl font-bold'
-                            value={chargeForm.price}
-                            onChange={(e) =>
-                              setChargeForm({
-                                ...chargeForm,
-                                price: e.target.value,
-                              })
-                            }
-                          />
-                          <button
-                            type='submit'
-                            className='bg-slate-900 text-white p-3 rounded-xl'
-                          >
-                            <Plus size={18} />
-                          </button>
-                        </div>
-                      </form>
-
-                      {/* --- OPCIÓN 1: VISION PAY UI --- */}
-                      <form
-                        onSubmit={handleRegisterPayment}
-                        className='relative overflow-hidden rounded-2xl p-5 border border-white/50 shadow-lg group'
-                      >
-                        {/* Fondo Glass Activo */}
-                        <div className='absolute inset-0 bg-white/40 backdrop-blur-xl z-0'></div>
-                        <div className='absolute -top-10 -right-10 w-32 h-32 bg-emerald-400/20 rounded-full blur-3xl group-hover:bg-emerald-400/30 transition-all'></div>
-
-                        <div className='relative z-10 space-y-4'>
-                          <div className='flex justify-between items-center'>
-                            <p className='text-[10px] font-bold text-slate-500 uppercase tracking-widest'>
-                              Terminal de Pago
-                            </p>
-                            {/* Selector de Método (Iconos) */}
-                            <div className='flex bg-white/50 rounded-lg p-1 gap-1'>
-                              {['Efectivo', 'Tarjeta', 'Transferencia'].map(
-                                (m) => (
-                                  <button
-                                    key={m}
-                                    type='button'
-                                    onClick={() =>
-                                      setPaymentForm({
-                                        ...paymentForm,
-                                        method: m,
-                                      })
-                                    }
-                                    title={m}
-                                    className={`p-1.5 rounded-md transition-all ${
-                                      paymentForm.method === m
-                                        ? 'bg-white text-emerald-600 shadow-sm scale-110'
-                                        : 'text-slate-400 hover:text-slate-600'
-                                    }`}
-                                  >
-                                    {m === 'Efectivo' && <Banknote size={14} />}
-                                    {m === 'Tarjeta' && (
-                                      <CreditCard size={14} />
-                                    )}
-                                    {m === 'Transferencia' && (
-                                      <ScanBarcode size={14} />
-                                    )}
-                                  </button>
-                                )
-                              )}
-                            </div>
-                          </div>
-
-                          <div className='flex gap-3'>
-                            <div className='relative flex-1 group/input'>
-                              <span className='absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 font-serif italic text-lg'>
-                                $
-                              </span>
-                              <input
-                                type='number'
-                                placeholder='0.00'
-                                className='w-full pl-8 pr-4 py-3 bg-white/60 border-none rounded-xl text-xl font-bold text-slate-800 placeholder:text-slate-300 focus:ring-2 focus:ring-emerald-400/50 transition-all'
-                                value={paymentForm.amount}
-                                onChange={(e) =>
-                                  setPaymentForm({
-                                    ...paymentForm,
-                                    amount: e.target.value,
-                                  })
-                                }
-                              />
-                            </div>
-                            <button
-                              type='submit'
-                              className='bg-gradient-to-br from-emerald-500 to-teal-600 text-white px-5 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-emerald-500/30 hover:shadow-emerald-500/50 hover:scale-105 active:scale-95 transition-all flex flex-col justify-center items-center gap-1'
-                            >
-                              <span className='text-[10px] opacity-80'>
-                                Cobrar
-                              </span>
-                              <span>Ahora</span>
-                            </button>
-                          </div>
-
-                          <div className='text-center'>
-                            <p className='text-[9px] text-slate-400 font-medium'>
-                              Método seleccionado:{' '}
-                              <span className='text-emerald-600 font-bold'>
-                                {paymentForm.method}
-                              </span>
-                            </p>
-                          </div>
-                        </div>
-                      </form>
-                    </div>
-                  )}
-
-                  {/* Acciones Globales ACTUALIZADAS */}
-                  <div className='grid grid-cols-3 gap-2 pt-4 border-t border-slate-100'>
-                    {/* 1. Botón WhatsApp */}
-                    <button
-                      onClick={calendarData.handleSendWhatsApp}
-                      className='flex flex-col items-center justify-center p-3 bg-white border border-slate-100 rounded-2xl gap-1 hover:bg-slate-50 transition-all'
-                    >
-                      <MessageCircle
-                        className='text-emerald-500'
-                        size={18}
-                      />
-                      <span className='text-[8px] font-bold uppercase text-slate-500'>
-                        WhatsApp
-                      </span>
-                    </button>
-
-                    {/* 2. 👇 NUEVO BOTÓN: CHECK-IN (Inteligente) */}
-                    {calendarData.selectedBooking.status === 'confirmed' ? (
-                      <button
-                        onClick={handleCheckIn}
-                        className='flex flex-col items-center justify-center p-3 bg-blue-50 border border-blue-100 rounded-2xl gap-1 hover:bg-blue-100 transition-all'
-                      >
-                        <CheckCircle2
-                          className='text-blue-600'
-                          size={18}
-                        />
-                        <span className='text-[8px] font-bold uppercase text-blue-600'>
-                          Check-in
-                        </span>
-                      </button>
-                    ) : (
-                      /* Si ya ingresó, mostramos que está "En Casa" */
-                      <div className='flex flex-col items-center justify-center p-3 bg-emerald-50 border border-emerald-100 rounded-2xl gap-1 opacity-50 cursor-default'>
-                        <User
-                          className='text-emerald-600'
-                          size={18}
-                        />
-                        <span className='text-[8px] font-bold uppercase text-emerald-600'>
-                          En Casa
-                        </span>
-                      </div>
-                    )}
-
-                    {/* 3. Botón Salida (Reemplaza a Eliminar) */}
-                    <button
-                      onClick={() => {
-                        // Usamos la nueva función si existe, si no, alerta
-                        if (calendarData.handleCheckOut) {
-                          calendarData.handleCheckOut();
-                        } else {
-                          alert(
-                            '⚠️ Falta agregar handleCheckOut en useCalendar.js'
-                          );
-                        }
-                      }}
-                      className='flex flex-col items-center justify-center p-3 bg-red-50 border border-red-100 rounded-2xl gap-1 hover:bg-red-100 transition-all'
-                    >
-                      <Trash2
-                        className='text-red-500'
-                        size={18}
-                      />
-                      <span className='text-[8px] font-bold uppercase text-red-500'>
-                        Salida
-                      </span>
-                    </button>
-                  </div>
-                </div>
-              </motion.div>
-            </div>,
-            document.body
-          )}
+        {/* 2. MODAL DETALLES (EXTRAÍDO) */}
+        {calendarData.selectedBooking && (
+          <BookingDetailModal
+            booking={calendarData.selectedBooking}
+            rooms={rooms}
+            onClose={() => calendarData.setSelectedBooking(null)}
+            onRefresh={fetchOperationalData} // Para actualizar el calendario general
+            onUpdateBooking={calendarData.setSelectedBooking} // Para actualizar el modal abierto
+            onCheckOut={calendarData.handleCheckOut}
+            onWhatsApp={calendarData.handleSendWhatsApp}
+          />
+        )}
 
         {/* 📝 MODAL EDITAR HUÉSPED */}
         <AnimatePresence>

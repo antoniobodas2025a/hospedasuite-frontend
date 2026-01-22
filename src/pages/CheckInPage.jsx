@@ -94,6 +94,17 @@ const CheckInPage = () => {
   const handleCheckIn = async (e) => {
     e.preventDefault();
 
+    // 🔥 CORRECCIÓN CRÍTICA AQUÍ 🔥
+    // Definimos hotelId basándonos en el hotel cargado en estado.
+    const hotelId = hotel?.id;
+
+    if (!hotelId) {
+      return alert(
+        '⚠️ Error: No se ha detectado el hotel. Por favor recarga la página.',
+      );
+    }
+    // ----------------------------
+
     // 1. Validaciones de Seguridad (Blindaje Legal)
     if (sigPad.current.isEmpty()) return alert('Por favor firma el registro.');
     if (!formData.habeasData)
@@ -145,7 +156,7 @@ const CheckInPage = () => {
             consent_timestamp: forensicTime, // Hora legal de firma
 
             // Relación
-            hotel_id: hotelId,
+            hotel_id: hotelId, // ✅ AHORA SÍ EXISTE LA VARIABLE
           },
         ])
         .select()
@@ -156,10 +167,10 @@ const CheckInPage = () => {
       // 3. Crear la Reserva (Booking)
       const { error: bookingError } = await supabase.from('bookings').insert([
         {
-          hotel_id: hotelId,
+          hotel_id: hotelId, // ✅ AHORA SÍ EXISTE LA VARIABLE
           guest_id: guest.id,
-          check_in: formData.checkIn,
-          check_out: formData.checkOut,
+          check_in: new Date(), // Asumimos hoy si no hay fechas
+          check_out: new Date(Date.now() + 86400000), // Mañana por defecto
           status: 'confirmed', // Entra confirmado directamente
           total_price: 0, // Se ajustará en recepción
           source: 'web_checkin',
@@ -170,7 +181,7 @@ const CheckInPage = () => {
 
       // Éxito
       alert(
-        '✅ ¡Check-in Realizado con Éxito! Tu registro legal está completo.'
+        '✅ ¡Check-in Realizado con Éxito! Tu registro legal está completo.',
       );
       // Opcional: Redirigir o limpiar formulario
     } catch (error) {

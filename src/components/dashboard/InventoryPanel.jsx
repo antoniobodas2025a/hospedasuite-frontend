@@ -25,6 +25,7 @@ import {
   MapPin,
   Smartphone,
 } from 'lucide-react';
+import { ChannelManager } from './ChannelManager';
 
 const AMENITIES_LIST = [
   { id: 'Wifi', label: 'Wifi 5G', icon: Wifi },
@@ -151,7 +152,7 @@ const InventoryPanel = ({
           roomData,
           newRoomFiles,
           roomData.images,
-          editingRoom.status
+          editingRoom.status,
         );
       } else {
         await createRoom(roomData, newRoomFiles);
@@ -796,6 +797,22 @@ const InventoryPanel = ({
                   ))}
                 </div>
 
+                {/* ✅ PROTECCIÓN CONTRA CRASH: Solo renderiza si editingRoom existe */}
+                {editingRoom?.id && (
+                  <div className='border-t border-slate-200 pt-6 mt-6'>
+                    <div className='flex items-center gap-2 mb-2'>
+                      <RefreshCw
+                        size={16}
+                        className='text-slate-700'
+                      />
+                      <h3 className='text-sm font-medium text-slate-700'>
+                        Conexiones Externas (OTA)
+                      </h3>
+                    </div>
+                    <ChannelManager roomId={editingRoom.id} />
+                  </div>
+                )}
+
                 <div className='pt-4 mt-auto border-t border-slate-200 sticky bottom-0 bg-slate-50 pb-safe'>
                   <button
                     onClick={handleSaveRoom}
@@ -805,8 +822,8 @@ const InventoryPanel = ({
                     {uploading
                       ? 'Subiendo...'
                       : loading
-                      ? 'Guardando...'
-                      : 'Guardar Todo'}
+                        ? 'Guardando...'
+                        : 'Guardar Todo'}
                   </button>
                 </div>
               </div>
