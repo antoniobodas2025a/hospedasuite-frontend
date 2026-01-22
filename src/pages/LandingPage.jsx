@@ -241,9 +241,10 @@ const LandingPage = () => {
       ]);
 
       if (!error) {
+        // --- 🛠️ CAMBIO ESTRATÉGICO: MENSAJE DE VENTA REAL ---
         const planMsg =
           selectedPlan === 'SEMILLA'
-            ? 'Quiero mi cuenta GRATIS (1-2 Habs).'
+            ? 'Quiero activar mi Plan Semilla ($29.900/mes).'
             : 'Quiero la oferta PIONEROS (3 Meses Gratis).';
 
         const message = `Hola, soy ${formData.ownerName} del hotel ${formData.hotelName}. ${planMsg} Mi correo es ${formData.email}.`;
@@ -538,7 +539,7 @@ const LandingPage = () => {
           </div>
 
           <div className='grid md:grid-cols-3 gap-8'>
-            {/* PLAN SEMILLA */}
+            {/* PLAN SEMILLA - ESTRATEGIA: "COSTO DE TINTOS" */}
             <GlassCard className='p-10 flex flex-col h-full hover:border-slate-300 transition-colors'>
               <div className='mb-6'>
                 <span className='text-xs font-bold uppercase tracking-wider text-slate-500 bg-slate-100 px-3 py-1 rounded-full'>
@@ -551,6 +552,12 @@ const LandingPage = () => {
                 </span>
                 <span className='text-slate-500 font-medium'>/mes</span>
               </div>
+
+              {/* 🧠 GATILLO PSICOLÓGICO: Anclaje de Precio */}
+              <p className='text-sm text-slate-500 font-bold mb-2 bg-yellow-50 p-2 rounded-lg border border-yellow-100'>
+                ☕ Lo que gastas en tintos.
+              </p>
+
               <p className='text-base text-slate-600 mb-8 font-medium'>
                 Perfecto para casas o apartamentos.
               </p>
@@ -562,6 +569,14 @@ const LandingPage = () => {
                   />
                   1 - 2 Habitaciones
                 </li>
+                {/* 🎯 BENEFICIO CLAVE: El verdadero dolor del cliente */}
+                <li className='flex gap-3'>
+                  <CheckCircle2
+                    size={18}
+                    className='text-slate-900'
+                  />
+                  Evita Multas de Booking
+                </li>
                 <li className='flex gap-3'>
                   <CheckCircle2
                     size={18}
@@ -569,20 +584,17 @@ const LandingPage = () => {
                   />
                   Registro Rápido
                 </li>
-                <li className='flex gap-3'>
-                  <CheckCircle2
-                    size={18}
-                    className='text-slate-900'
-                  />
-                  Reportes Legales
-                </li>
               </ul>
               <button
                 onClick={() => scrollToForm('SEMILLA', '1-2')}
-                className='w-full py-4 rounded-2xl bg-slate-100 text-slate-900 font-bold hover:bg-slate-200 transition-colors text-sm uppercase tracking-wide'
+                className='w-full py-4 rounded-2xl bg-slate-900 text-white font-bold hover:bg-slate-800 transition-colors text-sm uppercase tracking-wide shadow-lg shadow-slate-200'
               >
-                Elegir Gratis
+                Empezar Ahora
               </button>
+              {/* 🛡️ REDUCTOR DE RIESGO */}
+              <p className='text-[10px] text-center text-slate-400 mt-3 font-medium'>
+                Sin cláusulas de permanencia.
+              </p>
             </GlassCard>
 
             {/* PLAN PIONERO */}
@@ -634,7 +646,7 @@ const LandingPage = () => {
                 onClick={() => scrollToForm('PIONERO', '3-12')}
                 className='w-full py-4 rounded-2xl bg-blue-600 text-white font-bold hover:bg-blue-500 transition-colors text-sm uppercase tracking-wide shadow-lg shadow-blue-600/30'
               >
-                Reclamar Oferta
+                Empieza sin pagar
               </button>
               {/* 🛠️ MEJORA DE CONVERSIÓN: Reductor de fricción */}
               <p className='text-center text-[10px] text-slate-400 mt-3 uppercase tracking-wider font-bold'>
@@ -722,7 +734,7 @@ const LandingPage = () => {
                   <div className='text-center mb-10'>
                     <h3 className='text-3xl font-bold text-slate-900 mb-2'>
                       {selectedPlan === 'SEMILLA'
-                        ? 'Crea tu Cuenta Gratis'
+                        ? 'Crea tu Cuenta ($29.900/mes)'
                         : 'Activa tu Promoción'}
                     </h3>
                     <p className='text-sm font-bold text-slate-500 flex items-center justify-center gap-2 bg-slate-100 py-2 px-4 rounded-full w-fit mx-auto'>

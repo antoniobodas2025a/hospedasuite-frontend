@@ -48,10 +48,10 @@ const HunterDashboard = () => {
             setLeads((prev) => [payload.new, ...prev]);
           } else if (payload.eventType === 'UPDATE') {
             setLeads((prev) =>
-              prev.map((l) => (l.id === payload.new.id ? payload.new : l))
+              prev.map((l) => (l.id === payload.new.id ? payload.new : l)),
             );
           }
-        }
+        },
       )
       .subscribe();
 
@@ -76,7 +76,7 @@ const HunterDashboard = () => {
       });
       if (error) throw error;
       alert(
-        `🏹 Cacería completada. Se detectaron ${data.new_leads} objetivos nuevos.`
+        `🏹 Cacería completada. Se detectaron ${data.new_leads} objetivos nuevos.`,
       );
       fetchLeads();
     } catch (err) {
@@ -88,7 +88,7 @@ const HunterDashboard = () => {
 
   const updateStatus = async (id, newStatus) => {
     setLeads((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l))
+      prev.map((l) => (l.id === id ? { ...l, status: newStatus } : l)),
     );
     await supabase
       .from('hunted_leads')
@@ -103,16 +103,29 @@ const HunterDashboard = () => {
       .eq('id', id);
     setEditingNoteId(null);
     setLeads((prev) =>
-      prev.map((l) => (l.id === id ? { ...l, notes: tempNote } : l))
+      prev.map((l) => (l.id === id ? { ...l, notes: tempNote } : l)),
     );
   };
 
-  const openWhatsApp = (id, phone, message) => {
+  // --- 🛠️ NUEVO GENERADOR DE PITCH ESTRATÉGICO ---
+  const generateSmartPitch = (businessName) => {
+    return `Hola ${businessName}! 👋
+
+Soy Antonio de HospedaSuite. Estaba viendo su perfil en Google Maps (¡muy buenas fotos!) y noté que no tienen un link directo para reservar sin comisiones.
+
+Desarrollamos un sistema ligero que les permite recibir reservas directas y escanear cédulas desde el celular.
+
+Cuesta $29.900 al mes (literalmente menos de lo que cuesta un tinto al día ☕) y les evita pagar el 15-20% a Booking en sus clientes directos.
+
+¿Les gustaría que les active una prueba para que vean cómo funciona?`;
+  };
+
+  const openWhatsApp = (id, phone, businessName) => {
     if (!phone) {
       // Si no tiene teléfono, sugerimos descartarlo o buscarlo manual
       if (
         window.confirm(
-          "Este objetivo no tiene teléfono registrado. ¿Deseas moverlo a 'Descartados' para buscarlo luego?"
+          "Este objetivo no tiene teléfono registrado. ¿Deseas moverlo a 'Descartados' para buscarlo luego?",
         )
       ) {
         updateStatus(id, 'dead');
@@ -125,12 +138,15 @@ const HunterDashboard = () => {
       updateStatus(id, 'contacted');
     }
 
+    // Generamos el mensaje actualizado al momento del click
+    const message = generateSmartPitch(businessName);
+
     const cleanNumber = phone.replace(/\D/g, '');
     const finalNumber =
       cleanNumber.length === 10 ? `57${cleanNumber}` : cleanNumber;
     window.open(
       `https://wa.me/${finalNumber}?text=${encodeURIComponent(message)}`,
-      '_blank'
+      '_blank',
     );
   };
 
@@ -303,10 +319,10 @@ const HunterDashboard = () => {
                 lead.status === 'dead'
                   ? 'opacity-75 bg-slate-50 border-slate-200' // Efecto visual para descartados
                   : lead.status === 'contacted'
-                  ? 'border-blue-100'
-                  : lead.status === 'closed'
-                  ? 'border-green-100'
-                  : 'border-slate-100'
+                    ? 'border-blue-100'
+                    : lead.status === 'closed'
+                      ? 'border-green-100'
+                      : 'border-slate-100'
               }`}
             >
               {/* BADGES & ESTADO */}
@@ -340,6 +356,19 @@ const HunterDashboard = () => {
               <h3 className='font-black text-xl text-slate-900 mb-1 leading-tight'>
                 {lead.business_name}
               </h3>
+
+              {/* 🛠️ CAMBIO ESTRATÉGICO: Link Directo a Google Maps para "Reconocimiento" */}
+              <a
+                href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
+                  lead.business_name + ' ' + (city || ''),
+                )}`}
+                target='_blank'
+                rel='noreferrer'
+                className='text-[10px] font-bold text-blue-600 hover:underline mb-3 flex items-center gap-1'
+              >
+                <Search size={10} /> Investigar en Maps
+              </a>
+
               <div className='flex items-center gap-2 text-xs text-slate-500 mb-4'>
                 <MapPin
                   size={12}
@@ -394,10 +423,10 @@ const HunterDashboard = () => {
                   <RotateCcw size={18} /> Reactivar Oportunidad
                 </button>
               ) : (
-                // SI ESTÁ VIVO, BOTÓN DE WHATSAPP
+                // SI ESTÁ VIVO, BOTÓN DE WHATSAPP CON NUEVO SCRIPT
                 <button
                   onClick={() =>
-                    openWhatsApp(lead.id, lead.phone, lead.ai_pitch)
+                    openWhatsApp(lead.id, lead.phone, lead.business_name)
                   }
                   disabled={!lead.phone}
                   className={`w-full py-4 font-bold rounded-2xl flex items-center justify-center gap-2 shadow-lg transition-all active:scale-95 group/btn ${

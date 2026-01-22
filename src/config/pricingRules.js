@@ -1,5 +1,4 @@
 /**
- * LEYVAPASS: SISTEMA DE GOBERNANZA DE PRECIOS
  * Definición estricta de límites financieros.
  */
 
