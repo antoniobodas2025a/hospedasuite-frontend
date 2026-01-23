@@ -35,7 +35,7 @@ import {
   CloudRain,
   CloudFog,
   Info,
-  Hand, // Icono para indicar gesto
+  Hand,
 } from 'lucide-react';
 
 // --- ESTILOS GLOBALES ---
@@ -48,6 +48,13 @@ const GlobalStyles = () => (
     .font-sans { fontFamily: 'Lato', sans-serif; }
     .scrollbar-hide::-webkit-scrollbar { display: none; }
     .scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+    @keyframes shimmer {
+      0% { transform: translateX(-100%); }
+      100% { transform: translateX(100%); }
+    }
+    .animate-shimmer {
+      animation: shimmer 2s infinite;
+    }
   `}</style>
 );
 
@@ -76,7 +83,6 @@ const ImageGallery = ({ images, title }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const gallery = images && images.length > 0 ? images : [ROOM_PLACEHOLDER];
 
-  // Sincronizar índice con el scroll
   const handleScroll = () => {
     if (scrollRef.current) {
       const index = Math.round(
@@ -111,7 +117,6 @@ const ImageGallery = ({ images, title }) => {
 
   return (
     <div className='relative w-full h-full bg-gray-100 group'>
-      {/* Contenedor con Scroll Snap para gesto táctil */}
       <div
         ref={scrollRef}
         onScroll={handleScroll}
@@ -129,7 +134,6 @@ const ImageGallery = ({ images, title }) => {
               loading={idx === 0 ? 'eager' : 'lazy'}
               decoding='async'
             />
-            {/* Gradiente sutil para mejorar lectura de controles */}
             <div className='absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none' />
           </div>
         ))}
@@ -137,7 +141,6 @@ const ImageGallery = ({ images, title }) => {
 
       {gallery.length > 1 && (
         <>
-          {/* Botones de Navegación (Desktop) */}
           <div className='absolute inset-0 flex justify-between items-center p-4 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none'>
             <button
               onClick={prev}
@@ -157,7 +160,6 @@ const ImageGallery = ({ images, title }) => {
             </button>
           </div>
 
-          {/* Indicadores (Dots) */}
           <div className='absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10'>
             {gallery.map((_, idx) => (
               <button
@@ -175,7 +177,6 @@ const ImageGallery = ({ images, title }) => {
             ))}
           </div>
 
-          {/* Indicador visual de Swipe (Solo visible brevemente en móvil o hover) */}
           <div className='absolute bottom-10 left-1/2 -translate-x-1/2 md:hidden pointer-events-none opacity-60 text-white text-[10px] flex items-center gap-1 bg-black/20 px-2 py-1 rounded-full backdrop-blur-sm'>
             <Hand
               size={10}
@@ -330,6 +331,9 @@ const BookingPage = () => {
   const [loading, setLoading] = useState(true);
   const [processing, setProcessing] = useState(false);
 
+  // Nuevo estado para guardar el ID real de la reserva
+  const [createdBookingId, setCreatedBookingId] = useState(null);
+
   const [origin, setOrigin] = useState('direct');
   const [paymentOption, setPaymentOption] = useState('deposit');
 
@@ -454,25 +458,80 @@ const BookingPage = () => {
         paymentOption === 'full' ? totalRoomPrice : totalRoomPrice / 2;
       const balanceDue = totalRoomPrice - amountPaid;
 
-      const { error: bError } = await supabase.from('bookings').insert([
-        {
-          hotel_id: hotel.id,
-          room_id: selectedRoom.id,
-          guest_id: gData.id,
-          check_in: dates.checkIn,
-          check_out: dates.checkOut,
-          total_price: totalRoomPrice,
-          status: 'confirmed',
-          notes: `Pax: ${guest.guestsCount}. Origen: ${origin}. Pago: ${
-            paymentOption === 'full' ? '100%' : '50%'
-          }. Saldo Pendiente: $${balanceDue}. Notas: ${guest.comments}`,
-        },
-      ]);
+      const { data: bData, error: bError } = await supabase
+        .from('bookings')
+        .insert([
+          {
+            hotel_id: hotel.id,
+            room_id: selectedRoom.id,
+            guest_id: gData.id,
+            check_in: dates.checkIn,
+            check_out: dates.checkOut,
+            total_price: totalRoomPrice,
+            status: 'pending', // 🛑 IMPORTANTE: Nace como pendiente de pago
+            notes: `Pax: ${guest.guestsCount}. Origen: ${origin}. Pago: ${
+              paymentOption === 'full' ? '100%' : '50%'
+            }. Saldo Pendiente: $${balanceDue}. Notas: ${guest.comments}`,
+          },
+        ])
+        .select()
+        .single(); // ✅ Capturamos el ID de la reserva
 
       if (bError) throw bError;
+
+      setCreatedBookingId(bData.id); // Guardamos el ID para Wompi
       setStep(4);
     } catch (e) {
       alert(e.message);
+    } finally {
+      setProcessing(false);
+    }
+  };
+
+  // --- EN BOOKINGPAGE.JSX ---
+  const handleWompiPayment = async () => {
+    if (!createdBookingId) return alert('No se encontró el ID de la reserva.');
+    setProcessing(true);
+    try {
+      const nights = Math.max(
+        1,
+        Math.ceil(
+          (new Date(dates.checkOut) - new Date(dates.checkIn)) / 86400000,
+        ),
+      );
+      const multiplier = selectedRoom.is_price_per_person
+        ? parseInt(guest.guestsCount)
+        : 1;
+
+      // 1. Calculamos los dos valores críticos
+      const totalRoomPrice = (selectedRoom.price || 0) * nights * multiplier; // Valor Total del Contrato
+      const amountToCharge =
+        paymentOption === 'full' ? totalRoomPrice : totalRoomPrice / 2; // Lo que paga hoy
+
+      // 2. Llamar a la Edge Function con AMBOS valores
+      const { data, error } = await supabase.functions.invoke(
+        'wompi-checkout',
+        {
+          body: {
+            bookingId: createdBookingId,
+            amount: amountToCharge, // Para cobrar en la pasarela
+            totalBookingAmount: totalRoomPrice, // 🔥 NUEVO: Para calcular tu 10% real
+            origin: origin,
+            hotelId: hotel.id,
+          },
+        },
+      );
+
+      if (error) throw new Error(error.message || 'Error conectando con Wompi');
+      if (data?.error) throw new Error(data.error);
+
+      if (data?.redirectUrl) {
+        window.location.href = data.redirectUrl;
+      } else {
+        throw new Error('No se recibió URL de pago');
+      }
+    } catch (err) {
+      alert('⚠️ ' + err.message);
     } finally {
       setProcessing(false);
     }
@@ -713,7 +772,7 @@ const BookingPage = () => {
               </motion.div>
             )}
 
-            {/* STEP 3: DATOS Y PAGO (CON BLINDAJE LEGAL) */}
+            {/* STEP 3: DATOS Y PAGO */}
             {step === 3 && (
               <motion.div
                 key='step3'
@@ -916,7 +975,7 @@ const BookingPage = () => {
               </motion.div>
             )}
 
-            {/* STEP 4: CONFIRMACIÓN (CON SEMÁFORO GIGANTE) */}
+            {/* STEP 4: CONFIRMACIÓN Y PAGO WOMPI */}
             {step === 4 && (
               <motion.div
                 key='step4'
@@ -928,92 +987,44 @@ const BookingPage = () => {
                   <Check size={40} />
                 </div>
                 <h2 className='text-4xl md:text-5xl font-serif mb-4'>
-                  ¡Reserva Confirmada!
+                  Reserva Pre-Confirmada
                 </h2>
                 <p className='text-gray-500 text-lg mb-10'>
-                  Código:{' '}
-                  <b className='text-black'>
-                    #{Math.floor(1000 + Math.random() * 9000)}
-                  </b>
+                  Solo falta un paso para asegurar tu habitación.
                 </p>
 
                 <div className='max-w-md mx-auto bg-white border p-8 rounded-3xl shadow-xl mb-8 relative overflow-hidden'>
-                  {/* SEMÁFORO VISUAL */}
-                  <div
-                    className={`absolute top-0 left-0 right-0 h-2 ${
-                      balanceDue > 0 ? 'bg-red-500' : 'bg-emerald-500'
-                    }`}
-                  />
-
-                  <div className='flex justify-between items-center mb-6 border-b pb-6'>
-                    <div className='text-left'>
-                      <p className='text-[10px] font-bold uppercase text-gray-400'>
-                        TOTAL RESERVA
-                      </p>
-                      <p className='text-xl font-bold'>
-                        ${totalCost.toLocaleString()}
-                      </p>
-                    </div>
-                    <div className='text-right'>
-                      <p className='text-[10px] font-bold uppercase text-gray-400'>
-                        PAGADO HOY
-                      </p>
-                      <p className='text-xl font-bold text-emerald-600'>
-                        ${amountToPay.toLocaleString()}
-                      </p>
-                    </div>
+                  <div className='bg-slate-900 text-white py-2 px-4 absolute top-0 left-0 right-0 text-[10px] font-bold uppercase tracking-widest text-center'>
+                    PAGO SEGURO WOMPI
                   </div>
 
-                  {/* 🔥 SEMÁFORO DE TEXTO EXACTO SOLICITADO */}
-                  {balanceDue > 0 ? (
-                    <div className='bg-red-50 p-4 rounded-xl border border-red-100 flex items-center gap-4'>
-                      <div className='bg-red-100 p-2 rounded-full text-red-600'>
-                        <Info size={20} />
-                      </div>
-                      <div className='text-left'>
-                        <p className='text-xs font-bold text-red-600 uppercase mb-1'>
-                          🔴 PENDIENTE DE PAGO
-                        </p>
-                        <p className='text-2xl font-bold text-red-700'>
-                          ${balanceDue.toLocaleString()}
-                        </p>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className='bg-emerald-50 p-4 rounded-xl border border-emerald-100 flex items-center gap-4'>
-                      <div className='bg-emerald-100 p-2 rounded-full text-emerald-600'>
-                        <Check size={20} />
-                      </div>
-                      <div className='text-left'>
-                        <p className='text-xs font-bold text-emerald-600 uppercase mb-1'>
-                          🟢 PAGADO TOTALMENTE
-                        </p>
-                        <p className='text-xs text-gray-500'>
-                          No debes pagar nada al llegar.
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  <div className='mt-8 pt-6 border-t'>
-                    <p className='text-[10px] font-bold uppercase text-gray-400 mb-4'>
-                      COMPLETAR PAGO AHORA
+                  <div className='mt-8 flex flex-col items-center'>
+                    <p className='text-xs text-gray-400 uppercase font-bold mb-2'>
+                      Total a Pagar Ahora
                     </p>
+                    <p className='text-5xl font-serif font-bold text-slate-900 mb-8'>
+                      ${amountToPay.toLocaleString()}
+                    </p>
+
                     <button
-                      onClick={() =>
-                        window.open(
-                          `https://wa.me/${
-                            hotel?.phone
-                          }?text=Hola, envío comprobante de reserva por valor de $${amountToPay.toLocaleString()} (${
-                            paymentOption === 'full' ? 'Total' : '50%'
-                          }).`,
-                          '_blank',
-                        )
-                      }
-                      className='w-full bg-[#25D366] text-white px-8 py-4 rounded-full font-bold text-sm shadow-lg hover:bg-[#128C7E] flex items-center justify-center gap-2'
+                      onClick={handleWompiPayment}
+                      disabled={processing}
+                      className='w-full bg-[#182C68] text-white py-5 rounded-xl font-bold text-sm shadow-xl hover:scale-[1.02] transition-transform flex items-center justify-center gap-3 relative overflow-hidden'
                     >
-                      <CreditCard size={16} /> Enviar Comprobante WhatsApp
+                      {processing ? (
+                        <Loader className='animate-spin' />
+                      ) : (
+                        <>
+                          <CreditCard size={20} /> IR A PAGAR CON WOMPI
+                        </>
+                      )}
+                      {/* Brillo animado */}
+                      <div className='absolute top-0 -left-[100%] w-full h-full bg-gradient-to-r from-transparent via-white/20 to-transparent animate-shimmer' />
                     </button>
+
+                    <div className='mt-6 flex items-center gap-2 text-[10px] text-gray-400 font-medium'>
+                      <ShieldCheck size={12} /> Pagos procesados por Bancolombia
+                    </div>
                   </div>
                 </div>
               </motion.div>
@@ -1096,6 +1107,6 @@ const BookingPage = () => {
       </AnimatePresence>
     </div>
   );
-};
+};;
 
 export default BookingPage;

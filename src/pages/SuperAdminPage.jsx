@@ -137,7 +137,7 @@ const SuperAdminPage = () => {
     const activeHotels = hotelsData.filter((h) => h.status === 'active');
     const totalRevenue = activeHotels.reduce(
       (acc, curr) => acc + (curr.monthly_price || 29),
-      0
+      0,
     );
     setStats({
       mrr: totalRevenue,
@@ -164,14 +164,14 @@ const SuperAdminPage = () => {
 
     if (!serviceRoleKey) {
       alert(
-        '⚠️ ERROR DE CONFIGURACIÓN:\nNo se encontró VITE_SUPABASE_SERVICE_ROLE_KEY en .env.\nReinicia el servidor (npm run dev) si acabas de guardarlo.'
+        '⚠️ ERROR DE CONFIGURACIÓN:\nNo se encontró VITE_SUPABASE_SERVICE_ROLE_KEY en .env.\nReinicia el servidor (npm run dev) si acabas de guardarlo.',
       );
       return;
     }
 
     if (
       !window.confirm(
-        `⚠️ MODO DIOS ACTIVADO\n\nEntrando a "${hotel.name}" sin contraseña...\n\nTu sesión actual se cerrará.`
+        `⚠️ MODO DIOS ACTIVADO\n\nEntrando a "${hotel.name}" sin contraseña...\n\nTu sesión actual se cerrará.`,
       )
     )
       return;
@@ -190,14 +190,16 @@ const SuperAdminPage = () => {
             type: 'magiclink',
             email: hotel.email,
           }),
-        }
+        },
       );
 
       const data = await response.json();
 
       if (!response.ok) {
         throw new Error(
-          data.msg || data.error_description || 'Error desconocido del servidor'
+          data.msg ||
+            data.error_description ||
+            'Error desconocido del servidor',
         );
       }
 
@@ -218,7 +220,7 @@ const SuperAdminPage = () => {
   // 🔥 BORRADO BLINDADO V4
   const handleDeleteHotel = async (hotel) => {
     const userInput = window.prompt(
-      `⚠️ BORRADO FINAL ⚠️\n\nVas a eliminar a "${hotel.name}".\nEscribe "BORRAR" para confirmar la limpieza total:`
+      `⚠️ BORRADO FINAL ⚠️\n\nVas a eliminar a "${hotel.name}".\nEscribe "BORRAR" para confirmar la limpieza total:`,
     );
     if (userInput !== 'BORRAR') return;
 
@@ -323,6 +325,7 @@ const SuperAdminPage = () => {
         trial_ends_at: trialEnd.toISOString(),
         monthly_price: 29,
         subscription_plan: 'PRO_AI',
+        commission_rate: 10, // Default a 10% para nuevos hoteles manuales
       },
     ]);
 
@@ -361,6 +364,7 @@ const SuperAdminPage = () => {
           phone: lead.phone,
           email: lead.email,
           subscription_plan: 'PRO_AI',
+          commission_rate: 10, // Default a 10% para nuevos leads
         },
       ]);
       if (hotelError) throw hotelError;
@@ -391,7 +395,7 @@ const SuperAdminPage = () => {
     fetchData();
   };
 
-  // ✅ EDICIÓN ACTUALIZADA CON EMAIL Y TELÉFONO
+  // ✅ EDICIÓN ACTUALIZADA CON COMISIÓN (SPLIT PAYMENTS)
   const handleUpdateHotel = async (e) => {
     e.preventDefault();
     if (!editingHotel) return;
@@ -400,10 +404,11 @@ const SuperAdminPage = () => {
         .from('hotels')
         .update({
           name: editingHotel.name,
-          email: editingHotel.email, // 🔥 NUEVO
-          phone: editingHotel.phone, // 🔥 NUEVO
+          email: editingHotel.email,
+          phone: editingHotel.phone,
           status: editingHotel.status,
           subscription_plan: editingHotel.subscription_plan,
+          commission_rate: editingHotel.commission_rate, // 🔥 SE GUARDA LA TASA DE COMISIÓN
           trial_ends_at: new Date(editingHotel.trial_ends_at).toISOString(),
         })
         .eq('id', editingHotel.id);
@@ -594,7 +599,7 @@ const SuperAdminPage = () => {
               <div className='space-y-2 md:space-y-2'>
                 {hotels
                   .filter((h) =>
-                    h.name.toLowerCase().includes(searchTerm.toLowerCase())
+                    h.name.toLowerCase().includes(searchTerm.toLowerCase()),
                   )
                   .map((hotel) => (
                     <div
@@ -647,9 +652,9 @@ const SuperAdminPage = () => {
                               const msg = `Hola! El hotel *${hotel.name}* ha sido seleccionado.\n\nAcceso: ${window.location.origin}/login\nUsuario: ${hotel.email}\nClave: hotel123`;
                               window.open(
                                 `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(
-                                  msg
+                                  msg,
                                 )}`,
-                                '_blank'
+                                '_blank',
                               );
                             }}
                             className='p-2 rounded-xl bg-green-500/20 text-green-400 hover:bg-green-500/40 flex items-center justify-center'
@@ -725,7 +730,7 @@ const SuperAdminPage = () => {
         </div>
       </main>
 
-      {/* ✅ MODAL DE EDICIÓN CON EMAIL Y TELÉFONO */}
+      {/* ✅ MODAL DE EDICIÓN CON EMAIL, TELÉFONO Y COMISIÓN */}
       {editingHotel && (
         <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60 backdrop-blur-md'>
           <div className='bg-[#09090b] border border-white/10 rounded-[2rem] w-full max-w-md p-6 shadow-2xl relative'>
@@ -761,7 +766,7 @@ const SuperAdminPage = () => {
                 />
               </div>
 
-              {/* 🔥 NUEVOS CAMPOS: EMAIL Y TELÉFONO */}
+              {/* 🔥 CAMPOS DE CONTACTO */}
               <div className='grid grid-cols-2 gap-4'>
                 <div className='space-y-1'>
                   <label className='text-xs font-bold text-white/40 uppercase'>
@@ -835,6 +840,40 @@ const SuperAdminPage = () => {
                   </select>
                 </div>
               </div>
+
+              {/* 🔥 NUEVO: CONTROL DE COMISIÓN INTEGRADO */}
+              <div className='space-y-1 mt-4'>
+                <label className='text-xs font-bold text-white/40 uppercase flex items-center gap-2'>
+                  <DollarSign
+                    size={12}
+                    className='text-yellow-400'
+                  />{' '}
+                  Comisión OTA (%)
+                </label>
+                <div className='relative'>
+                  <input
+                    type='number'
+                    min='0'
+                    max='100'
+                    className='w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white focus:border-yellow-500/50 outline-none font-mono'
+                    placeholder='10'
+                    value={editingHotel.commission_rate || 10}
+                    onChange={(e) =>
+                      setEditingHotel({
+                        ...editingHotel,
+                        commission_rate: e.target.value,
+                      })
+                    }
+                  />
+                  <div className='absolute right-4 top-3 text-white/30 text-xs font-bold'>
+                    %
+                  </div>
+                </div>
+                <p className='text-[10px] text-white/30'>
+                  Porcentaje que retiene la plataforma por reserva.
+                </p>
+              </div>
+
               <div className='space-y-1'>
                 <label className='text-xs font-bold text-white/40 uppercase flex items-center gap-2'>
                   <Activity

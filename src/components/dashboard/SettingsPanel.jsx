@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { supabase } from '../../supabaseClient';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
 import {
   Settings,
   Lock,
@@ -9,15 +9,15 @@ import {
   QrCode,
   Printer,
   Globe,
-  Palette,
   MapPin,
   Percent,
   Copy,
   ExternalLink,
+  Instagram,
+  Zap,
 } from 'lucide-react';
 
 const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
-  // --- ESTADOS Y LÓGICA ORIGINAL (Preservada) ---
   const [activeSection, setActiveSection] = useState('general');
   const [loading, setLoading] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -28,9 +28,10 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
     location: '',
     tax_rate: 0,
     phone: '',
+    wompi_public_key: '',
+    wompi_integrity_secret: '',
   });
 
-  // Sincronizar formulario
   useEffect(() => {
     if (hotelInfo) {
       setConfigForm({
@@ -39,13 +40,22 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
         location: hotelInfo.location || '',
         tax_rate: parseFloat(hotelInfo.tax_rate) || 0,
         phone: hotelInfo.phone || '',
+        wompi_public_key: hotelInfo.wompi_public_key || '',
+        wompi_integrity_secret: hotelInfo.wompi_integrity_secret || '',
       });
     }
   }, [hotelInfo]);
 
-  const menuLink = hotelInfo?.id
+  // 🔥 GENERACIÓN DE ENLACES INTELIGENTES
+  const baseUrl = hotelInfo?.id
     ? `${window.location.origin}/book/${hotelInfo.id}`
     : '#';
+
+  // 1. Link para Instagram/WhatsApp del Hotel (0% Comisión)
+  const directLink = `${baseUrl}?origen=direct`;
+
+  // 2. Link para la OTA (10% Comisión - Uso interno o afiliados)
+  const otaLink = `${baseUrl}?origen=hospedasuite`;
 
   const handleUpdateConfig = async (e) => {
     e.preventDefault();
@@ -59,6 +69,8 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
           location: configForm.location,
           tax_rate: configForm.tax_rate,
           phone: configForm.phone,
+          wompi_public_key: configForm.wompi_public_key,
+          wompi_integrity_secret: configForm.wompi_integrity_secret,
         })
         .eq('id', hotelInfo.id);
 
@@ -96,7 +108,6 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
     setLoading(false);
   };
 
-  // --- CONFIGURACIÓN DEL MENÚ LATERAL ---
   const sections = [
     { id: 'general', title: 'General', icon: Settings, color: 'bg-slate-500' },
     { id: 'web', title: 'Web & QR', icon: Globe, color: 'bg-blue-500' },
@@ -105,7 +116,6 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
 
   return (
     <div className='h-full flex flex-col md:flex-row gap-6 p-6 overflow-hidden text-slate-800'>
-      {/* 1. SIDEBAR DE AJUSTES (Estilo macOS) */}
       <div className='w-full md:w-64 flex-none space-y-2'>
         <h2 className='text-2xl font-serif font-bold text-slate-800 mb-6 px-2'>
           Ajustes
@@ -139,9 +149,7 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
         ))}
       </div>
 
-      {/* 2. PANEL DE CONTENIDO (Tarjetas Glassmorphism) */}
       <div className='flex-1 bg-white/50 backdrop-blur-xl rounded-[2.5rem] border border-white/60 shadow-sm p-8 overflow-y-auto relative'>
-        {/* SECCIÓN: GENERAL */}
         {activeSection === 'general' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -151,12 +159,10 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
             <h3 className='text-2xl font-bold text-slate-800 mb-6'>
               Información del Hotel
             </h3>
-
             <form
               onSubmit={handleUpdateConfig}
               className='space-y-6'
             >
-              {/* Nombre y Color */}
               <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
                 <div className='md:col-span-2 space-y-2'>
                   <label className='text-xs font-bold text-slate-500 uppercase tracking-wider ml-1'>
@@ -191,7 +197,6 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
                 </div>
               </div>
 
-              {/* Ubicación y Teléfono */}
               <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
                 <div className='space-y-2 relative'>
                   <label className='text-xs font-bold text-slate-500 uppercase tracking-wider ml-1'>
@@ -238,7 +243,6 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
                 </div>
               </div>
 
-              {/* Impuesto */}
               <div className='space-y-2 w-full md:w-1/3'>
                 <label className='text-xs font-bold text-slate-500 uppercase tracking-wider ml-1'>
                   Impuesto (%)
@@ -254,13 +258,73 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
                     placeholder='0'
                     value={configForm.tax_rate}
                     onChange={(e) =>
-                      setConfigForm({ ...configForm, tax_rate: e.target.value })
+                      setConfigForm({
+                        ...configForm,
+                        tax_rate: e.target.value,
+                      })
                     }
                   />
                 </div>
               </div>
 
-              {/* Botón Guardar Flotante */}
+              <div className='col-span-full mt-8 bg-purple-50 p-6 rounded-[2rem] border border-purple-100 relative overflow-hidden'>
+                <div className='absolute top-0 right-0 w-32 h-32 bg-purple-200/50 rounded-full blur-3xl -z-0'></div>
+                <div className='relative z-10'>
+                  <h4 className='text-lg font-bold text-purple-900 mb-4 flex items-center gap-2'>
+                    <div className='p-2 bg-white rounded-lg shadow-sm'>💳</div>
+                    Pasarela de Pagos (Wompi Bancolombia)
+                  </h4>
+                  <p className='text-sm text-purple-800/70 mb-6 max-w-2xl'>
+                    Ingresa las llaves de producción de tu cuenta Wompi. Esto
+                    permitirá que el dinero de las reservas llegue directamente
+                    a tu cuenta bancaria.
+                  </p>
+
+                  <div className='grid grid-cols-1 md:grid-cols-2 gap-6'>
+                    <div className='space-y-2'>
+                      <label className='text-xs font-bold text-purple-900/60 uppercase tracking-wider ml-1'>
+                        Llave Pública (Public Key)
+                      </label>
+                      <input
+                        type='text'
+                        placeholder='pub_prod_...'
+                        className='w-full p-4 bg-white border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-purple-500/20 font-mono text-sm'
+                        value={configForm.wompi_public_key || ''}
+                        onChange={(e) =>
+                          setConfigForm({
+                            ...configForm,
+                            wompi_public_key: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+                    <div className='space-y-2'>
+                      <label className='text-xs font-bold text-purple-900/60 uppercase tracking-wider ml-1'>
+                        Secreto de Integridad
+                      </label>
+                      <div className='relative'>
+                        <Lock
+                          className='absolute left-4 top-1/2 -translate-y-1/2 text-purple-300'
+                          size={16}
+                        />
+                        <input
+                          type='password'
+                          placeholder='prod_integrity_...'
+                          className='w-full p-4 pl-12 bg-white border-none rounded-2xl shadow-sm focus:ring-2 focus:ring-purple-500/20 font-mono text-sm'
+                          value={configForm.wompi_integrity_secret || ''}
+                          onChange={(e) =>
+                            setConfigForm({
+                              ...configForm,
+                              wompi_integrity_secret: e.target.value,
+                            })
+                          }
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <motion.button
                 whileHover={{ scale: 1.05 }}
                 whileTap={{ scale: 0.95 }}
@@ -277,7 +341,7 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
           </motion.div>
         )}
 
-        {/* SECCIÓN: WEB & QR */}
+        {/* --- SECCIÓN WEB & QR ACTUALIZADA CON DOBLE LINK --- */}
         {activeSection === 'web' && (
           <motion.div
             initial={{ opacity: 0, y: 10 }}
@@ -285,54 +349,88 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
             className='max-w-3xl space-y-8'
           >
             <h3 className='text-2xl font-bold text-slate-800'>
-              Tu Página de Reservas
+              Tus Enlaces de Reserva
             </h3>
 
-            {/* Tarjeta Enlace */}
-            <div className='bg-blue-50/80 border border-blue-200 p-6 rounded-[2rem]'>
-              <p className='text-sm text-blue-800 mb-3 font-medium flex items-center gap-2'>
-                <Globe size={16} /> Enlace público para huéspedes
+            {/* 1. LINK HOTEL (DIRECTO - 0% COMISIÓN) */}
+            <div className='bg-emerald-50/80 border border-emerald-200 p-6 rounded-[2rem] relative overflow-hidden'>
+              <div className='absolute -right-10 -top-10 w-40 h-40 bg-emerald-200/30 rounded-full blur-3xl'></div>
+              <p className='text-sm text-emerald-800 mb-1 font-bold flex items-center gap-2'>
+                <Instagram size={18} /> Link Directo (Instagram / WhatsApp)
               </p>
-              <div className='flex flex-col md:flex-row gap-3'>
+              <p className='text-xs text-emerald-700/70 mb-4'>
+                Usa este enlace en tu perfil. Las reservas que entren por aquí
+                tendrán <strong>0% de comisión</strong> para HospedaSuite.
+              </p>
+              <div className='flex flex-col md:flex-row gap-3 relative z-10'>
                 <input
                   readOnly
-                  className='flex-1 p-4 bg-white rounded-2xl text-sm font-mono text-slate-600 border border-blue-100 select-all shadow-sm'
-                  value={menuLink}
+                  className='flex-1 p-4 bg-white rounded-2xl text-xs font-mono text-slate-600 border border-emerald-100 select-all shadow-sm'
+                  value={directLink}
                 />
                 <div className='flex gap-2'>
                   <button
                     onClick={() => {
-                      navigator.clipboard.writeText(menuLink);
-                      alert('¡Link copiado!');
+                      navigator.clipboard.writeText(directLink);
+                      alert('¡Link directo copiado! Listo para Instagram.');
                     }}
-                    className='bg-blue-600 text-white font-bold px-6 py-3 rounded-2xl hover:bg-blue-700 shadow-lg shadow-blue-500/30 flex items-center gap-2'
+                    className='bg-emerald-600 text-white font-bold px-4 py-3 rounded-2xl hover:bg-emerald-700 shadow-lg shadow-emerald-500/30 flex items-center gap-2 text-sm'
                   >
-                    <Copy size={18} /> Copiar
+                    <Copy size={16} /> Copiar
                   </button>
                   <button
-                    onClick={() => window.open(menuLink, '_blank')}
-                    className='bg-white text-blue-600 font-bold px-4 py-3 rounded-2xl border border-blue-200 hover:bg-blue-50 flex items-center gap-2'
+                    onClick={() => window.open(directLink, '_blank')}
+                    className='bg-white text-emerald-600 font-bold px-3 py-3 rounded-2xl border border-emerald-200 hover:bg-emerald-50'
                   >
-                    <ExternalLink size={18} /> Ver
+                    <ExternalLink size={16} />
                   </button>
                 </div>
               </div>
             </div>
 
-            {/* Tarjeta QR */}
+            {/* 2. LINK OTA (PLATAFORMA - 10% COMISIÓN) */}
+            <div className='bg-blue-50/80 border border-blue-200 p-6 rounded-[2rem] opacity-75 hover:opacity-100 transition-opacity'>
+              <p className='text-sm text-blue-800 mb-1 font-bold flex items-center gap-2'>
+                <Zap size={18} /> Link Plataforma (OTA)
+              </p>
+              <p className='text-xs text-blue-700/70 mb-4'>
+                Este es el enlace que usa HospedaSuite para traerte clientes
+                nuevos. Tiene <strong>10% de comisión</strong>.
+              </p>
+              <div className='flex flex-col md:flex-row gap-3'>
+                <input
+                  readOnly
+                  className='flex-1 p-4 bg-white rounded-2xl text-xs font-mono text-slate-600 border border-blue-100 select-all shadow-sm'
+                  value={otaLink}
+                />
+                <div className='flex gap-2'>
+                  <button
+                    onClick={() => {
+                      navigator.clipboard.writeText(otaLink);
+                      alert('Link OTA copiado.');
+                    }}
+                    className='bg-blue-100 text-blue-600 font-bold px-4 py-3 rounded-2xl hover:bg-blue-200 flex items-center gap-2 text-sm'
+                  >
+                    <Copy size={16} /> Copiar
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Tarjeta QR (Genera el Directo por defecto) */}
             <div>
               <h4 className='font-bold text-lg mb-4 flex items-center gap-2 text-slate-700'>
                 <QrCode
                   size={20}
                   className='text-slate-400'
                 />{' '}
-                Código QR para Habitaciones
+                Código QR (Enlace Directo)
               </h4>
               <div className='flex flex-col md:flex-row items-center gap-8 bg-white/60 p-8 rounded-[2rem] border border-white/60 shadow-sm'>
                 <div className='bg-white p-3 rounded-2xl shadow-inner border border-slate-100'>
                   <img
                     src={`https://api.qrserver.com/v1/create-qr-code/?size=200x200&data=${encodeURIComponent(
-                      menuLink
+                      directLink,
                     )}`}
                     alt='QR Menú'
                     className='rounded-xl mix-blend-multiply w-40 h-40'
@@ -340,13 +438,12 @@ const SettingsPanel = ({ hotelInfo, setHotelInfo }) => {
                 </div>
                 <div className='flex-1 text-center md:text-left'>
                   <p className='text-slate-500 mb-6 leading-relaxed'>
-                    Imprime este código y colócalo en la recepción o
-                    habitaciones. Tus huéspedes podrán escanearlo para ver el
-                    menú y pedir servicios.
+                    Este código lleva a tu <strong>Enlace Directo</strong> (0%
+                    comisión). Imprímelo para la recepción.
                   </p>
                   <a
                     href={`https://api.qrserver.com/v1/create-qr-code/?size=500x500&data=${encodeURIComponent(
-                      menuLink
+                      directLink,
                     )}`}
                     target='_blank'
                     download
