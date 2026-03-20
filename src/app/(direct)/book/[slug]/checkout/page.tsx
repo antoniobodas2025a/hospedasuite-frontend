@@ -28,8 +28,9 @@ const isValidDateString = (dateStr: string) => {
 
 export default async function CheckoutPage({ params, searchParams }: CheckoutPageProps) {
   const { slug } = await params;
-  const { room: roomId, ref, checkin, checkout } = await searchParams;
-
+  
+const { room: roomId, ref, checkin, checkout } = await searchParams;
+  
   if (!roomId) return notFound();
 
   if (!checkin || !checkout) {
