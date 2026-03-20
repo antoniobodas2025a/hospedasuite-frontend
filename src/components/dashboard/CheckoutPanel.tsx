@@ -12,22 +12,14 @@ import {
   BedDouble,
 } from 'lucide-react';
 import { useCheckout, BookingSummary } from '@/hooks/useCheckout';
-import WompiButton from '@/components/payments/WompiButton'; // <-- Importa el botón
+import WompiButton from '@/components/payments/WompiButton';
 
 interface CheckoutPanelProps {
   bookings: BookingSummary[];
-  wompiPublicKey?: string; // <-- Agrega esta línea
+  wompiPublicKey?: string;
 }
 
-const CheckoutPanel = ({ bookings, wompiPublicKey }: CheckoutPanelProps) => { // <-- Recibe la prop
-
-interface CheckoutPanelProps {
-  bookings: BookingSummary[];
-  wompiPublicKey?: string; // <-- Agrega esta línea
-}
-
-const CheckoutPanel = ({ bookings, wompiPublicKey }: CheckoutPanelProps) => { // <-- Recibe la prop
-
+const CheckoutPanel = ({ bookings, wompiPublicKey }: CheckoutPanelProps) => {
   const {
     selectedBooking,
     statement,
@@ -209,17 +201,6 @@ const CheckoutPanel = ({ bookings, wompiPublicKey }: CheckoutPanelProps) => { //
                   </div>
                 ))}
 
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
-                
                 {/* Formulario de Pago Rápido */}
                 {statement.balance > 0 && (
                   <div className='mt-8 pt-6 border-t border-slate-200'>
@@ -264,11 +245,9 @@ const CheckoutPanel = ({ bookings, wompiPublicKey }: CheckoutPanelProps) => { //
                       wompiPublicKey ? (
                         <WompiButton
                           amount={paymentForm.amount}
-                          reference={selectedBooking.id} // 🚨 ESTO ES CLAVE: El ID de la reserva es la referencia
+                          reference={selectedBooking.id}
                           publicKey={wompiPublicKey}
                           onSuccess={() => {
-                            // Damos 2.5 segundos de gracia para que el Webhook 
-                            // actualice la base de datos antes de recargar la UI
                             alert('🔄 Sincronizando pago con la base de datos...');
                             setTimeout(() => {
                               loadAccountForBooking(selectedBooking);
@@ -288,7 +267,6 @@ const CheckoutPanel = ({ bookings, wompiPublicKey }: CheckoutPanelProps) => { //
                         <DollarSign size={16} /> Cobrar Manualmente
                       </button>
                     )}
-
                   </div>
                 )}
               </div>
