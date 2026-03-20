@@ -5,7 +5,7 @@ import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RoomSchema, RoomFormValues } from '@/lib/validations/inventory';
 import { saveRoomAction } from '@/app/actions/inventory';
-import { X, Plus, Trash2, Wifi, Tv, Wind, Bath, Car, Coffee, Safe } from 'lucide-react';
+import { X, Plus, Trash2, Wifi, Tv, Wind, Bath, Car, Coffee } from 'lucide-react';
 
 // Diccionario de amenidades disponibles para que el hotelero elija
 const AVAILABLE_AMENITIES = [
