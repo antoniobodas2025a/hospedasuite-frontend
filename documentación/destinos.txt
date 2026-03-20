@@ -1,0 +1,12 @@
+Mapeo Geográfico Estratégico (Destinos)
+El script no asignará ciudades al azar. Distribuiremos los alojamientos en los 5 "Clústeres" turísticos más rentables del país:
+
+Clúster Antioquia: Guatapé, Jardín, Jericó. (Fuerte en Glampings y Fincas).
+
+Clúster Eje Cafetero: Salento, Filandia, Santa Rosa de Cabal. (Fuerte en Cabañas y Hostales).
+
+Clúster Histórico (Boyacá/Santander): Villa de Leyva, Barichara. (Dominio absoluto de Hoteles Boutique Coloniales).
+
+Clúster Caribe Rural: Minca, Palomino. (Fuerte en Hostales Boutique y Eco-Cabañas).
+
+Clúster Sabana: Suesca, Guatavita. (Dominio de Glampings de clima frío).

@@ -1,0 +1,134 @@
+Need to install the following packages:
+tree-node-cli@1.6.0
+Ok to proceed? (y) 
+src
+├── app
+│   ├── (admin)
+│   │   ├── dashboard
+│   │   │   ├── calendar
+│   │   │   │   └── page.tsx
+│   │   │   ├── checkout
+│   │   │   │   └── page.tsx
+│   │   │   ├── forensic-book
+│   │   │   │   └── page.tsx
+│   │   │   ├── guests
+│   │   │   │   └── page.tsx
+│   │   │   ├── inventory
+│   │   │   │   └── page.tsx
+│   │   │   ├── marketing
+│   │   │   │   └── page.tsx
+│   │   │   ├── pos
+│   │   │   │   └── page.tsx
+│   │   │   ├── reports
+│   │   │   │   └── page.tsx
+│   │   │   ├── services
+│   │   │   │   └── page.tsx
+│   │   │   ├── settings
+│   │   │   │   └── page.tsx
+│   │   │   ├── loading.tsx
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── (auth)
+│   │   └── login
+│   │       └── page.tsx
+│   ├── (direct)
+│   │   ├── book
+│   │   │   └── [slug]
+│   │   │       └── page.tsx
+│   │   └── layout.tsx
+│   ├── (ota)
+│   │   ├── layout.tsx
+│   │   └── page.tsx
+│   ├── (super-admin)
+│   │   ├── admin
+│   │   │   └── page.tsx
+│   │   └── layout.tsx
+│   ├── actions
+│   │   ├── auth.ts
+│   │   ├── bookings.ts
+│   │   ├── channel-manager.ts
+│   │   ├── dashboard.ts
+│   │   ├── guests.ts
+│   │   ├── inventory.ts
+│   │   ├── marketing.ts
+│   │   ├── ocr.ts
+│   │   ├── ota.ts
+│   │   ├── payments.ts
+│   │   ├── pos.ts
+│   │   ├── settings.ts
+│   │   ├── staff.ts
+│   │   ├── super-admin.ts
+│   │   └── wompi.ts
+│   ├── admin-auth
+│   │   └── page.tsx
+│   ├── api
+│   │   └── wompi
+│   │       └── webhook
+│   │           ├── ical
+│   │           │   └── [roomId]
+│   │           │       └── route.ts
+│   │           └── route.ts
+│   ├── auth
+│   │   └── callback
+│   │       └── route.ts
+│   ├── software
+│   │   └── page.tsx
+│   ├── globals.css
+│   └── layout.tsx
+├── components
+│   ├── auth
+│   │   └── LoginKeypad.tsx
+│   ├── common
+│   │   └── Placeholders.tsx
+│   ├── dashboard
+│   │   ├── CRMBoard.tsx
+│   │   ├── CalendarPanel.tsx
+│   │   ├── CheckoutPanel.tsx
+│   │   ├── DashboardKPIs.tsx
+│   │   ├── ForensicBookPanel.tsx
+│   │   ├── GuestsPanel.tsx
+│   │   ├── InventoryPanel.tsx
+│   │   ├── OverviewPanel.tsx
+│   │   ├── POSPanel.tsx
+│   │   ├── ReportsPanel.tsx
+│   │   └── SettingsPanel.tsx
+│   ├── layout
+│   │   ├── MobileNav.tsx
+│   │   └── Sidebar.tsx
+│   ├── modals
+│   │   ├── BookingWizardModal.tsx
+│   │   ├── ScannerModal.tsx
+│   │   └── ShiftReportModal.tsx
+│   ├── ota
+│   │   ├── HotelCard.tsx
+│   │   └── OTADashboard.tsx
+│   ├── payments
+│   │   └── WompiButton.tsx
+│   ├── public
+│   │   ├── AttributionTracker.tsx
+│   │   └── HomeLanding.tsx
+│   └── ui
+│       ├── EmptyState.tsx
+│       └── NavButton.tsx
+├── config
+│   └── menuItems.ts
+├── hooks
+│   ├── useCRM.ts
+│   ├── useCalendar.ts
+│   ├── useCheckout.ts
+│   ├── useDraggableScroll.ts
+│   ├── useForensicBook.ts
+│   ├── useGuests.ts
+│   ├── useInventory.ts
+│   ├── usePOS.ts
+│   └── useSettings.ts
+├── lib
+│   ├── hotel-context.ts
+│   └── supabase.ts
+├── utils
+│   └── supabase
+│       ├── client.ts
+│       ├── middleware.ts
+│       ├── pricing.ts
+│       └── server.ts
+└── middleware.ts

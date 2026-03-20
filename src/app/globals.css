@@ -1,0 +1,107 @@
+@import 'tailwindcss';
+
+/* CONFIGURACIÓN DE TEMA TAILWIND V4 
+  Aquí definimos los colores "Hospeda" directamente 
+  para que estén disponibles en todo el proyecto.
+*/
+@theme {
+  --color-hospeda-50: #f0f9ff;
+  --color-hospeda-100: #e0f2fe;
+  --color-hospeda-200: #bae6fd;
+  --color-hospeda-300: #7dd3fc;
+  --color-hospeda-400: #38bdf8;
+  --color-hospeda-500: #0ea5e9;
+  --color-hospeda-600: #0284c7;
+  --color-hospeda-700: #0369a1;
+  --color-hospeda-800: #075985;
+  --color-hospeda-900: #0c4a6e;
+  --color-hospeda-950: #082f49;
+
+  --font-display: var(--font-cinzel);
+  --font-serif: var(--font-playfair);
+  --font-sans: var(--font-inter);
+}
+
+/* CAPA BASE
+  Configuración de variables CSS nativas
+*/
+@layer base {
+  :root {
+    --background: 222.2 84% 4.9%;
+    --foreground: 210 40% 98%;
+    --card: 222.2 84% 4.9%;
+    --card-foreground: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
+    --accent: 217.2 32.6% 17.5%;
+    --accent-foreground: 210 40% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 212.7 26.8% 83.9%;
+    --radius: 0.5rem;
+  }
+}
+
+/* ESTILOS GLOBALES
+*/
+body {
+  background-color: theme('colors.hospeda.950');
+  color: white;
+  background-image: radial-gradient(circle at 50% 0%, #0c4a6e 0%, #020617 100%);
+  min-height: 100vh;
+}
+
+/* UTILIDADES PERSONALIZADAS
+  En v4, usamos @apply después de importar tailwind
+*/
+@layer components {
+  .glass-card {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 shadow-xl;
+  }
+
+  .glass-panel {
+    @apply bg-hospeda-950/80 backdrop-blur-md border border-hospeda-800/50;
+  }
+
+  .text-gradient {
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-hospeda-300;
+  }
+}
+
+/* src/app/globals.css */
+@media print {
+  /* 1. Elimina los encabezados y URLs del navegador por defecto */
+  @page {
+    margin: 0;
+    size: auto; /* Permite que el ticket crezca según el contenido */
+  }
+
+  /* 2. Forzar fondo blanco y quitar scrollbars */
+  body {
+    background-color: white !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    overflow: visible !important;
+  }
+
+  /* 3. Apagado Global de Elementos UI (Fuga de CSS) */
+  /* Oculta el Sidebar, menús móviles y cualquier botón flotante */
+  aside, nav, header, button {
+    display: none !important;
+  }
+
+  /* 4. Asegurar que el contenido del ticket se renderice en negro puro */
+  * {
+    color: black !important;
+    box-shadow: none !important;
+    text-shadow: none !important;
+  }
+}

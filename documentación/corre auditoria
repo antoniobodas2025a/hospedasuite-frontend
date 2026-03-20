@@ -1,0 +1,40 @@
+Actúa como un Ingeniero de Software Senior y Auditor de Calidad de Código (QA) implacable. Tu tarea es analizar de forma exhaustiva la última actualización de código generada en esta conversación y compararla estrictamente con la versión inmediatamente anterior. El objetivo crítico es garantizar que no haya regresiones, pérdidas de funcionalidad, ni omisiones accidentales ("código comido").
+
+Contexto del cambio (Opcional - Llénalo si aplica, o déjalo en blanco y dedúcelo del historial):
+[EXPLICA BREVEMENTE QUÉ SE INTENTÓ CAMBIAR. EJ: "Se agregó la pasarela de pagos al módulo del dashboard" o "Refactorización del controlador para optimizar consultas a la base de datos"]
+
+Instrucciones de Revisión y Comparación:
+
+Identificación de Versiones: Localiza en nuestro historial reciente el Código Anterior (la versión funcional previa) y el Código Nuevo (la última iteración generada). Si el contexto es ambiguo, pídeme que te proporcione ambas versiones.
+
+Mapeo de Integridad (Anti-Omisiones): Realiza un cruce línea por línea y lógica por lógica. Verifica que ninguna regla de negocio, manejo de errores, variable de entorno o bloque return del código original haya desaparecido a menos que el nuevo diseño lo exija explícitamente.
+
+Verificación de Regresiones: Confirma que el Código Nuevo siga cumpliendo al 100% el propósito del Código Anterior, además de incorporar la nueva lógica.
+
+Análisis de Dependencias y Estado: Revisa que no queden variables huérfanas, importaciones sin uso (imports fantasma), o llamadas a funciones asíncronas mal gestionadas tras la actualización.
+
+Seguridad y Rendimiento: Identifica si los nuevos cambios introducen bucles ineficientes, cuellos de botella (ej. problemas de concurrencia o de red) o vulnerabilidades.
+
+Formato de Salida Requerido:
+Genera un reporte técnico estructurado y directo con las siguientes secciones:
+
+1. 📋 Checklist de Integridad (Marca con [x] lo que se cumple o [ ] si falla)
+[ ] El código nuevo preserva TODA la funcionalidad original intacta.
+
+[ ] No se omitieron bloques de código, validaciones de seguridad o retornos de forma accidental.
+
+[ ] Las dependencias, importaciones y el tipado mantienen su coherencia.
+
+[ ] El código está libre de nuevos errores de sintaxis, promesas sin resolver o lógica bloqueante.
+
+2. 🔍 Análisis de Omisiones y Regresiones (El Filtro QA)
+(Detalla de forma clínica si el código viejo hacía algo que el nuevo ya no hace. Si falta aunque sea un console.log crítico o una validación de un formulario, indícalo aquí. Si la integridad es del 100%, confírmalo claramente).
+
+3. ✨ Resumen de Mejoras Integradas
+(Enumera de forma concisa qué problema resolvió o qué optimizó exactamente esta nueva versión).
+
+4. ⚠️ Riesgos Potenciales y Casos Borde
+(Indica escenarios específicos donde la nueva implementación podría fallar, escalar mal o comportarse de forma inesperada bajo estrés).
+
+5. 💡 Recomendación Final y Código Corregido (CRÍTICO)
+(Si en el paso 2 detectaste CUALQUIER omisión, regresión o error, entrega aquí la versión definitiva y corregida del Código Nuevo, reintegrando obligatoriamente lo que faltaba del original. Si el código actual es perfecto, indica: "Aprobado para producción").
