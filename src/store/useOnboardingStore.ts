@@ -55,7 +55,7 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
 
     try {
       // Aquí llamaremos a la función RPC de Supabase (Transacción Atómica)
-      const response = await fetch('/api/auth/onboarding', {
+      const response = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ adminData, hotelData, paymentToken }),
