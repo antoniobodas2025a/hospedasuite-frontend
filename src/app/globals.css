@@ -1,3 +1,6 @@
+:root {
+  color-scheme: light;
+}
 @import 'tailwindcss';
 
 /* CONFIGURACIÓN DE TEMA TAILWIND V4 

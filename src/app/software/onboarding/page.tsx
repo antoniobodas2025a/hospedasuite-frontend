@@ -72,15 +72,25 @@ export default function GoldenGateOnboarding() {
             <form onSubmit={adminForm.handleSubmit(onAdminSubmit)} className="space-y-6 animate-in fade-in slide-in-from-right-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Correo Electrónico Administrador</label>
-                <input {...adminForm.register('email')} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border" />
+                <input 
+                  type="email"
+                  placeholder="ejemplo@hotel.com"
+                  {...adminForm.register('email')} 
+                  className="mt-1 block w-full bg-white text-gray-900 placeholder:text-gray-400 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border sm:text-sm transition-colors" 
+                />
                 {adminForm.formState.errors.email && <p className="text-red-500 text-xs mt-1">{adminForm.formState.errors.email.message as string}</p>}
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-700">Contraseña Segura</label>
-                <input type="password" {...adminForm.register('password')} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border" />
+                <input 
+                  type="password" 
+                  placeholder="••••••••"
+                  {...adminForm.register('password')} 
+                  className="mt-1 block w-full bg-white text-gray-900 placeholder:text-gray-400 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border sm:text-sm transition-colors" 
+                />
                 {adminForm.formState.errors.password && <p className="text-red-500 text-xs mt-1">{adminForm.formState.errors.password.message as string}</p>}
               </div>
-              <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800">
+              <button type="submit" className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 transition-colors">
                 Continuar <ArrowRight className="ml-2 w-4 h-4 mt-0.5" />
               </button>
             </form>
@@ -91,21 +101,36 @@ export default function GoldenGateOnboarding() {
             <form onSubmit={hotelForm.handleSubmit(onHotelSubmit)} className="space-y-6 animate-in fade-in slide-in-from-right-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700">Nombre del Hotel / Alojamiento</label>
-                <input {...hotelForm.register('name')} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border" />
+                <input 
+                  type="text"
+                  placeholder="Ej. Glamping Cielo Estrellado"
+                  {...hotelForm.register('name')} 
+                  className="mt-1 block w-full bg-white text-gray-900 placeholder:text-gray-400 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border sm:text-sm" 
+                />
               </div>
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Ciudad</label>
-                  <input {...hotelForm.register('city')} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border" />
+                  <input 
+                    type="text"
+                    placeholder="Ej. Paipa"
+                    {...hotelForm.register('city')} 
+                    className="mt-1 block w-full bg-white text-gray-900 placeholder:text-gray-400 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border sm:text-sm" 
+                  />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-700">Habitaciones</label>
-                  <input type="number" {...hotelForm.register('rooms')} className="mt-1 block w-full border-gray-300 rounded-md shadow-sm p-2 border" />
+                  <input 
+                    type="number" 
+                    placeholder="Ej. 5"
+                    {...hotelForm.register('rooms')} 
+                    className="mt-1 block w-full bg-white text-gray-900 placeholder:text-gray-400 border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 p-2 border sm:text-sm" 
+                  />
                 </div>
               </div>
               <div className="flex space-x-3">
-                <button type="button" onClick={prevStep} className="w-1/3 py-2 px-4 border rounded-md text-sm text-gray-700 bg-white hover:bg-gray-50">Volver</button>
-                <button type="submit" className="w-2/3 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800">
+                <button type="button" onClick={prevStep} className="w-1/3 py-2 px-4 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">Volver</button>
+                <button type="submit" className="w-2/3 flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-gray-900 hover:bg-gray-800 transition-colors">
                   Configurar Sistema
                 </button>
               </div>
