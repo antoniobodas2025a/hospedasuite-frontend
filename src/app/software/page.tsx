@@ -1,6 +1,7 @@
  'use client';
-  import React, { useState, useEffect } from 'react';
-  import { 
+   import React, { useState, useEffect } from 'react';
+ import { useRouter } from 'next/navigation';
+   import { 
     Smartphone, 
     Globe, 
     Check, 
@@ -42,6 +43,7 @@
   };
 
   export default function App() {
+    const router = useRouter();
     const [scrolled, setScrolled] = useState(false);
     const [selectedTier, setSelectedTier] = useState('standard');
     const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -386,10 +388,13 @@
                     
                     <p className="text-[13px] text-[#1d1d1f]/40 mb-10 font-medium">COP / mes (después de 3 meses)</p>
                     
-                    <button className="w-full md:w-auto bg-[#1d1d1f] text-white px-10 py-5 rounded-full font-semibold text-[15px] hover:bg-black transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2">
-                      Empezar 3 Meses Gratis
-                      <ArrowUpRight size={16} className="text-white/60"/>
-                    </button>
+                    <button 
+    onClick={() => router.push(`/software/onboarding?plan=${selectedTier}&price=${TIERS[selectedTier].price}`)}
+    className="w-full md:w-auto bg-[#1d1d1f] text-white px-10 py-5 rounded-full font-semibold text-[15px] hover:bg-black transition-all duration-200 shadow-xl hover:shadow-2xl hover:-translate-y-1 active:scale-95 flex items-center justify-center gap-2"
+  >
+    Empezar 3 Meses Gratis
+    <ArrowUpRight size={16} className="text-white/60"/>
+  </button>
 
                     {/* Transparencia Wompi */}
                     <div className="mt-6 bg-[#007dfa]/5 border border-[#007dfa]/10 rounded-2xl p-4 text-left md:text-right max-w-xs">
