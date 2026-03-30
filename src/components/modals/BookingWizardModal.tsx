@@ -92,8 +92,8 @@ const BookingWizardModal = ({
             
             <div className='lg:col-span-7 space-y-6'>
               <div className='bg-slate-200/50 p-2 rounded-2xl flex'>
-                <button type="button" onClick={() => setBookingForm({...bookingForm, type: 'booking'})} className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase transition-all ${bookingForm.type === 'booking' ? 'bg-white shadow-md' : 'text-slate-500'}`}>Huésped</button>
-                <button type="button" onClick={() => setBookingForm({...bookingForm, type: 'maintenance'})} className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase transition-all ${bookingForm.type === 'maintenance' ? 'bg-white shadow-md' : 'text-slate-500'}`}>Mantenimiento</button>
+                <button type="button" onClick={() => setBookingForm({...bookingForm, type: 'booking'})} className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase transition-all ${bookingForm.type === 'booking' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>Huésped</button>
+                <button type="button" onClick={() => setBookingForm({...bookingForm, type: 'maintenance'})} className={`flex-1 py-3 rounded-xl text-xs font-bold uppercase transition-all ${bookingForm.type === 'maintenance' ? 'bg-white text-slate-900 shadow-md' : 'text-slate-500 hover:text-slate-700'}`}>Mantenimiento</button>
               </div>
 
               <div className='grid grid-cols-2 gap-4'>
