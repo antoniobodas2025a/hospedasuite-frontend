@@ -1,19 +1,19 @@
 import { create } from 'zustand';
 
-// 1. Definición estricta de tipos (TypeScript Nivel Producción)
+// 1. Definición estricta de tipos
 export interface AdminData {
   email: string;
-  password?: string; // Opcional porque no se guarda en el store por mucho tiempo
+  password?: string;
 }
 
 export interface HotelData {
   name: string;
   city: string;
+  location?: string; // <- Agregado para compatibilidad con Supabase
   rooms: number;
 }
 
 interface OnboardingState {
-  // Estado actual
   step: number;
   adminData: AdminData | null;
   hotelData: HotelData | null;
@@ -21,7 +21,6 @@ interface OnboardingState {
   isSubmitting: boolean;
   error: string | null;
 
-  // Acciones (Mutadores)
   setStep: (step: number) => void;
   nextStep: () => void;
   prevStep: () => void;
@@ -32,7 +31,6 @@ interface OnboardingState {
   reset: () => void;
 }
 
-// 2. Creación del Store (Memoria Inmutable)
 export const useOnboardingStore = create<OnboardingState>((set, get) => ({
   step: 1,
   adminData: null,
@@ -53,12 +51,19 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
     set({ isSubmitting: true, error: null });
     const { adminData, hotelData, paymentToken } = get();
 
+    // 🚨 CLÍNICA DE DATOS: Clonamos el hotelData y convertimos 'city' en 'location'
+    // para cumplir con la regla "not-null" de la base de datos Supabase
+    const dbHotelPayload = {
+      ...hotelData,
+      location: hotelData?.city 
+    };
+
     try {
-      // Aquí llamaremos a la función RPC de Supabase (Transacción Atómica)
+      // Usamos la ruta corregida
       const response = await fetch('/api/onboarding', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminData, hotelData, paymentToken }),
+        body: JSON.stringify({ adminData, hotelData: dbHotelPayload, paymentToken }),
       });
 
       if (!response.ok) {
@@ -67,10 +72,10 @@ export const useOnboardingStore = create<OnboardingState>((set, get) => ({
       }
 
       set({ isSubmitting: false });
-      return true; // Éxito total
+      return true;
     } catch (err: any) {
       set({ error: err.message, isSubmitting: false });
-      return false; // Fallo controlado
+      return false;
     }
   },
 

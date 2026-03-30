@@ -16,7 +16,6 @@ export async function POST(request: Request) {
     }
 
     // 2. Inicializar Supabase con Permisos de Administrador (Service Role Key)
-    // ADVERTENCIA: Nunca uses esta llave en el frontend (componentes cliente)
     const supabaseAdmin = createClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.SUPABASE_SERVICE_ROLE_KEY! 
@@ -26,7 +25,7 @@ export async function POST(request: Request) {
     const { data: authData, error: authError } = await supabaseAdmin.auth.admin.createUser({
       email: adminData.email,
       password: adminData.password,
-      email_confirm: true, // Autoconfirmamos para evitar fricción en el inicio inmediato
+      email_confirm: true, // Autoconfirmamos para evitar fricción
       user_metadata: {
         role: 'admin',
       }
@@ -39,21 +38,22 @@ export async function POST(request: Request) {
     const userId = authData.user.id;
 
     // 4. FASE B: Crear el Tenant (Hotel) y conectarlo al Usuario
+    // 🚨 AUDITORÍA QA: Se añadió "location" para evitar el crash de Not-Null Constraint
     const { error: hotelError } = await supabaseAdmin.from('hotels').insert({
       owner_id: userId,
       name: hotelData.name,
       city: hotelData.city,
-      email: adminData.email, // Correo de contacto del hotel por defecto
-      wompi_payment_source_id: paymentToken, // La bóveda financiera
+      location: hotelData.location || hotelData.city, // <--- CORRECCIÓN CRÍTICA DE DB
+      email: adminData.email, 
+      wompi_payment_source_id: paymentToken, 
       is_onboarding_complete: true,
-      status: 'active', // El trial_ends_at se encarga de los 90 días automáticamente vía SQL
+      status: 'active', 
       config: {
-        rooms_count: hotelData.rooms // Guardamos el número de habitaciones inicial
+        rooms_count: hotelData.rooms 
       }
     });
 
     // 5. MECANISMO DE DEFENSA: Rollback (Transacción Atómica)
-    // Si la base de datos falla al crear el hotel, destruimos al usuario huérfano
     if (hotelError) {
       await supabaseAdmin.auth.admin.deleteUser(userId);
       throw new Error(`Error al crear la base de datos del hotel: ${hotelError.message}`);
