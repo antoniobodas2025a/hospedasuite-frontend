@@ -7,7 +7,6 @@ import { RoomSchema, RoomFormValues } from '@/lib/validations/inventory';
 import { saveRoomAction } from '@/app/actions/inventory';
 import { X, Plus, Trash2, Wifi, Tv, Wind, Bath, Car, Coffee } from 'lucide-react';
 
-// Diccionario de amenidades disponibles para que el hotelero elija
 const AVAILABLE_AMENITIES = [
   { id: 'wifi', label: 'Wi-Fi', icon: Wifi },
   { id: 'tv', label: 'Smart TV', icon: Tv },
@@ -19,14 +18,13 @@ const AVAILABLE_AMENITIES = [
 
 interface Props {
   hotelId: string;
-  initialData?: any; // Si pasas datos, se comporta como "Editar", sino como "Crear"
+  initialData?: any; 
   onClose: () => void;
 }
 
 export default function RoomEditorModal({ hotelId, initialData, onClose }: Props) {
   const [isSaving, setIsSaving] = useState(false);
 
-  // Inicializamos React Hook Form con Zod
   const { register, control, handleSubmit, watch, setValue, formState: { errors } } = useForm<RoomFormValues>({
     resolver: zodResolver(RoomSchema),
     defaultValues: initialData || {
@@ -37,10 +35,11 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: Props
       size_sqm: undefined,
       gallery: [],
       amenities: [],
+      // 🚨 FIX: Aseguramos que el estado de limpieza viaje en el formulario
+      housekeeping_status: 'clean' 
     }
   });
 
-  // Controladores de arrays dinámicos para la galería
   const { fields: galleryFields, append: appendPhoto, remove: removePhoto } = useFieldArray({ control, name: "gallery" });
   
   const currentAmenities = watch('amenities') || [];
@@ -60,7 +59,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: Props
     setIsSaving(false);
     
     if (result.success) {
-      onClose(); // Cierra el modal si se guardó con éxito
+      onClose(); 
     } else {
       alert("Error: " + result.error);
     }
@@ -70,7 +69,6 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: Props
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/60 backdrop-blur-sm p-4">
       <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] flex flex-col shadow-2xl">
         
-        {/* HEADER */}
         <div className="p-6 border-b border-slate-100 flex justify-between items-center sticky top-0 bg-white rounded-t-2xl">
           <h2 className="text-2xl font-bold text-slate-800">
             {initialData ? 'Editar Habitación' : 'Nueva Habitación'}
@@ -80,35 +78,33 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: Props
           </button>
         </div>
 
-        {/* BODY CON SCROLL */}
         <div className="p-6 overflow-y-auto">
           <form id="room-form" onSubmit={handleSubmit(onSubmit)} className="space-y-8">
             
-            {/* 1. INFORMACIÓN BÁSICA */}
             <div>
               <h3 className="text-lg font-bold text-slate-800 mb-4">Información Básica</h3>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Nombre de Habitación</label>
-                  <input {...register('name')} className="w-full rounded-xl border-slate-200" placeholder="Ej. Suite Presidencial" />
+                  <input {...register('name')} className="w-full rounded-xl border-slate-200 bg-white text-slate-900" placeholder="Ej. Suite Presidencial" />
                   {errors.name && <p className="text-red-500 text-xs mt-1">{errors.name.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Precio por Noche (COP)</label>
-                  <input type="number" {...register('price', { valueAsNumber: true })} className="w-full rounded-xl border-slate-200" />
+                  <input type="number" {...register('price', { valueAsNumber: true })} className="w-full rounded-xl border-slate-200 bg-white text-slate-900" />
                   {errors.price && <p className="text-red-500 text-xs mt-1">{errors.price.message}</p>}
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Capacidad Máxima (Personas)</label>
-                  <input type="number" {...register('capacity', { valueAsNumber: true })} className="w-full rounded-xl border-slate-200" />
+                  <input type="number" {...register('capacity', { valueAsNumber: true })} className="w-full rounded-xl border-slate-200 bg-white text-slate-900" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Tamaño (m²)</label>
-                  <input type="number" {...register('size_sqm', { valueAsNumber: true })} className="w-full rounded-xl border-slate-200" placeholder="Ej. 45" />
+                  <input type="number" {...register('size_sqm', { valueAsNumber: true })} className="w-full rounded-xl border-slate-200 bg-white text-slate-900" placeholder="Ej. 45" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Estado</label>
-                  <select {...register('status')} className="w-full rounded-xl border-slate-200">
+                  <select {...register('status')} className="w-full rounded-xl border-slate-200 bg-white text-slate-900">
                     <option value="active">Activa (Pública)</option>
                     <option value="maintenance">Mantenimiento</option>
                   </select>
@@ -116,7 +112,6 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: Props
               </div>
             </div>
 
-            {/* 2. AMENIDADES (INTERFAZ VISUAL) */}
             <div className="border-t border-slate-100 pt-6">
               <h3 className="text-lg font-bold text-slate-800 mb-4">¿Qué incluye esta habitación?</h3>
               <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
@@ -142,7 +137,6 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: Props
               </div>
             </div>
 
-            {/* 3. GALERÍA DE FOTOS */}
             <div className="border-t border-slate-100 pt-6">
               <div className="flex justify-between items-center mb-4">
                 <h3 className="text-lg font-bold text-slate-800">Galería de Fotos</h3>
@@ -162,12 +156,12 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: Props
                       <input 
                         {...register(`gallery.${index}.url`)} 
                         placeholder="URL de la imagen (Ej. https://...)" 
-                        className="w-full text-sm rounded-lg border-slate-200" 
+                        className="w-full text-sm rounded-lg border-slate-200 bg-white text-slate-900" 
                       />
                       <input 
                         {...register(`gallery.${index}.alt`)} 
                         placeholder="Descripción corta (Ej. Cama principal)" 
-                        className="w-full text-sm rounded-lg border-slate-200" 
+                        className="w-full text-sm rounded-lg border-slate-200 bg-white text-slate-900" 
                       />
                     </div>
                     <button type="button" onClick={() => removePhoto(index)} className="p-2 text-red-500 hover:bg-red-50 rounded-lg">
@@ -185,7 +179,6 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: Props
           </form>
         </div>
 
-        {/* FOOTER - ACCIONES */}
         <div className="p-6 border-t border-slate-100 bg-slate-50 rounded-b-2xl flex justify-end gap-3">
           <button type="button" onClick={onClose} className="px-5 py-2.5 text-sm font-bold text-slate-600 hover:bg-slate-200 rounded-xl transition-colors">
             Cancelar

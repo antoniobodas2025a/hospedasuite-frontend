@@ -75,7 +75,6 @@ const BookingWizardModal = ({
   };
 
   return createPortal(
-    // 🚨 CORREGIDO: z-[100] es el estándar arquitectónico de modales en Tailwind
     <div className='fixed inset-0 bg-hospeda-950/60 backdrop-blur-xl z-[100] flex items-center justify-center p-4'>
       <motion.div className='bg-[#F8FAFC]/95 border border-white/60 rounded-[2.5rem] w-full max-w-5xl shadow-2xl overflow-hidden flex flex-col relative max-h-[95vh]'>
         
@@ -84,7 +83,6 @@ const BookingWizardModal = ({
             {bookingForm.id ? 'Detalles de Estadía' : 'Nueva Estadía'}
           </h3>
           <button onClick={onClose} className='p-2 bg-white rounded-full text-slate-400 hover:text-red-500 shadow-sm border border-slate-100'>
-            {/* 🚨 CORREGIDO: Ícono X más fino */}
             <X size={24} strokeWidth={1.5} />
           </button>
         </div>
@@ -99,11 +97,12 @@ const BookingWizardModal = ({
               </div>
 
               <div className='grid grid-cols-2 gap-4'>
-                <input type='date' className='p-4 rounded-2xl border border-slate-100 font-bold shadow-sm' value={bookingForm.checkIn} onChange={(e) => setBookingForm({...bookingForm, checkIn: e.target.value})} />
-                <input type='date' min={bookingForm.checkIn} className='p-4 rounded-2xl border border-slate-100 font-bold shadow-sm' value={bookingForm.checkOut} onChange={(e) => setBookingForm({...bookingForm, checkOut: e.target.value})} />
+                {/* 🚨 FIX: Inyectado bg-white text-slate-900 para neutralizar modo oscuro */}
+                <input type='date' className='p-4 rounded-2xl border border-slate-100 font-bold shadow-sm bg-white text-slate-900' value={bookingForm.checkIn} onChange={(e) => setBookingForm({...bookingForm, checkIn: e.target.value})} />
+                <input type='date' min={bookingForm.checkIn} className='p-4 rounded-2xl border border-slate-100 font-bold shadow-sm bg-white text-slate-900' value={bookingForm.checkOut} onChange={(e) => setBookingForm({...bookingForm, checkOut: e.target.value})} />
               </div>
 
-              <select className='w-full p-4 rounded-2xl border border-slate-100 font-bold shadow-sm' value={bookingForm.roomId} onChange={(e) => setBookingForm({...bookingForm, roomId: e.target.value})}>
+              <select className='w-full p-4 rounded-2xl border border-slate-100 font-bold shadow-sm bg-white text-slate-900' value={bookingForm.roomId} onChange={(e) => setBookingForm({...bookingForm, roomId: e.target.value})}>
                 <option value=''>Seleccionar Habitación...</option>
                 {availableRoomsList.map(r => <option key={r.id} value={r.id}>{r.name} — ${Number(r.price).toLocaleString()}</option>)}
               </select>
@@ -114,19 +113,18 @@ const BookingWizardModal = ({
                 <>
                   <div className='bg-white p-6 rounded-3xl border border-slate-100 space-y-3'>
                     <div className='flex gap-2'>
-                      <input className='flex-1 p-3 bg-slate-50 rounded-xl border-none outline-none' placeholder='Nombre Huésped' value={bookingForm.guestName} onChange={(e) => setBookingForm({...bookingForm, guestName: e.target.value})} />
+                      {/* 🚨 FIX: Inyectado text-slate-900 y placeholder-slate-400 */}
+                      <input className='flex-1 p-3 bg-slate-50 rounded-xl border-none outline-none text-slate-900 placeholder-slate-400' placeholder='Nombre Huésped' value={bookingForm.guestName} onChange={(e) => setBookingForm({...bookingForm, guestName: e.target.value})} />
                       <button type="button" onClick={() => setShowScanner(true)} className='p-3 bg-slate-800 text-white rounded-xl'>
-                        {/* 🚨 CORREGIDO: Ícono Scanner más fino */}
                         <ScanBarcode size={20} strokeWidth={1.5}/>
                       </button>
                     </div>
-                    <input className='w-full p-3 bg-slate-50 rounded-xl border-none outline-none' placeholder='Documento' value={bookingForm.guestDoc} onChange={(e) => setBookingForm({...bookingForm, guestDoc: e.target.value})} />
+                    <input className='w-full p-3 bg-slate-50 rounded-xl border-none outline-none text-slate-900 placeholder-slate-400' placeholder='Documento' value={bookingForm.guestDoc} onChange={(e) => setBookingForm({...bookingForm, guestDoc: e.target.value})} />
                   </div>
 
                   <div className='bg-slate-900 rounded-[2rem] p-6 text-white space-y-4 relative overflow-hidden'>
                     <div className='flex justify-between text-xs text-slate-400 font-bold uppercase tracking-widest'>
                       <span>Resumen de Estadía</span>
-                      {/* 🚨 CORREGIDO: Ícono Moon más fino */}
                       <Moon size={14} strokeWidth={1.5} />
                     </div>
                     <div className='space-y-1 text-sm'>
@@ -138,14 +136,12 @@ const BookingWizardModal = ({
                         <p className='text-[10px] text-slate-500 font-bold uppercase'>Total a Pagar</p>
                         <p className='text-3xl font-serif font-bold text-emerald-400'>${bookingForm.price.toLocaleString()}</p>
                       </div>
-                      {/* 🚨 CORREGIDO: Ícono de tarjeta más fino */}
                       <CreditCard size={32} strokeWidth={1.5} className='text-white/10'/>
                     </div>
                   </div>
                 </>
               ) : (
-                <div className='bg-slate-100 rounded-3xl p-10 text-center opacity-50'>
-                  {/* 🚨 CORREGIDO: Ícono Hammer más fino */}
+                <div className='bg-slate-100 rounded-3xl p-10 text-center opacity-50 text-slate-700'>
                   <Hammer size={48} strokeWidth={1.5} className='mx-auto mb-2'/>
                   <p className='font-bold'>Modo Bloqueo</p>
                 </div>
@@ -165,10 +161,10 @@ const BookingWizardModal = ({
             </button>
           )}
 
-          <button type="button" onClick={onClose} className='px-6 py-3 font-bold text-slate-400 ml-auto'>Cancelar</button>
+          <button type="button" onClick={onClose} className='px-6 py-3 font-bold text-slate-400 hover:text-slate-600 ml-auto transition-colors'>Cancelar</button>
           
           {!bookingForm.id && (
-            <button type="submit" onClick={handleCreateBooking} className='px-8 py-3 bg-hospeda-900 text-white font-bold rounded-2xl hover:bg-black'>Confirmar</button>
+            <button type="submit" onClick={handleCreateBooking} className='px-8 py-3 bg-hospeda-900 text-white font-bold rounded-2xl hover:bg-black transition-colors'>Confirmar</button>
           )}
         </div>
 

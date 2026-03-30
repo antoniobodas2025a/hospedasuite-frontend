@@ -20,7 +20,6 @@ const getAdminClient = () => {
 
 export async function saveRoomAction(hotelId: string, data: RoomFormValues, roomId?: string) {
   try {
-    // 🚨 SEGURIDAD QA: Validar que el usuario actual ES DUEÑO o ADMIN de este hotel
     const currentHotel = await getCurrentHotel();
     if (!currentHotel || currentHotel.id !== hotelId) {
       throw new Error("Violación de Seguridad: No tienes permisos sobre este hotel.");
@@ -29,6 +28,7 @@ export async function saveRoomAction(hotelId: string, data: RoomFormValues, room
     const supabaseAdmin = getAdminClient();
     const validData = RoomSchema.parse(data);
 
+    // 🚨 FIX: Construcción segura del Payload inyectando status y housekeeping_status
     const payload = {
       hotel_id: hotelId,
       name: validData.name,
@@ -37,19 +37,18 @@ export async function saveRoomAction(hotelId: string, data: RoomFormValues, room
       status: validData.status,
       size_sqm: validData.size_sqm,
       gallery: validData.gallery, 
-      amenities: validData.amenities, 
+      amenities: validData.amenities,
+      // Inyección maestra: Obligamos a la BD a guardarla como limpia.
+      housekeeping_status: validData.housekeeping_status || 'clean' 
     };
 
     if (roomId) {
-      // Editar existente
       const { error } = await supabaseAdmin.from('rooms').update(payload).eq('id', roomId);
       if (error) throw new Error(error.message);
     } else {
-      // Crear nueva
       const { data: newRoom, error } = await supabaseAdmin.from('rooms').insert([payload]).select().single();
       if (error) throw new Error(error.message);
       
-      // 🚨 CÓDIGO RECUPERADO: Escudo Anti-Bug para Next.js (Turbopack)
       const safeData = JSON.parse(
         JSON.stringify(newRoom, (key, value) =>
           typeof value === 'bigint' ? value.toString() : value
@@ -67,13 +66,11 @@ export async function saveRoomAction(hotelId: string, data: RoomFormValues, room
 
 export async function deleteRoomAction(id: string) {
   try {
-    // 🚨 SEGURIDAD QA: Validar propiedad antes de borrar
     const currentHotel = await getCurrentHotel();
     if (!currentHotel) throw new Error("No autenticado");
 
     const supabaseAdmin = getAdminClient();
     
-    // Validamos que la habitación pertenezca al hotel del usuario
     const { data: room } = await supabaseAdmin.from('rooms').select('hotel_id').eq('id', id).single();
     if (!room || room.hotel_id !== currentHotel.id) {
        throw new Error("Violación de Seguridad: Operación denegada.");
