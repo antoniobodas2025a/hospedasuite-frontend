@@ -108,8 +108,9 @@ const InventoryPanel = ({ initialRooms, hotelId }: InventoryPanelProps) => {
         <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
           {rooms.map((room) => (
             <motion.div key={room.id} layout initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className='bg-white rounded-[2rem] p-6 border border-slate-100 shadow-xl shadow-slate-200/50 group hover:border-hospeda-200 transition-all relative overflow-hidden'>
-              <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${room.status === 'clean' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
-                {room.status === 'clean' ? 'Limpia' : 'Sucia'}
+              {/* 🚨 FIX: Traductor corregido para leer 'active' o 'maintenance' */}
+              <div className={`absolute top-4 right-4 px-3 py-1 rounded-full text-[10px] font-bold uppercase tracking-widest ${room.status === 'active' ? 'bg-emerald-100 text-emerald-600' : 'bg-amber-100 text-amber-600'}`}>
+                {room.status === 'active' ? 'Disponible' : 'En Mantenimiento'}
               </div>
 
               <div className='mb-4'>

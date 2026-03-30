@@ -28,8 +28,7 @@ export async function saveRoomAction(hotelId: string, data: RoomFormValues, room
     const supabaseAdmin = getAdminClient();
     const validData = RoomSchema.parse(data);
 
-    // 🚨 FIX: Construcción segura del Payload inyectando status y housekeeping_status
-    const payload = {
+const payload = {
       hotel_id: hotelId,
       name: validData.name,
       capacity: validData.capacity,
@@ -37,9 +36,8 @@ export async function saveRoomAction(hotelId: string, data: RoomFormValues, room
       status: validData.status,
       size_sqm: validData.size_sqm,
       gallery: validData.gallery, 
-      amenities: validData.amenities,
-      // Inyección maestra: Obligamos a la BD a guardarla como limpia.
-      housekeeping_status: validData.housekeeping_status || 'clean' 
+      amenities: validData.amenities
+      // 🚨 FIX: Eliminamos housekeeping_status para que Supabase no explote
     };
 
     if (roomId) {

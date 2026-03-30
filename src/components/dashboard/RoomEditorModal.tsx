@@ -35,8 +35,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: Props
       size_sqm: undefined,
       gallery: [],
       amenities: [],
-      // 🚨 FIX: Aseguramos que el estado de limpieza viaje en el formulario
-      housekeeping_status: 'clean' 
+      // 🚨 FIX: Eliminada la línea de housekeeping_status
     }
   });
 
