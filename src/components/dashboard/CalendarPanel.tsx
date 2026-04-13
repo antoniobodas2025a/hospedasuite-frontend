@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Copy } from 'lucide-react';
 import BookingWizardModal from '@/components/modals/BookingWizardModal';
 import { useCalendar, Booking } from '@/hooks/useCalendar';
-// 🚨 FIX QA: Importamos los Sensores de Puntero
-import { DndContext, DragOverlay, useDraggable, useDroppable, defaultDropAnimationSideEffects, useSensor, useSensors, PointerSensor } from '@dnd-kit/core';
+
+import { 
+  DndContext, DragOverlay, useDraggable, useDroppable, 
+  defaultDropAnimationSideEffects, useSensor, useSensors, 
+  MouseSensor, TouchSensor 
+} from '@dnd-kit/core';
 
 interface Room { id: string; name: string; price: number; status: string; }
 interface CalendarPanelProps { rooms: Room[]; initialBookings: Booking[]; hotelId: string; }
@@ -35,29 +38,34 @@ const DraggableBooking = ({ booking, isStart, isAltPressed }: { booking: Booking
   const durationDays = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
 
   return (
-    <motion.div
+    <div
       ref={setNodeRef}
       {...listeners}
       {...attributes}
-      initial={{ opacity: 0, x: -10 }}
-      animate={{ opacity: 1, x: 0 }}
-      className={`h-full absolute top-1 bottom-1 rounded-lg text-[10px] font-bold p-2 text-white overflow-hidden shadow-sm cursor-grab active:cursor-grabbing border border-white/20 z-10
+      // 🚨 FIX: select-none y touch-none inyectados para bloquear el comportamiento nativo del navegador
+      className={`h-full absolute top-1 bottom-1 rounded-lg text-[10px] font-bold p-2 text-white overflow-hidden shadow-sm cursor-grab active:cursor-grabbing border border-white/20 z-10 transition-opacity select-none touch-none
         ${booking.status === 'checked_in' ? 'bg-emerald-500' : booking.status === 'maintenance' ? 'bg-slate-500' : 'bg-blue-500'}
-        ${isDragging ? (isAltPressed ? 'opacity-80 border-dashed border-2 ring-2 ring-emerald-400' : 'opacity-30 border-dashed border-2 pointer-events-none') : ''} 
+        ${isDragging ? (isAltPressed ? 'opacity-80 border-dashed border-2 ring-2 ring-emerald-400' : 'opacity-30 border-dashed border-2 pointer-events-none') : 'animate-in fade-in zoom-in-95 duration-200'} 
       `}
-      style={{ width: `calc(${durationDays * 100}% + ${durationDays - 1}px)`, left: '4px' }} 
+      style={{ 
+        width: `calc(${durationDays * 100}% + ${durationDays - 1}px)`, 
+        left: '4px'
+      }} 
       title={booking.guest_name || 'Reservado'}
     >
-      <span className='whitespace-nowrap flex items-center gap-1'>
+      <span className='whitespace-nowrap flex items-center gap-1 pointer-events-none'>
         {isDragging && isAltPressed && <Copy size={12} className="text-white" />}
         {booking.status === 'maintenance' && <span className='text-xs'>🔨</span>}
         {booking.guest_name || (booking.guests?.full_name ?? 'Ocupado')}
       </span>
-    </motion.div>
+    </div>
   );
 };
 
 const CalendarPanel = ({ rooms, initialBookings, hotelId }: CalendarPanelProps) => {
+  // 🚨 FIX CRÍTICO SSR: El escudo anti-hidratación de Next.js
+  const [isMounted, setIsMounted] = useState(false);
+  
   const {
     currentDate, moveDate, getBookingForDate, showBookingModal, setShowBookingModal,
     bookingForm, setBookingForm, handleCreateBooking, handleDragEnd, handleDuplicateBooking
@@ -67,27 +75,31 @@ const CalendarPanel = ({ rooms, initialBookings, hotelId }: CalendarPanelProps) 
   const [isAltPressed, setIsAltPressed] = useState(false);
 
   useEffect(() => {
+    setIsMounted(true); // Encendemos los motores solo cuando estamos 100% en el navegador del cliente
+    
     const handleKeyDown = (e: KeyboardEvent) => { if (e.key === 'Alt' || e.key === 'Option') setIsAltPressed(true); };
     const handleKeyUp = (e: KeyboardEvent) => { if (e.key === 'Alt' || e.key === 'Option') setIsAltPressed(false); };
-    
     window.addEventListener('keydown', handleKeyDown);
     window.addEventListener('keyup', handleKeyUp);
-    return () => {
-      window.removeEventListener('keydown', handleKeyDown);
-      window.removeEventListener('keyup', handleKeyUp);
-    };
+    return () => { window.removeEventListener('keydown', handleKeyDown); window.removeEventListener('keyup', handleKeyUp); };
   }, []);
 
-  // 🚨 FIX QA CRÍTICO: Sensores de Precisión
-  // Exige que el ratón se mueva 5px antes de considerar que es un "arrastre".
-  // Esto evita que clics accidentales rompan el drag & drop.
   const sensors = useSensors(
-    useSensor(PointerSensor, {
-      activationConstraint: {
-        distance: 5, 
-      },
-    })
+    useSensor(MouseSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 250, tolerance: 5 } })
   );
+
+  // Si Next.js todavía está renderizando el servidor, mostramos una pantalla de carga para proteger el DndContext
+  if (!isMounted) {
+    return (
+      <div className='flex flex-col h-[calc(100vh-8rem)] bg-white rounded-[2rem] border border-slate-100 shadow-sm items-center justify-center'>
+        <div className="animate-pulse flex flex-col items-center">
+          <CalendarIcon size={48} className="text-slate-200 mb-4" />
+          <p className="text-slate-400 font-bold tracking-widest uppercase text-xs">Calibrando Físicas...</p>
+        </div>
+      </div>
+    );
+  }
 
   const daysToShow = 14;
   const dates = Array.from({ length: daysToShow }, (_, i) => {
@@ -104,56 +116,64 @@ const CalendarPanel = ({ rooms, initialBookings, hotelId }: CalendarPanelProps) 
   const onDragEnd = (event: any) => {
     const { active, over } = event;
     setActiveDragBooking(null); 
+    
     if (over && active.id) {
       const [newRoomId, newCheckInStr] = String(over.id).split('|');
       if(newRoomId && newCheckInStr) {
-        if (isAltPressed) {
-          handleDuplicateBooking(String(active.id), newRoomId, newCheckInStr);
-        } else {
-          handleDragEnd(String(active.id), newRoomId, newCheckInStr);
-        }
+        const originalBooking = active.data.current?.booking;
+        if (originalBooking && originalBooking.room_id === newRoomId && originalBooking.check_in === newCheckInStr) return; 
+
+        if (isAltPressed) handleDuplicateBooking(String(active.id), newRoomId, newCheckInStr);
+        else handleDragEnd(String(active.id), newRoomId, newCheckInStr);
       }
     }
   };
 
-  const dropAnimationConfig = {
-    sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }),
-  };
+  const dropAnimationConfig = { sideEffects: defaultDropAnimationSideEffects({ styles: { active: { opacity: '0.4' } } }) };
 
   return (
     <DndContext sensors={sensors} onDragStart={onDragStart} onDragEnd={onDragEnd}>
       <div className='flex flex-col h-[calc(100vh-8rem)] bg-white rounded-[2rem] border border-slate-100 shadow-sm overflow-hidden'>
         
-        <div className='p-6 border-b border-slate-100 flex justify-between items-center bg-slate-50/50'>
-          <div className='flex items-center gap-4'>
-            <h2 className='text-xl font-bold text-slate-800 flex items-center gap-2'>
+        {/* HEADER RESPONSIVE */}
+        <div className='p-4 sm:p-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-4 bg-slate-50/50'>
+          <div className='flex items-center justify-between w-full sm:w-auto gap-4'>
+            <h2 className='text-lg sm:text-xl font-bold text-slate-800 flex items-center gap-2'>
               <CalendarIcon strokeWidth={1.5} className='text-hospeda-600' /> Cronograma
             </h2>
-            <div className="hidden md:flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-lg border border-slate-200 text-xs text-slate-500 font-medium">
-              💡 Tip: Mantén <kbd className="bg-white border border-slate-300 px-1.5 py-0.5 rounded shadow-sm text-[10px] font-mono">Alt</kbd> al arrastrar para clonar
-            </div>
+            <button
+              onClick={() => { setBookingForm((prev: any) => ({ ...prev, roomId: '', price: 0 })); setShowBookingModal(true); }}
+              className='sm:hidden px-4 py-2.5 bg-hospeda-900 hover:bg-black text-white font-bold rounded-xl shadow-lg flex items-center gap-1 transition-transform active:scale-95'
+            >
+              <Plus size={16} strokeWidth={1.5} /> <span className="text-xs">Reserva</span>
+            </button>
+          </div>
 
-            <div className='flex bg-white rounded-xl border border-slate-200 p-1 shadow-sm'>
+          <div className='flex flex-wrap items-center gap-4 w-full sm:w-auto justify-between sm:justify-end'>
+            <div className="hidden lg:flex items-center gap-2 px-3 py-1 bg-slate-100 rounded-lg border border-slate-200 text-xs text-slate-500 font-medium">
+              💡 Tip: Mantén <kbd className="bg-white border border-slate-300 px-1.5 py-0.5 rounded shadow-sm text-[10px] font-mono">Alt</kbd> para clonar
+            </div>
+            <div className='flex bg-white rounded-xl border border-slate-200 p-1 shadow-sm w-full sm:w-auto justify-between'>
               <button onClick={() => moveDate(-7)} className='p-2 hover:bg-slate-100 rounded-lg text-slate-500'>
                 <ChevronLeft size={18} strokeWidth={1.5} />
               </button>
-              <span className='px-4 py-2 text-sm font-bold text-slate-700 min-w-[140px] text-center capitalize'>
-                {currentDate.toLocaleDateString('es-CO', { month: 'long', year: 'numeric' })}
+              <span className='px-4 py-2 text-sm font-bold text-slate-700 min-w-[120px] text-center capitalize'>
+                {currentDate.toLocaleDateString('es-CO', { month: 'short', year: 'numeric' })}
               </span>
               <button onClick={() => moveDate(7)} className='p-2 hover:bg-slate-100 rounded-lg text-slate-500'>
                 <ChevronRight size={18} strokeWidth={1.5} />
               </button>
             </div>
+            <button
+              onClick={() => { setBookingForm((prev: any) => ({ ...prev, roomId: '', price: 0 })); setShowBookingModal(true); }}
+              className='hidden sm:flex px-6 py-3 bg-hospeda-900 hover:bg-black text-white font-bold rounded-xl shadow-lg items-center gap-2 transition-transform hover:scale-105'
+            >
+              <Plus size={18} strokeWidth={1.5} /> Nueva Reserva
+            </button>
           </div>
-          
-          <button
-            onClick={() => { setBookingForm((prev) => ({ ...prev, roomId: '', price: 0 })); setShowBookingModal(true); }}
-            className='px-6 py-3 bg-hospeda-900 hover:bg-black text-white font-bold rounded-xl shadow-lg flex items-center gap-2 transition-transform hover:scale-105'
-          >
-            <Plus size={18} strokeWidth={1.5} /> Nueva Reserva
-          </button>
         </div>
 
+        {/* CALENDARIO GRID */}
         <div className='flex-1 overflow-auto custom-scrollbar relative'>
           <div className='min-w-[1200px]'>
             <div className='flex sticky top-0 z-20 bg-white border-b border-slate-100 shadow-sm'>
@@ -181,12 +201,13 @@ const CalendarPanel = ({ rooms, initialBookings, hotelId }: CalendarPanelProps) 
                   const isStart = booking ? booking.check_in === dateStr : false;
 
                   return (
-                    <CalendarCell key={i} dateStr={dateStr} roomId={room.id}>
-                      {booking && isStart && <DraggableBooking booking={booking} isStart={isStart} isAltPressed={isAltPressed} />}
+                    <CalendarCell key={i} dateStr={dateStr} roomId={String(room.id)}>
+                      {/* 🚨 FIX: Aseguramos que el ID de la reserva pase como String estricto */}
+                      {booking && isStart && <DraggableBooking booking={{...booking, id: String(booking.id)}} isStart={isStart} isAltPressed={isAltPressed} />}
                       
-                      {/* 🚨 FIX QA CRÍTICO: Sombra visual. Si estoy arrastrando, los días de "relleno" también se difuminan */}
+                      {/* 🚨 FIX CRÍTICO: pointer-events-none inyectado para que el cristal deje pasar el clic */}
                       {booking && !isStart && (
-                         <div className={`h-full absolute top-1 bottom-1 left-0 right-0 z-0 ${booking.status === 'checked_in' ? 'bg-emerald-500' : booking.status === 'maintenance' ? 'bg-slate-500' : 'bg-blue-500'} opacity-90 ${activeDragBooking?.id === booking.id ? 'opacity-30 border-dashed border-2' : ''}`} />
+                         <div className={`pointer-events-none h-full absolute top-1 bottom-1 left-0 right-0 z-0 ${booking.status === 'checked_in' ? 'bg-emerald-500' : booking.status === 'maintenance' ? 'bg-slate-500' : 'bg-blue-500'} opacity-90 ${String(activeDragBooking?.id) === String(booking.id) ? 'opacity-30 border-dashed border-2' : ''}`} />
                       )}
                     </CalendarCell>
                   );
@@ -201,7 +222,8 @@ const CalendarPanel = ({ rooms, initialBookings, hotelId }: CalendarPanelProps) 
         )}
       </div>
 
-      <DragOverlay dropAnimation={dropAnimationConfig}>
+      {/* 🚨 FIX: z-[999] y pointer-events-none para asegurar que el fantasma flote sobre todo sin bloquear caídas */}
+      <DragOverlay dropAnimation={dropAnimationConfig} className="z-[999] pointer-events-none">
         {activeDragBooking ? (
           <div
             className={`h-14 rounded-lg text-[10px] font-bold p-2 text-white shadow-2xl cursor-grabbing border border-white opacity-90 transform scale-105 rotate-2

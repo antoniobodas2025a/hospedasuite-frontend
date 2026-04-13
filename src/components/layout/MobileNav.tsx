@@ -2,164 +2,120 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
-import {
-  Calendar,
-  UtensilsCrossed,
-  Loader2,
-  Mic,
-  ScanBarcode,
-  Menu,
-  X,
-  Calculator
-} from 'lucide-react';
+import { usePathname } from 'next/navigation';
+import { Calendar, ScanBarcode, Menu, X, Calculator, Home } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { MENU_ITEMS } from '@/config/menuItems';
 import ShiftReportModal from '@/components/modals/ShiftReportModal';
+import { MENU_ITEMS } from '@/config/menuItems';
 
 interface MobileNavProps {
-  onVoiceAction?: () => void;
-  isListening?: boolean;
-  isProcessing?: boolean;
   onOpenScanner?: () => void;
 }
 
-const MobileNav = ({
-  onVoiceAction,
-  isListening = false,
-  isProcessing = false,
-  onOpenScanner,
-}: MobileNavProps) => {
+export default function MobileNav({ onOpenScanner }: MobileNavProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
   const pathname = usePathname();
-  const router = useRouter();
-
-  // 🚨 Estado para el Arqueo de Caja
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
 
-  // 🧠 LÓGICA SCROLL-AWARE
+  // 🚨 FIX QA: Lógica de Scroll Restaurada y Protegida
   useEffect(() => {
     const handleScroll = () => {
+      if (showMenu) return; // Si el menú está abierto, prohibido ocultar el Dock
+      
       const currentScrollY = window.scrollY;
-      if (showMenu) {
-        setIsVisible(true);
-        return;
-      }
-      if (Math.abs(currentScrollY - lastScrollY) < 10) return;
-      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+      if (currentScrollY > lastScrollY && currentScrollY > 50) {
         setIsVisible(false);
       } else {
         setIsVisible(true);
       }
       setLastScrollY(currentScrollY);
     };
-    window.addEventListener('scroll', handleScroll);
+    
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY, showMenu]);
 
-  const handleMenuClick = (href: string) => {
-    router.push(href);
-    setShowMenu(false);
-  };
-
-  const isActive = (href: string) =>
-    pathname === href || (pathname.startsWith(href) && href !== '/dashboard');
+  // 🚨 FIX QA: Bloquear scroll del fondo (body) cuando el menú está activo (Regla Mobile-First)
+  useEffect(() => {
+    if (showMenu) document.body.style.overflow = 'hidden';
+    else document.body.style.overflow = 'unset';
+    
+    return () => { document.body.style.overflow = 'unset'; };
+  }, [showMenu]);
 
   return (
     <>
-      {/* 1. OVERLAY DEL MENÚ GRID */}
+      {/* 1. BARRA FLOTANTE MINIMALISTA (DOCK) */}
+      <AnimatePresence>
+        {isVisible && (
+          <motion.nav 
+            initial={{ y: 100 }} animate={{ y: 0 }} exit={{ y: 100 }} transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+            className='fixed bottom-4 left-4 right-4 z-[60] md:hidden'
+          >
+            <div className='bg-hospeda-950/95 backdrop-blur-xl rounded-[2rem] shadow-[0_8px_32px_rgba(0,0,0,0.5)] border border-white/10 p-2'>
+              <div className='flex items-center justify-around px-2'>
+                <Link href='/dashboard' onClick={() => setShowMenu(false)} className={`p-3 rounded-2xl transition-all active:scale-95 ${pathname === '/dashboard' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}`}>
+                  <Home size={22} strokeWidth={2}/>
+                </Link>
+                <Link href='/dashboard/calendar' onClick={() => setShowMenu(false)} className={`p-3 rounded-2xl transition-all active:scale-95 ${pathname === '/dashboard/calendar' ? 'bg-white/10 text-white' : 'text-slate-400 hover:text-white'}`}>
+                  <Calendar size={22} strokeWidth={2}/>
+                </Link>
+                
+                <button onClick={() => { setShowMenu(false); onOpenScanner?.(); }} className='p-3 rounded-2xl text-slate-400 hover:text-white transition-all active:scale-95'>
+                  <ScanBarcode size={22} strokeWidth={2} />
+                </button>
+                
+                <button onClick={() => setShowMenu(!showMenu)} className={`p-3 rounded-2xl transition-all active:scale-95 ${showMenu ? 'bg-hospeda-600 text-white shadow-lg' : 'text-slate-400 hover:text-white'}`}>
+                  {showMenu ? <X size={22} strokeWidth={2} /> : <Menu size={22} strokeWidth={2} />}
+                </button>
+              </div>
+            </div>
+          </motion.nav>
+        )}
+      </AnimatePresence>
+
+      {/* 2. OVERLAY OSCURO (Toca afuera para cerrar - Ciber-blindaje UX) */}
       <AnimatePresence>
         {showMenu && (
-          <motion.div
-            initial={{ opacity: 0, y: 100 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: 100 }}
-            transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className='fixed inset-0 z-[80] bg-hospeda-950/95 backdrop-blur-2xl flex flex-col justify-end pb-36 px-6 md:hidden'
+          <motion.div 
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+            className="fixed inset-0 bg-hospeda-950/80 backdrop-blur-sm z-40 md:hidden"
             onClick={() => setShowMenu(false)}
-          >
-            <div className='mb-8 text-center'>
-              <div className='w-12 h-1 bg-white/10 rounded-full mx-auto mb-6'></div>
-              <h3 className='text-xl font-display font-bold text-white'>
-                Menú de Gestión
-              </h3>
-            </div>
+          />
+        )}
+      </AnimatePresence>
 
-            <div className='grid grid-cols-2 gap-4' onClick={(e) => e.stopPropagation()}>
+      {/* 3. MENÚ DESPLEGABLE DE PANTALLA COMPLETA */}
+      <AnimatePresence>
+        {showMenu && (
+          <motion.div 
+            initial={{ opacity: 0, y: 30, scale: 0.95 }} 
+            animate={{ opacity: 1, y: 0, scale: 1 }} 
+            exit={{ opacity: 0, y: 30, scale: 0.95 }} 
+            transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+            className='fixed inset-x-4 bottom-24 bg-[#1a1a1a]/95 backdrop-blur-2xl rounded-[2rem] shadow-2xl border border-white/10 p-6 z-50 md:hidden overflow-hidden flex flex-col max-h-[70vh]'
+          >
+            <div className='grid grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-1 pb-2'>
               {MENU_ITEMS.map((item) => (
-                <button
-                  key={item.id}
-                  onClick={() => handleMenuClick(item.href)}
-                  className={`p-5 rounded-[24px] flex flex-col items-center justify-center gap-3 border border-white/5 shadow-lg active:scale-95 transition-all ${
-                    isActive(item.href) ? 'bg-white/10' : 'bg-white/5'
-                  }`}
-                >
-                  <item.icon size={28} className={item.color} strokeWidth={1.5} />
-                  <span className='text-xs font-bold text-slate-300 tracking-wide uppercase'>{item.label}</span>
-                </button>
+                <Link key={item.id} href={item.href} onClick={() => setShowMenu(false)} className='flex items-center gap-3 p-4 rounded-2xl text-slate-300 hover:text-white bg-white/5 hover:bg-white/10 border border-white/5 transition-all active:scale-95'>
+                  <item.icon size={20} className={item.color} /> 
+                  <span className='text-xs font-bold tracking-wide truncate'>{item.label}</span>
+                </Link>
               ))}
             </div>
-
-            {/* 🚨 NUEVO: BOTÓN DE CIERRE DE TURNO EN MÓVIL */}
-            <div className='mt-6 pt-6 border-t border-white/10' onClick={(e) => e.stopPropagation()}>
-              <button
-                onClick={() => { setShowMenu(false); setIsShiftModalOpen(true); }}
-                className='w-full p-4 rounded-[24px] bg-gradient-to-r from-emerald-500/20 to-emerald-600/20 text-emerald-400 font-bold border border-emerald-500/30 flex items-center justify-center gap-3 active:scale-95 transition-all'
-              >
-                <Calculator size={24} /> Cierre de Turno
+            
+            <div className='mt-2 pt-4 border-t border-white/10 flex-shrink-0'>
+              <button onClick={() => { setShowMenu(false); setIsShiftModalOpen(true); }} className='flex items-center justify-center gap-2 w-full p-4 rounded-2xl bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20 border border-emerald-500/20 font-bold transition-all active:scale-95'>
+                <Calculator size={18} /> Cierre de Turno
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* 2. DOCK FLOTANTE INTELIGENTE (Sin Cambios) */}
-      <AnimatePresence>
-        {isVisible && (
-          <motion.div
-            initial={{ y: 100, opacity: 0 }}
-            animate={{ y: 0, opacity: 1 }}
-            exit={{ y: 100, opacity: 0 }}
-            transition={{ type: 'spring', stiffness: 260, damping: 20 }}
-            className='fixed bottom-6 left-0 right-0 mx-auto w-[90%] max-w-[380px] z-[90] h-[72px] md:hidden'
-          >
-            <div className='w-full h-full bg-[#1a1a1a]/90 backdrop-blur-2xl text-white rounded-[28px] shadow-[0_8px_32px_rgba(0,0,0,0.4)] px-4 flex justify-between items-center border border-white/10 relative'>
-              
-              <div className='flex gap-1'>
-                <Link href='/dashboard' className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${pathname === '/dashboard' ? 'bg-white/10 text-cyan-400' : 'text-gray-400 hover:text-white'}`}>
-                  <Calendar size={22} strokeWidth={2} />
-                </Link>
-                <Link href='/dashboard/menu' className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${pathname === '/dashboard/menu' ? 'bg-white/10 text-orange-400' : 'text-gray-400 hover:text-white'}`}>
-                  <UtensilsCrossed size={22} strokeWidth={2} />
-                </Link>
-              </div>
-
-              {/* BOTÓN CENTRAL (VOICE AI) */}
-              <div className='absolute left-1/2 -translate-x-1/2 -top-6'>
-                <button onClick={onVoiceAction} disabled={isProcessing} className={`w-16 h-16 rounded-[24px] flex items-center justify-center border-[4px] border-[#F3F4F6] transition-all shadow-xl ${isListening ? 'bg-red-500 scale-110 shadow-red-500/40' : isProcessing ? 'bg-slate-800 scale-100' : 'bg-gradient-to-tr from-hospeda-400 to-hospeda-600 shadow-hospeda-500/30 active:scale-95'}`}>
-                  {isProcessing ? <Loader2 size={24} className='text-white animate-spin' /> : <Mic size={24} className='text-white' strokeWidth={2} />}
-                </button>
-              </div>
-
-              <div className='flex gap-1'>
-                <button onClick={onOpenScanner} className='w-12 h-12 rounded-2xl flex items-center justify-center text-gray-400 hover:text-white transition-all'>
-                  <ScanBarcode size={22} strokeWidth={2} />
-                </button>
-                <button onClick={() => setShowMenu(!showMenu)} className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${showMenu ? 'bg-white/10 text-white rotate-90' : 'text-gray-400 hover:text-white'}`}>
-                  {showMenu ? <X size={22} /> : <Menu size={22} />}
-                </button>
-              </div>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* 🚨 MODAL DE ARQUEO INYECTADO */}
-      <ShiftReportModal isOpen={isShiftModalOpen} onClose={() => setIsShiftModalOpen(false)} />
+      {isShiftModalOpen && <ShiftReportModal onClose={() => setIsShiftModalOpen(false)} />}
     </>
   );
-};
-
-export default MobileNav;
+}

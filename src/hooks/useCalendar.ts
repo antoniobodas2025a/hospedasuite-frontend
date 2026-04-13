@@ -8,7 +8,7 @@ import { createClient } from '@/utils/supabase/client';
 export type BookingStatus = 'confirmed' | 'checked_in' | 'checked_out' | 'maintenance' | 'cancelled';
 
 export interface Booking {
-  id: string;
+  id: string; // 🚨 ARQUITECTURA CLEAN: Forzamos a que el estado interno sea siempre estricto
   room_id: string;
   check_in: string;
   check_out: string;
@@ -34,16 +34,26 @@ export interface BookingForm {
   source?: 'direct' | 'ota' | 'admin';
 }
 
-export const useCalendar = (initialRooms: any[], initialBookings: Booking[], hotelId: string) => {
+// 🛡️ CAPA DE ANTICORRUPCIÓN (ACL): Sanitiza los datos de entrada una sola vez (O(N))
+const normalizeBooking = (b: any): Booking => ({
+  ...b,
+  id: String(b.id),
+  room_id: String(b.room_id),
+});
+
+export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId: string) => {
   const router = useRouter();
 
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [bookings, setBookings] = useState<Booking[]>(initialBookings.filter(b => b.status !== 'cancelled'));
+  
+  // Normalizamos al inicializar
+  const [bookings, setBookings] = useState<Booking[]>(
+    initialBookings.map(normalizeBooking).filter(b => b.status !== 'cancelled')
+  );
 
-  // 🚨 FIX QA CRÍTICO: Sincronización de Estado (Anti-Reservas Fantasma)
-  // Cuando Next.js trae nuevos datos (por router.refresh), los inyectamos a la pantalla
+  // Normalizamos al recibir actualizaciones SSR
   useEffect(() => {
-    setBookings(initialBookings.filter(b => b.status !== 'cancelled'));
+    setBookings(initialBookings.map(normalizeBooking).filter(b => b.status !== 'cancelled'));
   }, [initialBookings]);
 
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -62,8 +72,7 @@ export const useCalendar = (initialRooms: any[], initialBookings: Booking[], hot
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bookings', filter: `hotel_id=eq.${hotelId}` },
-        (payload) => {
-          console.log('Sincronización Mágica: Cambio detectado', payload);
+        () => {
           router.refresh(); 
         }
       )
@@ -80,13 +89,14 @@ export const useCalendar = (initialRooms: any[], initialBookings: Booking[], hot
 
   const goToToday = () => setCurrentDate(new Date());
 
+  // ⚡ RENDIMIENTO ÓPTIMO: Búsqueda sin transformaciones de tipos, seguro para render loop
   const getBookingForDate = (roomId: string, date: Date) => {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const dateStr = `${year}-${month}-${day}`;
 
-    return bookings.find((b) => b.room_id === roomId && dateStr >= b.check_in && dateStr < b.check_out && b.status !== 'cancelled');
+    return bookings.find((b) => b.room_id === String(roomId) && dateStr >= b.check_in && dateStr < b.check_out && b.status !== 'cancelled');
   };
 
   const handleCreateBooking = async (e: React.FormEvent) => {
@@ -97,7 +107,7 @@ export const useCalendar = (initialRooms: any[], initialBookings: Booking[], hot
       const result = await createBookingAction({
         hotel_id: hotelId, type: bookingForm.type, guestName: bookingForm.guestName,
         guestDoc: bookingForm.guestDoc, guestPhone: bookingForm.guestPhone,
-        guestEmail: bookingForm.guestEmail, roomId: bookingForm.roomId,
+        guestEmail: bookingForm.guestEmail, roomId: String(bookingForm.roomId),
         checkIn: bookingForm.checkIn, checkOut: bookingForm.checkOut,
         price: bookingForm.price, source: 'admin'
       });
@@ -116,7 +126,7 @@ export const useCalendar = (initialRooms: any[], initialBookings: Booking[], hot
       });
     } catch (error: any) {
       console.error(error);
-      alert(`Error Forense: ${error.message}`);
+      alert(`Error: ${error.message}`);
     }
   };
 
@@ -166,7 +176,7 @@ export const useCalendar = (initialRooms: any[], initialBookings: Booking[], hot
 
     const tempClone: Booking = {
       ...originalBooking,
-      id: `temp-${Date.now()}`,
+      id: String(`temp-${Date.now()}`),
       room_id: newRoomId,
       check_in: newCheckInDateStr,
       check_out: newCheckOutDateStr,

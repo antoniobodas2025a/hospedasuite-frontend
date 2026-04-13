@@ -1,156 +1,184 @@
 'use client';
 
-import { useState } from 'react';
-import { User, CreditCard, Loader2 } from 'lucide-react';
-import { createPendingBookingAction } from '@/app/actions/bookings';
+import React, { useState } from 'react';
+import { Wine, Coffee, HeartHandshake, ShieldCheck, ArrowRight, User, Mail, Phone, CreditCard, Loader2 } from 'lucide-react';
+import { createPendingBookingAction } from '@/app/actions/bookings'; 
+import { Hotel, Room } from '@/types'; // 🛡️ DEUDA TÉCNICA SALDADA
 
 interface CheckoutFormProps {
-  priceToPay: number;
-  roomId: string;
-  checkin: string;
-  checkout: string;
+  hotel: Hotel;
+  room: Room;
+  checkIn: string;
+  checkOut: string;
+  nights: number;
+  basePrice: number;
   isOta: boolean;
 }
 
-export function CheckoutForm({ priceToPay, roomId, checkin, checkout, isOta }: CheckoutFormProps) {
-  const [formData, setFormData] = useState({
-    fullName: '',
-    document: '',
-    email: '',
-    phone: '',
-  });
+const UPSELL_OPTIONS = [
+  { id: 'wine', title: 'Botella de Vino Tinto', description: 'Te espera en tu habitación al llegar.', price: 75000, icon: Wine },
+  { id: 'breakfast', title: 'Desayuno a la Cama', description: 'Servicio exclusivo para 2 personas.', price: 45000, icon: Coffee },
+  { id: 'romantic', title: 'Decoración Romántica', description: 'Pétalos, velas y fresas.', price: 120000, icon: HeartHandshake },
+];
 
-  const [isProcessing, setIsProcessing] = useState(false);
+export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, basePrice, isOta }: CheckoutFormProps) {
+  const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', document: '' });
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value
-    });
+  const upsellsTotal = UPSELL_OPTIONS
+    .filter(opt => selectedUpsells.includes(opt.id))
+    .reduce((sum, opt) => sum + opt.price, 0);
+  
+  const grandTotal = basePrice + upsellsTotal;
+
+  const toggleUpsell = (id: string) => {
+    setSelectedUpsells(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
   };
 
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!formData.fullName || !formData.email || !formData.document || !formData.phone) {
-      alert("Por favor, completa todos los campos.");
-      return;
+      return alert("Por favor, completa todos tus datos personales.");
     }
 
-    setIsProcessing(true);
+    setIsSubmitting(true);
     
     const payload = {
       ...formData,
-      amount: priceToPay,
-      roomId,
-      checkin,
-      checkout,
-      source: isOta ? 'ota' : 'direct'
+      amount: grandTotal, 
+      roomId: room.id,
+      checkin: checkIn,
+      checkout: checkOut,
+      source: isOta ? 'ota' : 'direct',
+      upsells: selectedUpsells 
     };
     
     const result = await createPendingBookingAction(payload);
 
-    if (!result.success || !result.bookingId) {
-      alert(`Ocurrió un error al procesar tu solicitud: ${result.error}`);
-      setIsProcessing(false);
+    if (!result?.success || !result?.bookingId) {
+      alert(`Ocurrió un error al procesar tu solicitud: ${result?.error || 'Desconocido'}`);
+      setIsSubmitting(false);
       return;
     }
 
-    // 🚨 FIX QA CRÍTICO: Bypass WAF usando Formulario Nativo Oculto
-    const amountInCents = Math.round(Number(priceToPay) * 100);
+    const amountInCents = Math.round(Number(grandTotal) * 100);
     const rawKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY || '';
     const cleanPublicKey = rawKey.replace(/['"\s\r\n]+/g, '');
     
     if (!cleanPublicKey) {
-      alert("Error del sistema: Pasarela de pago no configurada en las variables de entorno.");
-      setIsProcessing(false);
+      alert("Error del sistema: Pasarela de pago no configurada.");
+      setIsSubmitting(false);
       return;
     }
     
     const redirectUrl = `${window.location.origin}/book/success`;
 
-    // En lugar de window.location.href, construimos un formulario nativo
-    // Esto evade las reglas estrictas de SSRF de CloudFront
-    const form = document.createElement('form');
-    form.method = 'GET';
-    form.action = 'https://checkout.wompi.co/p/';
-    
-    const params: Record<string, string> = {
-      'public-key': cleanPublicKey,
-      'currency': 'COP',
-      'amount-in-cents': amountInCents.toString(),
-      'reference': result.bookingId,
-      'redirect-url': redirectUrl
-    };
+    // 🛡️ Redirección Limpia (Evita el bloqueo 403 del WAF de CloudFront)
+    const wompiUrl = new URL('https://checkout.wompi.co/p/');
+    wompiUrl.searchParams.append('public-key', cleanPublicKey);
+    wompiUrl.searchParams.append('currency', 'COP');
+    wompiUrl.searchParams.append('amount-in-cents', amountInCents.toString());
+    wompiUrl.searchParams.append('reference', result.bookingId);
+    wompiUrl.searchParams.append('redirect-url', redirectUrl);
 
-    for (const key in params) {
-      const input = document.createElement('input');
-      input.type = 'hidden';
-      input.name = key;
-      input.value = params[key];
-      form.appendChild(input);
-    }
-
-    document.body.appendChild(form);
-    form.submit(); // AWS CloudFront verá esto como una navegación estándar permitida
-  };
+    // Navegación nativa del navegador
+    window.location.href = wompiUrl.toString();
+  }; // <--- 🛡️ CURACIÓN FORENSE: CIERRE LÉXICO RESTAURADO
 
   return (
-    <div className="space-y-6">
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-          <User className="text-hospeda-600" size={24} />
-          <h2 className="text-xl font-bold text-slate-800">Tus Datos</h2>
-        </div>
-        
-        <form id="checkout-form" onSubmit={handlePayment} className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Nombre Completo</label>
-              <input 
-                type="text" name="fullName" value={formData.fullName} onChange={handleChange} required
-                className="w-full text-slate-900 bg-white rounded-xl border-slate-300 shadow-sm focus:border-hospeda-500 focus:ring-hospeda-500" placeholder="Ej. Juan Pérez" 
-              />
+    <form id="checkout-form" onSubmit={handlePayment} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div className="lg:col-span-7 space-y-8">
+        <section className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-slate-100">
+          <h2 className="text-xl font-bold text-slate-800 mb-2">Mejora tu Experiencia</h2>
+          <p className="text-slate-500 text-sm mb-6">Añade estos extras para hacer tu estancia inolvidable.</p>
+          <div className="space-y-4">
+            {UPSELL_OPTIONS.map(opt => {
+              const isSelected = selectedUpsells.includes(opt.id);
+              const Icon = opt.icon;
+              return (
+                <div key={opt.id} onClick={() => toggleUpsell(opt.id)} className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${isSelected ? 'border-hospeda-500 bg-hospeda-50' : 'border-slate-100 hover:border-slate-200'}`}>
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 rounded-xl ${isSelected ? 'bg-hospeda-100 text-hospeda-600' : 'bg-slate-100 text-slate-400'}`}>
+                      <Icon size={24} strokeWidth={1.5} />
+                    </div>
+                    <div>
+                      <h4 className={`font-bold ${isSelected ? 'text-hospeda-900' : 'text-slate-700'}`}>{opt.title}</h4>
+                      <p className="text-xs text-slate-500">{opt.description}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className={`font-black ${isSelected ? 'text-hospeda-600' : 'text-slate-800'}`}>+${opt.price.toLocaleString()}</p>
+                    <div className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isSelected ? 'text-hospeda-500' : 'text-slate-300'}`}>{isSelected ? 'Agregado' : 'Agregar'}</div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </section>
+
+        <section className="bg-white p-6 sm:p-8 rounded-[2rem] shadow-sm border border-slate-100">
+          <h2 className="text-xl font-bold text-slate-800 mb-6">Tus Datos</h2>
+          <div className="space-y-4">
+            <div className="relative">
+              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+              <input required type="text" placeholder="Nombre Completo" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold outline-none focus:ring-2 focus:ring-hospeda-400 transition-all" />
             </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Documento / Pasaporte</label>
-              <input 
-                type="text" name="document" value={formData.document} onChange={handleChange} required
-                className="w-full text-slate-900 bg-white rounded-xl border-slate-300 shadow-sm focus:border-hospeda-500 focus:ring-hospeda-500" placeholder="Número de documento" 
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="relative">
+                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <input required type="text" placeholder="Documento (CC/Pasaporte)" value={formData.document} onChange={e => setFormData({...formData, document: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold outline-none focus:ring-2 focus:ring-hospeda-400 transition-all" />
+              </div>
+              <div className="relative">
+                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+                <input required type="tel" placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold outline-none focus:ring-2 focus:ring-hospeda-400 transition-all" />
+              </div>
+            </div>
+            <div className="relative">
+              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" size={20} />
+              <input required type="email" placeholder="Correo Electrónico" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-bold outline-none focus:ring-2 focus:ring-hospeda-400 transition-all" />
             </div>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Correo Electrónico</label>
-              <input 
-                type="email" name="email" value={formData.email} onChange={handleChange} required
-                className="w-full text-slate-900 bg-white rounded-xl border-slate-300 shadow-sm focus:border-hospeda-500 focus:ring-hospeda-500" placeholder="correo@ejemplo.com" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-1">Teléfono / WhatsApp</label>
-              <input 
-                type="tel" name="phone" value={formData.phone} onChange={handleChange} required
-                className="w-full text-slate-900 bg-white rounded-xl border-slate-300 shadow-sm focus:border-hospeda-500 focus:ring-hospeda-500" placeholder="+57 300 000 0000" 
-              />
-            </div>
-          </div>
-        </form>
+        </section>
       </div>
 
-      <div className="bg-white rounded-2xl shadow-sm border border-slate-200 p-6">
-        <div className="flex items-center gap-3 mb-6 border-b border-slate-100 pb-4">
-          <CreditCard className="text-hospeda-600" size={24} />
-          <h2 className="text-xl font-bold text-slate-800">Pago Seguro</h2>
-        </div>
-        <p className="text-slate-500 text-sm mb-6">Serás redirigido a la pasarela segura de Wompi para completar tu transacción.</p>
-        <button 
-          form="checkout-form" type="submit" disabled={isProcessing}
-          className="w-full bg-hospeda-900 text-white py-4 rounded-xl font-bold text-lg hover:bg-black transition-colors shadow-md flex justify-center items-center gap-2 disabled:opacity-50"
-        >
-          {isProcessing ? <><Loader2 className="animate-spin" size={20} /> Conectando con el banco...</> : `Pagar $${priceToPay.toLocaleString()} COP`}
-        </button>
+      <div className="lg:col-span-5 sticky top-8">
+        <section className="bg-slate-900 p-8 rounded-[2rem] shadow-2xl text-white">
+          <h2 className="text-xl font-bold mb-6">Resumen de Reserva</h2>
+          <div className="space-y-4 mb-6 border-b border-slate-700 pb-6">
+            <div className="flex justify-between items-start">
+              <div>
+                <p className="text-slate-400 text-sm">{room.name}</p>
+                <p className="font-bold">{nights} {nights === 1 ? 'Noche' : 'Noches'}</p>
+                <p className="text-xs text-slate-500 mt-1">{checkIn} al {checkOut}</p>
+              </div>
+              <p className="font-bold">${basePrice.toLocaleString()}</p>
+            </div>
+            {selectedUpsells.length > 0 && (
+              <div className="flex justify-between items-start animate-in fade-in duration-300 text-hospeda-400">
+                <p className="text-sm font-bold">Extras ({selectedUpsells.length})</p>
+                <p className="font-bold">${upsellsTotal.toLocaleString()}</p>
+              </div>
+            )}
+          </div>
+          <div className="flex justify-between items-end mb-8">
+            <p className="text-slate-400">Total a Pagar</p>
+            <p className="text-3xl font-black">${grandTotal.toLocaleString()} <span className="text-sm text-slate-500 font-medium">COP</span></p>
+          </div>
+          <button form="checkout-form" type="submit" disabled={isSubmitting} style={{ backgroundColor: hotel.primary_color || '#0ea5e9' }} className="w-full py-4 rounded-xl text-white font-bold flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/50 disabled:opacity-50 disabled:scale-100">
+            {isSubmitting ? <><Loader2 className="animate-spin" size={20}/> Procesando...</> : <>Pagar Seguro <ArrowRight size={20}/></>}
+          </button>
+          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-slate-400 font-medium">
+            <ShieldCheck size={16} className="text-emerald-400" /> Transacción 100% segura
+          </div>
+          {hotel.cancellation_policy && (
+            <div className="mt-4 p-4 bg-slate-800 rounded-xl text-xs text-slate-400 leading-relaxed border border-slate-700">
+              <span className="font-bold text-slate-300 block mb-1">Política de Cancelación:</span>
+              {hotel.cancellation_policy}
+            </div>
+          )}
+        </section>
       </div>
-    </div>
+    </form>
   );
 }

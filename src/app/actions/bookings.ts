@@ -1,11 +1,12 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { cookies } from 'next/headers';
 
-const supabaseAdmin = createClient(
+// 🛡️ CLIENTE PRIVILEGIADO GLOBAL (Solo para Server Actions seguros)
+const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
@@ -24,6 +25,25 @@ interface BookingPayload {
   source?: 'direct' | 'ota' | 'admin';
 }
 
+interface PendingBookingPayload {
+  fullName: string;
+  email: string;
+  phone: string;
+  document: string;
+  roomId: string;
+  checkin: string;
+  checkout: string;
+  source: 'direct' | 'ota';
+  upsells: string[];
+  amount: number; 
+}
+
+const UPSELL_PRICES: Record<string, number> = {
+  wine: 75000,
+  breakfast: 45000,
+  romantic: 120000,
+};
+
 async function getActiveStaffId(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
@@ -39,7 +59,7 @@ async function getActiveStaffId(): Promise<string | null> {
 }
 
 // ------------------------------------------------------------------
-// ACCIÓN 1: Crear Reserva (Admin)
+// ACCIÓN 1: Crear Reserva (Admin Dashboard) - RESTAURADA
 // ------------------------------------------------------------------
 export async function createBookingAction(data: BookingPayload) {
   try {
@@ -112,7 +132,7 @@ export async function createBookingAction(data: BookingPayload) {
 }
 
 // ------------------------------------------------------------------
-// ACCIÓN 2: Mover Reserva (Drag & Drop)
+// ACCIÓN 2: Mover Reserva (Drag & Drop) - RESTAURADA
 // ------------------------------------------------------------------
 export async function updateBookingDatesAction(bookingId: string, newRoomId: string, newCheckIn: string, newCheckOut: string) {
   try {
@@ -152,7 +172,7 @@ export async function updateBookingDatesAction(bookingId: string, newRoomId: str
 }
 
 // ------------------------------------------------------------------
-// ACCIÓN 3: Cancelar Reserva
+// ACCIÓN 3: Cancelar Reserva - RESTAURADA
 // ------------------------------------------------------------------
 export async function cancelBookingAction(bookingId: string) {
   try {
@@ -176,7 +196,7 @@ export async function cancelBookingAction(bookingId: string) {
 }
 
 // ------------------------------------------------------------------
-// ACCIÓN 4: Clonar Reserva (Copiar y Pegar)
+// ACCIÓN 4: Clonar Reserva (Copiar y Pegar) - RESTAURADA
 // ------------------------------------------------------------------
 export async function duplicateBookingAction(bookingId: string, newRoomId: string, newCheckIn: string, newCheckOut: string) {
   try {
@@ -234,30 +254,74 @@ export async function duplicateBookingAction(bookingId: string, newRoomId: strin
 }
 
 // ------------------------------------------------------------------
-// 🚨 ACCIÓN 5: Crear Reserva PENDIENTE (Nuevo flujo OTA -> Wompi)
+// 🚨 ACCIÓN 5: Crear Reserva PENDIENTE B2C (Zero-Trust + Wompi)
 // ------------------------------------------------------------------
-export async function createPendingBookingAction(payload: {
-  fullName: string;
-  document: string;
-  email: string;
-  phone: string;
-  roomId: string;
-  checkin: string;
-  checkout: string;
-  amount: number;
-  source: string;
-}) {
+export async function createPendingBookingAction(payload: PendingBookingPayload) {
   try {
-    // 🚨 FIX QA APLICADO: Consulta SQL saneada
+    if (!payload.roomId || !payload.checkin || !payload.checkout || !payload.fullName || !payload.document) {
+      return { success: false, error: 'Faltan datos obligatorios para procesar la reserva.' };
+    }
+
+    const checkInDate = new Date(`${payload.checkin}T12:00:00Z`);
+    const checkOutDate = new Date(`${payload.checkout}T12:00:00Z`);
+    
+    if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime()) || checkInDate >= checkOutDate) {
+      return { success: false, error: 'Inconsistencia temporal en las fechas seleccionadas.' };
+    }
+
+    const { data: overlappingBookings, error: overlapError } = await supabaseAdmin
+      .from('bookings')
+      .select('id')
+      .eq('room_id', payload.roomId)
+      .neq('status', 'cancelled')
+      .lt('check_in', payload.checkout)
+      .gt('check_out', payload.checkin)
+      .limit(1);
+
+    if (overlapError) throw new Error('Fallo al verificar disponibilidad del inventario en tiempo real.');
+    if (overlappingBookings && overlappingBookings.length > 0) {
+      return { success: false, error: 'La habitación acaba de ser reservada por otro usuario. Por favor, selecciona otras fechas.' };
+    }
+
+    // 🛡️ CORRECCIÓN DE ESQUEMA APLICADA
     const { data: room, error: roomError } = await supabaseAdmin
       .from('rooms')
-      .select('hotel_id, price')
+      .select('hotel_id, price, base_price')
       .eq('id', payload.roomId)
       .single();
 
-    if (roomError || !room) throw new Error(`Habitación no encontrada o inválida. Error: ${roomError?.message}`);
+    if (roomError) {
+      console.error("[CRITICAL DB ERROR] Fallo al consultar habitación:", roomError);
+    }
 
-    // Buscar si el huésped ya existe (por email)
+    if (!room) {
+      return { success: false, error: 'No se pudo verificar el inventario de la habitación.' };
+    }
+
+    const nights = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
+    
+    // 🛡️ CORRECCIÓN MATEMÁTICA APLICADA
+    const pricePerNight = Number(room.price || room.base_price || 0);
+    
+    if (pricePerNight <= 0) {
+      return { success: false, error: 'Inconsistencia financiera en el costo de la habitación.' };
+    }
+
+    const verifiedBasePrice = pricePerNight * nights;
+
+    let verifiedUpsellsTotal = 0;
+    if (Array.isArray(payload.upsells)) {
+      payload.upsells.forEach(u => {
+        if (UPSELL_PRICES[u]) verifiedUpsellsTotal += UPSELL_PRICES[u];
+      });
+    }
+
+    const finalVerifiedTotal = verifiedBasePrice + verifiedUpsellsTotal;
+
+    if (finalVerifiedTotal !== payload.amount) {
+      console.warn(`[AUDIT WARN] Manipulación detectada. Cliente envió: ${payload.amount}, Backend calculó: ${finalVerifiedTotal}. Aplicando valor seguro.`);
+    }
+
     let guestId;
     const { data: existingGuest } = await supabaseAdmin
       .from('guests')
@@ -268,7 +332,6 @@ export async function createPendingBookingAction(payload: {
     if (existingGuest) {
       guestId = existingGuest.id;
     } else {
-      // Crear nuevo huésped si no existe
       const { data: newGuest, error: guestError } = await supabaseAdmin
         .from('guests')
         .insert([{
@@ -281,32 +344,52 @@ export async function createPendingBookingAction(payload: {
         .select('id')
         .single();
 
-      if (guestError) throw new Error('Error al registrar el huésped: ' + guestError.message);
+      if (guestError) throw new Error('Error al registrar el perfil del huésped: ' + guestError.message);
       guestId = newGuest.id;
     }
 
-    // Crear la Reserva en estado PENDIENTE
-    const { data: booking, error: bookingError } = await supabaseAdmin
+    const { data: newBooking, error: bookingError } = await supabaseAdmin
       .from('bookings')
       .insert([{
         hotel_id: room.hotel_id,
         room_id: payload.roomId,
-        guest_id: guestId,
+        guest_id: guestId, 
         check_in: payload.checkin,
         check_out: payload.checkout,
-        total_price: payload.amount,
-        status: 'pending',
-        source: payload.source
+        total_price: finalVerifiedTotal,
+        status: 'PENDING',
+        source: payload.source,
       }])
       .select('id')
       .single();
 
-    if (bookingError) throw new Error('Error al generar la reserva: ' + bookingError.message);
+    if (bookingError || !newBooking) {
+      console.error("[CRITICAL] Error al insertar reserva:", bookingError);
+      return { success: false, error: 'No se pudo registrar la reserva en el sistema central.' };
+    }
 
-    return { success: true, bookingId: booking.id };
+    const { data: paymentLink, error: paymentError } = await supabaseAdmin
+      .from('payment_links')
+      .insert([{
+        reservation_id: newBooking.id,
+        amount: finalVerifiedTotal,
+        status: 'PENDING',
+      }])
+      .select('id')
+      .single();
+
+    if (paymentError || !paymentLink) {
+      console.error("[CRITICAL] Error al crear link de pago:", paymentError);
+      return { success: false, error: 'No se pudo generar la orden de cobro.' };
+    }
+
+    revalidatePath('/dashboard');
+    revalidatePath('/dashboard/calendar');
+
+    return { success: true, bookingId: paymentLink.id };
 
   } catch (error: any) {
-    console.error("❌ FALLO EN TRANSACCIÓN DE RESERVA:", error.message);
-    return { success: false, error: error.message };
+    console.error("[CRITICAL] Fatal Server Action Error:", error.message);
+    return { success: false, error: 'Fallo crítico del servidor. Por favor contacta a soporte.' };
   }
 }

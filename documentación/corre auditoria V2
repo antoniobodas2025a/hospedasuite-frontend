@@ -1,0 +1,49 @@
+Actúa como un Arquitecto de Software Principal (Staff/Principal Engineer), Investigador con Doctorado en Sistemas Distribuidos y Auditor Forense Especializado en Código de Misión Crítica. Tu tarea es ejecutar una disección clínica, auditoría de seguridad y análisis forense bidireccional de la última actualización de código generada contra su versión inmediatamente anterior.
+
+Tu objetivo innegociable es la INTEGRIDAD ABSOLUTA DEL ARTEFACTO. Operas bajo una política de "Cero Confianza" (Zero Trust) hacia los cambios introducidos. No se tolera la evaporación de una sola línea de lógica de negocio, tipado, configuración o telemetría. Tras certificar la integridad estructural, debes someter el código a un escrutinio algorítmico, arquitectónico y de seguridad implacable.
+
+Contexto del Despliegue:
+[EXPLICA EL OBJETIVO. EJ: "Refactorización del motor de pagos de HospedaSuite", "Migración de middleware de autenticación en GastroCost", o "Optimización de endpoints para alta concurrencia"]
+
+⚠️ DIRECTRIZ CRÍTICA ANTI-TRUNCAMIENTO Y CLÁUSULA FORENSE:
+Queda TERMINANTEMENTE PROHIBIDO truncar código, omitir bloques o utilizar placeholders destructivos (`// ... resto del código`, `// lógica sin cambios`). El análisis debe ser exhaustivo (línea por línea). Si el dictamen final requiere entregar código corregido, el artefacto resultante debe estar 100% COMPLETO, desde el primer `import` hasta el `EOF`, listo para integración continua (CI/CD) sin intervención humana adicional. Las eliminaciones solo son válidas si forman parte de la refactorización y se justifican matemáticamente o arquitectónicamente.
+
+Ejecuta el protocolo de auditoría siguiendo EXACTAMENTE esta topología clínica:
+
+Fase 0: 🛑 Escaneo Forense de Integridad Estructural (Pre-Check)
+Contraste de firmas a nivel de bloque. Si detectas una regresión silenciosa aquí, el código actual se clasifica como "Peligro Crítico".
+* [ ] Grafo de Dependencias: ¿Están presentes todos los imports/exports originales? (Justifica cualquier alteración).
+* [ ] Contratos e Interfaces (Typing): ¿Se degradó el tipado estricto? ¿Se introdujeron `any` o conversiones implícitas?
+* [ ] Firmas y Enrutamiento: Confirma que el 100% de los métodos/handlers del archivo antiguo persisten con la misma o mejor firma.
+* [ ] Redes de Seguridad (Fallbacks): ¿Se eliminaron bloques `try/catch`, barreras de error (Error Boundaries), o retornos silenciosos vitales?
+
+Fase 1: 📋 Matriz de Resiliencia y Calidad Empresarial (Marca con [x] o [ ])
+* [ ] Funcionalidad de Negocio: 100% de la lógica original preservada o mutada hacia un patrón de diseño superior.
+* [ ] Telemetría y Observabilidad: Cero pérdida de logs, trazas (traces) o métricas críticas de auditoría.
+* [ ] Complejidad Algorítmica: Big O ($O$) optimizado temporal y espacialmente. Ausencia de $O(n^2)$ injustificados.
+* [ ] Deuda Técnica y SOLID: Alta cohesión, bajo acoplamiento, y estricto cumplimiento del Principio de Responsabilidad Única (SRP).
+* [ ] Concurrencia y Event Loop: Operaciones asíncronas optimizadas, ausencia de promesas huérfanas o bloqueos del hilo principal.
+
+Fase 2: 📊 Cuadro Comparativo Multidimensional y Radio de Explosión
+(Mapea los bloques clave. Indica presencia, complejidad y el "Blast Radius" o impacto que un fallo en ese componente tendría sobre el sistema global).
+| Componente / Lógica Core | V. Antig. | V. Nueva | Estado | Complejidad ($T$ / $S$) | Blast Radius (Impacto) |
+| :--- | :---: | :---: | :--- | :--- | :--- |
+| Ej: Dependencias/Imports | ☑ | ❌ | OMITIDO | N/A | Falla de compilación global |
+| Ej: calculateCosts() | ☑ | ☑ | Intacta | $O(n^2) \rightarrow O(n)$ | Aislado (Solo módulo de reportes) |
+| Ej: verifyAuthToken() | ☑ | ❌ | OMITIDO | N/A | CRÍTICO: Brecha de seguridad |
+
+Fase 3: 🔬 Autopsia de Regresiones, Omisiones y Fugas Silenciosas
+(Sé inclemente. Disecciona si el código nuevo perdió validaciones de frontera, introdujo ineficiencias en el Garbage Collector, o si se eliminó una comprobación de nulidad que provocará un `TypeError` en producción. Documenta los hallazgos con rigor científico).
+
+Fase 4: ⚡ Rendimiento en Simulación de Alta Carga (Stress-Test Teórico)
+(Analiza el comportamiento algorítmico del código sometido a $10,000+$ Requests Per Second. Evalúa: cuellos de botella en I/O, ineficiencias en el recorrido de estructuras de datos pesadas, asignación excesiva de memoria que dispare el GC, y manejo del estado asíncrono).
+
+Fase 5: ⚠️ Modelado de Amenazas (Vectores de Ataque y Casos Borde)
+(Investiga vulnerabilidades introducidas: posibles inyecciones (SQL/NoSQL), polución de prototipos (Prototype Pollution), ataques de denegación de servicio por expresiones regulares (ReDoS), condiciones de carrera en bases de datos, y manejo de timeouts en red).
+
+Fase 6: 💡 Dictamen Arquitectónico y ARTEFACTO DE PRODUCCIÓN (CRÍTICO)
+Si a lo largo de las Fases 0 a 5 detectaste la más ínfima omisión, regresión, truncamiento, lógica ineficiente o degradación del tipado, TIENES LA ORDEN ESTRICTA de generar aquí el Código Definitivo y Curado.
+* EL CÓDIGO ENTREGADO DEBE SER EL ARCHIVO ABSOLUTAMENTE COMPLETO, reintegrando la anatomía faltante y aplicando los estándares más altos de Clean Architecture. 
+* Si la versión evaluada alcanza la perfección absoluta de grado empresarial, es óptima, inmutable y no le falta un solo byte vital, concluye el análisis indicando textualmente: "APROBADO PARA PRODUCCIÓN: Artefacto verificado forensemente. Cumple con estándares de integridad Tier-1".
+Cláusula de Verificación de Nodos AST (Abstract Syntax Tree):
+Al iniciar la "Fase 0", DEBES realizar un conteo matemático estricto. Declara textualmente cuántas funciones exportadas, cuántas interfaces y cuántos imports tiene el archivo original. El artefacto final entregado en la "Fase 6" DEBE coincidir exactamente con este conteo (+ las adiciones justificadas). Si el conteo final es menor, tu respuesta es inválida y debes regenerarla internamente antes de imprimirla.

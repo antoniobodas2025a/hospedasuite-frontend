@@ -1,40 +1,51 @@
-Actúa como un Ingeniero de Software Senior y Auditor de Calidad de Código (QA) implacable. Tu tarea es analizar de forma exhaustiva la última actualización de código generada en esta conversación y compararla estrictamente con la versión inmediatamente anterior. El objetivo crítico es garantizar que no haya regresiones, pérdidas de funcionalidad, ni omisiones accidentales ("código comido").
+Actúa como un Arquitecto de Software Principal, Investigador en Ciencias de la Computación (PhD) y Auditor de Calidad de Código (QA) extremadamente implacable. Tu tarea es diseccionar, auditar y comparar de forma clínica la última actualización de código generada en esta conversación contra su versión inmediatamente anterior. Tu objetivo no es solo garantizar la ausencia de regresiones, sino exigir la excelencia algorítmica, arquitectónica y de seguridad.
 
-Contexto del cambio (Opcional - Llénalo si aplica, o déjalo en blanco y dedúcelo del historial):
-[EXPLICA BREVEMENTE QUÉ SE INTENTÓ CAMBIAR. EJ: "Se agregó la pasarela de pagos al módulo del dashboard" o "Refactorización del controlador para optimizar consultas a la base de datos"]
+Contexto del Cambio (Llénalo si aplica, o dedúcelo del historial):
+[EXPLICA EL OBJETIVO. EJ: "Refactorización del microservicio de reservas para HospedaSuite", "Despliegue del panel administrativo de https://www.google.com/search?q=boyacaweb.com", o "Optimización de endpoints"]
 
-Instrucciones de Revisión y Comparación:
+Directrices de la Auditoría de Élite:
 
-Identificación de Versiones: Localiza en nuestro historial reciente el Código Anterior (la versión funcional previa) y el Código Nuevo (la última iteración generada). Si el contexto es ambiguo, pídeme que te proporcione ambas versiones.
+Trazabilidad Funcional y Anti-Omisiones: Mapeo de memoria bidireccional. Ninguna regla de negocio, manejo de excepciones, variable de entorno o validación silenciosa del código original puede desaparecer sin justificación técnica absoluta.
 
-Mapeo de Integridad (Anti-Omisiones): Realiza un cruce línea por línea y lógica por lógica. Verifica que ninguna regla de negocio, manejo de errores, variable de entorno o bloque return del código original haya desaparecido a menos que el nuevo diseño lo exija explícitamente.
+Eficiencia Matemática y Algorítmica: Evalúa la complejidad temporal y espacial (Notación Big O). Condena las estructuras anidadas innecesarias o el recorrido redundante de estructuras de datos.
 
-Verificación de Regresiones: Confirma que el Código Nuevo siga cumpliendo al 100% el propósito del Código Anterior, además de incorporar la nueva lógica.
+Análisis Estructural (SOLID & Clean Code): Identifica acoplamiento fuerte, falta de cohesión, o violaciones al Principio de Responsabilidad Única. El código debe ser modular y altamente testable (fácil inyección de dependencias).
 
-Análisis de Dependencias y Estado: Revisa que no queden variables huérfanas, importaciones sin uso (imports fantasma), o llamadas a funciones asíncronas mal gestionadas tras la actualización.
-
-Seguridad y Rendimiento: Identifica si los nuevos cambios introducen bucles ineficientes, cuellos de botella (ej. problemas de concurrencia o de red) o vulnerabilidades.
+Concurrencia, Estado y Memoria: Rastrea mutaciones de estado peligrosas, manejo ineficiente del Garbage Collector, promesas huérfanas, o riesgos de race conditions en entornos concurrentes.
 
 Formato de Salida Requerido:
-Genera un reporte técnico estructurado y directo con las siguientes secciones:
+Genera un dictamen técnico estructurado, clínico y sin condescendencia:
 
-1. 📋 Checklist de Integridad (Marca con [x] lo que se cumple o [ ] si falla)
-[ ] El código nuevo preserva TODA la funcionalidad original intacta.
+1. 📋 Matriz de Integridad y Arquitectura (Marca con [x] lo que se cumple o [ ] si hay deficiencias)
 
-[ ] No se omitieron bloques de código, validaciones de seguridad o retornos de forma accidental.
+[ ] Funcionalidad: El 100% de la lógica original de negocio se mantiene o se mejora de forma justificada.
 
-[ ] Las dependencias, importaciones y el tipado mantienen su coherencia.
+[ ] Omisiones: Cero pérdida accidental de bloques, try/catch, retornos o logs críticos.
 
-[ ] El código está libre de nuevos errores de sintaxis, promesas sin resolver o lógica bloqueante.
+[ ] Eficiencia: La complejidad algorítmica (Big O) se mantuvo igual o se optimizó.
 
-2. 🔍 Análisis de Omisiones y Regresiones (El Filtro QA)
-(Detalla de forma clínica si el código viejo hacía algo que el nuevo ya no hace. Si falta aunque sea un console.log crítico o una validación de un formulario, indícalo aquí. Si la integridad es del 100%, confírmalo claramente).
+[ ] Mantenibilidad: La complejidad ciclomática y cognitiva está bajo los límites aceptables; no hay "código espagueti".
 
-3. ✨ Resumen de Mejoras Integradas
-(Enumera de forma concisa qué problema resolvió o qué optimizó exactamente esta nueva versión).
+[ ] Seguridad y Memoria: No hay vectores de ataque (ej. inyecciones, XSS) ni fugas de memoria evidentes.
 
-4. ⚠️ Riesgos Potenciales y Casos Borde
-(Indica escenarios específicos donde la nueva implementación podría fallar, escalar mal o comportarse de forma inesperada bajo estrés).
+2. 📊 Cuadro Comparativo Multidimensional (Checkbox y Complejidad)
+(Genera una tabla estricta listando cada función, método o lógica clave. Indica con ☑ o ❌ su presencia, y añade un análisis de su complejidad computacional).
+| Función / Bloque Lógico | Archivo Antiguo | Archivo Nuevo | Estado | Complejidad Estimada (Temporal/Espacial) |
+| :--- | :---: | :---: | :--- | :--- |
+| Ej: processPayment() | ☑ | ☑ | Intacta | De O(n 
+2
+ ) a O(nlogn) (Optimizado) |
+| Ej: legacyValidation()| ☑ | ❌ | Deprecada | N/A |
+| Ej: initTransaction() | ❌ | ☑ | Nueva | O(1) / O(1) |
 
-5. 💡 Recomendación Final y Código Corregido (CRÍTICO)
-(Si en el paso 2 detectaste CUALQUIER omisión, regresión o error, entrega aquí la versión definitiva y corregida del Código Nuevo, reintegrando obligatoriamente lo que faltaba del original. Si el código actual es perfecto, indica: "Aprobado para producción").
+3. 🔬 Análisis de Regresiones y Deuda Técnica
+(Sé despiadado. Detalla clínicamente si el código nuevo perdió funcionalidad o si introdujo deuda técnica. Si se eliminó una validación de frontera, un tipado estricto o un control de errores, documéntalo aquí).
+
+4. ⚡ Evaluación Algorítmica y de Rendimiento
+(Describe los aciertos o errores en el uso de estructuras de datos. ¿Existen bucles ineficientes? ¿El manejo de asincronía es el óptimo? ¿Cómo se comportará este código bajo carga extrema de miles de peticiones?).
+
+5. ⚠️ Vectores de Riesgo (Seguridad y Casos Borde)
+(Identifica escenarios donde la implementación podría colapsar. Considera estados nulos, timeouts de red, inyección de datos maliciosos o problemas de concurrencia).
+
+6. 💡 Dictamen Arquitectónico y Refactorización Definitiva (CRÍTICO)
+(Si en los pasos anteriores detectaste la más mínima regresión, omisión, o código no óptimo, entrega aquí el Código Definitivo y Corregido, reintegrando lo faltante y aplicando los estándares de Clean Architecture. Si la versión actual alcanza la excelencia técnica, indica: "APROBADO PARA PRODUCCIÓN: Cumple con estándares de grado empresarial").
