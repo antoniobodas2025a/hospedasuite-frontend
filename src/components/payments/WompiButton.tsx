@@ -9,7 +9,7 @@ interface WompiButtonProps {
   amount: number;
   reference: string;
   publicKey: string;
-  email?: string; // Opcional, para pre-llenar
+  email?: string;
   onSuccess?: () => void;
 }
 
@@ -35,20 +35,26 @@ const WompiButton = ({
       return;
     }
 
-    // 2. Configurar el Widget
-    const checkout = new (window as any).WidgetCheckout({
+    // 2. Construcción Dinámica del Payload (Evasión de WAF)
+    const widgetConfig: any = {
       currency: currency,
       amountInCents: amountInCents,
       reference: reference,
       publicKey: publicKey,
-      signature: { integrity: signature }, // ¡Aquí va la firma generada!
-      customerData: {
-        email: email || '',
-      },
-      redirectUrl: `${window.location.origin}/dashboard/checkout?status=approved`, // Opcional
-    });
+      signature: { integrity: signature }, 
+      redirectUrl: `${window.location.origin}/dashboard/checkout?status=approved`, 
+    };
+
+    // 🛡️ SecOps Fix: Solo inyectamos customerData si el email existe y no es un string vacío
+    if (email && email.trim() !== '') {
+      widgetConfig.customerData = {
+        email: email.trim(),
+      };
+    }
 
     // 3. Abrir Wompi
+    const checkout = new (window as any).WidgetCheckout(widgetConfig);
+    
     checkout.open((result: any) => {
       const transaction = result.transaction;
       if (transaction.status === 'APPROVED') {
