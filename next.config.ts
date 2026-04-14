@@ -7,17 +7,31 @@ const nextConfig = {
         hostname: 'images.unsplash.com',
       },
     ],
-  }, // 🚨 FIX: Faltaba esta llave de cierre
+  },
   
-  // 🚨 INICIO DEL BYPASS PARA VERCEL
+  // BYPASS PARA VERCEL
   typescript: {
     ignoreBuildErrors: true,
   },
   eslint: {
     ignoreDuringBuilds: true,
   },
-  // 🚨 FIN DEL BYPASS
+
+  // 🛡️ BARRERA WAF: Cabeceras HTTP Estrictas (Inyectado por Dra. Cipher)
+  async headers() {
+    return [
+      {
+        source: '/(.*)',
+        headers: [
+          { key: 'X-DNS-Prefetch-Control', value: 'on' },
+          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' }, // Previene Clickjacking en el Checkout
+          { key: 'X-Content-Type-Options', value: 'nosniff' }, // Previene inyección de binarios
+          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
+        ],
+      },
+    ];
+  },
 };
 
-// 🚨 FIX: Usamos una sola forma de exportar
 export default nextConfig;

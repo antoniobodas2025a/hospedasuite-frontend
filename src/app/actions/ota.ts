@@ -75,54 +75,63 @@ export async function fetchOTAHotelsAction(
 }
 
 /**
- * 🥇 PREMIUM FETCH: Detalle del Hotel + Motor de Disponibilidad en Tiempo Real
+ * 🥇 PREMIUM FETCH: Detalle del Hotel + Motor de Disponibilidad RPC (Tier-1)
  */
 export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string, checkOut?: string) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
 
+    // 1. Traemos SOLO los datos del hotel base
     const { data: hotel, error } = await supabaseAdmin
       .from('hotels')
-      .select(`
-        *,
-        rooms (
-          id, name, capacity, price, status, gallery, amenities, size_sqm     
-        )
-      `)
+      .select('*')
       .eq('slug', slug)
       .eq('status', 'active')
       .single();
 
     if (error || !hotel) return { success: false, hotel: null };
 
-    let occupiedRoomIds: string[] = [];
+    let finalRooms = [];
 
-    // MOTOR DE DISPONIBILIDAD
+    // 2. MOTOR DE DISPONIBILIDAD (Postgres Anti-Join)
     if (checkIn && checkOut) {
       const safeCheckIn = checkIn.split('T')[0];
       const safeCheckOut = checkOut.split('T')[0];
 
-      const { data: overlaps, error: overlapError } = await supabaseAdmin
-        .from('bookings')
-        .select('room_id')
-        .eq('hotel_id', hotel.id)
-        .in('status', ['confirmed', 'checked_in', 'maintenance']) 
-        .lt('check_in', safeCheckOut) 
-        .gt('check_out', safeCheckIn); 
+      console.log(`[SEC-OPS] Ejecutando RPC de disponibilidad para ${slug}: ${safeCheckIn} a ${safeCheckOut}`);
 
-      if (!overlapError && overlaps) {
-        occupiedRoomIds = overlaps.map(b => b.room_id);
+      // ✅ EL ENFOQUE TIER-1 INYECTADO AQUÍ
+      const { data: availableRooms, error: rpcError } = await supabaseAdmin.rpc('get_available_rooms', {
+        p_hotel_id: hotel.id,
+        p_check_in: safeCheckIn,
+        p_check_out: safeCheckOut
+      });
+
+      if (rpcError) {
+        console.error("🚨 Error en Motor RPC:", rpcError.message);
+        throw new Error(rpcError.message);
       }
+
+      finalRooms = availableRooms || [];
+    } else {
+      // 3. Fallback: Si el usuario entra al hotel sin fechas, mostramos el catálogo activo
+      const { data: allRooms } = await supabaseAdmin
+        .from('rooms')
+        .select('id, name, capacity, price, status, gallery, amenities, size_sqm')
+        .eq('hotel_id', hotel.id)
+        .neq('status', 'maintenance');
+
+      finalRooms = allRooms || [];
     }
 
+    // 4. Sanitización y mapeo final con Barrera Zero-Trust restaurada
     const premiumHotel = {
       ...hotel,
-      rooms: hotel.rooms
-        ?.filter((r: any) => r.status !== 'maintenance') 
-        ?.filter((r: any) => !occupiedRoomIds.includes(r.id)) 
-        ?.map((r: any) => ({
+      rooms: finalRooms
+        .filter((r: any) => r.status !== 'maintenance') // 🛡️ BARRERA FORENSE RESTAURADA
+        .map((r: any) => ({
           ...r,
-          price_per_night: r.price 
+          price_per_night: r.price // Compatibilidad con componentes frontend
         }))
     };
 
