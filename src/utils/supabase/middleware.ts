@@ -72,13 +72,31 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // Protección básica de rutas
-  if (request.nextUrl.pathname.startsWith('/dashboard') && !user) {
+  const path = request.nextUrl.pathname;
+
+  // 🛡️ 1. Protección Básica: Invitados no pueden entrar a zonas seguras
+  if ((path.startsWith('/dashboard') || path.startsWith('/admin')) && !user) {
     return NextResponse.redirect(new URL('/login', request.url));
   }
 
-  // Redirigir si ya está logueado e intenta ir al login
-  if (request.nextUrl.pathname.startsWith('/login') && user) {
+  // 🛡️ 2. Protección Avanzada: Zero-Trust para rutas Super Admin
+  if (path.startsWith('/admin') && user) {
+    // Consultamos la tabla de roles usando el cliente de SSR (Respeta RLS)
+    const { data: roleData, error: roleError } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (roleError || !roleData || roleData.role !== 'superadmin') {
+      console.warn(`🚨 [SEC-OPS] Intento de escalada de privilegios bloqueado. User ID: ${user.id}`);
+      // Expulsamos al usuario a su dashboard normal
+      return NextResponse.redirect(new URL('/dashboard', request.url));
+    }
+  }
+
+  // 🔄 Redirigir si ya está logueado e intenta ir al login
+  if (path.startsWith('/login') && user) {
      return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
