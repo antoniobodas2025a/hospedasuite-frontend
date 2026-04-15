@@ -1,3 +1,5 @@
+import { withSentryConfig } from '@sentry/nextjs';
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
@@ -25,8 +27,8 @@ const nextConfig = {
         headers: [
           { key: 'X-DNS-Prefetch-Control', value: 'on' },
           { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' }, // Previene Clickjacking en el Checkout
-          { key: 'X-Content-Type-Options', value: 'nosniff' }, // Previene inyección de binarios
+          { key: 'X-Frame-Options', value: 'SAMEORIGIN' }, 
+          { key: 'X-Content-Type-Options', value: 'nosniff' }, 
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
         ],
       },
@@ -34,4 +36,21 @@ const nextConfig = {
   },
 };
 
-export default nextConfig;
+// 📡 INYECCIÓN DE TELEMETRÍA (Híbrido Sentry Wizard + SecOps Shield)
+export default withSentryConfig(nextConfig, {
+  org: "hospedasuite",
+  project: "hospedasuite-frontend",
+  silent: true,
+  widenClientFileUpload: true,
+  tunnelRoute: "/monitoring",
+  
+  // 🛡️ SecOps: Oculta el código fuente original en los navegadores de los usuarios
+  hideSourceMaps: true,
+
+  webpack: {
+    automaticVercelMonitors: true,
+    treeshake: {
+      removeDebugLogging: true,
+    },
+  },
+});
