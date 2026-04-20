@@ -44,6 +44,11 @@ const UPSELL_PRICES: Record<string, number> = {
   romantic: 120000,
 };
 
+// 💰 REGLAS DE NEGOCIO HOSPEDASUITE (CAMINO B)
+const PLATFORM_OTA_FEE_PERCENTAGE = 0.10; // 10% de comisión OTA
+const PLATFORM_DIRECT_FEE_PERCENTAGE = 0.00; // 0% de comisión canal directo
+const PLATFORM_UPSELL_FEE_PERCENTAGE = 0.03; // 🚀 NUEVO: 3% por ventas generadas por IA
+
 async function getActiveStaffId(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
@@ -59,7 +64,7 @@ async function getActiveStaffId(): Promise<string | null> {
 }
 
 // ------------------------------------------------------------------
-// ACCIÓN 1: Crear Reserva (Admin Dashboard) - RESTAURADA
+// ACCIÓN 1: Crear Reserva (Desde el Admin Dashboard / Recepción)
 // ------------------------------------------------------------------
 export async function createBookingAction(data: BookingPayload) {
   try {
@@ -117,6 +122,7 @@ export async function createBookingAction(data: BookingPayload) {
         check_out: data.checkOut,
         status: data.type === 'booking' ? 'confirmed' : 'maintenance',
         total_price: data.price,
+        platform_fee: 0, // Reservas de admin no pagan fee
         staff_id: staffId, 
         source: bookingSource, 
       }]);
@@ -132,7 +138,7 @@ export async function createBookingAction(data: BookingPayload) {
 }
 
 // ------------------------------------------------------------------
-// ACCIÓN 2: Mover Reserva (Drag & Drop) - RESTAURADA
+// ACCIÓN 2: Mover Reserva (Drag & Drop en Calendario)
 // ------------------------------------------------------------------
 export async function updateBookingDatesAction(bookingId: string, newRoomId: string, newCheckIn: string, newCheckOut: string) {
   try {
@@ -172,7 +178,7 @@ export async function updateBookingDatesAction(bookingId: string, newRoomId: str
 }
 
 // ------------------------------------------------------------------
-// ACCIÓN 3: Cancelar Reserva - RESTAURADA
+// ACCIÓN 3: Cancelar Reserva
 // ------------------------------------------------------------------
 export async function cancelBookingAction(bookingId: string) {
   try {
@@ -196,7 +202,7 @@ export async function cancelBookingAction(bookingId: string) {
 }
 
 // ------------------------------------------------------------------
-// ACCIÓN 4: Clonar Reserva (Copiar y Pegar) - RESTAURADA
+// ACCIÓN 4: Clonar Reserva (Copiar y Pegar)
 // ------------------------------------------------------------------
 export async function duplicateBookingAction(bookingId: string, newRoomId: string, newCheckIn: string, newCheckOut: string) {
   try {
@@ -239,6 +245,7 @@ export async function duplicateBookingAction(bookingId: string, newRoomId: strin
         check_out: newCheckOut,
         status: originalBooking.status,     
         total_price: originalBooking.total_price, 
+        platform_fee: originalBooking.platform_fee,
         staff_id: staffId, 
         source: 'admin',   
       });
@@ -258,76 +265,56 @@ export async function duplicateBookingAction(bookingId: string, newRoomId: strin
 // ------------------------------------------------------------------
 export async function createPendingBookingAction(payload: PendingBookingPayload) {
   try {
-    if (!payload.roomId || !payload.checkin || !payload.checkout || !payload.fullName || !payload.document) {
-      return { success: false, error: 'Faltan datos obligatorios para procesar la reserva.' };
-    }
-
-    const checkInDate = new Date(`${payload.checkin}T12:00:00Z`);
-    const checkOutDate = new Date(`${payload.checkout}T12:00:00Z`);
-    
-    if (isNaN(checkInDate.getTime()) || isNaN(checkOutDate.getTime()) || checkInDate >= checkOutDate) {
-      return { success: false, error: 'Inconsistencia temporal en las fechas seleccionadas.' };
-    }
-
-    const { data: overlappingBookings, error: overlapError } = await supabaseAdmin
-      .from('bookings')
-      .select('id')
-      .eq('room_id', payload.roomId)
-      .neq('status', 'cancelled')
-      .lt('check_in', payload.checkout)
-      .gt('check_out', payload.checkin)
-      .limit(1);
-
-    if (overlapError) throw new Error('Fallo al verificar disponibilidad del inventario en tiempo real.');
-    if (overlappingBookings && overlappingBookings.length > 0) {
-      return { success: false, error: 'La habitación acaba de ser reservada por otro usuario. Por favor, selecciona otras fechas.' };
-    }
-
-    // 🛡️ CORRECCIÓN DE ESQUEMA APLICADA
+    // 1. 🛑 BARRERA ZERO-TRUST: Jamás confíes en el precio que envía el Frontend
     const { data: room, error: roomError } = await supabaseAdmin
       .from('rooms')
-      .select('hotel_id, price, base_price')
+      .select('id, hotel_id, price')
       .eq('id', payload.roomId)
       .single();
 
-    if (roomError) {
-      console.error("[CRITICAL DB ERROR] Fallo al consultar habitación:", roomError);
+    if (roomError || !room) {
+      throw new Error('Habitación no encontrada o inactiva.');
     }
 
-    if (!room) {
-      return { success: false, error: 'No se pudo verificar el inventario de la habitación.' };
-    }
+    // 2. Cálculo de Noches (Matemática Inmutable)
+    const checkInDate = new Date(`${payload.checkin}T12:00:00Z`);
+    const checkOutDate = new Date(`${payload.checkout}T12:00:00Z`);
+    const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
+    const totalNights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
 
-    const nights = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
+    // 3. AISLAMIENTO FINANCIERO: Hospedaje vs Upsells
+    const verifiedAccommodationTotal = room.price * totalNights;
     
-    // 🛡️ CORRECCIÓN MATEMÁTICA APLICADA
-    const pricePerNight = Number(room.price || room.base_price || 0);
-    
-    if (pricePerNight <= 0) {
-      return { success: false, error: 'Inconsistencia financiera en el costo de la habitación.' };
-    }
-
-    const verifiedBasePrice = pricePerNight * nights;
-
     let verifiedUpsellsTotal = 0;
-    if (Array.isArray(payload.upsells)) {
-      payload.upsells.forEach(u => {
-        if (UPSELL_PRICES[u]) verifiedUpsellsTotal += UPSELL_PRICES[u];
+    if (payload.upsells && payload.upsells.length > 0) {
+      payload.upsells.forEach(item => {
+        if (UPSELL_PRICES[item]) verifiedUpsellsTotal += UPSELL_PRICES[item];
       });
     }
 
-    const finalVerifiedTotal = verifiedBasePrice + verifiedUpsellsTotal;
+    const finalVerifiedTotal = verifiedAccommodationTotal + verifiedUpsellsTotal;
 
-    if (finalVerifiedTotal !== payload.amount) {
-      console.warn(`[AUDIT WARN] Manipulación detectada. Cliente envió: ${payload.amount}, Backend calculó: ${finalVerifiedTotal}. Aplicando valor seguro.`);
+    // 4. 💸 MOTOR DE LIQUIDACIÓN DE LA OTA (Su modelo de negocio expandido)
+    let calculatedPlatformFee = 0;
+    
+    if (payload.source === 'ota') {
+      calculatedPlatformFee = verifiedAccommodationTotal * PLATFORM_OTA_FEE_PERCENTAGE;
+    } else if (payload.source === 'direct') {
+      calculatedPlatformFee = verifiedAccommodationTotal * PLATFORM_DIRECT_FEE_PERCENTAGE;
     }
 
-    let guestId;
+    // 🚀 Lógica de Comisión por Upselling (Aplica sin importar el origen de la reserva)
+    const upsellingFee = verifiedUpsellsTotal * PLATFORM_UPSELL_FEE_PERCENTAGE;
+    calculatedPlatformFee += upsellingFee; // Se suma al libro mayor
+
+    // 5. Gestión del Huésped
+    let guestId = null;
     const { data: existingGuest } = await supabaseAdmin
       .from('guests')
       .select('id')
-      .eq('email', payload.email)
-      .maybeSingle();
+      .eq('hotel_id', room.hotel_id)
+      .eq('doc_number', payload.document)
+      .single();
 
     if (existingGuest) {
       guestId = existingGuest.id;
@@ -335,28 +322,30 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
       const { data: newGuest, error: guestError } = await supabaseAdmin
         .from('guests')
         .insert([{
+          hotel_id: room.hotel_id,
           full_name: payload.fullName,
-          email: payload.email,
           doc_number: payload.document,
-          phone: payload.phone,
-          hotel_id: room.hotel_id 
+          email: payload.email,
+          phone: payload.phone
         }])
         .select('id')
         .single();
-
-      if (guestError) throw new Error('Error al registrar el perfil del huésped: ' + guestError.message);
+        
+      if (guestError || !newGuest) throw new Error('Fallo al registrar el huésped.');
       guestId = newGuest.id;
     }
 
+    // 6. INSERCIÓN DE LA RESERVA CON TRAZABILIDAD FINANCIERA
     const { data: newBooking, error: bookingError } = await supabaseAdmin
       .from('bookings')
       .insert([{
         hotel_id: room.hotel_id,
-        room_id: payload.roomId,
+        room_id: room.id,
         guest_id: guestId, 
         check_in: payload.checkin,
         check_out: payload.checkout,
         total_price: finalVerifiedTotal,
+        platform_fee: calculatedPlatformFee, // 💰 SU DINERO QUEDA REGISTRADO AQUÍ
         status: 'PENDING',
         source: payload.source,
       }])
@@ -368,6 +357,7 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
       return { success: false, error: 'No se pudo registrar la reserva en el sistema central.' };
     }
 
+    // 7. ORDEN DE COBRO (Para Wompi)
     const { data: paymentLink, error: paymentError } = await supabaseAdmin
       .from('payment_links')
       .insert([{
@@ -390,6 +380,6 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
 
   } catch (error: any) {
     console.error("[CRITICAL] Fatal Server Action Error:", error.message);
-    return { success: false, error: 'Fallo crítico del servidor. Por favor contacta a soporte.' };
+    return { success: false, error: error.message };
   }
 }

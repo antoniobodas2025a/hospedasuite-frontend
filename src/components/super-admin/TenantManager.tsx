@@ -1,10 +1,18 @@
 'use client';
 
 import { useState } from 'react';
-import { Building2, Key, Trash2, Edit, X, Save, Lock, AlertTriangle } from 'lucide-react';
+import { Building2, Key, Trash2, Edit, X, Save, Lock, AlertTriangle, DollarSign } from 'lucide-react';
 import { godModeAccess, deleteHotelAction, updateTenantAction, forceChangePasswordAction } from '@/app/actions/super-admin';
 
-export default function TenantManager({ hotels }: { hotels: any[] }) {
+// Importamos el tipo del HQ para tipar las props
+import { HotelFinancialRecord } from '@/app/actions/hq';
+
+interface TenantManagerProps {
+  hotels: any[];
+  hqData?: HotelFinancialRecord[]; // Inyectado desde el nuevo layout
+}
+
+export default function TenantManager({ hotels, hqData = [] }: TenantManagerProps) {
   const [editingHotel, setEditingHotel] = useState<any | null>(null);
   const [isProcessing, setIsProcessing] = useState(false);
   const [newPassword, setNewPassword] = useState('');
@@ -63,15 +71,22 @@ export default function TenantManager({ hotels }: { hotels: any[] }) {
     }
   };
 
+  // Función auxiliar para buscar la deuda de un hotel
+  const getHotelDebt = (hotelId: string) => {
+    const record = hqData.find(h => h.hotel_id === hotelId);
+    return record ? record.total_debt : 0;
+  };
+
   return (
     <>
       <div className='overflow-x-auto'>
         <table className='w-full text-left'>
-          <thead className='bg-black/20 text-xs uppercase text-white/40 font-bold tracking-wider'>
+          <thead className='bg-black/20 text-[10px] uppercase text-white/40 font-bold tracking-widest'>
             <tr>
               <th className='p-6'>Hotel / ID</th>
               <th className='p-6'>Estado</th>
               <th className='p-6'>Dueño / Plan</th>
+              <th className='p-6'>Factura (Mes)</th>
               <th className='p-6 text-right'>Control Global</th>
             </tr>
           </thead>
@@ -79,15 +94,15 @@ export default function TenantManager({ hotels }: { hotels: any[] }) {
             {hotels?.map((hotel) => (
               <tr key={hotel.id} className='hover:bg-white/5 transition-colors group'>
                 <td className='p-6'>
-                  <div className='font-bold text-white text-base flex items-center gap-2'>
+                  <div className='font-bold text-white text-base flex items-center gap-2 tracking-tight'>
                     <Building2 size={16} className='text-blue-400' /> {hotel.name}
                   </div>
-                  <div className='text-white/30 text-xs font-mono mt-1 opacity-0 group-hover:opacity-100 transition-opacity select-all'>
+                  <div className='text-white/30 text-[10px] font-mono mt-1 opacity-0 group-hover:opacity-100 transition-opacity select-all'>
                     {hotel.id}
                   </div>
                 </td>
                 <td className='p-6'>
-                  <span className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${
+                  <span className={`px-3 py-1 rounded-full text-[9px] font-bold uppercase border tracking-widest ${
                       hotel.status === 'active' ? 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' 
                       : hotel.status === 'suspended' ? 'bg-red-500/10 text-red-400 border-red-500/20'
                       : 'bg-amber-500/10 text-amber-400 border-amber-500/20'
@@ -97,12 +112,19 @@ export default function TenantManager({ hotels }: { hotels: any[] }) {
                   </span>
                 </td>
                 <td className='p-6'>
-                  <div className='text-white/80 flex items-center gap-2'>
+                  <div className='text-white/80 flex items-center gap-2 text-xs'>
                     {hotel.email}
-                    {/* 🚨 FIX: Badge visual rápido si no hay dueño */}
-                    {!hotel.owner_id && <span title="Hotel Mock del Script" className="bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded text-[10px]">MOCK</span>}
+                    {!hotel.owner_id && <span title="Hotel Mock" className="bg-amber-500/20 text-amber-400 px-1.5 py-0.5 rounded text-[9px]">MOCK</span>}
                   </div>
-                  <div className='text-white/30 text-xs mt-0.5 font-mono'>{hotel.subscription_plan || 'Sin Plan'}</div>
+                  <div className='text-blue-400/80 text-[10px] mt-1 font-bold uppercase tracking-widest bg-blue-500/10 w-fit px-2 py-0.5 rounded border border-blue-500/20'>
+                    {hotel.subscription_plan || 'NO ASIGNADO'}
+                  </div>
+                </td>
+                <td className='p-6'>
+                  <div className="font-bold text-emerald-400 tabular-nums flex items-center gap-1">
+                    <DollarSign size={14} />
+                    {getHotelDebt(hotel.id).toLocaleString()}
+                  </div>
                 </td>
                 <td className='p-6 flex justify-end gap-3 items-center'>
                   
@@ -128,10 +150,10 @@ export default function TenantManager({ hotels }: { hotels: any[] }) {
       {/* MODAL DE EDICIÓN Y SEGURIDAD */}
       {editingHotel && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-          <div className="bg-slate-900 border border-white/10 rounded-3xl w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
+          <div className="bg-slate-900 border border-white/10 rounded-[2rem] w-full max-w-2xl shadow-2xl flex flex-col overflow-hidden">
             
             <div className="p-6 border-b border-white/10 flex justify-between items-center bg-black/20">
-              <h2 className="text-xl font-bold text-white flex items-center gap-2">
+              <h2 className="text-xl font-bold text-white flex items-center gap-2 tracking-tight">
                 <Edit className="text-blue-500"/> Gestionar: {editingHotel.name}
               </h2>
               <button onClick={() => setEditingHotel(null)} className="p-2 hover:bg-white/10 rounded-full text-white/50 transition-colors">
@@ -143,52 +165,52 @@ export default function TenantManager({ hotels }: { hotels: any[] }) {
               
               {/* Bloque 1: Edición Comercial */}
               <div className="bg-white/5 border border-white/10 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-white/50 uppercase mb-4">Ajustes Comerciales</h3>
+                <h3 className="text-xs font-bold text-white/50 uppercase tracking-widest mb-4">Ajustes Comerciales</h3>
                 <form id="update-tenant-form" onSubmit={handleUpdateTenant} className="space-y-4">
                   <div>
-                    <label className="text-xs text-white/50 mb-1 block">Nombre del Hotel</label>
-                    <input name="name" defaultValue={editingHotel.name} required className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none" />
+                    <label className="text-[10px] uppercase tracking-widest font-bold text-white/50 mb-1 block ml-2">Nombre del Hotel</label>
+                    <input name="name" defaultValue={editingHotel.name} required className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white font-medium focus:border-blue-500 outline-none" />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
                     <div>
-                      <label className="text-xs text-white/50 mb-1 block">Estado Operativo</label>
-                      <select name="status" defaultValue={editingHotel.status} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none">
+                      <label className="text-[10px] uppercase tracking-widest font-bold text-white/50 mb-1 block ml-2">Estado Operativo</label>
+                      <select name="status" defaultValue={editingHotel.status} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white font-medium focus:border-blue-500 outline-none">
                         <option value="active" className="text-black">Activo (Facturando)</option>
-                        <option value="suspended" className="text-black">Suspendido (Falta de Pago)</option>
+                        <option value="suspended" className="text-black">Suspendido (Impago)</option>
                         <option value="maintenance" className="text-black">En Configuración</option>
                       </select>
                     </div>
+                    {/* 🛡️ CORRECCIÓN DE PLANES EN MODAL */}
                     <div>
-                      <label className="text-xs text-white/50 mb-1 block">Plan de Suscripción</label>
-                      <select name="plan" defaultValue={editingHotel.subscription_plan} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white focus:border-blue-500 outline-none">
-                        <option value="PRO_AI" className="text-black">PRO AI</option>
-                        <option value="GROWTH" className="text-black">GROWTH</option>
-                        <option value="CORPORATE" className="text-black">CORPORATE</option>
+                      <label className="text-[10px] uppercase tracking-widest font-bold text-white/50 mb-1 block ml-2">Plan de Suscripción</label>
+                      <select name="plan" defaultValue={editingHotel.subscription_plan} className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white font-medium focus:border-blue-500 outline-none">
+                        <option value="micro" className="text-black">Micro</option>
+                        <option value="standard" className="text-black">Estándar</option>
+                        <option value="pro" className="text-black">Pro</option>
                       </select>
                     </div>
                   </div>
-                  <div className="pt-2">
-                    <button type="submit" disabled={isProcessing} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-2.5 px-6 rounded-xl transition-all shadow-lg flex items-center gap-2 text-sm disabled:opacity-50">
-                      <Save size={16} /> Guardar Cambios
+                  <div className="pt-4">
+                    <button type="submit" disabled={isProcessing} className="bg-blue-600 hover:bg-blue-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 text-sm disabled:opacity-50 w-full">
+                      <Save size={18} /> Actualizar Perfil
                     </button>
                   </div>
                 </form>
               </div>
 
-              {/* Bloque 2: Seguridad Inteligente (Adaptativa) */}
+              {/* Bloque 2: Seguridad Inteligente */}
               <div className="bg-red-500/5 border border-red-500/20 rounded-2xl p-6">
-                <h3 className="text-sm font-bold text-red-400 uppercase mb-4 flex items-center gap-2">
-                  <Lock size={16}/> Zona de Seguridad (Forzar Credenciales)
+                <h3 className="text-xs font-bold text-red-400 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <Lock size={16}/> Zona de Seguridad
                 </h3>
                 
-                {/* 🚨 FIX QA: Detección de Datos Huérfanos */}
                 {!editingHotel.owner_id ? (
                   <div className="bg-amber-500/10 border border-amber-500/20 p-4 rounded-xl flex items-start gap-3">
                     <AlertTriangle className="text-amber-400 shrink-0 mt-0.5" size={20} />
                     <div>
                       <p className="text-amber-400 text-sm font-bold">Datos de Prueba (Mock Data)</p>
                       <p className="text-amber-400/70 text-xs mt-1">
-                        Este hotel fue creado por el script de desarrollo y no posee un usuario real en el sistema de Auth. No se le puede cambiar la contraseña ni generar Modo Dios.
+                        Este hotel no posee un usuario real en el sistema de Auth. No se le puede cambiar la contraseña.
                       </p>
                     </div>
                   </div>
@@ -196,7 +218,7 @@ export default function TenantManager({ hotels }: { hotels: any[] }) {
                   <>
                     <form onSubmit={handleChangePassword} className="flex gap-4 items-end">
                       <div className="flex-1">
-                        <label className="text-xs text-red-400/70 mb-1 block">Nueva Contraseña del Dueño</label>
+                        <label className="text-[10px] uppercase tracking-widest font-bold text-red-400/70 mb-1 block ml-2">Forzar Nueva Contraseña</label>
                         <input 
                           type="text" 
                           placeholder="Escribe la nueva clave..." 
@@ -207,10 +229,10 @@ export default function TenantManager({ hotels }: { hotels: any[] }) {
                         />
                       </div>
                       <button type="submit" disabled={isProcessing} className="bg-red-600 hover:bg-red-500 text-white font-bold py-3 px-6 rounded-xl transition-all shadow-lg text-sm disabled:opacity-50">
-                        Ejecutar Cambio
+                        Ejecutar
                       </button>
                     </form>
-                    <p className="text-xs text-red-400/50 mt-3">Al ejecutar esto, desconectarás al dueño de todos sus dispositivos activos.</p>
+                    <p className="text-[11px] text-red-400/50 mt-3 ml-2 font-medium">Al ejecutar esto, desconectarás al dueño de todos sus dispositivos activos.</p>
                   </>
                 )}
               </div>

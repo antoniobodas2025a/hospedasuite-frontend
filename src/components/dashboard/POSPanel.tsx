@@ -68,7 +68,7 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelProps
         {menuItems.length === 0 ? (
           <div className='flex-1 flex items-center justify-center p-12'>
             <EmptyState 
-              iconName="utensils" // 🚨 Usando el String seguro
+              iconName="utensils"
               title="Tu carta está vacía" 
               description="Crea tu primer platillo o servicio para comenzar a vender."
               actionLabel="Crear mi primer ítem"
@@ -171,7 +171,7 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelProps
         </div>
       </div>
 
-      {/* MODAL NUEVO PRODUCTO */}
+      {/* MODAL NUEVO PRODUCTO (Blindado) */}
       <AnimatePresence>
         {isProductModalOpen && (
           <div className='fixed inset-0 z-[100] bg-slate-950/80 backdrop-blur-md flex items-center justify-center p-4'>
@@ -199,14 +199,15 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelProps
                     </select>
                   </div>
                   <div className='space-y-2'>
-                    <label className='text-xs font-bold text-slate-400 uppercase ml-2'>Precio</label>
-                    <input type='number' className='w-full h-14 p-4 bg-slate-50 rounded-2xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-100' value={productForm.price === 0 ? '' : productForm.price} onChange={(e) => setProductForm({ ...productForm, price: Number(e.target.value) })} />
+                    <label className='text-xs font-bold text-slate-400 uppercase ml-2'>Precio (COP)</label>
+                    {/* 🛡️ BLINDAJE UI: min="0" evita valores negativos */}
+                    <input type='number' min="0" step="0.01" className='w-full h-14 p-4 bg-slate-50 rounded-2xl font-bold text-slate-700 outline-none focus:ring-2 focus:ring-emerald-100' value={productForm.price === 0 ? '' : productForm.price} onChange={(e) => setProductForm({ ...productForm, price: Math.max(0, Number(e.target.value)) })} />
                   </div>
                 </div>
               </div>
               <div className='flex gap-4 mt-10'>
                 <button onClick={() => setIsProductModalOpen(false)} className='flex-1 py-4 text-slate-500 font-bold'>Cancelar</button>
-                <button onClick={createProduct} className='flex-2 py-4 px-8 bg-slate-900 text-white font-bold rounded-2xl shadow-xl'>Guardar</button>
+                <button onClick={createProduct} disabled={!productForm.name || productForm.price <= 0} className='flex-2 py-4 px-8 bg-slate-900 hover:bg-black disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold rounded-2xl shadow-xl transition-all'>Guardar</button>
               </div>
             </motion.div>
           </div>
