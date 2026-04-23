@@ -1,193 +1,194 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import { motion } from 'framer-motion';
 import {
-  FileText,
-  Search,
-  Filter,
-  Download,
-  CalendarDays,
-  User,
-  BedDouble,
+  FileText, Search, Download, CalendarDays, User, BedDouble
 } from 'lucide-react';
 import { useForensicBook, ForensicEntry } from '@/hooks/useForensicBook';
+import { cn } from '@/lib/utils';
 
-interface ForensicBookPanelProps {
+// ==========================================
+// BLOQUE 1: INTERFACES ESTRICTAS
+// ==========================================
+
+interface ForensicBookPanelContainerProps {
   initialData: ForensicEntry[];
 }
 
-const ForensicBookPanel = ({ initialData }: ForensicBookPanelProps) => {
-  const { entries, searchTerm, statusFilter, handleFilter, totalRevenue } =
-    useForensicBook(initialData);
+interface ForensicBookPanelViewProps {
+  entries: ForensicEntry[];
+  searchTerm: string;
+  statusFilter: string;
+  totalRevenue: number;
+  onFilter: (term: string, status: string) => void;
+}
 
-  // Utilidad de colores para badges
-  const getStatusStyle = (status: string) => {
-    switch (status) {
-      case 'checked_in':
-        return 'bg-emerald-100 text-emerald-700 border-emerald-200';
-      case 'checked_out':
-        return 'bg-slate-100 text-slate-600 border-slate-200';
-      case 'confirmed':
-        return 'bg-blue-100 text-blue-700 border-blue-200';
-      case 'cancelled':
-        return 'bg-red-50 text-red-500 border-red-100';
-      default:
-        return 'bg-gray-100 text-gray-600';
-    }
-  };
+// ==========================================
+// BLOQUE 2: COMPONENTES AUXILIARES Y DICCIONARIOS
+// ==========================================
 
-  const getStatusLabel = (status: string) => {
-    switch (status) {
-      case 'checked_in':
-        return 'En Casa';
-      case 'checked_out':
-        return 'Finalizado';
-      case 'confirmed':
-        return 'Confirmado';
-      case 'cancelled':
-        return 'Cancelado';
-      default:
-        return status;
-    }
-  };
+const getStatusStyle = (status: string) => {
+  switch (status) {
+    case 'checked_in':
+      return 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_-3px_rgba(16,185,129,0.2)]';
+    case 'checked_out':
+      return 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20';
+    case 'confirmed':
+      return 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 shadow-[0_0_10px_-3px_rgba(99,102,241,0.2)]';
+    case 'cancelled':
+      return 'bg-rose-500/10 text-rose-400 border-rose-500/20';
+    default:
+      return 'bg-zinc-800/50 text-zinc-500 border-white/5';
+  }
+};
 
+const getStatusLabel = (status: string) => {
+  switch (status) {
+    case 'checked_in': return 'En Casa';
+    case 'checked_out': return 'Finalizado';
+    case 'confirmed': return 'Confirmado';
+    case 'cancelled': return 'Cancelado';
+    default: return status;
+  }
+};
+
+// ==========================================
+// BLOQUE 3: COMPONENTE PRESENTACIONAL (UI Claude 2026)
+// ==========================================
+
+const ForensicBookPanelView: React.FC<ForensicBookPanelViewProps> = ({
+  entries, searchTerm, statusFilter, totalRevenue, onFilter
+}) => {
   return (
-    <div className='space-y-6 pb-20'>
-      {/* HEADER */}
-      <div className='bg-white/50 backdrop-blur-md p-6 rounded-3xl border border-white/60 shadow-sm flex flex-col lg:flex-row justify-between items-end lg:items-center gap-6'>
+    <div className='space-y-6 pb-20 font-poppins text-zinc-100'>
+      
+      {/* HEADER: Liquid Glass */}
+      <div className='bg-zinc-900/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/5 shadow-2xl shadow-black/50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 ring-1 ring-inset ring-white/10'>
         <div>
-          <h2 className='text-2xl font-display font-bold text-slate-800 flex items-center gap-3'>
-            <FileText className='text-hospeda-600' /> Libro de Registro
+          <h2 className='text-2xl font-bold tracking-tight text-zinc-50 flex items-center gap-3'>
+            <FileText className='text-indigo-400 size-6' /> Libro de Registro
           </h2>
-          <p className='text-slate-500 text-sm mt-1'>
-            Auditoría de movimientos y ocupación histórica.
+          <p className='text-zinc-400 text-sm mt-1 font-lora'>
+            Auditoría inmutable de movimientos y ocupación histórica.
           </p>
         </div>
 
-        {/* TARJETA DE INGRESOS (Solo visible si hay datos) */}
-        <div className='bg-slate-900 text-white px-6 py-3 rounded-2xl shadow-xl flex flex-col items-end min-w-[200px]'>
-          <span className='text-[10px] font-bold uppercase tracking-widest text-slate-400'>
+        {/* TARJETA DE INGRESOS (Metrics Node) */}
+        <div className='bg-zinc-950/80 border border-white/5 px-6 py-3.5 rounded-2xl shadow-inner flex flex-col items-end min-w-[200px]'>
+          <span className='text-[10px] font-bold uppercase tracking-widest text-zinc-500'>
             Ingresos Vista
           </span>
-          <span className='text-2xl font-display font-bold text-emerald-400'>
+          <span className='text-2xl font-display font-bold text-emerald-400 tracking-tight'>
             ${totalRevenue.toLocaleString()}
           </span>
         </div>
       </div>
 
-      {/* BARRA DE HERRAMIENTAS */}
+      {/* BARRA DE HERRAMIENTAS DE NAVEGACIÓN */}
       <div className='flex flex-col md:flex-row gap-4'>
-        {/* Buscador */}
+        {/* Buscador Forense */}
         <div className='relative flex-1'>
-          <Search
-            className='absolute left-4 top-1/2 -translate-y-1/2 text-slate-400'
-            size={18}
-          />
+          <Search className='absolute left-4 top-1/2 -translate-y-1/2 text-zinc-500 size-4 stroke-[1.5]' />
           <input
             type='text'
-            placeholder='Buscar por huésped, cédula o habitación...'
-            className='w-full pl-11 pr-4 py-3 bg-white rounded-2xl border-none font-medium text-slate-600 shadow-sm outline-none focus:ring-2 focus:ring-hospeda-200'
+            placeholder='Buscar identidad, documento o vector de habitación...'
+            className='w-full pl-11 pr-4 py-3 bg-zinc-900/40 backdrop-blur-md rounded-2xl border border-white/5 font-medium text-zinc-200 placeholder:text-zinc-600 shadow-inner outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all'
             value={searchTerm}
-            onChange={(e) => handleFilter(e.target.value, statusFilter)}
+            onChange={(e) => onFilter(e.target.value, statusFilter)}
           />
         </div>
 
-        {/* Filtros */}
-        <div className='flex gap-2 overflow-x-auto pb-2 md:pb-0'>
-          {['all', 'confirmed', 'checked_in', 'checked_out', 'cancelled'].map(
-            (status) => (
-              <button
-                key={status}
-                onClick={() => handleFilter(searchTerm, status)}
-                className={`px-4 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all ${
-                  statusFilter === status
-                    ? 'bg-hospeda-600 text-white shadow-md'
-                    : 'bg-white text-slate-500 hover:bg-slate-50'
-                }`}
-              >
-                {status === 'all' ? 'Todos' : getStatusLabel(status)}
-              </button>
-            ),
-          )}
+        {/* Filtros Topológicos */}
+        <div className='flex gap-2 overflow-x-auto pb-2 md:pb-0 custom-scrollbar hide-scrollbar'>
+          {['all', 'confirmed', 'checked_in', 'checked_out', 'cancelled'].map((status) => (
+            <button
+              key={status}
+              onClick={() => onFilter(searchTerm, status)}
+              className={cn(
+                "px-4 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300",
+                statusFilter === status
+                  ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 ring-1 ring-indigo-400/50"
+                  : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
+              )}
+            >
+              {status === 'all' ? 'Vista Global' : getStatusLabel(status)}
+            </button>
+          ))}
         </div>
 
-        {/* Botón Exportar (Visual) */}
-        <button className='px-4 py-3 bg-white text-slate-600 rounded-2xl font-bold shadow-sm hover:text-hospeda-600 flex items-center gap-2'>
-          <Download size={18} /> <span className='hidden md:inline'>CSV</span>
+        {/* Botón Exportar */}
+        <button className='px-5 py-3 bg-zinc-800/50 border border-white/5 text-zinc-300 hover:text-white hover:border-indigo-500/50 rounded-2xl font-bold shadow-lg transition-all flex items-center gap-2 active:scale-95 group'>
+          <Download className="size-4 stroke-[2] group-hover:translate-y-0.5 transition-transform" /> 
+          <span className='hidden md:inline'>Exportar CSV</span>
         </button>
       </div>
 
-      {/* TABLA DE DATOS */}
-      <div className='bg-white rounded-[2.5rem] shadow-sm border border-slate-100 overflow-hidden'>
-        <div className='overflow-x-auto'>
+      {/* TABLA DE DATOS (High Density B2B) */}
+      <div className='bg-zinc-900/40 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/5 overflow-hidden ring-1 ring-inset ring-white/5'>
+        <div className='overflow-x-auto custom-scrollbar'>
           <table className='w-full text-left border-collapse'>
             <thead>
-              <tr className='bg-slate-50/50 border-b border-slate-100 text-xs font-bold text-slate-400 uppercase tracking-wider'>
-                <th className='p-6'>Huésped</th>
-                <th className='p-6'>Habitación</th>
-                <th className='p-6'>Fechas</th>
-                <th className='p-6'>Estado</th>
-                <th className='p-6 text-right'>Total</th>
+              <tr className='bg-zinc-950/80 border-b border-white/5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest'>
+                <th className='p-6'>Identidad Huésped</th>
+                <th className='p-6'>Asignación Física</th>
+                <th className='p-6'>Ventana Temporal</th>
+                <th className='p-6'>Estado Transaccional</th>
+                <th className='p-6 text-right'>Liquidación Total</th>
               </tr>
             </thead>
-            <tbody className='divide-y divide-slate-50'>
+            <tbody className='divide-y divide-white/5'>
               {entries.map((entry) => (
                 <motion.tr
                   key={entry.id}
                   initial={{ opacity: 0 }}
                   animate={{ opacity: 1 }}
-                  className='hover:bg-slate-50/50 transition-colors group'
+                  className='hover:bg-white/[0.02] transition-colors group'
                 >
                   <td className='p-6'>
-                    <div className='flex items-center gap-3'>
-                      <div className='w-10 h-10 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 group-hover:bg-white group-hover:shadow-sm transition-all'>
-                        <User size={18} />
+                    <div className='flex items-center gap-3.5'>
+                      <div className='size-10 rounded-2xl bg-zinc-800/50 border border-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-indigo-500/10 group-hover:text-indigo-400 group-hover:border-indigo-500/20 transition-all'>
+                        <User className="size-4 stroke-[2]" />
                       </div>
                       <div>
-                        <div className='font-bold text-slate-800'>
-                          {entry.guests?.full_name || 'Desconocido'}
+                        <div className='font-bold text-zinc-200 group-hover:text-white transition-colors'>
+                          {entry.guests?.full_name || 'Huésped no indexado'}
                         </div>
-                        <div className='text-xs text-slate-400 font-mono'>
-                          {entry.guests?.doc_number}
+                        <div className='text-[10px] text-zinc-500 font-mono tracking-wider mt-0.5'>
+                          DOC: {entry.guests?.doc_number || 'N/A'}
                         </div>
                       </div>
                     </div>
                   </td>
 
                   <td className='p-6'>
-                    <div className='flex items-center gap-2 text-slate-600 font-medium'>
-                      <BedDouble
-                        size={16}
-                        className='text-hospeda-400'
-                      />
-                      {entry.rooms?.name || 'N/A'}
+                    <div className='flex items-center gap-2.5 text-zinc-300 font-medium'>
+                      <BedDouble size={16} className='text-zinc-600' />
+                      {entry.rooms?.name || 'Nodo No Asignado'}
                     </div>
                   </td>
 
                   <td className='p-6'>
-                    <div className='flex flex-col text-sm'>
-                      <span className='flex items-center gap-2 text-slate-600'>
-                        <span className='w-1.5 h-1.5 rounded-full bg-emerald-400'></span>
+                    <div className='flex flex-col text-xs font-mono gap-1.5'>
+                      <span className='flex items-center gap-2 text-zinc-300'>
+                        <span className='size-1.5 rounded-full bg-emerald-500/80 shadow-[0_0_5px_rgba(16,185,129,0.5)]'></span>
                         {entry.check_in}
                       </span>
-                      <span className='flex items-center gap-2 text-slate-400 mt-1'>
-                        <span className='w-1.5 h-1.5 rounded-full bg-slate-300'></span>
+                      <span className='flex items-center gap-2 text-zinc-500'>
+                        <span className='size-1.5 rounded-full bg-zinc-700'></span>
                         {entry.check_out}
                       </span>
                     </div>
                   </td>
 
                   <td className='p-6'>
-                    <span
-                      className={`px-3 py-1 rounded-full text-[10px] font-bold uppercase border ${getStatusStyle(entry.status)}`}
-                    >
+                    <span className={cn("px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border", getStatusStyle(entry.status))}>
                       {getStatusLabel(entry.status)}
                     </span>
                   </td>
 
                   <td className='p-6 text-right'>
-                    <div className='font-display font-bold text-slate-800'>
+                    <div className='font-display font-bold text-zinc-200'>
                       ${entry.total_price.toLocaleString()}
                     </div>
                   </td>
@@ -197,13 +198,13 @@ const ForensicBookPanel = ({ initialData }: ForensicBookPanelProps) => {
           </table>
         </div>
 
+        {/* Empty State Nativo */}
         {entries.length === 0 && (
-          <div className='p-20 text-center text-slate-400 flex flex-col items-center'>
-            <CalendarDays
-              size={48}
-              className='mb-4 opacity-50'
-            />
-            <p>No se encontraron registros forenses.</p>
+          <div className='p-20 text-center flex flex-col items-center bg-zinc-950/30'>
+            <CalendarDays className='size-12 mb-4 stroke-[1] text-zinc-600' />
+            <p className="text-zinc-400 font-mono text-sm uppercase tracking-widest">
+              El motor de búsqueda no encontró registros coincidentes.
+            </p>
           </div>
         )}
       </div>
@@ -211,4 +212,23 @@ const ForensicBookPanel = ({ initialData }: ForensicBookPanelProps) => {
   );
 };
 
-export default ForensicBookPanel;
+// ==========================================
+// BLOQUE 4: COMPONENTE CONTENEDOR (Máquina de Estados)
+// ==========================================
+
+export default function ForensicBookPanel({ initialData }: ForensicBookPanelContainerProps) {
+  const { entries, searchTerm, statusFilter, handleFilter, totalRevenue } = useForensicBook(initialData);
+
+  // 🛡️ Zero-Trust Data Parsing (Protección estricta de Memoria)
+  const safeEntries = useMemo(() => Array.isArray(entries) ? entries : [], [entries]);
+
+  return (
+    <ForensicBookPanelView 
+      entries={safeEntries}
+      searchTerm={searchTerm}
+      statusFilter={statusFilter}
+      totalRevenue={totalRevenue}
+      onFilter={handleFilter}
+    />
+  );
+}

@@ -5,18 +5,22 @@ import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { cookies } from 'next/headers';
 
-// 🛡️ CLIENTE PRIVILEGIADO GLOBAL (Solo para Server Actions seguros)
+// 🛡️ CLIENTE PRIVILEGIADO GLOBAL (Admin Tier)
 const supabaseAdmin = createSupabaseClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
+// ==========================================
+// BLOQUE 1: INTERFACES Y CONTRATOS
+// ==========================================
+
 interface BookingPayload {
   hotel_id: string;
   type: 'booking' | 'maintenance';
-  guestName: string;
-  guestDoc: string;
-  guestPhone: string;
+  guestName?: string;
+  guestDoc?: string;
+  guestPhone?: string;
   guestEmail?: string;
   roomId: string;
   checkIn: string;
@@ -38,17 +42,6 @@ interface PendingBookingPayload {
   amount: number; 
 }
 
-const UPSELL_PRICES: Record<string, number> = {
-  wine: 75000,
-  breakfast: 45000,
-  romantic: 120000,
-};
-
-// 💰 REGLAS DE NEGOCIO HOSPEDASUITE (CAMINO B)
-const PLATFORM_OTA_FEE_PERCENTAGE = 0.10; // 10% de comisión OTA
-const PLATFORM_DIRECT_FEE_PERCENTAGE = 0.00; // 0% de comisión canal directo
-const PLATFORM_UPSELL_FEE_PERCENTAGE = 0.03; // 🚀 NUEVO: 3% por ventas generadas por IA
-
 async function getActiveStaffId(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
@@ -58,35 +51,86 @@ async function getActiveStaffId(): Promise<string | null> {
       return staffData.id || null;
     }
   } catch (error) {
-    console.warn('Fallo al parsear la cookie del staff:', error);
+    console.warn('Fallo al parsear la sesión del staff:', error);
   }
   return null;
 }
 
-// ------------------------------------------------------------------
-// ACCIÓN 1: Crear Reserva (Desde el Admin Dashboard / Recepción)
-// ------------------------------------------------------------------
+// ==========================================
+// BLOQUE 2: ACCIONES CORE (ADMIN)
+// ==========================================
+
+/**
+ * 🛡️ ACCIÓN CRÍTICA CORREGIDA: Actualiza identidad y estadía.
+ * Resuelve el fallo de columna inexistente al separar 'guests' de 'bookings'.
+ */
+export async function updateBookingDetailsAction(bookingId: string, data: any) {
+  try {
+    const currentHotel = await getCurrentHotel();
+    if (!currentHotel) throw new Error('No autorizado');
+
+    // 1. Obtener la referencia del huésped asociado a esta reserva
+    const { data: booking, error: fetchError } = await supabaseAdmin
+      .from('bookings')
+      .select('guest_id')
+      .eq('id', bookingId)
+      .eq('hotel_id', currentHotel.id)
+      .single();
+
+    if (fetchError || !booking) throw new Error('Reserva no localizada en el ledger.');
+
+    // 2. Si hay un huésped vinculado, actualizar su perfil de identidad en la tabla GUESTS
+    if (booking.guest_id) {
+      const { error: guestError } = await supabaseAdmin
+        .from('guests')
+        .update({
+          full_name: data.guestName,
+          doc_number: data.guestDoc,
+          phone: data.guestPhone,
+          email: data.guestEmail,
+        })
+        .eq('id', booking.guest_id)
+        .eq('hotel_id', currentHotel.id);
+
+      if (guestError) throw new Error('Fallo al actualizar perfil del huésped: ' + guestError.message);
+    }
+
+    // 3. Actualizar los parámetros de la reserva en la tabla BOOKINGS (Sin la columna inexistente 'guest_name')
+    const { error: updateError } = await supabaseAdmin
+      .from('bookings')
+      .update({
+        total_price: data.price,
+        check_in: data.checkIn,
+        check_out: data.checkOut,
+        room_id: data.roomId,
+      })
+      .eq('id', bookingId)
+      .eq('hotel_id', currentHotel.id);
+
+    if (updateError) throw updateError;
+
+    revalidatePath('/dashboard/calendar');
+    return { success: true };
+    
+  } catch (error: any) {
+    console.error("[CRITICAL] Fallo en Transmisión de Datos:", error.message);
+    return { success: false, error: error.message };
+  }
+}
+
 export async function createBookingAction(data: BookingPayload) {
   try {
     const currentHotel = await getCurrentHotel();
     if (!currentHotel || currentHotel.id !== data.hotel_id) {
-      throw new Error('Violación de Seguridad: No tienes permisos para este hotel.');
+      throw new Error('Violación de Seguridad: Acceso denegado al nodo.');
     }
 
     const staffId = await getActiveStaffId();
     let guestId = null;
 
-    const cookieStore = await cookies();
-    const sourceCookie = cookieStore.get('hospeda_source')?.value;
-
-    let bookingSource = data.source;
-    if (!bookingSource) {
-      if (staffId) bookingSource = 'admin';
-      else if (sourceCookie === 'ota') bookingSource = 'ota';
-      else bookingSource = 'direct';
-    }
-
     if (data.type === 'booking') {
+      if (!data.guestDoc) throw new Error('Documento mandatorio para reservas.');
+      
       const { data: existingGuest } = await supabaseAdmin
         .from('guests')
         .select('id')
@@ -106,10 +150,9 @@ export async function createBookingAction(data: BookingPayload) {
               email: data.guestEmail,
               hotel_id: currentHotel.id,
             }])
-          .select()
-          .single();
+          .select().single();
 
-        if (guestError) throw new Error('Error creando perfil del huésped: ' + guestError.message);
+        if (guestError) throw new Error('Fallo al indexar identidad: ' + guestError.message);
         guestId = newGuest.id;
       }
     }
@@ -122,14 +165,17 @@ export async function createBookingAction(data: BookingPayload) {
         check_out: data.checkOut,
         status: data.type === 'booking' ? 'confirmed' : 'maintenance',
         total_price: data.price,
-        platform_fee: 0, // Reservas de admin no pagan fee
         staff_id: staffId, 
-        source: bookingSource, 
+        source: data.source || 'admin', 
       }]);
 
-    if (bookingError) throw new Error('Error registrando la reserva: ' + bookingError.message);
+    if (bookingError) {
+      if (bookingError.message.includes('prevent_double_booking') || bookingError.code === '23P04') {
+        throw new Error('prevent_double_booking');
+      }
+      throw new Error('Error de inserción: ' + bookingError.message);
+    }
 
-    revalidatePath('/dashboard');
     revalidatePath('/dashboard/calendar');
     return { success: true };
   } catch (error: any) {
@@ -137,29 +183,10 @@ export async function createBookingAction(data: BookingPayload) {
   }
 }
 
-// ------------------------------------------------------------------
-// ACCIÓN 2: Mover Reserva (Drag & Drop en Calendario)
-// ------------------------------------------------------------------
 export async function updateBookingDatesAction(bookingId: string, newRoomId: string, newCheckIn: string, newCheckOut: string) {
   try {
     const currentHotel = await getCurrentHotel();
     if (!currentHotel) throw new Error('No autorizado');
-
-    const { data: overlappingBookings, error: overlapError } = await supabaseAdmin
-      .from('bookings')
-      .select('id')
-      .eq('hotel_id', currentHotel.id)
-      .eq('room_id', newRoomId)
-      .in('status', ['confirmed', 'checked_in'])
-      .neq('id', bookingId)
-      .lt('check_in', newCheckOut) 
-      .gt('check_out', newCheckIn); 
-
-    if (overlapError) throw new Error('Error al validar disponibilidad en BD.');
-
-    if (overlappingBookings && overlappingBookings.length > 0) {
-      return { success: false, error: 'Las fechas chocan con otra reserva.' };
-    }
 
     const { error: updateError } = await supabaseAdmin
       .from('bookings')
@@ -167,9 +194,13 @@ export async function updateBookingDatesAction(bookingId: string, newRoomId: str
       .eq('id', bookingId)
       .eq('hotel_id', currentHotel.id);
 
-    if (updateError) throw new Error('Error en BD: ' + updateError.message);
+    if (updateError) {
+      if (updateError.message.includes('prevent_double_booking') || updateError.code === '23P04') {
+        throw new Error('prevent_double_booking'); 
+      }
+      throw new Error('Fallo de Mutación: ' + updateError.message);
+    }
 
-    revalidatePath('/dashboard');
     revalidatePath('/dashboard/calendar');
     return { success: true };
   } catch (error: any) {
@@ -177,13 +208,10 @@ export async function updateBookingDatesAction(bookingId: string, newRoomId: str
   }
 }
 
-// ------------------------------------------------------------------
-// ACCIÓN 3: Cancelar Reserva
-// ------------------------------------------------------------------
 export async function cancelBookingAction(bookingId: string) {
   try {
     const currentHotel = await getCurrentHotel();
-    if (!currentHotel) throw new Error('Violación de Seguridad: No autorizado.');
+    if (!currentHotel) throw new Error('No autorizado.');
 
     const { error: cancelError } = await supabaseAdmin
       .from('bookings')
@@ -191,9 +219,8 @@ export async function cancelBookingAction(bookingId: string) {
       .eq('id', bookingId)
       .eq('hotel_id', currentHotel.id);
 
-    if (cancelError) throw new Error('Error al cancelar: ' + cancelError.message);
+    if (cancelError) throw new Error('Error al purgar nodo: ' + cancelError.message);
 
-    revalidatePath('/dashboard');
     revalidatePath('/dashboard/calendar');
     return { success: true };
   } catch (error: any) {
@@ -201,9 +228,6 @@ export async function cancelBookingAction(bookingId: string) {
   }
 }
 
-// ------------------------------------------------------------------
-// ACCIÓN 4: Clonar Reserva (Copiar y Pegar)
-// ------------------------------------------------------------------
 export async function duplicateBookingAction(bookingId: string, newRoomId: string, newCheckIn: string, newCheckOut: string) {
   try {
     const currentHotel = await getCurrentHotel();
@@ -211,48 +235,34 @@ export async function duplicateBookingAction(bookingId: string, newRoomId: strin
 
     const staffId = await getActiveStaffId();
 
-    const { data: overlappingBookings, error: overlapError } = await supabaseAdmin
-      .from('bookings')
-      .select('id')
-      .eq('hotel_id', currentHotel.id)
-      .eq('room_id', newRoomId)
-      .in('status', ['confirmed', 'checked_in'])
-      .lt('check_in', newCheckOut)
-      .gt('check_out', newCheckIn);
-
-    if (overlapError) throw new Error('Error al validar disponibilidad en BD.');
-
-    if (overlappingBookings && overlappingBookings.length > 0) {
-      return { success: false, error: 'Las fechas chocan con otra reserva.' };
-    }
-
-    const { data: originalBooking, error: fetchError } = await supabaseAdmin
+    const { data: original, error: fetchErr } = await supabaseAdmin
       .from('bookings')
       .select('*')
       .eq('id', bookingId)
       .eq('hotel_id', currentHotel.id)
       .single();
 
-    if (fetchError || !originalBooking) throw new Error('No se pudo leer la reserva original.');
+    if (fetchErr || !original) throw new Error('Origen inaccesible.');
 
-    const { error: insertError } = await supabaseAdmin
-      .from('bookings')
-      .insert({
+    const { error: insErr } = await supabaseAdmin.from('bookings').insert({
         hotel_id: currentHotel.id,
         room_id: newRoomId,
-        guest_id: originalBooking.guest_id, 
+        guest_id: original.guest_id, 
         check_in: newCheckIn,
         check_out: newCheckOut,
-        status: originalBooking.status,     
-        total_price: originalBooking.total_price, 
-        platform_fee: originalBooking.platform_fee,
+        status: original.status,     
+        total_price: original.total_price, 
         staff_id: staffId, 
         source: 'admin',   
       });
 
-    if (insertError) throw new Error('Error al crear el clon: ' + insertError.message);
+    if (insErr) {
+      if (insErr.message.includes('prevent_double_booking') || insErr.code === '23P04') {
+        throw new Error('prevent_double_booking');
+      }
+      throw new Error('Fallo de clonación: ' + insErr.message);
+    }
 
-    revalidatePath('/dashboard');
     revalidatePath('/dashboard/calendar');
     return { success: true };
   } catch (error: any) {
@@ -260,54 +270,22 @@ export async function duplicateBookingAction(bookingId: string, newRoomId: strin
   }
 }
 
-// ------------------------------------------------------------------
-// 🚨 ACCIÓN 5: Crear Reserva PENDIENTE B2C (Zero-Trust + Wompi)
-// ------------------------------------------------------------------
 export async function createPendingBookingAction(payload: PendingBookingPayload) {
   try {
-    // 1. 🛑 BARRERA ZERO-TRUST: Jamás confíes en el precio que envía el Frontend
     const { data: room, error: roomError } = await supabaseAdmin
       .from('rooms')
       .select('id, hotel_id, price')
       .eq('id', payload.roomId)
       .single();
 
-    if (roomError || !room) {
-      throw new Error('Habitación no encontrada o inactiva.');
-    }
+    if (roomError || !room) throw new Error('Unidad inactiva.');
 
-    // 2. Cálculo de Noches (Matemática Inmutable)
-    const checkInDate = new Date(`${payload.checkin}T12:00:00Z`);
-    const checkOutDate = new Date(`${payload.checkout}T12:00:00Z`);
-    const diffTime = Math.abs(checkOutDate.getTime() - checkInDate.getTime());
-    const totalNights = Math.max(1, Math.ceil(diffTime / (1000 * 60 * 60 * 24)));
+    const checkIn = new Date(`${payload.checkin}T12:00:00Z`);
+    const checkOut = new Date(`${payload.checkout}T12:00:00Z`);
+    const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
 
-    // 3. AISLAMIENTO FINANCIERO: Hospedaje vs Upsells
-    const verifiedAccommodationTotal = room.price * totalNights;
+    const verifiedTotal = room.price * nights;
     
-    let verifiedUpsellsTotal = 0;
-    if (payload.upsells && payload.upsells.length > 0) {
-      payload.upsells.forEach(item => {
-        if (UPSELL_PRICES[item]) verifiedUpsellsTotal += UPSELL_PRICES[item];
-      });
-    }
-
-    const finalVerifiedTotal = verifiedAccommodationTotal + verifiedUpsellsTotal;
-
-    // 4. 💸 MOTOR DE LIQUIDACIÓN DE LA OTA (Su modelo de negocio expandido)
-    let calculatedPlatformFee = 0;
-    
-    if (payload.source === 'ota') {
-      calculatedPlatformFee = verifiedAccommodationTotal * PLATFORM_OTA_FEE_PERCENTAGE;
-    } else if (payload.source === 'direct') {
-      calculatedPlatformFee = verifiedAccommodationTotal * PLATFORM_DIRECT_FEE_PERCENTAGE;
-    }
-
-    // 🚀 Lógica de Comisión por Upselling (Aplica sin importar el origen de la reserva)
-    const upsellingFee = verifiedUpsellsTotal * PLATFORM_UPSELL_FEE_PERCENTAGE;
-    calculatedPlatformFee += upsellingFee; // Se suma al libro mayor
-
-    // 5. Gestión del Huésped
     let guestId = null;
     const { data: existingGuest } = await supabaseAdmin
       .from('guests')
@@ -319,7 +297,7 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
     if (existingGuest) {
       guestId = existingGuest.id;
     } else {
-      const { data: newGuest, error: guestError } = await supabaseAdmin
+      const { data: newG, error: gErr } = await supabaseAdmin
         .from('guests')
         .insert([{
           hotel_id: room.hotel_id,
@@ -328,15 +306,13 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
           email: payload.email,
           phone: payload.phone
         }])
-        .select('id')
-        .single();
+        .select('id').single();
         
-      if (guestError || !newGuest) throw new Error('Fallo al registrar el huésped.');
-      guestId = newGuest.id;
+      if (gErr) throw new Error('Fallo de indexación.');
+      guestId = newG.id;
     }
 
-    // 6. INSERCIÓN DE LA RESERVA CON TRAZABILIDAD FINANCIERA
-    const { data: newBooking, error: bookingError } = await supabaseAdmin
+    const { data: newB, error: bErr } = await supabaseAdmin
       .from('bookings')
       .insert([{
         hotel_id: room.hotel_id,
@@ -344,42 +320,30 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
         guest_id: guestId, 
         check_in: payload.checkin,
         check_out: payload.checkout,
-        total_price: finalVerifiedTotal,
-        platform_fee: calculatedPlatformFee, // 💰 SU DINERO QUEDA REGISTRADO AQUÍ
+        total_price: verifiedTotal,
         status: 'PENDING',
         source: payload.source,
       }])
-      .select('id')
-      .single();
+      .select('id').single();
 
-    if (bookingError || !newBooking) {
-      console.error("[CRITICAL] Error al insertar reserva:", bookingError);
-      return { success: false, error: 'No se pudo registrar la reserva en el sistema central.' };
+    if (bErr) {
+      if (bErr.message.includes('prevent_double_booking') || bErr.code === '23P04') {
+        throw new Error('prevent_double_booking');
+      }
+      throw new Error('Fallo de escritura transaccional.');
     }
 
-    // 7. ORDEN DE COBRO (Para Wompi)
-    const { data: paymentLink, error: paymentError } = await supabaseAdmin
+    const { data: link, error: lErr } = await supabaseAdmin
       .from('payment_links')
-      .insert([{
-        reservation_id: newBooking.id,
-        amount: finalVerifiedTotal,
-        status: 'PENDING',
-      }])
-      .select('id')
-      .single();
+      .insert([{ reservation_id: newB.id, amount: verifiedTotal, status: 'PENDING' }])
+      .select('id').single();
 
-    if (paymentError || !paymentLink) {
-      console.error("[CRITICAL] Error al crear link de pago:", paymentError);
-      return { success: false, error: 'No se pudo generar la orden de cobro.' };
-    }
+    if (lErr) throw new Error('Fallo al generar orden de liquidación.');
 
-    revalidatePath('/dashboard');
     revalidatePath('/dashboard/calendar');
-
-    return { success: true, bookingId: paymentLink.id };
+    return { success: true, bookingId: link.id };
 
   } catch (error: any) {
-    console.error("[CRITICAL] Fatal Server Action Error:", error.message);
     return { success: false, error: error.message };
   }
 }

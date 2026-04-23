@@ -85,7 +85,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
             </div>
             <p className='text-4xl font-bold text-zinc-50 flex items-baseline gap-1'>
               <span className='text-xl text-zinc-500'>$</span>
-              {stats.totalRevenue.toLocaleString()}
+              {(stats?.totalRevenue || 0).toLocaleString()}
             </p>
           </div>
         </motion.div>
@@ -102,9 +102,9 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
               <h3 className='font-semibold text-zinc-400 text-xs tracking-widest uppercase'>Densidad Actual</h3>
             </div>
             <div className='flex items-end gap-3'>
-              <p className='text-4xl font-bold text-zinc-50'>{stats.occupancyRate}%</p>
+              <p className='text-4xl font-bold text-zinc-50'>{stats?.occupancyRate || 0}%</p>
               <div className="flex-1 h-1.5 bg-zinc-800 rounded-full mb-2.5 overflow-hidden">
-                <div className="h-full bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${stats.occupancyRate}%` }}></div>
+                <div className="h-full bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${stats?.occupancyRate || 0}%` }}></div>
               </div>
             </div>
           </div>
@@ -121,7 +121,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
               </div>
               <h3 className='font-semibold text-zinc-400 text-xs tracking-widest uppercase'>Contratos Activos</h3>
             </div>
-            <p className='text-4xl font-bold text-zinc-50'>{stats.totalBookings}</p>
+            <p className='text-4xl font-bold text-zinc-50'>{stats?.totalBookings || 0}</p>
           </div>
         </motion.div>
 
@@ -136,7 +136,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
           <h3 className='text-sm font-semibold text-zinc-400 mb-6 uppercase tracking-wider'>Evolución de Ingresos (Mes en Curso)</h3>
           <div className='h-[300px] w-full'>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={stats.chartData} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
+              <BarChart data={stats?.chartData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
                 <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'inherit' }} dy={10} />
                 <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'inherit' }} tickFormatter={(value) => `$${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
@@ -162,7 +162,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
           </h3>
 
           <div className='flex-1 space-y-3 relative z-10'>
-            {stats.upcomingArrivals.length === 0 ? (
+            {!stats?.upcomingArrivals || stats.upcomingArrivals.length === 0 ? (
               <div className="h-full flex flex-col items-center justify-center text-zinc-600 gap-3">
                 <BedDouble className="size-8 stroke-[1]" />
                 <p className="font-lora italic text-sm">Sin vectores de llegada próximos.</p>
@@ -171,14 +171,19 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
               stats.upcomingArrivals.map((booking) => (
                 <div key={booking.id} 
                   className='bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3.5 hover:bg-zinc-800/80 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between group cursor-default'>
-                  <div>
-                    <p className='font-medium text-sm text-zinc-200 group-hover:text-white transition-colors'>{booking.guests?.full_name}</p>
-                    <p className='text-xs text-zinc-500 mt-1 flex items-center gap-1.5'>
-                      <BedDouble className="size-3" /> {booking.rooms?.name}
+                  <div className="min-w-0 pr-2">
+                    <p className='font-medium text-sm text-zinc-200 group-hover:text-white transition-colors truncate'>
+                      {booking.guests?.full_name || 'Huésped no registrado'}
+                    </p>
+                    <p className='text-xs text-zinc-500 mt-1 flex items-center gap-1.5 truncate'>
+                      <BedDouble className="size-3 shrink-0" /> {booking.rooms?.name || 'Asignación P.'}
                     </p>
                   </div>
-                  <div className='text-right'>
-                    <p className='text-xs font-mono text-zinc-400 group-hover:text-indigo-400 transition-colors'>{booking.check_in.split('-').reverse().join('/')}</p>
+                  {/* 🚨 PARCHE ZERO-TRUST: Evaluación estricta de nulidad antes del split() */}
+                  <div className='text-right shrink-0'>
+                    <p className='text-xs font-mono text-zinc-400 group-hover:text-indigo-400 transition-colors'>
+                      {booking.check_in ? booking.check_in.split('-').reverse().join('/') : 'Sin Fecha'}
+                    </p>
                     <ArrowRight className='size-3.5 text-zinc-600 inline-block mt-1 group-hover:translate-x-1 transition-transform' />
                   </div>
                 </div>
@@ -202,7 +207,6 @@ export default function OverviewPanel({ hotelId }: OverviewPanelContainerProps) 
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    // Patrón isMounted mitigador de Memory Leaks en React Concurrente
     let isMounted = true;
 
     async function loadStats() {
@@ -212,7 +216,7 @@ export default function OverviewPanel({ hotelId }: OverviewPanelContainerProps) 
         
         if (!isMounted) return;
 
-        if (response.success) {
+        if (response.success && response.data) {
           setStats(response.data);
         } else {
           setError(response.error || 'Fallo en la resolución de métricas.');
@@ -228,7 +232,6 @@ export default function OverviewPanel({ hotelId }: OverviewPanelContainerProps) 
 
     loadStats();
 
-    // Lógica intocable: Suscripción Realtime a Supabase
     const supabase = createClient();
     const channel = supabase
       .channel(`dashboard-sync-${hotelId}`)
@@ -241,7 +244,6 @@ export default function OverviewPanel({ hotelId }: OverviewPanelContainerProps) 
           filter: `hotel_id=eq.${hotelId}`,
         },
         () => {
-          // Re-fetch silencioso al detectar mutación en DB
           loadStats();
         }
       )
@@ -275,8 +277,11 @@ export default function OverviewPanel({ hotelId }: OverviewPanelContainerProps) 
     );
   }
 
-  const isCompletelyEmpty = stats.totalRevenue === 0 && stats.totalBookings === 0 && stats.upcomingArrivals.length === 0;
+  // Prevención de TypeError si los nodos principales no existen
+  const isCompletelyEmpty = 
+    (!stats.totalRevenue || stats.totalRevenue === 0) && 
+    (!stats.totalBookings || stats.totalBookings === 0) && 
+    (!stats.upcomingArrivals || stats.upcomingArrivals.length === 0);
 
-  // Delegación pura al componente Presentacional
   return <OverviewPanelView stats={stats} isCompletelyEmpty={isCompletelyEmpty} />;
 }

@@ -1,12 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   processPaymentAction, 
   getAccountStatementAction, 
   finalizeCheckoutAction 
 } from '@/app/actions/payments';
+
+// ==========================================
+// BLOQUE 1: INTERFACES Y CONTRATOS ESTRICTOS
+// ==========================================
 
 export interface BookingSummary {
   id: string;
@@ -29,44 +33,81 @@ export interface AccountStatement {
   };
 }
 
+interface PaymentForm {
+  amount: number;
+  method: string;
+  notes: string;
+}
+
+// ==========================================
+// BLOQUE 2: CAPA DE NORMALIZACIÓN (Zero-Trust)
+// ==========================================
+
+/**
+ * 🛡️ ACL (Anti-Corruption Layer): Garantiza que los datos financieros 
+ * tengan valores por defecto seguros si el servidor falla o devuelve data parcial.
+ */
+const sanitizeStatement = (data: any): AccountStatement => ({
+  roomArgs: Number(data?.roomArgs) || 0,
+  serviceCharges: Number(data?.serviceCharges) || 0,
+  totalPaid: Number(data?.totalPaid) || 0,
+  balance: Number(data?.balance) || 0,
+  details: {
+    services: Array.isArray(data?.details?.services) ? data.details.services : [],
+    payments: Array.isArray(data?.details?.payments) ? data.details.payments : [],
+  }
+});
+
+// ==========================================
+// BLOQUE 3: LÓGICA DEL HOOK (Motor de Estado)
+// ==========================================
+
 export const useCheckout = (activeBookings: BookingSummary[]) => {
   const router = useRouter();
+  
+  // Estados de Dominio Criptográfico
   const [selectedBooking, setSelectedBooking] = useState<BookingSummary | null>(null);
   const [statement, setStatement] = useState<AccountStatement | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
-  const [paymentForm, setPaymentForm] = useState({
+  // Estado de UI (Formulario de Liquidación)
+  const [paymentForm, setPaymentForm] = useState<PaymentForm>({
     amount: 0,
     method: 'cash',
     notes: '',
   });
 
-  const loadAccountForBooking = async (booking: BookingSummary) => {
+  // ⚡ MEMOIZACIÓN: loadAccountForBooking (Carga de Nodo Financiero)
+  const loadAccountForBooking = useCallback(async (booking: BookingSummary) => {
     setIsLoading(true);
     setSelectedBooking(booking);
 
     try {
-      // 🛡️ Invocación segura a Server Action (Cero exposición de BD)
       const res = await getAccountStatementAction(booking.id, booking.room.id, booking.total_price);
       
-      if (!res.success || !res.statement) throw new Error(res.error);
+      if (!res.success) throw new Error(res.error || 'Falla en la resolución de cuenta.');
 
-      setStatement(res.statement);
-      setPaymentForm((prev) => ({
+      // Inyección de seguridad Zero-Trust: Blindaje de Tipos
+      const cleanStatement = sanitizeStatement(res.statement);
+      setStatement(cleanStatement);
+
+      // Actualización atómica del monto sugerido para evitar desajustes en UI
+      setPaymentForm(prev => ({
         ...prev,
-        amount: res.statement.balance > 0 ? res.statement.balance : 0,
+        amount: cleanStatement.balance > 0 ? cleanStatement.balance : 0,
       }));
     } catch (e: any) {
-      console.error(e);
-      alert('Error cargando cuenta: ' + e.message);
+      console.error("[CRITICAL] Billing Resolve Error:", e);
+      alert('Error en la Bóveda de Datos: ' + e.message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const processPayment = async () => {
+  // ⚡ MEMOIZACIÓN: processPayment (Ejecución de Abono)
+  const processPayment = useCallback(async () => {
     if (!selectedBooking || !statement) return;
-    if (paymentForm.amount <= 0) return alert('El monto debe ser mayor a 0');
+    if (paymentForm.amount <= 0) return alert('El vector de pago debe ser mayor a 0');
 
     setIsLoading(true);
     try {
@@ -74,49 +115,61 @@ export const useCheckout = (activeBookings: BookingSummary[]) => {
         booking_id: selectedBooking.id,
         amount: paymentForm.amount,
         method: paymentForm.method,
-        notes: paymentForm.notes || 'Abono en Checkout',
+        notes: paymentForm.notes || 'Abono en Terminal de Salida',
       });
 
       if (!result.success) throw new Error(result.error);
 
+      // Recarga atómica de la cuenta tras el registro de abono para sincronía absoluta
       await loadAccountForBooking(selectedBooking);
-      alert('✅ Pago registrado con auditoría');
-      setPaymentForm((prev) => ({ ...prev, amount: 0, notes: '' }));
+      alert('✅ Transacción firmada y registrada en el Ledger.');
+      
+      setPaymentForm(prev => ({ ...prev, amount: 0, notes: '' }));
     } catch (e: any) {
-      alert(e.message);
+      alert('Violación de Integridad en el Pago: ' + e.message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedBooking, statement, paymentForm, loadAccountForBooking]);
 
-  const finalizeCheckout = async () => {
+  // ⚡ MEMOIZACIÓN: finalizeCheckout (Cierre de Folio y Liberación)
+  const finalizeCheckout = useCallback(async () => {
     if (!selectedBooking || !statement) return;
 
+    // Lógica de validación de riesgo financiero (Protocolo de Alerta)
     if (statement.balance > 0) {
-      if (!confirm(`⚠️ Hay un saldo pendiente de $${statement.balance.toLocaleString()}. ¿Cerrar cuenta de todas formas?`)) return;
+      const confirmForced = confirm(
+        `⚠️ ALERTA DE RIESGO: El folio presenta un saldo de $${statement.balance.toLocaleString()}. ¿Desea autorizar un Checkout Forzado?`
+      );
+      if (!confirmForced) return;
     } else {
-      if (!confirm('¿Confirmar salida del huésped y liberar habitación?')) return;
+      if (!confirm('¿Confirmar liberación de unidad y cierre definitivo de folio?')) return;
     }
 
     setIsLoading(true);
     try {
       const serviceIds = statement.details.services.map((s) => s.id);
       
-      // 🛡️ Mutación delegada al servidor (Previene inyección de estado)
-      const result = await finalizeCheckoutAction(selectedBooking.id, selectedBooking.room.id, serviceIds);
+      const result = await finalizeCheckoutAction(
+        selectedBooking.id, 
+        selectedBooking.room.id, 
+        serviceIds
+      );
       
       if (!result.success) throw new Error(result.error);
 
-      alert('👋 Check-out exitoso. Habitación marcada como SUCIA.');
+      alert('👋 Proceso de Salida Completado. Unidad transmutada a estado "DIRTY" (Mantenimiento).');
+      
+      // Desencadenar re-renderizado global del RSC
       router.refresh();
       setSelectedBooking(null);
       setStatement(null);
     } catch (e: any) {
-      alert('Error crítico en checkout: ' + e.message);
+      alert('Falla Crítica en Transmisión de Cierre: ' + e.message);
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [selectedBooking, statement, router]);
 
   return {
     selectedBooking,

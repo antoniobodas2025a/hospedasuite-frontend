@@ -1,14 +1,24 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { createBookingAction, updateBookingDatesAction, cancelBookingAction, duplicateBookingAction } from '@/app/actions/bookings';
+import { 
+  createBookingAction, 
+  updateBookingDatesAction, 
+  cancelBookingAction, 
+  duplicateBookingAction,
+  updateBookingDetailsAction // 🚨 Inyectado: Nueva acción para mutar identidad del huésped
+} from '@/app/actions/bookings';
 import { createClient } from '@/utils/supabase/client';
+
+// ==========================================
+// BLOQUE 1: TIPADO Y ESTRUCTURAS
+// ==========================================
 
 export type BookingStatus = 'confirmed' | 'checked_in' | 'checked_out' | 'maintenance' | 'cancelled';
 
 export interface Booking {
-  id: string; // 🚨 ARQUITECTURA CLEAN: Forzamos a que el estado interno sea siempre estricto
+  id: string; 
   room_id: string;
   check_in: string;
   check_out: string;
@@ -34,29 +44,32 @@ export interface BookingForm {
   source?: 'direct' | 'ota' | 'admin';
 }
 
-// 🛡️ CAPA DE ANTICORRUPCIÓN (ACL): Sanitiza los datos de entrada una sola vez (O(N))
 const normalizeBooking = (b: any): Booking => ({
   ...b,
   id: String(b.id),
   room_id: String(b.room_id),
 });
 
+// ==========================================
+// BLOQUE 2: MOTOR DE ESTADO (HOOK CERTIFICADO)
+// ==========================================
+
 export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId: string) => {
   const router = useRouter();
 
   const [currentDate, setCurrentDate] = useState(new Date());
-  
-  // Normalizamos al inicializar
   const [bookings, setBookings] = useState<Booking[]>(
     initialBookings.map(normalizeBooking).filter(b => b.status !== 'cancelled')
   );
 
-  // Normalizamos al recibir actualizaciones SSR
+  // Sincronización Server-to-Client
   useEffect(() => {
     setBookings(initialBookings.map(normalizeBooking).filter(b => b.status !== 'cancelled'));
   }, [initialBookings]);
 
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [selectedBookingForEdit, setSelectedBookingForEdit] = useState<Booking | null>(null);
+
   const [bookingForm, setBookingForm] = useState<BookingForm>({
     type: 'booking', guestName: '', guestDoc: '', guestPhone: '', roomId: '',
     checkIn: new Date().toISOString().split('T')[0],
@@ -64,6 +77,7 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
     adults: 1, children: 0, price: 0,
   });
 
+  // Suscripción Realtime (Zero-Trust Sync)
   useEffect(() => {
     if (!hotelId) return;
     const supabase = createClient();
@@ -72,158 +86,135 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
       .on(
         'postgres_changes',
         { event: '*', schema: 'public', table: 'bookings', filter: `hotel_id=eq.${hotelId}` },
-        () => {
-          router.refresh(); 
-        }
+        () => { router.refresh(); }
       )
       .subscribe();
 
     return () => { supabase.removeChannel(channel); };
   }, [hotelId, router]);
 
-  const moveDate = (days: number) => {
-    const newDate = new Date(currentDate);
-    newDate.setDate(newDate.getDate() + days);
-    setCurrentDate(newDate);
-  };
-
-  const goToToday = () => setCurrentDate(new Date());
-
-  // ⚡ RENDIMIENTO ÓPTIMO: Búsqueda sin transformaciones de tipos, seguro para render loop
+  // Query de Matriz O(N)
   const getBookingForDate = (roomId: string, date: Date) => {
-    const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, '0');
-    const day = String(date.getDate()).padStart(2, '0');
-    const dateStr = `${year}-${month}-${day}`;
-
-    return bookings.find((b) => b.room_id === String(roomId) && dateStr >= b.check_in && dateStr < b.check_out && b.status !== 'cancelled');
+    const dStr = date.toISOString().split('T')[0];
+    return bookings.find((b) => b.room_id === String(roomId) && dStr >= b.check_in && dStr < b.check_out);
   };
 
-  const handleCreateBooking = async (e: React.FormEvent) => {
+  // ==========================================
+  // BLOQUE 3: CONTROLADORES DE MUTACIÓN
+  // ==========================================
+
+  const openEditBookingModal = useCallback((booking: Booking) => {
+    setSelectedBookingForEdit(booking);
+    setBookingForm({
+      id: booking.id,
+      type: booking.status === 'maintenance' ? 'maintenance' : 'booking',
+      guestName: booking.guest_name || booking.guests?.full_name || '',
+      guestDoc: booking.guests?.doc_number || '',
+      guestPhone: booking.guests?.phone || '',
+      roomId: booking.room_id,
+      checkIn: booking.check_in,
+      checkOut: booking.check_out,
+      adults: 1,
+      children: 0,
+      price: booking.total_price,
+    });
+    setShowBookingModal(true);
+  }, []);
+
+  const openNewBookingModal = useCallback(() => {
+    setSelectedBookingForEdit(null);
+    setBookingForm({
+      type: 'booking', guestName: '', guestDoc: '', guestPhone: '', roomId: '',
+      checkIn: new Date().toISOString().split('T')[0],
+      checkOut: new Date(Date.now() + 86400000).toISOString().split('T')[0],
+      adults: 1, children: 0, price: 0,
+    });
+    setShowBookingModal(true);
+  }, []);
+
+  const handleSaveBooking = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!hotelId) return alert('Error Crítico: No se ha identificado el Hotel ID.');
+    if (!hotelId) return alert('Violación de Contexto: Hotel ID nulo.');
+    if (!bookingForm.roomId) return alert('Validación: Unidad física requerida.');
 
     try {
-      const result = await createBookingAction({
-        hotel_id: hotelId, type: bookingForm.type, guestName: bookingForm.guestName,
-        guestDoc: bookingForm.guestDoc, guestPhone: bookingForm.guestPhone,
-        guestEmail: bookingForm.guestEmail, roomId: String(bookingForm.roomId),
-        checkIn: bookingForm.checkIn, checkOut: bookingForm.checkOut,
-        price: bookingForm.price, source: 'admin'
-      });
+      const payload = {
+        ...bookingForm,
+        hotel_id: hotelId,
+        guestName: bookingForm.guestName.trim() || undefined,
+        guestDoc: bookingForm.guestDoc.trim() || undefined,
+        source: 'admin' as const
+      };
 
-      if (!result.success) throw new Error(result.error);
+      let result;
+      if (bookingForm.id) {
+        // 🔄 MUTACIÓN: Edición de registro existente
+        result = await updateBookingDetailsAction(bookingForm.id, payload);
+      } else {
+        // 🆕 INSERCIÓN: Creación de nuevo registro
+        result = await createBookingAction(payload);
+      }
 
-      alert('✅ Reserva Creada Exitosamente');
+      if (!result.success) {
+        if (result.error?.includes('prevent_double_booking')) {
+          throw new Error('Colisión Detectada: Espacio ocupado en el Ledger.');
+        }
+        throw new Error(result.error);
+      }
+
+      alert('✅ Transacción Ejecutada');
       setShowBookingModal(false);
-      router.refresh(); 
-
-      setBookingForm({
-        type: 'booking', guestName: '', guestDoc: '', guestPhone: '', roomId: '',
-        checkIn: new Date().toISOString().split('T')[0],
-        checkOut: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-        adults: 1, children: 0, price: 0,
-      });
+      router.refresh();
     } catch (error: any) {
-      console.error(error);
-      alert(`Error: ${error.message}`);
+      alert(`Fallo Operativo: ${error.message}`);
     }
   };
 
-  const handleDragEnd = async (bookingId: string, newRoomId: string, newCheckInDateStr: string) => {
-    const originalBooking = bookings.find(b => b.id === bookingId);
-    if (!originalBooking) return;
+  const handleDragEnd = async (bookingId: string, newRoomId: string, newCheckIn: string) => {
+    const original = bookings.find(b => b.id === bookingId);
+    if (!original) return;
 
-    const checkInDate = new Date(`${originalBooking.check_in}T12:00:00Z`);
-    const checkOutDate = new Date(`${originalBooking.check_out}T12:00:00Z`);
-    const durationDays = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+    const diff = new Date(original.check_out).getTime() - new Date(original.check_in).getTime();
+    const newCheckOut = new Date(new Date(newCheckIn).getTime() + diff).toISOString().split('T')[0];
 
-    const newCheckIn = new Date(`${newCheckInDateStr}T12:00:00Z`);
-    const newCheckOut = new Date(newCheckIn.getTime() + durationDays * 24 * 60 * 60 * 1000);
-    const newCheckOutDateStr = newCheckOut.toISOString().split('T')[0];
+    const backup = [...bookings];
+    setBookings(prev => prev.map(b => b.id === bookingId ? { ...b, room_id: newRoomId, check_in: newCheckIn, check_out: newCheckOut } : b));
 
-    const backupBookings = [...bookings]; 
-    setBookings(current => current.map(b => {
-      if (b.id === bookingId) {
-        return { ...b, room_id: newRoomId, check_in: newCheckInDateStr, check_out: newCheckOutDateStr };
-      }
-      return b;
-    }));
-
-    try {
-      const result = await updateBookingDatesAction(bookingId, newRoomId, newCheckInDateStr, newCheckOutDateStr);
-      if (!result.success) {
-        setBookings(backupBookings);
-        alert(`❌ No se pudo mover: ${result.error}`);
-      }
-    } catch (error) {
-      setBookings(backupBookings); 
-      alert('Error de conexión al mover la reserva.');
+    const res = await updateBookingDatesAction(bookingId, newRoomId, newCheckIn, newCheckOut);
+    if (!res.success) {
+      setBookings(backup);
+      alert('Error al reposicionar: ' + res.error);
     }
   };
 
-  const handleDuplicateBooking = async (bookingId: string, newRoomId: string, newCheckInDateStr: string) => {
-    const originalBooking = bookings.find(b => b.id === bookingId);
-    if (!originalBooking) return;
+  const handleDuplicateBooking = async (id: string, rid: string, cin: string) => {
+    const original = bookings.find(b => b.id === id);
+    if (!original) return;
 
-    const checkInDate = new Date(`${originalBooking.check_in}T12:00:00Z`);
-    const checkOutDate = new Date(`${originalBooking.check_out}T12:00:00Z`);
-    const durationDays = Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24));
+    const diff = new Date(original.check_out).getTime() - new Date(original.check_in).getTime();
+    const cout = new Date(new Date(cin).getTime() + diff).toISOString().split('T')[0];
 
-    const newCheckIn = new Date(`${newCheckInDateStr}T12:00:00Z`);
-    const newCheckOut = new Date(newCheckIn.getTime() + durationDays * 24 * 60 * 60 * 1000);
-    const newCheckOutDateStr = newCheckOut.toISOString().split('T')[0];
-
-    const tempClone: Booking = {
-      ...originalBooking,
-      id: String(`temp-${Date.now()}`),
-      room_id: newRoomId,
-      check_in: newCheckInDateStr,
-      check_out: newCheckOutDateStr,
-    };
-    
-    setBookings(current => [...current, tempClone]);
-
-    try {
-      const result = await duplicateBookingAction(bookingId, newRoomId, newCheckInDateStr, newCheckOutDateStr);
-      if (!result.success) {
-        setBookings(current => current.filter(b => b.id !== tempClone.id));
-        alert(`❌ No se pudo clonar: ${result.error}`);
-      } else {
-        router.refresh(); 
-      }
-    } catch (error) {
-      setBookings(current => current.filter(b => b.id !== tempClone.id));
-      alert('Error de conexión al clonar la reserva.');
-    }
+    const res = await duplicateBookingAction(id, rid, cin, cout);
+    if (!res.success) alert('Fallo al clonar nodo: ' + res.error);
+    else router.refresh();
   };
 
-  const handleCancelBooking = async (bookingId: string) => {
-    if (!confirm('¿Estás seguro de que deseas anular esta reserva?')) return;
-    
-    const backupBookings = [...bookings];
-    setBookings(current => current.filter(b => b.id !== bookingId));
-
-    try {
-      const result = await cancelBookingAction(bookingId);
-      if (result.success) {
-        alert('✅ Reserva cancelada correctamente.');
-        setShowBookingModal(false);
-        router.refresh();
-      } else {
-        setBookings(backupBookings); 
-        alert('❌ Error al cancelar: ' + result.error);
-      }
-    } catch (error: any) {
-      setBookings(backupBookings);
-      alert('Error de red: ' + error.message);
-    }
+  const handleCancelBooking = async (id: string) => {
+    if (!confirm('¿Anular transacción?')) return;
+    const res = await cancelBookingAction(id);
+    if (res.success) {
+      setShowBookingModal(false);
+      router.refresh();
+    } else alert('Error: ' + res.error);
   };
 
   return {
-    currentDate, moveDate, goToToday, getBookingForDate, bookings,
-    showBookingModal, setShowBookingModal, bookingForm, setBookingForm,
-    handleCreateBooking, availableRoomsList: initialRooms,
+    currentDate, moveDate: (d: number) => {
+      const n = new Date(currentDate); n.setDate(n.getDate() + d); setCurrentDate(n);
+    }, 
+    goToToday: () => setCurrentDate(new Date()),
+    getBookingForDate, bookings, showBookingModal, setShowBookingModal,
+    bookingForm, setBookingForm, handleSaveBooking, openEditBookingModal, openNewBookingModal,
     handleDragEnd, handleCancelBooking, handleDuplicateBooking
   };
 };
