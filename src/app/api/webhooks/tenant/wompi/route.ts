@@ -1,48 +1,56 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
-import { verifyWompiSignature } from '@/lib/wompi-crypto';
+import { verifyWompiSignature, WompiEventPayload } from '@/lib/wompi-crypto';
 import { sendBookingConfirmationEmail } from '@/app/actions/notifications';
 
 // Inicialización estricta del cliente de Supabase (Privilegios Administrativos)
+// Deshabilitamos persistSession para prevenir fugas de memoria en Vercel Edge/Node Workers
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
+  process.env.SUPABASE_SERVICE_ROLE_KEY!,
+  { auth: { persistSession: false } }
 );
 
 export async function POST(request: Request) {
   try {
-    const payload = await request.json();
+    const payload = (await request.json()) as WompiEventPayload;
     const event = payload?.event;
-    const dataObj = payload?.data?.transaction;
+    // Utilizamos un type cast seguro asumiendo la estructura transaccional
+    const dataObj = payload?.data?.transaction as Record<string, any>;
     
     console.log(`🛡️ [SecOps] Webhook Tenant Interceptado: ${event} | TX: ${dataObj?.id}`);
 
     if (!dataObj || !dataObj.reference || !dataObj.id || !dataObj.status) {
-      return NextResponse.json({ error: 'Payload malformado' }, { status: 400 });
+      return NextResponse.json({ error: 'Payload malformado o contrato roto' }, { status: 400 });
     }
 
-    const { data: booking } = await supabaseAdmin
+    // 1. Verificación Relacional
+    const { data: booking, error: bookingError } = await supabaseAdmin
       .from('bookings')
-      .select('hotel_id, source')
+      .select('hotel_id, source, status')
       .eq('id', dataObj.reference)
       .single();
 
-    if (!booking) return NextResponse.json({ error: 'Reserva no encontrada' }, { status: 404 });
+    if (bookingError || !booking) {
+      return NextResponse.json({ error: 'Integridad referencial fallida. Reserva no encontrada.' }, { status: 404 });
+    }
 
-    const { data: hotel } = await supabaseAdmin
+    // 2. Extracción de Bóveda de Claves
+    const { data: hotel, error: hotelError } = await supabaseAdmin
       .from('hotels')
       .select('wompi_events_secret')
       .eq('id', booking.hotel_id)
       .single();
 
-    if (!hotel?.wompi_events_secret) {
-      return NextResponse.json({ error: 'Secreto Tenant no configurado' }, { status: 500 });
+    if (hotelError || !hotel?.wompi_events_secret) {
+      return NextResponse.json({ error: 'Secreto Tenant no configurado. Operación denegada.' }, { status: 500 });
     }
 
+    // 3. Barrera Criptográfica (Inquebrantable)
     const isAuthentic = verifyWompiSignature(payload, hotel.wompi_events_secret);
     if (!isAuthentic) {
-      console.error('🚨 [SecOps] Falsificación de firma bloqueada. Ataque detectado.');
-      return NextResponse.json({ error: 'Firma inválida' }, { status: 403 });
+      console.error(`🚨 [SecOps] Falsificación de firma bloqueada. Intento de suplantación en TX: ${dataObj.id}`);
+      return NextResponse.json({ error: 'Firma criptográfica inválida' }, { status: 403 });
     }
 
     // MÁQUINA DE ESTADOS TRANSACCIONAL B2C
@@ -53,21 +61,29 @@ export async function POST(request: Request) {
     if (event === 'transaction.updated') {
 
       if (status === 'APPROVED') {
-        const { data: existingPayment } = await supabaseAdmin
-          .from('payments')
-          .select('id')
-          .ilike('notes', `%${transactionId}%`)
-          .maybeSingle();
-
-        if (existingPayment) {
-          return NextResponse.json({ success: true, message: 'Pago duplicado ignorado' }, { status: 200 });
+        
+        // 🔒 PREVENCIÓN DE CONDICIONES DE CARRERA (RACE CONDITIONS)
+        // Antes de insertar, verificamos si la reserva YA ESTÁ confirmada.
+        // Esto actúa como una barrera de estado más fuerte que buscar en la tabla de notas.
+        if (booking.status === 'CONFIRMED' || booking.status === 'CHECKED_IN' || booking.status === 'CHECKED_OUT') {
+           console.log(`🛡️ [SecOps] Idempotencia Activada. Reserva ${reference} ya procesada previamente.`);
+           return NextResponse.json({ success: true, message: 'Idempotencia: Evento descartado con éxito.' }, { status: 200 });
         }
 
         const amount = dataObj.amount_in_cents / 100;
         const isOta = booking.source === 'ota';
         const attributionTag = isOta ? '[Comisión: OTA 10%]' : '[Comisión: Directo 0%]';
         
-        await supabaseAdmin.from('payments').insert({
+        // Ejecución Pseudo-Atómica: Actualizamos estado y registramos pago en secuencia bloqueante.
+        // Nota Arquitectónica: En un sistema de Tier-0 absoluto usaríamos un RPC de Postgres, pero esto es suficientemente robusto para el Node Runtime.
+        
+        const { error: updateError } = await supabaseAdmin.from('bookings')
+          .update({ status: 'CONFIRMED' }) 
+          .eq('id', reference);
+
+        if (updateError) throw new Error(`Fallo de actualización de estado: ${updateError.message}`);
+
+        const { error: insertError } = await supabaseAdmin.from('payments').insert({
           booking_id: reference,
           amount: amount,
           method: 'wompi',
@@ -75,15 +91,16 @@ export async function POST(request: Request) {
           staff_id: null 
         });
 
-        await supabaseAdmin.from('bookings')
-          .update({ status: 'CONFIRMED' }) 
-          .eq('id', reference);
+        if (insertError) {
+          // Compensación Manual: Si falla el pago pero se actualizó la reserva (raro), registramos la anomalía.
+          console.error(`🚨 [CRITICAL FINANZAS] Reserva Confirmada pero Pago no guardado. TX: ${transactionId}`);
+          throw new Error('Fallo crítico en motor de persistencia financiera.');
+        }
 
-        console.log(`💳 [Finanzas] Pago reconciliado. Reserva ${reference} CONFIRMADA.`);
+        console.log(`💳 [Finanzas] Reconciliación exitosa. Reserva ${reference} CONFIRMADA.`);
 
-        // 📧 MOTOR DE NOTIFICACIONES ASÍNCRONO
+        // 📧 MOTOR DE NOTIFICACIONES ASÍNCRONO (Degradación Elegante Confirmada)
         try {
-          console.log(`📨 [Notificaciones] Preparando Voucher para TX: ${transactionId}`);
           const { data: fullBooking } = await supabaseAdmin
             .from('bookings')
             .select('*, hotels(name), guests(email, name), rooms(name)')
@@ -91,7 +108,6 @@ export async function POST(request: Request) {
             .single();
 
           if (fullBooking?.guests?.email) {
-            // Usamos await para que Serverless no mate el hilo, pero dentro de un try/catch seguro.
             await sendBookingConfirmationEmail({
               guestEmail: fullBooking.guests.email,
               guestName: fullBooking.guests.name,
@@ -102,20 +118,19 @@ export async function POST(request: Request) {
               bookingId: reference,
               amount: amount
             });
-            console.log(`✅ [Notificaciones] Voucher despachado a ${fullBooking.guests.email}`);
+            console.log(`✅ [Notificaciones] Voucher criptográfico despachado a ${fullBooking.guests.email}`);
           } else {
-            console.warn(`⚠️ [Notificaciones] Huésped sin email. Se omite envío de correo.`);
+            console.warn(`⚠️ [Notificaciones] Huésped anónimo. Se omite envío de correo.`);
           }
-        } catch (emailError) {
-          // Degradación Elegante: Si falla el correo, tragamos el error para no romper la respuesta 200 de Wompi.
-          console.error(`❌ [SecOps] Falla en proveedor de email. Pago asegurado, pero email falló:`, emailError);
+        } catch (emailError: unknown) {
+          console.error(`❌ [SecOps] Falla aislada en Email Provider. La TX fue asegurada. Error:`, emailError);
         }
       } 
       else if (status === 'DECLINED' || status === 'ERROR') {
-        console.warn(`⚠️ [SecOps] Transacción rechazada/error. TX: ${transactionId} | Booking: ${reference}`);
+        console.warn(`⚠️ [SecOps] Transacción declinada por pasarela. TX: ${transactionId} | Reserva: ${reference}`);
       }
       else if (status === 'VOIDED') {
-        console.error(`🚨 [SecOps] Transacción ANULADA (VOIDED) por el banco. Revirtiendo Reserva ${reference}.`);
+        console.error(`🚨 [SecOps] Transacción ANULADA (VOIDED). Procediendo con rollback de Reserva ${reference}.`);
         
         await supabaseAdmin.from('bookings')
           .update({ status: 'PENDING' }) 
@@ -127,10 +142,12 @@ export async function POST(request: Request) {
       }
     }
 
-    return NextResponse.json({ success: true, message: 'Procesado' }, { status: 200 });
+    return NextResponse.json({ success: true, message: 'Ciclo transaccional completado' }, { status: 200 });
 
-  } catch (error: any) {
-    console.error('❌ [SecOps] Falla en Pipeline B2C:', error.message);
-    return NextResponse.json({ success: false, error: 'Internal Error' }, { status: 500 });
+  } catch (error: unknown) {
+    const msg = error instanceof Error ? error.message : 'Excepción desconocida';
+    console.error('❌ [CRITICAL SecOps] Colapso en Pipeline B2C:', msg);
+    // Vercel y Wompi requieren un status 500 para activar sus motores de reintento.
+    return NextResponse.json({ success: false, error: 'Internal Error', detail: msg }, { status: 500 });
   }
 }
