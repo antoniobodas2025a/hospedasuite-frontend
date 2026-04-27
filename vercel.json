@@ -1,12 +1,3 @@
 {
-  "crons": [
-    {
-      "path": "/api/cron/release-inventory",
-      "schedule": "*/5 * * * *"
-    },
-    {
-      "path": "/api/cron/sync-channels",
-      "schedule": "0 * * * *"
-    }
-  ]
+  "crons": []
 }

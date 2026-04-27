@@ -15,9 +15,7 @@ const nextConfig = {
   typescript: {
     ignoreBuildErrors: true,
   },
-  eslint: {
-    ignoreDuringBuilds: true,
-  },
+  
 
   // 🛡️ BARRERA WAF: Cabeceras HTTP Estrictas (Inyectado por Dra. Cipher)
   async headers() {
