@@ -1,13 +1,13 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { 
   createBookingAction, 
   updateBookingDatesAction, 
   cancelBookingAction, 
   duplicateBookingAction,
-  updateBookingDetailsAction // 🚨 Inyectado: Nueva acción para mutar identidad del huésped
+  updateBookingDetailsAction 
 } from '@/app/actions/bookings';
 import { createClient } from '@/utils/supabase/client';
 
@@ -62,7 +62,6 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
     initialBookings.map(normalizeBooking).filter(b => b.status !== 'cancelled')
   );
 
-  // Sincronización Server-to-Client
   useEffect(() => {
     setBookings(initialBookings.map(normalizeBooking).filter(b => b.status !== 'cancelled'));
   }, [initialBookings]);
@@ -76,6 +75,28 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
     checkOut: new Date(Date.now() + 86400000).toISOString().split('T')[0],
     adults: 1, children: 0, price: 0,
   });
+
+  // ========================================================================
+  // 🛡️ MOTOR DE DISPONIBILIDAD (Predictive Availability Shield)
+  // Filtra las habitaciones al vuelo basándose en las fechas del formulario.
+  // ========================================================================
+  const availableRoomsList = useMemo(() => {
+    const { checkIn, checkOut, id: currentBookingId } = bookingForm;
+    if (!checkIn || !checkOut) return initialRooms;
+
+    return initialRooms.filter(room => {
+      const roomIsTaken = bookings.some(b => {
+        // Exclusión mutua: No chocar con el propio registro en modo edición
+        if (currentBookingId && b.id === currentBookingId) return false;
+        if (b.room_id !== String(room.id)) return false;
+
+        // Verificación de solapamiento de intervalos temporales
+        const overlap = b.check_in < checkOut && checkIn < b.check_out;
+        return overlap;
+      });
+      return !roomIsTaken;
+    });
+  }, [initialRooms, bookings, bookingForm.checkIn, bookingForm.checkOut, bookingForm.id]);
 
   // Suscripción Realtime (Zero-Trust Sync)
   useEffect(() => {
@@ -93,7 +114,6 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
     return () => { supabase.removeChannel(channel); };
   }, [hotelId, router]);
 
-  // Query de Matriz O(N)
   const getBookingForDate = (roomId: string, date: Date) => {
     const dStr = date.toISOString().split('T')[0];
     return bookings.find((b) => b.room_id === String(roomId) && dStr >= b.check_in && dStr < b.check_out);
@@ -148,16 +168,14 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
 
       let result;
       if (bookingForm.id) {
-        // 🔄 MUTACIÓN: Edición de registro existente
         result = await updateBookingDetailsAction(bookingForm.id, payload);
       } else {
-        // 🆕 INSERCIÓN: Creación de nuevo registro
         result = await createBookingAction(payload);
       }
 
       if (!result.success) {
         if (result.error?.includes('prevent_double_booking')) {
-          throw new Error('Colisión Detectada: Espacio ocupado en el Ledger.');
+          throw new Error('La unidad ya se encuentra comprometida para estas fechas.');
         }
         throw new Error(result.error);
       }
@@ -166,7 +184,7 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
       setShowBookingModal(false);
       router.refresh();
     } catch (error: any) {
-      alert(`Fallo Operativo: ${error.message}`);
+      alert(`⚠️ Bloqueo Operativo: ${error.message}`);
     }
   };
 
@@ -209,12 +227,23 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
   };
 
   return {
-    currentDate, moveDate: (d: number) => {
+    currentDate, 
+    moveDate: (d: number) => {
       const n = new Date(currentDate); n.setDate(n.getDate() + d); setCurrentDate(n);
     }, 
     goToToday: () => setCurrentDate(new Date()),
-    getBookingForDate, bookings, showBookingModal, setShowBookingModal,
-    bookingForm, setBookingForm, handleSaveBooking, openEditBookingModal, openNewBookingModal,
-    handleDragEnd, handleCancelBooking, handleDuplicateBooking
+    getBookingForDate, 
+    bookings, 
+    showBookingModal, 
+    setShowBookingModal,
+    bookingForm, 
+    setBookingForm, 
+    handleSaveBooking, 
+    openEditBookingModal, 
+    openNewBookingModal,
+    handleDragEnd, 
+    handleCancelBooking, 
+    handleDuplicateBooking,
+    availableRoomsList
   };
 };

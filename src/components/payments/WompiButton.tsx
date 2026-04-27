@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { generateWompiSignature } from '@/app/actions/wompi';
-import { Loader2, CreditCard } from 'lucide-react';
+import { Loader2, CreditCard, ShieldCheck } from 'lucide-react';
 import Script from 'next/script';
 
 interface WompiButtonProps {
@@ -10,7 +10,10 @@ interface WompiButtonProps {
   reference: string;
   publicKey: string;
   email?: string;
-  onSuccess?: () => void;
+  hotelId?: string; // 🛡️ Opcional: Define si es pago interno o SaaS
+  isSubscription?: boolean; // 🚀 Activa la UI de "Plan Pionero"
+  redirectUrl?: string; // 🛡️ Flexibilidad de redirección explícita
+  onSuccess?: (transactionId: string) => void;
 }
 
 const WompiButton = ({
@@ -18,6 +21,9 @@ const WompiButton = ({
   reference,
   publicKey,
   email,
+  hotelId,
+  isSubscription = false,
+  redirectUrl,
   onSuccess,
 }: WompiButtonProps) => {
   const [loading, setLoading] = useState(false);
@@ -25,45 +31,50 @@ const WompiButton = ({
   const handlePayment = async () => {
     setLoading(true);
 
-    // 1. Pedir la firma segura al servidor
-    const { signature, amountInCents, currency, error } =
-      await generateWompiSignature(amount, reference);
+    // 1. RESOLUCIÓN DE FIRMA POLIMÓRFICA (SaaS vs Tenant)
+    const { success, signature, amountInCents, currency, error } =
+      await generateWompiSignature(amount, reference, hotelId);
 
-    if (error) {
-      alert('Error de Seguridad: ' + error);
+    if (!success) {
+      alert('🚨 Error de Seguridad Criptográfica: ' + error);
       setLoading(false);
       return;
     }
 
-    // 2. Construcción Dinámica del Payload (Evasión de WAF)
+    // 🛡️ RESOLUCIÓN DE ENRUTAMIENTO DETERMINISTA
+    const finalRedirectUrl = redirectUrl 
+      ? `${window.location.origin}${redirectUrl}`
+      : isSubscription 
+        ? `${window.location.origin}/software/onboarding/success`
+        : `${window.location.origin}/dashboard/checkout?status=approved`;
+
+    // 2. CONSTRUCCIÓN DEL PAYLOAD BLINDADO (Evasión de WAF)
     const widgetConfig: any = {
       currency: currency,
       amountInCents: amountInCents,
       reference: reference,
       publicKey: publicKey,
-      signature: { integrity: signature }, 
-      redirectUrl: `${window.location.origin}/dashboard/checkout?status=approved`, 
+      signature: { integrity: signature },
+      redirectUrl: finalRedirectUrl, 
     };
 
-    // 🛡️ SecOps Fix: Solo inyectamos customerData si el email existe y no es un string vacío
     if (email && email.trim() !== '') {
       widgetConfig.customerData = {
         email: email.trim(),
       };
     }
 
-    // 3. Abrir Wompi
+    // 3. INYECCIÓN DEL IFRAME DE BÓVEDA (PCI-DSS)
     const checkout = new (window as any).WidgetCheckout(widgetConfig);
     
     checkout.open((result: any) => {
       const transaction = result.transaction;
       if (transaction.status === 'APPROVED') {
-        alert('✅ Pago Aprobado: ' + transaction.id);
-        if (onSuccess) onSuccess();
+        if (onSuccess) onSuccess(transaction.id);
       } else if (transaction.status === 'DECLINED') {
-        alert('❌ Pago Rechazado');
+        alert('❌ Método de pago rechazado por el banco emisor.');
       } else {
-        alert('⚠️ Estado: ' + transaction.status);
+        alert('⚠️ Estado de transacción pendiente: ' + transaction.status);
       }
       setLoading(false);
     });
@@ -79,16 +90,25 @@ const WompiButton = ({
       <button
         onClick={handlePayment}
         disabled={loading}
-        className='w-full py-4 bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-xl shadow-lg shadow-indigo-200 transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed'
+        className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed ${
+          isSubscription 
+            ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20' 
+            : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'
+        }`}
       >
         {loading ? (
-          <Loader2 className='animate-spin' />
+          <Loader2 className='animate-spin size-5' />
+        ) : isSubscription ? (
+          <ShieldCheck className='size-5 text-emerald-400' />
         ) : (
-          <CreditCard size={20} />
+          <CreditCard className='size-5' />
         )}
+
         {loading
-          ? 'Conectando con Banco...'
-          : `Pagar $${amount.toLocaleString()} con Wompi`}
+          ? 'Conectando con Bóveda...'
+          : isSubscription
+            ? 'Vincular Tarjeta y Activar 90 Días Gratis'
+            : `Pagar $${amount.toLocaleString()} con Wompi`}
       </button>
     </>
   );

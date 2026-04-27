@@ -2,8 +2,12 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// ✅ Importamos las Server Actions seguras (ya no usamos supabase cliente)
-import { createOrderAction, createProductAction } from '@/app/actions/pos';
+// 🛡️ REPARACIÓN TOPOLÓGICA: Importación de las Acciones del Ledger Unificado
+import { 
+  addServiceChargeAction, 
+  processWalkInChargeAction, 
+  createProductAction 
+} from '@/app/actions/pos';
 
 export interface MenuItem {
   id: number;
@@ -19,20 +23,23 @@ export interface CartItem extends MenuItem {
   quantity: number;
 }
 
-export interface RoomOption {
+export interface BookingOption {
   id: string;
-  name: string;
+  room_id: string;
+  rooms?: { name: string };
+  guests?: { full_name: string };
 }
 
 export const usePOS = (
   initialItems: MenuItem[],
-  initialRooms: RoomOption[],
+  activeBookings: BookingOption[],
   hotelId: string,
 ) => {
   const router = useRouter();
   const [menuItems, setMenuItems] = useState<MenuItem[]>(initialItems);
   const [cart, setCart] = useState<CartItem[]>([]);
-  const [selectedRoomId, setSelectedRoomId] = useState<string>('');
+  
+  const [selectedRoomId, setSelectedRoomId] = useState<string>(''); 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
   const [productForm, setProductForm] = useState<Partial<MenuItem>>({
@@ -43,7 +50,6 @@ export const usePOS = (
     description: '',
   });
 
-  // A. Lógica del Carrito (Mantenemos igual porque es 100% UI local)
   const addToCart = (item: MenuItem) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.id === item.id);
@@ -76,77 +82,82 @@ export const usePOS = (
     0,
   );
 
-  // B. Acción: Crear Pedido (Delegado al Servidor con Mitigación de Riesgos)
   const createOrder = async () => {
-    // 1. Validaciones UI rápidas
-    if (cart.length === 0) return alert('El carrito está vacío');
-    if (!selectedRoomId) return alert('Selecciona una habitación para cargar el consumo');
+    if (cart.length === 0) return alert('El carrito de compras está vacío.');
+    if (!selectedRoomId) return alert('Selecciona una habitación activa o "Venta de Mostrador".');
     
-    // Validación redundante manejada de forma segura
     if (!hotelId) {
-      console.error('Violación de contexto: hotelId es nulo en el cliente.');
-      return alert('Error de sesión. Por favor recarga la página.');
+      console.error('Violación de contexto: hotelId nulo en entorno cliente.');
+      return alert('Error de integridad de sesión. Por favor recarga el panel.');
     }
 
-    // 2. MITIGACIÓN DE CONECTIVIDAD: Verificación offline preemptiva
     if (typeof window !== 'undefined' && !window.navigator.onLine) {
-      return alert('📶 No hay conexión a internet. Tu pedido está a salvo en el carrito. Espera a que vuelva la red y presiona "Cobrar" de nuevo.');
+      return alert('📶 Pérdida de conexión detectada. El carrito ha sido preservado en memoria local.');
     }
 
     try {
-      // 3. OPTIMIZACIÓN DE PAYLOAD (JSON Diet)
-      // Solo enviamos los datos esenciales para la facturación (quitamos emojis y descripciones largas)
-      const optimizedCart = cart.map(item => ({
-        id: item.id,
-        name: item.name,
-        price: item.price,
-        quantity: item.quantity
-      }));
+      const cartSummary = cart.map(item => `${item.quantity}x ${item.name}`).join(' | ');
 
-      // 4. Llamada al Servidor
-      const result = await createOrderAction({
-        hotel_id: hotelId,
-        room_id: selectedRoomId,
-        items: optimizedCart, // <-- Payload ligero enviado
-        total_price: cartTotal,
-      });
+      // 🛡️ VECTORIZACIÓN DEL CARRITO PARA TRANSACCIÓN MASIVA (Bulk ACID)
+      // Extraemos los Arrays matemáticos una sola vez para ambas rutas
+      const extractedProductIds = cart.map(item => item.id);
+      const extractedQuantities = cart.map(item => item.quantity);
 
-      if (!result.success) {
-        throw new Error(result.error);
+      if (selectedRoomId === 'walk_in') {
+        
+        // 🛡️ AHORA DEDUCE STOCK ATÓMICAMENTE
+        const result = await processWalkInChargeAction({
+          amount: cartTotal,
+          description: cartSummary,
+          productIds: extractedProductIds,
+          quantities: extractedQuantities
+        });
+        
+        if (!result.success) throw new Error(result.error);
+        alert('✅ Venta de mostrador (Walk-in) liquidada y stock actualizado.');
+        
+      } else {
+        
+        const targetBooking = activeBookings.find(b => b.id === selectedRoomId);
+        if (!targetBooking) throw new Error('Folio huérfano. La reserva destino ya no es válida.');
+
+        const result = await addServiceChargeAction({
+          bookingId: targetBooking.id,
+          roomId: targetBooking.room_id,
+          productIds: extractedProductIds,     
+          quantities: extractedQuantities,     
+          description: `POS: ${cartSummary}`,
+          amount: cartTotal
+        });
+
+        if (!result.success) throw new Error(result.error);
+        alert('✅ Cargos transferidos y stock descontado exitosamente.');
       }
 
-      // 5. Éxito: Limpieza del carrito
-      alert('✅ Consumo cargado a la habitación exitosamente');
       setCart([]);
       setSelectedRoomId('');
-      router.refresh();
+      router.refresh(); 
       
     } catch (e: any) {
-      // Manejo de caída de red a mitad de la petición
       if (e.message.includes('fetch') || e.message.includes('network')) {
-        alert('📶 La conexión falló mientras se enviaba. Verifica tu internet e intenta de nuevo.');
+        alert('📶 Fallo de transmisión en la última milla. Verifica tu red.');
       } else {
-        alert('Error al crear orden: ' + e.message);
+        alert('Violación de Transacción: ' + e.message);
       }
     }
   };
 
-  // C. Acción: Crear Producto (Delegado al Servidor)
   const createProduct = async () => {
-    if (!hotelId) return alert('Error de sesión: Falta ID del hotel');
+    if (!hotelId) return alert('Error de sesión: Permisos insuficientes.');
 
     try {
-      // Usamos la Server Action
       const result = await createProductAction({
         ...productForm,
         hotel_id: hotelId,
       });
 
-      if (!result.success) {
-        throw new Error(result.error);
-      }
+      if (!result.success) throw new Error(result.error);
 
-      // Actualizamos UI
       setMenuItems([...menuItems, result.data]);
       setIsProductModalOpen(false);
       setProductForm({
@@ -158,7 +169,7 @@ export const usePOS = (
       });
       router.refresh();
     } catch (e: any) {
-      alert('Error al crear producto: ' + e.message);
+      alert('Error en Inserción de Producto: ' + e.message);
     }
   };
 

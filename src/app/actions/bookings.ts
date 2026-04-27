@@ -42,6 +42,10 @@ interface PendingBookingPayload {
   amount: number; 
 }
 
+// ==========================================
+// BLOQUE 2: UTILIDADES DE AUDITORÍA
+// ==========================================
+
 async function getActiveStaffId(): Promise<string | null> {
   try {
     const cookieStore = await cookies();
@@ -56,20 +60,28 @@ async function getActiveStaffId(): Promise<string | null> {
   return null;
 }
 
+/**
+ * 🛡️ HELPER: Verificador de Colisión Temporal
+ * Mapea las restricciones de exclusión de PostgreSQL al lenguaje del Frontend.
+ */
+const isTemporalCollision = (error: any): boolean => {
+  if (!error) return false;
+  return (
+    error.message?.includes('no_overlapping_bookings') || 
+    error.message?.includes('prevent_double_booking') || 
+    error.code === '23P04'
+  );
+};
+
 // ==========================================
-// BLOQUE 2: ACCIONES CORE (ADMIN)
+// BLOQUE 3: ACCIONES CORE (ADMIN)
 // ==========================================
 
-/**
- * 🛡️ ACCIÓN CRÍTICA CORREGIDA: Actualiza identidad y estadía.
- * Resuelve el fallo de columna inexistente al separar 'guests' de 'bookings'.
- */
 export async function updateBookingDetailsAction(bookingId: string, data: any) {
   try {
     const currentHotel = await getCurrentHotel();
     if (!currentHotel) throw new Error('No autorizado');
 
-    // 1. Obtener la referencia del huésped asociado a esta reserva
     const { data: booking, error: fetchError } = await supabaseAdmin
       .from('bookings')
       .select('guest_id')
@@ -77,9 +89,8 @@ export async function updateBookingDetailsAction(bookingId: string, data: any) {
       .eq('hotel_id', currentHotel.id)
       .single();
 
-    if (fetchError || !booking) throw new Error('Reserva no localizada en el ledger.');
+    if (fetchError || !booking) throw new Error('Reserva no localizada.');
 
-    // 2. Si hay un huésped vinculado, actualizar su perfil de identidad en la tabla GUESTS
     if (booking.guest_id) {
       const { error: guestError } = await supabaseAdmin
         .from('guests')
@@ -92,10 +103,9 @@ export async function updateBookingDetailsAction(bookingId: string, data: any) {
         .eq('id', booking.guest_id)
         .eq('hotel_id', currentHotel.id);
 
-      if (guestError) throw new Error('Fallo al actualizar perfil del huésped: ' + guestError.message);
+      if (guestError) throw new Error('Fallo al actualizar huésped: ' + guestError.message);
     }
 
-    // 3. Actualizar los parámetros de la reserva en la tabla BOOKINGS (Sin la columna inexistente 'guest_name')
     const { error: updateError } = await supabaseAdmin
       .from('bookings')
       .update({
@@ -107,13 +117,16 @@ export async function updateBookingDetailsAction(bookingId: string, data: any) {
       .eq('id', bookingId)
       .eq('hotel_id', currentHotel.id);
 
-    if (updateError) throw updateError;
+    if (updateError) {
+      if (isTemporalCollision(updateError)) throw new Error('prevent_double_booking');
+      throw updateError;
+    }
 
     revalidatePath('/dashboard/calendar');
     return { success: true };
     
   } catch (error: any) {
-    console.error("[CRITICAL] Fallo en Transmisión de Datos:", error.message);
+    console.error("[CRITICAL] Booking Update Error:", error.message);
     return { success: false, error: error.message };
   }
 }
@@ -122,7 +135,7 @@ export async function createBookingAction(data: BookingPayload) {
   try {
     const currentHotel = await getCurrentHotel();
     if (!currentHotel || currentHotel.id !== data.hotel_id) {
-      throw new Error('Violación de Seguridad: Acceso denegado al nodo.');
+      throw new Error('Violación de Seguridad: Acceso denegado.');
     }
 
     const staffId = await getActiveStaffId();
@@ -170,10 +183,8 @@ export async function createBookingAction(data: BookingPayload) {
       }]);
 
     if (bookingError) {
-      if (bookingError.message.includes('prevent_double_booking') || bookingError.code === '23P04') {
-        throw new Error('prevent_double_booking');
-      }
-      throw new Error('Error de inserción: ' + bookingError.message);
+      if (isTemporalCollision(bookingError)) throw new Error('prevent_double_booking');
+      throw new Error(bookingError.message);
     }
 
     revalidatePath('/dashboard/calendar');
@@ -195,10 +206,8 @@ export async function updateBookingDatesAction(bookingId: string, newRoomId: str
       .eq('hotel_id', currentHotel.id);
 
     if (updateError) {
-      if (updateError.message.includes('prevent_double_booking') || updateError.code === '23P04') {
-        throw new Error('prevent_double_booking'); 
-      }
-      throw new Error('Fallo de Mutación: ' + updateError.message);
+      if (isTemporalCollision(updateError)) throw new Error('prevent_double_booking'); 
+      throw new Error(updateError.message);
     }
 
     revalidatePath('/dashboard/calendar');
@@ -257,10 +266,8 @@ export async function duplicateBookingAction(bookingId: string, newRoomId: strin
       });
 
     if (insErr) {
-      if (insErr.message.includes('prevent_double_booking') || insErr.code === '23P04') {
-        throw new Error('prevent_double_booking');
-      }
-      throw new Error('Fallo de clonación: ' + insErr.message);
+      if (isTemporalCollision(insErr)) throw new Error('prevent_double_booking');
+      throw new Error(insErr.message);
     }
 
     revalidatePath('/dashboard/calendar');
@@ -327,10 +334,8 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
       .select('id').single();
 
     if (bErr) {
-      if (bErr.message.includes('prevent_double_booking') || bErr.code === '23P04') {
-        throw new Error('prevent_double_booking');
-      }
-      throw new Error('Fallo de escritura transaccional.');
+      if (isTemporalCollision(bErr)) throw new Error('prevent_double_booking');
+      throw new Error(bErr.message);
     }
 
     const { data: link, error: lErr } = await supabaseAdmin
@@ -344,6 +349,73 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
     return { success: true, bookingId: link.id };
 
   } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * 🛡️ PROTOCOLO DE CHECK-IN BLINDADO (DOCTORADO)
+ * Realiza la transición de estado de la reserva validando la integridad física de la habitación.
+ */
+export async function processCheckInAction(bookingId: string) {
+  try {
+    const currentHotel = await getCurrentHotel();
+    if (!currentHotel) throw new Error('AUTH_ERROR: Nodo no autorizado.');
+
+    // 1. OBTENCIÓN Y BLOQUEO DE CONTEXTO (Zero-Trust)
+    const { data: booking, error: fetchErr } = await supabaseAdmin
+      .from('bookings')
+      .select('room_id, hotel_id, status, rooms(status, name)')
+      .eq('id', bookingId)
+      .eq('hotel_id', currentHotel.id)
+      .single();
+
+    if (fetchErr || !booking) throw new Error('NOT_FOUND: La reserva no existe en este nodo.');
+    
+    const room = booking.rooms as any;
+
+    // 2. VALIDACIÓN DE INVARIANTE FÍSICO
+    // Si la habitación está sucia o en mantenimiento, abortamos la transacción.
+    if (room.status === 'dirty') {
+      throw new Error(`ROOM_DIRTY: La unidad ${room.name} requiere aseo profundo antes del Check-in.`);
+    }
+    
+    if (room.status === 'maintenance') {
+      throw new Error(`ROOM_MAINTENANCE: La unidad ${room.name} está bajo protocolos de reparación.`);
+    }
+
+    if (room.status === 'occupied' && booking.status !== 'checked_in') {
+      throw new Error(`ROOM_CONFLICT: La unidad ${room.name} ya figura como ocupada por otro folio.`);
+    }
+
+    // 3. EJECUCIÓN TRANSACCIONAL (Atómica en PostgreSQL)
+    // Actualizamos la Reserva
+    const { error: bookingUpdateErr } = await supabaseAdmin
+      .from('bookings')
+      .update({ status: 'checked_in' })
+      .eq('id', bookingId);
+
+    if (bookingUpdateErr) throw new Error(`UPDATE_FAILED: ${bookingUpdateErr.message}`);
+
+    // Sincronizamos el estado de la Habitación a 'occupied'
+    const { error: roomUpdateErr } = await supabaseAdmin
+      .from('rooms')
+      .update({ status: 'occupied' })
+      .eq('id', booking.room_id);
+
+    if (roomUpdateErr) {
+      // Rollback manual (para compensar si falla la segunda parte)
+      await supabaseAdmin.from('bookings').update({ status: 'confirmed' }).eq('id', bookingId);
+      throw new Error(`ROOM_SYNC_FAILED: ${roomUpdateErr.message}`);
+    }
+
+    // 4. PURGA DE CACHÉ GLOBAL
+    revalidatePath('/dashboard', 'layout'); 
+    
+    return { success: true };
+
+  } catch (error: any) {
+    console.error('🚨 CHECKIN_FORENSIC_ERROR:', error.message);
     return { success: false, error: error.message };
   }
 }

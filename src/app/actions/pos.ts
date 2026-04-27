@@ -1,23 +1,16 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/server';
+import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
-import { getCurrentHotel } from '@/lib/hotel-context'; // 🔐 Importamos el candado de seguridad
-import { cookies } from 'next/headers'; // 🚨 Necesario para la auditoría de caja
+import { getCurrentHotel } from '@/lib/hotel-context';
+import { cookies } from 'next/headers';
 
-const supabaseAdmin = createClient(
+// 🛡️ Cliente administrativo solo para operaciones de Staff/Auth cruzada
+const supabaseAdmin = createAdminClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
-
-// --- 🛡️ BARRERAS DE TIPADO ESTRICTO (Zero-Trust) ---
-interface OrderPayload {
-  hotel_id: string;
-  room_id: string;
-  booking_id?: string; // CRÍTICO: Para vincular al folio exacto
-  items: any;
-  total_price: number;
-}
 
 interface ProductPayload {
   hotel_id: string;
@@ -28,189 +21,189 @@ interface ProductPayload {
   image_emoji: string;
 }
 
-// ============================================================================
-// 📦 CÓDIGO ORIGINAL BLINDADO
-// ============================================================================
-
-export async function createOrderAction(payload: OrderPayload) {
-  try {
-    const currentHotel = await getCurrentHotel();
-    if (!currentHotel || currentHotel.id !== payload.hotel_id) {
-      throw new Error('Violación de Seguridad: No tienes permisos para este hotel.');
-    }
-
-    if (payload.total_price < 0) throw new Error('Operación rechazada: Monto negativo.');
-
-    const { error } = await supabaseAdmin.from('service_orders').insert([
-      {
-        hotel_id: currentHotel.id,
-        room_id: payload.room_id,
-        booking_id: payload.booking_id || null, // Vínculo financiero
-        items: payload.items,
-        total_price: payload.total_price,
-        status: 'pending',
-        payment_method: 'room_charge',
-      },
-    ]);
-
-    if (error) throw new Error(`[DB Error]: ${error.message}`);
-
-    revalidatePath('/dashboard/services');
-    revalidatePath('/dashboard/checkout');
-    return { success: true };
-  } catch (error: any) {
-    console.error('🚨 [SEC-OPS] Fallo en createOrderAction:', error);
-    return { success: false, error: error.message };
-  }
-}
-
 export async function createProductAction(payload: ProductPayload) {
   try {
-    const currentHotel = await getCurrentHotel();
-    if (!currentHotel || currentHotel.id !== payload.hotel_id) {
-      throw new Error('Violación de Seguridad: No tienes permisos para este hotel.');
+    const hotel = await getCurrentHotel();
+    if (!hotel || hotel.id !== payload.hotel_id) {
+      throw new Error('AUTH_ERROR: Nodo no autorizado.');
     }
 
-    if (!payload.name || payload.price < 0) {
-      throw new Error('Datos de producto inválidos.');
-    }
-
-    const { data, error } = await supabaseAdmin
+    const supabase = await createClient();
+    const { data, error } = await supabase
       .from('menu_items')
-      .insert([
-        {
-          name: payload.name.trim(),
-          category: payload.category,
-          price: payload.price,
-          description: payload.description,
-          image_emoji: payload.image_emoji || '📦',
-          hotel_id: currentHotel.id,
-        },
-      ])
-      .select()
+      .insert([{
+        name: payload.name.trim(),
+        category: payload.category,
+        price: payload.price,
+        description: payload.description,
+        image_emoji: payload.image_emoji || '📦',
+        hotel_id: hotel.id,
+      }])
+      .select().single();
+
+    if (error) throw new Error(`DB_ERROR: ${error.message}`);
+
+    revalidatePath('/dashboard/pos');
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function getMenuAction() {
+  try {
+    const hotel = await getCurrentHotel();
+    if (!hotel) throw new Error('No autorizado');
+
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('menu_items')
+      .select('*')
+      .eq('hotel_id', hotel.id)
+      .order('category', { ascending: true });
+
+    if (error) throw new Error(`DB_ERROR: ${error.message}`);
+    return { success: true, data };
+  } catch (error: any) {
+    return { success: false, error: error.message };
+  }
+}
+
+export async function addServiceChargeAction(payload: {
+  bookingId: string;
+  roomId: string;
+  productIds: (string | number)[]; 
+  quantities: number[];            
+  description: string;
+  amount: number;
+}) {
+  try {
+    const hotel = await getCurrentHotel();
+    if (!hotel) throw new Error('AUTH_ERROR: Nodo no autorizado.');
+
+    const supabase = await createClient();
+
+    const { data: booking, error: checkErr } = await supabase
+      .from('bookings')
+      .select('status')
+      .eq('id', payload.bookingId)
+      .eq('hotel_id', hotel.id)
       .single();
 
-    if (error) throw new Error(`[DB Error]: ${error.message}`);
+    if (checkErr || !booking) throw new Error('BOOKING_NOT_FOUND: El nodo destino no existe.');
+    if (booking.status !== 'checked_in') {
+      throw new Error(`INVALID_STATE: Solo se pueden cargar consumos a huéspedes activos.`);
+    }
 
-    revalidatePath('/dashboard/services');
-    revalidatePath('/dashboard/pos');
-    return { success: true, data };
-  } catch (error: any) {
-    console.error('🚨 [SEC-OPS] Fallo en createProductAction:', error);
-    return { success: false, error: error.message };
-  }
-}
+    const { error: rpcError } = await supabase.rpc('process_atomic_cart_sale', {
+      p_booking_id: payload.bookingId,
+      p_room_id: payload.roomId,
+      p_product_ids: payload.productIds,
+      p_quantities: payload.quantities,
+      p_total_amount: payload.amount,
+      p_description: payload.description
+    });
 
-// ============================================================================
-// 🚀 MOTOR POS AVANZADO
-// ============================================================================
-
-// 1. OBTENER HABITACIONES OCUPADAS (Para el buscador del POS)
-export async function getActiveBookingsForPosAction() {
-  try {
-    const currentHotel = await getCurrentHotel();
-    if (!currentHotel) throw new Error('No autorizado');
-
-    const { data, error } = await supabaseAdmin
-      .from('bookings')
-      .select('id, room_id, rooms(name), guest_id, guests(full_name)')
-      .eq('hotel_id', currentHotel.id)
-      .eq('status', 'checked_in');
-
-    if (error) throw new Error(`[DB Error]: ${error.message}`);
-
-    return { success: true, data };
-  } catch (error: any) {
-    return { success: false, error: error.message };
-  }
-}
-
-// 2. CARGAR CONSUMO A LA HABITACIÓN (Escribe en service_orders)
-export async function chargeToRoomAction(bookingId: string, roomId: string, description: string, amount: number) {
-  try {
-    const currentHotel = await getCurrentHotel();
-    if (!currentHotel) throw new Error('No autorizado');
-    
-    if (amount < 0) throw new Error('Operación rechazada: Monto negativo.');
-
-    const { error } = await supabaseAdmin.from('service_orders').insert([
-      {
-        hotel_id: currentHotel.id,
-        room_id: roomId, 
-        booking_id: bookingId, // 🛡️ CRÍTICO: Atamos el consumo al folio del huésped actual
-        items: description, 
-        total_price: amount,
-        status: 'pending',
-        payment_method: 'room_charge',
+    if (rpcError) {
+      if (rpcError.message.includes('OUT_OF_STOCK')) {
+        throw new Error('INVENTARIO AGOTADO: Uno o más productos del carrito no tienen stock suficiente.');
       }
-    ]);
-
-    if (error) throw new Error(`[DB Error]: ${error.message}`);
+      throw new Error(`TRANSACTION_FAILED: ${rpcError.message}`);
+    }
 
     revalidatePath('/dashboard/checkout');
+    revalidatePath('/dashboard/calendar'); 
     revalidatePath('/dashboard/pos');
+
     return { success: true };
   } catch (error: any) {
-    console.error('🚨 [SEC-OPS] Fallo en chargeToRoomAction:', error);
+    console.error('🚨 POS_ACID_BULK_ERROR:', error.message);
     return { success: false, error: error.message };
   }
 }
 
-// 3. COBRO INMEDIATO (Cliente de Paso / Walk-in)
-export async function processWalkInChargeAction(amount: number, description: string) {
+/**
+ * 🛡️ ACCIÓN POS: COBROS WALK-IN CON DEDUCCIÓN ATÓMICA DE STOCK
+ */
+export async function processWalkInChargeAction(payload: {
+  amount: number;
+  description: string;
+  productIds: (string | number)[]; // 👈 Requerido para deducción atómica
+  quantities: number[];            // 👈 Requerido para deducción atómica
+}) {
   try {
-    const currentHotel = await getCurrentHotel();
-    if (!currentHotel) throw new Error('No autorizado');
+    const hotel = await getCurrentHotel();
+    if (!hotel) throw new Error('No autorizado');
     
-    if (amount < 0) throw new Error('Operación rechazada: Monto negativo.');
+    if (payload.amount < 0) throw new Error('Operación rechazada: Monto negativo.');
 
     const cookieStore = await cookies();
     const staffCookie = cookieStore.get('hospeda_staff_session');
     
-    // 🛡️ BARRERA FORENSE: Evitar caída por JSON corrupto
     let staffId = null;
     try {
       if (staffCookie?.value) {
         staffId = JSON.parse(staffCookie.value).id;
       }
-    } catch (parseError) {
-      console.warn('⚠️ [SEC-OPS] Cookie de staff inválida o alterada. Procediendo como Anónimo.');
+    } catch (e) {
+      console.warn('⚠️ Staff session corrupta.');
     }
 
-    const { error } = await supabaseAdmin.from('payments').insert([
-      {
-        amount: amount,
-        method: 'cash',
-        notes: `Walk-in POS: ${description}`,
-        staff_id: staffId,
+    const supabase = await createClient();
+
+    // 1. Ejecución RPC Bulk (Atómica) para descontar stock
+    // Pasamos NULL para booking_id y room_id ya que es venta de mostrador
+    const { error: rpcError } = await supabase.rpc('process_atomic_cart_sale', {
+      p_booking_id: null, 
+      p_room_id: null,    
+      p_product_ids: payload.productIds,
+      p_quantities: payload.quantities,
+      p_total_amount: payload.amount,
+      p_description: `Walk-in POS: ${payload.description}`
+    });
+
+    if (rpcError) {
+      if (rpcError.message.includes('OUT_OF_STOCK')) {
+        throw new Error('INVENTARIO AGOTADO: No hay stock suficiente para venta de mostrador.');
       }
-    ]);
+      throw new Error(`INVENTORY_TRANSACTION_FAILED: ${rpcError.message}`);
+    }
 
-    if (error) throw new Error(`[DB Error]: ${error.message}`);
+    // 2. Si el stock se dedujo correctamente, registramos el pago en caja
+    const { error: paymentError } = await supabase.from('payments').insert([{
+      amount: payload.amount,
+      method: 'cash',
+      notes: `Walk-in POS: ${payload.description}`,
+      staff_id: staffId,
+    }]);
 
+    if (paymentError) {
+      // ⚠️ ADVERTENCIA FORENSE: Si esto falla, el stock se descontó pero el dinero no entró a la caja (Ledger Desync).
+      // En un sistema puro, ambos inserts deben estar en la MISMA función RPC de Postgres.
+      console.error('🚨 LEDGER_DESYNC_RISK: Fallo registro de pago tras deducir stock.', paymentError.message);
+      throw new Error(`PAYMENT_RECORD_FAILED: ${paymentError.message}`);
+    }
+
+    revalidatePath('/dashboard/pos');
     return { success: true };
   } catch (error: any) {
-    console.error('🚨 [SEC-OPS] Fallo en processWalkInChargeAction:', error);
     return { success: false, error: error.message };
   }
 }
 
-// 4. OBTENER EL MENÚ REAL DE LA BASE DE DATOS
-export async function getMenuAction() {
+export async function getActiveBookingsForPosAction() {
   try {
-    const currentHotel = await getCurrentHotel();
-    if (!currentHotel) throw new Error('No autorizado');
+    const hotel = await getCurrentHotel();
+    if (!hotel) throw new Error('No autorizado');
 
-    const { data, error } = await supabaseAdmin
-      .from('menu_items')
-      .select('*')
-      .eq('hotel_id', currentHotel.id)
-      // Si tienes una columna is_available, descomenta la siguiente línea:
-      // .eq('is_available', true) 
-      .order('category', { ascending: true });
+    const supabase = await createClient();
+    const { data, error } = await supabase
+      .from('bookings')
+      .select('id, room_id, rooms(name), guest_id, guests(full_name)')
+      .eq('hotel_id', hotel.id)
+      .eq('status', 'checked_in');
 
-    if (error) throw new Error(`[DB Error]: ${error.message}`);
-
+    if (error) throw new Error(`DB_ERROR: ${error.message}`);
     return { success: true, data };
   } catch (error: any) {
     return { success: false, error: error.message };

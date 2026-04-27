@@ -1,21 +1,18 @@
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import { createPortal } from 'react-dom';
+import { useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, User, Calendar, BedDouble, ShieldCheck, 
-  Trash2, Save, CreditCard, Smartphone, Hash, 
-  Sparkles, Moon, Hammer, ScanBarcode 
+  Trash2, Save, CreditCard, Hash, 
+  Sparkles, Moon, Hammer, ScanBarcode, AlertTriangle
 } from 'lucide-react';
 import { calculateStayPrice } from '@/utils/supabase/pricing';
 import ScannerModal from './ScannerModal';
 import { cn } from '@/lib/utils';
 import { BookingForm } from '@/hooks/useCalendar';
-
-// ==========================================
-// BLOQUE 1: INTERFACES ESTRICTAS
-// ==========================================
 
 interface PricingDetails {
   totalNights: number;
@@ -33,10 +30,6 @@ interface BookingWizardModalProps {
   onClose: () => void;
 }
 
-// ==========================================
-// BLOQUE 2: COMPONENTE PRESENTACIONAL (Liquid Glass)
-// ==========================================
-
 const BookingWizardModalView: React.FC<BookingWizardModalProps & {
   pricingDetails: PricingDetails;
   showScanner: boolean;
@@ -46,6 +39,7 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
   bookingForm, setBookingForm, availableRoomsList, handleCreateBooking,
   onDelete, onClose, pricingDetails, showScanner, setShowScanner, handleScanSuccess
 }) => {
+  const router = useRouter(); 
   const isEditing = !!bookingForm.id;
   const isMaintenance = bookingForm.type === 'maintenance';
 
@@ -57,7 +51,6 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
         exit={{ scale: 0.95, opacity: 0, y: 20 }}
         className='bg-[#09090b]/95 border border-white/10 w-full max-w-5xl rounded-[2.5rem] shadow-2xl overflow-hidden ring-1 ring-white/10 flex flex-col max-h-[90vh]'
       >
-        {/* HEADER ESTRATÉGICO */}
         <div className='p-8 border-b border-white/5 flex justify-between items-start bg-zinc-900/40 backdrop-blur-md'>
           <div>
             <div className='flex items-center gap-3 mb-1'>
@@ -75,16 +68,13 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
           </button>
         </div>
 
-        {/* BODY: SCROLLABLE LEDGER */}
         <form id="booking-wizard-form" onSubmit={handleCreateBooking} className='p-8 grid grid-cols-1 lg:grid-cols-12 gap-10 overflow-y-auto custom-scrollbar'>
           
-          {/* LADO IZQUIERDO: CONFIGURACIÓN LOGÍSTICA (7/12) */}
           <div className='lg:col-span-7 space-y-8'>
-            {/* Tipo de Operación */}
             <div className='bg-zinc-950/80 p-1.5 rounded-2xl flex border border-white/5 shadow-inner'>
               <button 
                 type="button" 
-                onClick={() => setBookingForm({...bookingForm, type: 'booking'})} 
+                onClick={() => setBookingForm({...bookingForm, type: 'booking', roomId: ''})} 
                 className={cn(
                   "flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2",
                   !isMaintenance ? "bg-zinc-800 text-zinc-100 shadow-md ring-1 ring-white/10" : "text-zinc-500 hover:text-zinc-300"
@@ -94,7 +84,7 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
               </button>
               <button 
                 type="button" 
-                onClick={() => setBookingForm({...bookingForm, type: 'maintenance'})} 
+                onClick={() => setBookingForm({...bookingForm, type: 'maintenance', roomId: ''})} 
                 className={cn(
                   "flex-1 py-3 rounded-xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2",
                   isMaintenance ? "bg-amber-500/20 text-amber-400 shadow-md ring-1 ring-amber-500/30" : "text-zinc-500 hover:text-zinc-300"
@@ -104,7 +94,6 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
               </button>
             </div>
 
-            {/* Ventana de Tiempo */}
             <div className='space-y-4'>
               <h4 className='text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2'>
                 <Calendar size={14} className="text-indigo-500" /> Ventana de Ocupación
@@ -112,41 +101,45 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
               <div className='grid grid-cols-2 gap-4'>
                 <div className='space-y-2'>
                   <label className='text-[10px] text-zinc-600 ml-2 font-bold uppercase'>In</label>
-                  <input type="date" required value={bookingForm.checkIn} onChange={(e) => setBookingForm({...bookingForm, checkIn: e.target.value})}
+                  <input type="date" required value={bookingForm.checkIn} onChange={(e) => setBookingForm({...bookingForm, checkIn: e.target.value, roomId: ''})}
                     className='w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-zinc-200 font-mono text-sm outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner'
                   />
                 </div>
                 <div className='space-y-2'>
                   <label className='text-[10px] text-zinc-600 ml-2 font-bold uppercase'>Out</label>
-                  <input type="date" required value={bookingForm.checkOut} min={bookingForm.checkIn} onChange={(e) => setBookingForm({...bookingForm, checkOut: e.target.value})}
+                  <input type="date" required value={bookingForm.checkOut} min={bookingForm.checkIn} onChange={(e) => setBookingForm({...bookingForm, checkOut: e.target.value, roomId: ''})}
                     className='w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-zinc-200 font-mono text-sm outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner'
                   />
                 </div>
               </div>
             </div>
 
-            {/* Asignación de Unidad */}
             <div className='space-y-4'>
               <h4 className='text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] flex items-center gap-2'>
                 <BedDouble size={14} className="text-sky-500" /> Asignación de Unidad
               </h4>
-              <select required value={bookingForm.roomId} onChange={(e) => setBookingForm({...bookingForm, roomId: e.target.value})}
-                className='w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-zinc-200 font-bold outline-none focus:ring-2 focus:ring-sky-500/50 transition-all appearance-none cursor-pointer'
-              >
-                <option value="">Seleccionar unidad física...</option>
-                {availableRoomsList.map(r => (
-                  <option key={r.id} value={r.id}>{r.name} — ${(Number(r.price) || 0).toLocaleString()} / noche</option>
-                ))}
-              </select>
+              
+              {availableRoomsList.length === 0 ? (
+                <div className='w-full p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl flex items-center justify-center gap-3 text-rose-400 font-bold'>
+                  <AlertTriangle size={18} /> Colisión Detectada: Sin disponibilidad para estas fechas.
+                </div>
+              ) : (
+                <select required value={bookingForm.roomId} onChange={(e) => setBookingForm({...bookingForm, roomId: e.target.value})}
+                  className='w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-zinc-200 font-bold outline-none focus:ring-2 focus:ring-sky-500/50 transition-all appearance-none cursor-pointer'
+                >
+                  <option value="">Seleccionar unidad física...</option>
+                  {availableRoomsList.map(r => (
+                    <option key={r.id} value={r.id}>{r.name} — ${(Number(r.price) || 0).toLocaleString()} / noche</option>
+                  ))}
+                </select>
+              )}
             </div>
           </div>
 
-          {/* LADO DERECHO: IDENTIDAD Y FINANZAS (5/12) */}
           <div className='lg:col-span-5'>
             <AnimatePresence mode="wait">
               {!isMaintenance ? (
                 <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-6">
-                  {/* Identidad OCR */}
                   <div className='bg-zinc-900/40 p-6 rounded-[2rem] border border-white/5 space-y-4'>
                     <div className='flex justify-between items-center'>
                       <label className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Identidad del Huésped</label>
@@ -170,9 +163,7 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
                     </div>
                   </div>
 
-                  {/* Bóveda Financiera (Pricing Breakdown) */}
                   <div className='bg-indigo-600/10 border border-indigo-500/20 p-8 rounded-[2rem] relative overflow-hidden ring-1 ring-indigo-500/10'>
-                    <div className="absolute -right-10 -bottom-10 size-40 bg-indigo-500/10 rounded-full blur-3xl" />
                     <h4 className='text-[10px] font-bold text-indigo-400 uppercase tracking-[0.2em] flex items-center gap-2 mb-6'>
                       <CreditCard size={14} /> Auditoría Financiera
                     </h4>
@@ -184,10 +175,6 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
                       <div className='flex justify-between text-emerald-400/70'>
                         <span>Noches Fin de Sem.:</span>
                         <span className='text-emerald-400 font-bold'>{pricingDetails.weekendNights}</span>
-                      </div>
-                      <div className='flex justify-between text-zinc-500 pt-2 border-t border-white/5'>
-                        <span>Tasa por Unidad:</span>
-                        <span className='text-zinc-200'>${(bookingForm.price / (pricingDetails.totalNights || 1)).toLocaleString()}</span>
                       </div>
                     </div>
                     <div className='flex justify-between items-end'>
@@ -204,27 +191,41 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
               ) : (
                 <motion.div initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} className='h-full flex flex-col items-center justify-center bg-amber-500/5 border border-amber-500/10 rounded-[2rem] p-10 text-center space-y-4'>
                   <Hammer className="size-16 text-amber-500/30" />
-                  <p className='font-bold uppercase tracking-widest text-sm text-amber-500'>Bloqueo Operativo</p>
-                  <p className='text-[10px] font-mono text-zinc-500 leading-relaxed'>La unidad no generará activos financieros durante el mantenimiento.</p>
+                  <p className='font-bold uppercase tracking-widest text-sm text-amber-400'>Bloqueo Operativo</p>
                 </motion.div>
               )}
             </AnimatePresence>
           </div>
         </form>
 
-        {/* ACCIONES DE CIERRE */}
         <div className='p-8 bg-[#09090b]/90 border-t border-white/5 flex flex-col sm:flex-row justify-between items-center gap-4 backdrop-blur-xl'>
-          {isEditing ? (
-            <button type="button" onClick={onDelete} className='w-full sm:w-auto px-6 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-all border border-rose-500/20 flex items-center justify-center gap-2'>
-              <Trash2 size={16} /> Anular Registro
-            </button>
-          ) : <div />}
+          <div className='flex flex-wrap items-center gap-3 w-full sm:w-auto'>
+            {isEditing && (
+              <>
+                <button type="button" onClick={onDelete} className='px-6 py-3 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-all border border-rose-500/20 flex items-center gap-2'>
+                  <Trash2 size={16} /> Anular
+                </button>
+                <button 
+                  type="button" 
+                  onClick={() => router.push(`/dashboard/checkout?id=${bookingForm.id}`)}
+                  className='px-6 py-3 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-400 rounded-2xl font-bold text-[10px] uppercase tracking-widest transition-all border border-emerald-500/20 flex items-center gap-2'
+                >
+                  <CreditCard size={16} /> Checkout / Cobro
+                </button>
+              </>
+            )}
+          </div>
 
           <div className='flex items-center gap-4 w-full sm:w-auto'>
             <button type="button" onClick={onClose} className='flex-1 sm:flex-none px-6 py-3 text-zinc-500 hover:text-zinc-300 font-bold text-sm transition-colors'>
               Cancelar
             </button>
-            <button type="submit" form="booking-wizard-form" className='flex-[2] sm:flex-none px-10 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm shadow-[0_20px_50px_rgba(79,70,229,0.3)] transition-all active:scale-95 flex items-center justify-center gap-3 ring-1 ring-white/20'>
+            <button 
+              type="submit" 
+              form="booking-wizard-form" 
+              disabled={availableRoomsList.length === 0}
+              className='disabled:opacity-50 disabled:cursor-not-allowed flex-[2] sm:flex-none px-10 py-4 bg-indigo-600 hover:bg-indigo-500 text-white rounded-2xl font-bold text-sm shadow-[0_20px_50px_rgba(79,70,229,0.3)] transition-all active:scale-95 flex items-center justify-center gap-3 ring-1 ring-white/20'
+            >
               {isEditing ? <><Save size={18} /> Persistir Cambios</> : <><ShieldCheck size={18} /> Confirmar Reserva</>}
             </button>
           </div>
@@ -238,10 +239,6 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
   );
 };
 
-// ==========================================
-// BLOQUE 3: COMPONENTE CONTENEDOR (Máquina de Inteligencia)
-// ==========================================
-
 export default function BookingWizardModal(props: BookingWizardModalProps) {
   const [isMounted, setIsMounted] = useState(false);
   const [showScanner, setShowScanner] = useState(false);
@@ -251,7 +248,6 @@ export default function BookingWizardModal(props: BookingWizardModalProps) {
 
   useEffect(() => { setIsMounted(true); }, []);
 
-  // 🛡️ MOTOR FINANCIERO: Cálculo de precios con blindaje de fin de semana
   useEffect(() => {
     const { bookingForm, availableRoomsList, setBookingForm } = props;
     if (bookingForm.roomId && bookingForm.checkIn && bookingForm.checkOut && bookingForm.type !== 'maintenance') {

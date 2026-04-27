@@ -11,7 +11,7 @@ import { logout } from '@/app/actions/auth';
 import ShiftReportModal from '@/components/modals/ShiftReportModal';
 
 // ==========================================
-// BLOQUE 1: INTERFACES ESTRICTAS (Co-Location)
+// BLOQUE 1: INTERFACES ESTRICTAS
 // ==========================================
 
 interface MenuItem {
@@ -43,7 +43,7 @@ interface SidebarProps {
 }
 
 // ==========================================
-// BLOQUE 2: COMPONENTE PRESENTACIONAL (UI Claude 2026)
+// BLOQUE 2: COMPONENTE PRESENTACIONAL
 // ==========================================
 
 const SidebarView: React.FC<SidebarViewProps> = ({
@@ -71,13 +71,24 @@ const SidebarView: React.FC<SidebarViewProps> = ({
       <nav className="flex-1 p-6 space-y-1.5 overflow-y-auto custom-scrollbar">
         {menuItems.map((item) => {
           const isActive = currentPath === item.href || (currentPath.startsWith(item.href) && item.href !== '/dashboard');
+          
+          // 🛡️ REPARACIÓN FORENSE: Indicador visual para módulos críticos (Housekeeping)
+          const showBadge = item.id === 'housekeeping'; 
+
           return (
-            <Link key={item.id} href={item.href} className="block group">
+            <Link key={item.id} href={item.href} className="block group relative">
               <NavButton 
                 icon={<item.icon className={cn("size-4.5 stroke-[1.5]", isActive ? "text-indigo-400" : "text-zinc-500 group-hover:text-zinc-300")} />} 
                 label={item.label} 
                 active={isActive} 
               />
+              {/* Badge de Alerta Operativa */}
+              {showBadge && (
+                <span 
+                  className="absolute right-4 top-1/2 -translate-y-1/2 size-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse" 
+                  aria-hidden="true"
+                />
+              )}
             </Link>
           );
         })}
@@ -117,14 +128,13 @@ const SidebarView: React.FC<SidebarViewProps> = ({
 };
 
 // ==========================================
-// BLOQUE 3: COMPONENTE CONTENEDOR (Máquina de Estados)
+// BLOQUE 3: COMPONENTE CONTENEDOR
 // ==========================================
 
 export default function Sidebar({ hotelName = 'HospedaSuite', user }: SidebarProps) {
   const pathname = usePathname();
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
 
-  // Lógica Forense: Orquestación segura del cierre de sesión
   const handleLogout = async () => {
     try {
       await logout();
@@ -144,7 +154,6 @@ export default function Sidebar({ hotelName = 'HospedaSuite', user }: SidebarPro
         onOpenShiftModal={() => setIsShiftModalOpen(true)}
       />
 
-      {/* Renderizado Adyacente (Previene recortes Z-Index en el aside) */}
       <ShiftReportModal 
         isOpen={isShiftModalOpen} 
         onClose={() => setIsShiftModalOpen(false)} 

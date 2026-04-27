@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BedDouble, Users, DollarSign, Plus, Edit, Trash2, Link2, RefreshCw, Search, Filter } from 'lucide-react';
+import { BedDouble, Users, DollarSign, Plus, Edit, Link2, RefreshCw, Search, Filter } from 'lucide-react';
 import { useInventory, Room } from '@/hooks/useInventory';
 import { syncChannelManagerAction } from '@/app/actions/channel-manager';
 import EmptyState from '@/components/ui/EmptyState'; 
@@ -10,11 +10,13 @@ import RoomEditorModal from './RoomEditorModal';
 import { cn } from '@/lib/utils';
 
 // ==========================================
-// BLOQUE 1: INTERFACES ESTRICTAS
+// BLOQUE 1: CONTRATOS REPARADOS (Zero-Trust)
 // ==========================================
 
+// 🛡️ REPARACIÓN: El panel ahora exige initialRooms para evitar el Waterfall Fetch
 interface InventoryPanelContainerProps {
   hotelId: string;
+  initialRooms: Room[];
 }
 
 interface InventoryPanelViewProps {
@@ -30,111 +32,118 @@ interface InventoryPanelViewProps {
 }
 
 // ==========================================
-// BLOQUE 2: COMPONENTES AUXILIARES (Skeleton & Badges)
+// BLOQUE 2: MICRO-COMPONENTES (Estilo Mac 2026)
 // ==========================================
+
+const getStatusConfig = (status: string) => {
+  switch (status) {
+    case 'active':
+    case 'available':
+      return { label: 'Disponible', badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20 shadow-[0_0_10px_rgba(16,185,129,0.1)]', dot: 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' };
+    case 'maintenance':
+      return { label: 'Mantenimiento', badge: 'bg-amber-500/10 text-amber-400 border-amber-500/20 shadow-[0_0_10px_rgba(245,158,11,0.1)]', dot: 'bg-amber-500' };
+    case 'occupied':
+      return { label: 'Ocupada', badge: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20 shadow-[0_0_10px_rgba(99,102,241,0.1)]', dot: 'bg-indigo-500' };
+    case 'dirty':
+      return { label: 'Sucia / Check-out', badge: 'bg-rose-500/10 text-rose-400 border-rose-500/20 shadow-[0_0_10px_rgba(244,63,94,0.1)]', dot: 'bg-rose-500 animate-pulse' };
+    default:
+      return { label: 'Inactiva', badge: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20', dot: 'bg-zinc-500' };
+  }
+};
 
 const InventorySkeleton = () => (
   <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
     {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div key={i} className='bg-zinc-900/40 backdrop-blur-sm rounded-[2rem] p-6 border border-white/5 shadow-xl animate-pulse'>
-        <div className='w-12 h-12 bg-zinc-800/50 rounded-2xl mb-4'></div>
-        <div className='h-5 bg-zinc-800/50 rounded-full w-3/4 mb-3'></div>
-        <div className='h-3 bg-zinc-800/50 rounded-full w-1/2 mb-6'></div>
-        <div className='flex gap-2'>
-          <div className='h-8 bg-zinc-800/50 rounded-xl w-1/3'></div>
-          <div className='h-8 bg-zinc-800/50 rounded-xl w-1/3'></div>
+      <div key={i} className='bg-zinc-900/20 backdrop-blur-3xl rounded-[2.5rem] p-6 border border-white/5 shadow-2xl animate-pulse'>
+        <div className='w-14 h-14 bg-zinc-800/50 rounded-2xl mb-6'></div>
+        <div className='h-6 bg-zinc-800/50 rounded-full w-2/3 mb-4'></div>
+        <div className='h-4 bg-zinc-800/50 rounded-full w-1/2 mb-8'></div>
+        <div className='flex gap-3'>
+          <div className='h-10 bg-zinc-800/50 rounded-xl w-1/2'></div>
+          <div className='h-10 bg-zinc-800/50 rounded-xl w-1/2'></div>
         </div>
       </div>
     ))}
   </div>
 );
 
-const getStatusConfig = (status: string) => {
-  switch (status) {
-    case 'active':
-    case 'available':
-      return { label: 'Disponible', color: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/20' };
-    case 'maintenance':
-      return { label: 'Mantenimiento', color: 'bg-amber-500/10 text-amber-400 border-amber-500/20' };
-    case 'occupied':
-      return { label: 'Ocupada', color: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20' };
-    default:
-      return { label: 'Inactiva', color: 'bg-zinc-500/10 text-zinc-400 border-zinc-500/20' };
-  }
-};
-
 // ==========================================
-// BLOQUE 3: COMPONENTE PRESENTACIONAL (UI Claude 2026)
+// BLOQUE 3: CAPA DE PRESENTACIÓN
 // ==========================================
 
 const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
   rooms, isLoading, searchTerm, setSearchTerm, filterStatus, setFilterStatus, isSyncing, onSync, onOpenEditor
 }) => {
   return (
-    <div className='space-y-6 pb-20 font-poppins text-zinc-100'>
+    <div className='space-y-8 pb-20 font-poppins text-zinc-100'>
       
-      {/* HEADER: Controles de Misión */}
-      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 bg-zinc-900/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/5 shadow-2xl shadow-black/50'>
+      {/* HEADER TIPO DYNAMIC ISLAND (Mac 2026 Style) */}
+      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-[#09090b]/80 backdrop-blur-3xl p-6 rounded-[2.5rem] border border-white/10 shadow-2xl sticky top-4 z-20'>
         <div>
-          <h2 className='text-2xl font-bold tracking-tight text-zinc-50'>Matriz de Inventario</h2>
-          <p className='text-zinc-400 font-lora text-sm mt-1'>Gestión topológica de unidades y sincronización OTA.</p>
+          <h2 className='text-2xl font-bold tracking-tight text-white flex items-center gap-3'>
+            Matriz de Inventario
+            <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-full border border-indigo-500/30 uppercase tracking-widest">{rooms.length} Unidades</span>
+          </h2>
+          <p className='text-zinc-400 font-medium text-sm mt-1'>Control topológico de la propiedad y sincronización OTA.</p>
         </div>
         
-        <div className='flex flex-wrap items-center gap-3 w-full lg:w-auto'>
-          {/* Barra de Búsqueda Forense */}
-          <div className='relative flex-1 lg:w-64'>
-            <Search className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500 stroke-[1.5]' />
+        <div className='flex flex-wrap items-center gap-3 w-full lg:w-auto bg-zinc-950 p-2 rounded-3xl border border-white/5 shadow-inner'>
+          
+          <div className='relative flex-1 lg:w-48'>
+            <Search className='absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500 stroke-[2]' />
             <input
               type='text'
               placeholder='Buscar unidad...'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className='w-full pl-10 pr-4 py-2.5 bg-zinc-950/50 border border-white/10 rounded-xl text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all'
+              className='w-full pl-11 pr-4 py-3 bg-zinc-900/50 hover:bg-zinc-900 border border-transparent hover:border-white/10 rounded-2xl text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all'
             />
           </div>
 
-          {/* Filtro de Estado */}
           <div className='relative'>
-            <Filter className='absolute left-3 top-1/2 -translate-y-1/2 size-4 text-zinc-500 stroke-[1.5]' />
+            <Filter className='absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500 stroke-[2]' />
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className='pl-10 pr-8 py-2.5 bg-zinc-950/50 border border-white/10 rounded-xl text-sm text-zinc-200 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer transition-all'
+              className='pl-11 pr-10 py-3 bg-zinc-900/50 hover:bg-zinc-900 border border-transparent hover:border-white/10 rounded-2xl text-sm text-zinc-200 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer transition-all font-medium'
             >
               <option value='all'>Todos los Estados</option>
-              <option value='active'>Disponibles</option>
+              <option value='available'>Disponibles</option>
+              <option value='occupied'>Ocupadas</option>
+              <option value='dirty'>Sucias / Aseo</option>
               <option value='maintenance'>Mantenimiento</option>
             </select>
           </div>
 
-          {/* Botones de Acción Táctica */}
+          <div className="w-px h-8 bg-white/10 mx-1 hidden sm:block"></div>
+
           <button 
             onClick={onSync} 
             disabled={isSyncing}
-            className='flex items-center gap-2 px-4 py-2.5 bg-zinc-800/50 hover:bg-zinc-700/50 border border-white/5 text-zinc-300 rounded-xl font-medium text-sm transition-all disabled:opacity-50'
+            className='p-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl transition-all disabled:opacity-50 active:scale-95'
+            title="Sincronizar Channel Manager"
           >
-            <RefreshCw className={cn("size-4 stroke-[1.5]", isSyncing && "animate-spin")} />
-            <span className="hidden sm:inline">Sincronizar</span>
+            <RefreshCw className={cn("size-5 stroke-[2]", isSyncing && "animate-spin")} />
           </button>
           
           <button 
             onClick={() => onOpenEditor()}
-            className='flex items-center gap-2 px-4 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all active:scale-95'
+            className='flex items-center gap-2 px-6 py-3 bg-white hover:bg-zinc-200 text-black rounded-2xl font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all active:scale-95'
           >
-            <Plus className="size-4 stroke-[2]" /> Nueva Unidad
+            <Plus className="size-5 stroke-[2]" /> Nueva
           </button>
         </div>
       </div>
 
-      {/* RENDERIZADO CONDICIONAL DE DATA */}
-      {isLoading ? (
+      {/* RENDERIZADO REACTIVO DE GRID */}
+      {isLoading && rooms.length === 0 ? (
         <InventorySkeleton />
       ) : rooms.length === 0 ? (
         <EmptyState 
           icon={BedDouble}
-          title="Inventario Vacío"
-          description={searchTerm ? "No se encontraron unidades que coincidan con los parámetros de búsqueda." : "No hay habitaciones registradas en la base de datos. Inicie añadiendo su primera unidad."}
-          actionLabel={searchTerm ? "Limpiar Filtros" : "Añadir Habitación"}
+          title="Sin Coincidencias"
+          description={searchTerm ? "Modifique los filtros de búsqueda superior." : "Inicie la configuración topológica de su hotel añadiendo una unidad."}
+          actionLabel={searchTerm ? "Limpiar Filtros" : "Añadir Unidad"}
           actionOnClick={searchTerm ? () => { setSearchTerm(''); setFilterStatus('all'); } : () => onOpenEditor()}
           color="zinc"
         />
@@ -148,53 +157,58 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                 <motion.div 
                   key={room.id}
                   layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
+                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
                   exit={{ opacity: 0, scale: 0.95 }}
-                  whileHover={{ y: -4 }}
-                  className='bg-zinc-900/40 backdrop-blur-sm rounded-[2rem] p-6 border border-white/5 shadow-xl relative overflow-hidden group'
+                  whileHover={{ y: -5 }}
+                  className='bg-zinc-900/40 backdrop-blur-2xl rounded-[2.5rem] p-6 border border-white/5 shadow-2xl relative overflow-hidden group flex flex-col justify-between'
                 >
-                  {/* Resplandor Dinámico */}
-                  <div className="absolute -right-10 -top-10 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors duration-500"></div>
+                  <div className="absolute -right-20 -top-20 w-48 h-48 bg-white/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors duration-700 ease-out"></div>
                   
                   <div className="relative z-10">
                     <div className='flex justify-between items-start mb-6'>
-                      <div className='size-12 rounded-2xl bg-zinc-800/80 border border-white/5 flex items-center justify-center text-zinc-300 group-hover:text-indigo-400 group-hover:bg-indigo-500/10 transition-colors'>
+                      <div className='size-14 rounded-[1.2rem] bg-zinc-950 border border-white/10 flex items-center justify-center text-zinc-400 group-hover:text-indigo-400 shadow-inner transition-colors'>
                         <BedDouble className="size-6 stroke-[1.5]" />
                       </div>
-                      <span className={`px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border ${statusConfig.color}`}>
-                        {statusConfig.label}
-                      </span>
+                      <div className='flex items-center gap-2'>
+                        <span className={cn("size-2 rounded-full", statusConfig.dot)}></span>
+                        <span className={cn(`px-3 py-1 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] border`, statusConfig.badge)}>
+                          {statusConfig.label}
+                        </span>
+                      </div>
                     </div>
 
-                    <h3 className='text-xl font-bold text-zinc-50 mb-1 truncate'>{room.name}</h3>
-                    <p className='text-sm text-zinc-500 font-mono mb-6 truncate'>{(room.type || 'Estándar').toUpperCase()}</p>
+                    <h3 className='text-2xl font-bold text-white tracking-tighter mb-1'>{room.name}</h3>
+                    <p className='text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-6'>{(room.type || 'ESTÁNDAR')}</p>
 
-                    <div className='space-y-3 mb-6'>
-                      <div className='flex items-center text-zinc-400 text-sm bg-zinc-950/30 p-2.5 rounded-xl border border-white/5'>
-                        <Users className='size-4 mr-3 text-zinc-500' />
-                        <span className='font-medium'>Capacidad:</span>
-                        <span className='ml-auto text-zinc-200 font-bold'>{room.capacity} pax</span>
+                    <div className='space-y-2 mb-8'>
+                      <div className='flex justify-between items-center text-zinc-300 text-sm bg-zinc-950/40 px-4 py-3 rounded-2xl border border-white/5'>
+                        <span className='flex items-center font-medium text-zinc-500 text-xs uppercase tracking-wider'>
+                          <Users className='size-4 mr-2' /> Capacidad
+                        </span>
+                        <span className='font-bold'>{room.capacity} Pax</span>
                       </div>
-                      <div className='flex items-center text-zinc-400 text-sm bg-zinc-950/30 p-2.5 rounded-xl border border-white/5'>
-                        <DollarSign className='size-4 mr-3 text-emerald-500/70' />
-                        <span className='font-medium'>Tarifa Base:</span>
-                        <span className='ml-auto text-zinc-200 font-mono'>${(room.base_price || room.price || 0).toLocaleString()}</span>
+                      <div className='flex justify-between items-center text-zinc-300 text-sm bg-zinc-950/40 px-4 py-3 rounded-2xl border border-white/5'>
+                        <span className='flex items-center font-medium text-zinc-500 text-xs uppercase tracking-wider'>
+                          <DollarSign className='size-4 mr-2 text-emerald-500/50' /> Tarifa Base
+                        </span>
+                        <span className='font-mono font-bold text-emerald-400'>${(room.base_price || room.price || 0).toLocaleString()}</span>
                       </div>
+                      
                       {room.ical_import_url && (
-                        <div className='flex items-center text-xs text-sky-400/80 bg-sky-500/5 p-2 rounded-xl border border-sky-500/10'>
-                          <Link2 className='size-3 mr-2' /> Sincronización OTA Activa
+                        <div className='mt-4 flex items-center justify-center text-[10px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 py-2 rounded-xl border border-sky-500/20'>
+                          <Link2 className='size-3 mr-2' /> OTA Sync Activa
                         </div>
                       )}
                     </div>
-
-                    <button 
-                      onClick={() => onOpenEditor(room)}
-                      className='w-full py-3 bg-zinc-800/50 hover:bg-indigo-600 border border-white/5 hover:border-indigo-500 text-zinc-300 hover:text-white rounded-xl font-bold text-sm transition-all flex items-center justify-center gap-2'
-                    >
-                      <Edit className='size-4 stroke-[2]' /> Configurar Unidad
-                    </button>
                   </div>
+
+                  <button 
+                    onClick={() => onOpenEditor(room)}
+                    className='relative z-10 w-full py-4 bg-zinc-950 hover:bg-white border border-white/10 hover:border-white text-zinc-400 hover:text-black rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]'
+                  >
+                    <Edit className='size-4 stroke-[2]' /> Editar Unidad
+                  </button>
                 </motion.div>
               );
             })}
@@ -206,35 +220,39 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
 };
 
 // ==========================================
-// BLOQUE 4: COMPONENTE CONTENEDOR (Máquina de Estados)
+// BLOQUE 4: COMPONENTE CONTENEDOR (Data Logic)
 // ==========================================
 
-export default function InventoryPanel({ hotelId }: InventoryPanelContainerProps) {
+export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanelContainerProps) {
+  // 🛡️ REPARACIÓN: Inicializamos el estado local con los datos del servidor para hidratación instantánea
+  const [localRooms, setLocalRooms] = useState<Room[]>(initialRooms);
+  
+  // Asumimos que useInventory ahora se usa solo para operaciones subsecuentes o ignoramos isLoading si hay datos.
   const { rooms, isLoading, syncRooms } = useInventory(hotelId);
   
-  // Estado Local (UI State)
+  // Sincronización de memoria si el hook trae datos frescos
+  useEffect(() => {
+    if (rooms && rooms.length > 0) {
+      setLocalRooms(rooms);
+    }
+  }, [rooms]);
+
   const [searchTerm, setSearchTerm] = useState('');
   const [filterStatus, setFilterStatus] = useState('all');
   const [isSyncing, setIsSyncing] = useState(false);
-  
-  // Estado de Modal
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
 
-  // 🚨 Lógica de Filtrado Memoria (Memoizada y BLINDADA CON ZERO-TRUST)
+  // Filtrado Seguro
   const filteredRooms = useMemo(() => {
-    // Escudo Cero Confianza: Si rooms es undefined o null, se convierte en un arreglo vacío.
-    const safeRooms = Array.isArray(rooms) ? rooms : [];
-    
+    const safeRooms = Array.isArray(localRooms) ? localRooms : [];
     return safeRooms.filter((room) => {
-      // Usamos Optional Chaining (?.) por si el objeto room no tiene la propiedad name.
       const matchesSearch = room?.name?.toLowerCase().includes(searchTerm.toLowerCase()) ?? false;
       const matchesStatus = filterStatus === 'all' || room?.status === filterStatus;
       return matchesSearch && matchesStatus;
     });
-  }, [rooms, searchTerm, filterStatus]);
+  }, [localRooms, searchTerm, filterStatus]);
 
-  // Handler de Acciones
   const handleManualSync = async () => {
     setIsSyncing(true);
     try {
@@ -260,11 +278,14 @@ export default function InventoryPanel({ hotelId }: InventoryPanelContainerProps
     }
   };
 
+  // Se oculta el skeleton si ya tenemos initialRooms
+  const showLoading = isLoading && localRooms.length === 0;
+
   return (
     <>
       <InventoryPanelView 
         rooms={filteredRooms}
-        isLoading={isLoading}
+        isLoading={showLoading}
         searchTerm={searchTerm}
         setSearchTerm={setSearchTerm}
         filterStatus={filterStatus}
@@ -274,7 +295,6 @@ export default function InventoryPanel({ hotelId }: InventoryPanelContainerProps
         onOpenEditor={handleOpenEditor}
       />
 
-      {/* Portal Inyectado Fuera del Layout de Rejilla */}
       {isEditorOpen && (
         <RoomEditorModal 
           hotelId={hotelId} 

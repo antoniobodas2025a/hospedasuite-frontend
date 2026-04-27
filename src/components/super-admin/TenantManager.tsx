@@ -1,8 +1,9 @@
 'use client';
 
 import { useState } from 'react';
-import { Building2, Key, Trash2, Edit, X, Save, Lock, AlertTriangle, DollarSign } from 'lucide-react';
+import { Building2, Key, Trash2, Edit, X, Save, Lock, AlertTriangle, DollarSign, Rocket } from 'lucide-react';
 import { godModeAccess, deleteHotelAction, updateTenantAction, forceChangePasswordAction } from '@/app/actions/super-admin';
+import { injectDemoDataAction } from '@/app/actions/seeding';
 
 // Importamos el tipo del HQ para tipar las props
 import { HotelFinancialRecord } from '@/app/actions/hq';
@@ -22,7 +23,13 @@ export default function TenantManager({ hotels, hqData = [] }: TenantManagerProp
     const res = await godModeAccess(email);
     setIsProcessing(false);
     if (res.success && res.url) {
-      window.open(res.url, '_blank');
+      try {
+        await navigator.clipboard.writeText(res.url);
+        alert('🔑 ENLACE MAGICO COPIADO AL PORTAPAPELES.\n\n⚠️ ALERTA DE AISLAMIENTO: Para evitar destruir tu sesión de Super Administrador, abre una "Ventana de Incógnito" (Ctrl+Shift+N) y pega el enlace allí.');
+      } catch (err) {
+        // Fallback por si el navegador bloquea el portapapeles
+        prompt('Copia este enlace y pégalo en una Ventana de Incógnito:', res.url);
+      }
     } else {
       alert("Error en Modo Dios: " + res.error);
     }
@@ -68,6 +75,19 @@ export default function TenantManager({ hotels, hqData = [] }: TenantManagerProp
       setNewPassword('');
     } else {
       alert("Error cambiando contraseña: " + res.error);
+    }
+  };
+
+  // 🚀 INYECCIÓN GTM: Gatillo de Demostración (Seeding)
+  const handleSeed = async (id: string, name: string) => {
+    if (!confirm(`⚠️ ¿Inyectar datos de demostración sintéticos en [${name}]?`)) return;
+    setIsProcessing(true);
+    const res = await injectDemoDataAction(id);
+    setIsProcessing(false);
+    if (res.success) {
+      alert('✅ Demostración lista. El hotel ha sido poblado.');
+    } else {
+      alert('❌ Error de Inyección: ' + res.error);
     }
   };
 
@@ -128,6 +148,11 @@ export default function TenantManager({ hotels, hqData = [] }: TenantManagerProp
                 </td>
                 <td className='p-6 flex justify-end gap-3 items-center'>
                   
+                  {/* 🚀 BOTÓN GTM SEEDING INYECTADO */}
+                  <button onClick={() => handleSeed(hotel.id, hotel.name)} disabled={isProcessing} className='p-2 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500 hover:text-white rounded-lg transition-all border border-indigo-500/20 disabled:opacity-50' title='Inyectar Matriz de Demostración'>
+                    <Rocket size={16} />
+                  </button>
+
                   <button onClick={() => setEditingHotel(hotel)} className='p-2 bg-blue-500/10 text-blue-400 hover:bg-blue-500 hover:text-white rounded-lg transition-all border border-blue-500/20' title='Editar Tenant'>
                     <Edit size={16} />
                   </button>
