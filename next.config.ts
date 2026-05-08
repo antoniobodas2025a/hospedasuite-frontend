@@ -2,8 +2,15 @@ import { withSentryConfig } from '@sentry/nextjs';
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // 📸 CONFIGURACIÓN DE MOTOR DE IMÁGENES (SUPABASE + CDN)
   images: {
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'auaqpomuivfhomlkvhju.supabase.co',
+        port: '',
+        pathname: '/storage/v1/object/public/**',
+      },
       {
         protocol: 'https',
         hostname: 'images.unsplash.com',
@@ -11,13 +18,13 @@ const nextConfig = {
     ],
   },
   
-  // BYPASS PARA VERCEL
+  // 🛡️ CONFIGURACIÓN DE COMPILACIÓN
   typescript: {
-    ignoreBuildErrors: true,
+    // Nota: Mantener en true solo si las dependencias de terceros tienen tipos rotos.
+    ignoreBuildErrors: true, 
   },
-  
 
-  // 🛡️ BARRERA WAF: Cabeceras HTTP Estrictas (Inyectado por Dra. Cipher)
+  // 🛡️ BARRERA WAF: Cabeceras HTTP Estrictas (Security-First)
   async headers() {
     return [
       {
@@ -34,21 +41,15 @@ const nextConfig = {
   },
 };
 
-// 📡 INYECCIÓN DE TELEMETRÍA (Híbrido Sentry Wizard + SecOps Shield)
-export default withSentryConfig(nextConfig, {
+// 📡 INYECCIÓN DE TELEMETRÍA (Sentry Wizard + SecOps Shield)
+const sentryOptions = {
   org: "hospedasuite",
   project: "hospedasuite-frontend",
   silent: true,
   widenClientFileUpload: true,
   tunnelRoute: "/monitoring",
-  
-  // 🛡️ SecOps: Oculta el código fuente original en los navegadores de los usuarios
-  hideSourceMaps: true,
+  hideSourceMaps: true, // Protección de propiedad intelectual (Capa 7)
+};
 
-  webpack: {
-    automaticVercelMonitors: true,
-    treeshake: {
-      removeDebugLogging: true,
-    },
-  },
-});
+// EXPORTACIÓN DETERMINISTA
+export default withSentryConfig(nextConfig, sentryOptions);

@@ -63,33 +63,32 @@ async function handler(req: Request) {
         const events = await ical.async.fromURL(room.ical_import_url);
         
         for (const event of Object.values(events)) {
-          if (event.type === 'VEVENT') {
-            const externalId = event.uid;
-            const checkIn = new Date(event.start as Date).toISOString().split('T')[0];
-            const checkOut = new Date(event.end as Date).toISOString().split('T')[0];
-            const today = new Date().toISOString().split('T')[0];
+          if (event?.type !== 'VEVENT') continue;
+          const externalId = event.uid;
+          const checkIn = new Date(event.start).toISOString().split('T')[0];
+          const checkOut = new Date(event.end as Date).toISOString().split('T')[0];
+          const today = new Date().toISOString().split('T')[0];
 
-            if (checkOut <= today) continue;
+          if (checkOut <= today) continue;
 
-            const { data: existingBooking } = await supabaseAdmin
-              .from('bookings')
-              .select('id')
-              .eq('external_id', externalId)
-              .single();
+          const { data: existingBooking } = await supabaseAdmin
+            .from('bookings')
+            .select('id')
+            .eq('external_id', externalId)
+            .single();
 
-            if (!existingBooking) {
-              await supabaseAdmin.from('bookings').insert([{
-                hotel_id: hotelId,
-                room_id: room.id,
-                guest_id: guestId, 
-                check_in: checkIn,
-                check_out: checkOut,
-                status: 'blocked_ota',
-                total_price: 0,
-                external_id: externalId
-              }]);
-              totalImported++;
-            }
+          if (!existingBooking) {
+            await supabaseAdmin.from('bookings').insert([{
+              hotel_id: hotelId,
+              room_id: room.id,
+              guest_id: guestId, 
+              check_in: checkIn,
+              check_out: checkOut,
+              status: 'blocked_ota',
+              total_price: 0,
+              external_id: externalId
+            }]);
+            totalImported++;
           }
         }
       } catch (icalError: any) {

@@ -26,7 +26,7 @@ export default function SuperAdminHQ() {
       setIsLoading(true);
       const res = await getHQFinancialReportAction();
       if (res.success) {
-        setData(res.report);
+        setData(res.report ?? []);
         setKpis(res.kpis);
       } else {
         setError(res.error);

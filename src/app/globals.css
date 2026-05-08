@@ -1,13 +1,13 @@
 @import 'tailwindcss';
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-/* ---break---
-*/
+
 @custom-variant dark (&:is(.dark *));
 
-/* HOSPEDASUITE CORE THEME - TAILWIND V4 
-  Certificado para Producción: 22-Abril-2026
-*/
+/* ====================================================
+   HOSPEDASUITE CORE THEME - TAILWIND V4 
+   Certificado para Producción: Arquitectura Tier-1
+   ==================================================== */
 @theme {
   --color-hospeda-50: #f0f9ff;
   --color-hospeda-100: #e0f2fe;
@@ -35,35 +35,45 @@
     color-scheme: light dark;
   }
 
-  body {
-    /* Estética PhD: Fondo Profundo con Gradiente Radial */
+  /* 📱 MOTOR DE RESILIENCIA MOBILE FIRST: Core Viewport */
+  html, body {
     @apply antialiased bg-background text-foreground;
-    background-image: radial-gradient(circle at 50% 0%, #0c4a6e 0%, #020617 100%);
-    min-height: 100vh;
     font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    
+    /* Corrección de Viewport Dinámico (Elimina el recorte del menú de Safari) */
+    min-height: 100dvh;
+    /* Previene el rebote elástico no deseado al hacer scroll en iOS (Overscroll) */
+    overscroll-behavior-y: none;
+    /* Quita el cuadro azul al tocar botones en Android */
+    -webkit-tap-highlight-color: transparent; 
   }
 
-  /* 🛡️ RESOLUCIÓN DEL CONFLICTO: WHITE ON WHITE */
-  /* Forzamos determinismo en elementos de entrada */
-  input, select, textarea {
-    @apply bg-white text-slate-900 border-slate-200 shadow-sm transition-all;
-    color: #0f172a !important; /* Slate 900 */
-    background-color: #ffffff !important;
+  body {
+    /* Estética PhD: Fondo Profundo con Gradiente Radial (Base B2B) */
+    background-image: radial-gradient(circle at 50% 0%, #0c4a6e 0%, #020617 100%);
   }
 
-  /* Estilos para el autocompletado del navegador (Chrome/Safari) */
+  /* Estilos para el autocompletado del navegador (Chrome/Safari) - Neutro para Dark/Light */
   input:-webkit-autofill,
   input:-webkit-autofill:hover, 
   input:-webkit-autofill:focus {
-    -webkit-text-fill-color: #0f172a !important;
-    -webkit-box-shadow: 0 0 0px 1000px white inset !important;
     transition: background-color 5000s ease-in-out 0s;
   }
+  
   * {
     @apply border-border outline-ring/50;
   }
+  
   html {
     @apply font-sans;
+  }
+
+  /* Parche Global para utilidades de Tailwind en Mobile */
+  .min-h-screen {
+    min-height: 100dvh !important;
+  }
+  .h-screen {
+    height: 100dvh !important;
   }
 }
 
@@ -82,7 +92,82 @@
   }
 }
 
-/* PROTOCOLO DE IMPRESIÓN (TICKETS Y REPORTES) */
+/* ====================================================
+   📱 NEUTRALIZACIÓN DEL EFECTO FANTASMA (HOVER STICKINESS)
+   Solo aplica efectos hover si el dispositivo tiene un mouse físico
+   ==================================================== */
+@media (hover: none) and (pointer: coarse) {
+  .group:hover {
+    transform: none !important;
+    box-shadow: inherit !important;
+  }
+  button:active, a:active {
+    transform: scale(0.96);
+    transition: transform 0.1s ease;
+  }
+}
+
+/* ====================================================
+   📅 PROTECCIÓN DEL CALENDARIO (DAYPICKER) EN MÓVILES B2C
+   ==================================================== */
+@media (max-width: 768px) {
+  .date-picker-b2c {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100vw;
+    top: auto;
+    border-radius: 2rem 2rem 0 0;
+    border-bottom: none;
+    box-shadow: 0 -20px 40px rgba(0,0,0,0.1);
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .date-picker-b2c .rdp {
+    --rdp-cell-size: 40px;
+    margin: 0 auto;
+    display: flex;
+    justify-content: center;
+  }
+}
+
+@keyframes slideUp {
+  from { transform: translateY(100%); }
+  to { transform: translateY(0); }
+}
+
+/* --- OVERRIDES: REACT DAY PICKER (B2C FROSTED PEARL EDITION) --- */
+.date-picker-b2c .rdp {
+  --rdp-cell-size: 42px;
+  --rdp-accent-color: #4f46e5; /* indigo-600 */
+  --rdp-background-color: #eef2ff; /* indigo-50 */
+  --rdp-outline: 2px solid var(--rdp-accent-color);
+  margin: 0;
+  color: #0f172a; /* slate-900 */
+}
+
+.date-picker-b2c .rdp-day_selected {
+  background-color: var(--rdp-accent-color) !important;
+  color: white !important;
+  font-weight: 700;
+}
+
+.date-picker-b2c .rdp-day:hover:not(.rdp-day_selected) {
+  background-color: #f1f5f9; /* slate-100 */
+  border-radius: 12px;
+}
+
+.date-picker-b2c .rdp-head_cell {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: #64748b; /* slate-500 */
+  font-weight: 800;
+}
+
+/* ====================================================
+   🖨️ PROTOCOLO DE IMPRESIÓN (TICKETS Y REPORTES)
+   ==================================================== */
 @media print {
   @page { margin: 0; size: auto; }
   body {
@@ -97,8 +182,10 @@
     text-shadow: none !important;
   }
 }
-/* ---break---
-*/
+
+/* ====================================================
+   🎨 VARIABLES SHADCN/UI (OKLCH HIGH-PERFORMANCE)
+   ==================================================== */
 @theme inline {
   --font-heading: var(--font-sans);
   --font-sans: var(--font-sans);
@@ -141,8 +228,7 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 }
-/* ---break---
-*/
+
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
@@ -177,8 +263,7 @@
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
 }
-/* ---break---
-*/
+
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);

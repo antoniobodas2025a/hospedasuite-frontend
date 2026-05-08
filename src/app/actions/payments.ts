@@ -154,39 +154,29 @@ export async function processPaymentAction(payload: {
 }
 
 // ============================================================================
-// 3. FINALIZAR CHECKOUT (CON TRIPLE PURGA DE CACHÉ)
+// 3. FINALIZAR CHECKOUT (RPC ATÓMICO)
 // ============================================================================
 export async function finalizeCheckoutAction(bookingId: string, roomId: string, serviceIds: string[]) {
   try {
+    // 🛡️ RPC Atómico: un solo viaje a PostgreSQL, todo o nada.
+    // Si falla la room update o el cierre de consumos, Postgres revierte TODO.
     const supabase = await createClient();
+    const { data, error: rpcError } = await supabase
+      .rpc('atomic_check_out', {
+        p_booking_id: bookingId,
+        p_room_id: roomId,
+        p_service_ids: serviceIds.length > 0 ? serviceIds : null,
+      });
 
-    // 1. Cambio de Estado Atómico en el Ledger
-    const { error: bookingErr } = await supabase
-      .from('bookings')
-      .update({ status: 'checked_out' })
-      .eq('id', bookingId);
-    
-    if (bookingErr) throw new Error('DB_ERROR: No se pudo cerrar el folio de reserva.');
-
-    // 2. Liberación de Inventario (Marcado como Sucio)
-    const { error: roomErr } = await supabase
-      .from('rooms')
-      .update({ status: 'dirty' })
-      .eq('id', roomId);
-    
-    if (roomErr) console.error('⚠️ Advertencia: No se pudo marcar habitación como sucia:', roomErr.message);
-
-    // 3. Cierre de Consumos Extra
-    if (serviceIds.length > 0) {
-      const { error: svcErr } = await supabase
-        .from('service_items')
-        .update({ status: 'paid' })
-        .in('id', serviceIds);
-        
-      if (svcErr) console.warn('⚠️ Advertencia: No se pudieron cerrar los consumos asociados.', svcErr.message);
+    if (rpcError) {
+      throw new Error(`RPC_ERROR: ${rpcError.message}`);
     }
 
-    // 🛡️ PROTOCOLO FORENSE: Purga de Datos Global (Garantiza limpieza de Sidebar)
+    if (!data?.success) {
+      throw new Error(data?.error || 'CHECKOUT_FAILED: Error desconocido en la transacción.');
+    }
+
+    // 🛡️ PROTOCOLO FORENSE: Purga de Datos Global
     revalidatePath('/dashboard', 'layout'); 
     revalidatePath('/dashboard/checkout');
     revalidatePath('/dashboard/calendar');

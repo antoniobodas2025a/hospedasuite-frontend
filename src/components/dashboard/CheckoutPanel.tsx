@@ -158,7 +158,7 @@ const CheckoutPanelView: React.FC<CheckoutPanelViewProps> = ({
                         <WompiButton
                           amount={paymentForm.amount}
                           reference={selectedBooking.id}
-                          publicKey={wompiPublicKey}
+                          publicKey={wompiPublicKey ?? ''}
                           onSuccess={() => {
                             // 🛡️ REFACTORIZADO: Uso de la referencia de ámbito correcta 'onLoadAccount'
                             alert('✅ Pago Certificado. Sincronizando Ledger...'); 

@@ -22,9 +22,11 @@ interface DashboardStats {
   chartData: Array<{ name: string; ingresos: number }>;
   upcomingArrivals: Array<{
     id: string;
-    guests?: { full_name: string };
-    rooms?: { name: string };
+    guests?: { full_name: string }[];
+    rooms?: { name: string }[];
     check_in: string;
+    check_out?: string | null;
+    total_price?: number | null;
   }>;
 }
 
@@ -143,7 +145,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
                 <Tooltip 
                   cursor={{ fill: '#27272a', opacity: 0.4 }}
                   contentStyle={{ backgroundColor: '#09090b', borderRadius: '0.75rem', border: '1px solid #27272a', color: '#f4f4f5', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}
-                  formatter={(value: number) => [`$${value.toLocaleString()}`, 'Ingresos']}
+                  formatter={((value: number) => `$${value.toLocaleString()}`) as any}
                 />
                 <Bar dataKey="ingresos" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
@@ -173,10 +175,10 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
                   className='bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3.5 hover:bg-zinc-800/80 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between group cursor-default'>
                   <div className="min-w-0 pr-2">
                     <p className='font-medium text-sm text-zinc-200 group-hover:text-white transition-colors truncate'>
-                      {booking.guests?.full_name || 'Huésped no registrado'}
+                      {booking.guests?.[0]?.full_name || 'Huésped no registrado'}
                     </p>
                     <p className='text-xs text-zinc-500 mt-1 flex items-center gap-1.5 truncate'>
-                      <BedDouble className="size-3 shrink-0" /> {booking.rooms?.name || 'Asignación P.'}
+                      <BedDouble className="size-3 shrink-0" /> {booking.rooms?.[0]?.name || 'Asignación P.'}
                     </p>
                   </div>
                   {/* 🚨 PARCHE ZERO-TRUST: Evaluación estricta de nulidad antes del split() */}

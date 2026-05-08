@@ -30,7 +30,7 @@ export interface RoomOption {
 
 export interface BookingOption {
   id: string;
-  room_id: string;
+  room_id?: string;
   rooms?: { name: string };
   guests?: { full_name: string };
 }
@@ -128,7 +128,7 @@ export const usePOS = (
 
         const result = await addServiceChargeAction({
           bookingId: targetBooking.id,
-          roomId: targetBooking.room_id,
+          roomId: targetBooking.room_id || targetBooking.id,
           productIds: extractedProductIds,     
           quantities: extractedQuantities,     
           description: `POS: ${cartSummary}`,
@@ -157,8 +157,12 @@ export const usePOS = (
 
     try {
       const result = await createProductAction({
-        ...productForm,
         hotel_id: hotelId,
+        name: productForm.name ?? '',
+        category: productForm.category ?? 'General',
+        price: productForm.price ?? 0,
+        image_emoji: productForm.image_emoji ?? '🍽️',
+        description: productForm.description,
       });
 
       if (!result.success) throw new Error(result.error);

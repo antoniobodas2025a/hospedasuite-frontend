@@ -1,5 +1,5 @@
 // test-webhook.ts
-const crypto = require('crypto');
+import { createHash } from 'node:crypto';
 
 const SECRET = "tu_secreto_de_eventos_aqui"; // Debe coincidir con tu .env
 const ENDPOINT = "http://localhost:3000/api/wompi/webhook"; // Cambia por tu URL de Vercel para pruebas remotas
@@ -19,7 +19,7 @@ const testData = {
 
 const tx = testData.data.transaction;
 const stringToHash = `${tx.id}${tx.status}${tx.amount_in_cents}${testData.timestamp}${SECRET}`;
-const checksum = crypto.createHash('sha256').update(stringToHash).digest('hex');
+const checksum = createHash('sha256').update(stringToHash).digest('hex');
 
 const payload = {
   ...testData,

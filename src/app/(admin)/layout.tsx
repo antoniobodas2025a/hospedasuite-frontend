@@ -44,10 +44,7 @@ export default async function AdminLayout({
       {/* Contenido Principal */}
       <main className='flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#09090b]'>
         {/* Nav para Móvil */}
-        <MobileNav 
-          user={plainUser} 
-          hotelName={hotel?.name || 'HospedaSuite'} 
-        />
+        <MobileNav />
         
         {/* Área de Renderizado de Hijos (Paneles) */}
         <div className='flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar relative z-10'>

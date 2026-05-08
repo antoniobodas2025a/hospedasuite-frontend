@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BedDouble, Users, DollarSign, Plus, Edit, Link2, RefreshCw, Search, Filter } from 'lucide-react';
+import { BedDouble, Users, DollarSign, Plus, Edit, Link2, RefreshCw, Search, Filter, Image as ImageIcon } from 'lucide-react';
 import { useInventory, Room } from '@/hooks/useInventory';
 import { syncChannelManagerAction } from '@/app/actions/channel-manager';
 import EmptyState from '@/components/ui/EmptyState'; 
@@ -10,10 +10,9 @@ import RoomEditorModal from './RoomEditorModal';
 import { cn } from '@/lib/utils';
 
 // ==========================================
-// BLOQUE 1: CONTRATOS REPARADOS (Zero-Trust)
+// BLOQUE 1: CONTRATOS (Zero-Trust)
 // ==========================================
 
-// 🛡️ REPARACIÓN: El panel ahora exige initialRooms para evitar el Waterfall Fetch
 interface InventoryPanelContainerProps {
   hotelId: string;
   initialRooms: Room[];
@@ -30,10 +29,6 @@ interface InventoryPanelViewProps {
   onSync: () => void;
   onOpenEditor: (room?: Room) => void;
 }
-
-// ==========================================
-// BLOQUE 2: MICRO-COMPONENTES (Estilo Mac 2026)
-// ==========================================
 
 const getStatusConfig = (status: string) => {
   switch (status) {
@@ -54,7 +49,7 @@ const getStatusConfig = (status: string) => {
 const InventorySkeleton = () => (
   <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
     {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div key={i} className='bg-zinc-900/20 backdrop-blur-3xl rounded-[2.5rem] p-6 border border-white/5 shadow-2xl animate-pulse'>
+      <div key={i} className='bg-zinc-900/20 backdrop-blur-3xl rounded-[2.5rem] p-6 border border-white/5 shadow-2xl animate-pulse min-h-[320px]'>
         <div className='w-14 h-14 bg-zinc-800/50 rounded-2xl mb-6'></div>
         <div className='h-6 bg-zinc-800/50 rounded-full w-2/3 mb-4'></div>
         <div className='h-4 bg-zinc-800/50 rounded-full w-1/2 mb-8'></div>
@@ -68,7 +63,7 @@ const InventorySkeleton = () => (
 );
 
 // ==========================================
-// BLOQUE 3: CAPA DE PRESENTACIÓN
+// BLOQUE 2: CAPA DE PRESENTACIÓN
 // ==========================================
 
 const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
@@ -77,7 +72,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
   return (
     <div className='space-y-8 pb-20 font-poppins text-zinc-100'>
       
-      {/* HEADER TIPO DYNAMIC ISLAND (Mac 2026 Style) */}
+      {/* HEADER TIPO DYNAMIC ISLAND */}
       <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-[#09090b]/80 backdrop-blur-3xl p-6 rounded-[2.5rem] border border-white/10 shadow-2xl sticky top-4 z-20'>
         <div>
           <h2 className='text-2xl font-bold tracking-tight text-white flex items-center gap-3'>
@@ -88,7 +83,6 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
         </div>
         
         <div className='flex flex-wrap items-center gap-3 w-full lg:w-auto bg-zinc-950 p-2 rounded-3xl border border-white/5 shadow-inner'>
-          
           <div className='relative flex-1 lg:w-48'>
             <Search className='absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500 stroke-[2]' />
             <input
@@ -99,7 +93,6 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
               className='w-full pl-11 pr-4 py-3 bg-zinc-900/50 hover:bg-zinc-900 border border-transparent hover:border-white/10 rounded-2xl text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all'
             />
           </div>
-
           <div className='relative'>
             <Filter className='absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500 stroke-[2]' />
             <select
@@ -114,99 +107,84 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
               <option value='maintenance'>Mantenimiento</option>
             </select>
           </div>
-
           <div className="w-px h-8 bg-white/10 mx-1 hidden sm:block"></div>
-
-          <button 
-            onClick={onSync} 
-            disabled={isSyncing}
-            className='p-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl transition-all disabled:opacity-50 active:scale-95'
-            title="Sincronizar Channel Manager"
-          >
+          <button onClick={onSync} disabled={isSyncing} className='p-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl transition-all disabled:opacity-50 active:scale-95' title="Sincronizar Channel Manager">
             <RefreshCw className={cn("size-5 stroke-[2]", isSyncing && "animate-spin")} />
           </button>
-          
-          <button 
-            onClick={() => onOpenEditor()}
-            className='flex items-center gap-2 px-6 py-3 bg-white hover:bg-zinc-200 text-black rounded-2xl font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all active:scale-95'
-          >
+          <button onClick={() => onOpenEditor()} className='flex items-center gap-2 px-6 py-3 bg-white hover:bg-zinc-200 text-black rounded-2xl font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all active:scale-95'>
             <Plus className="size-5 stroke-[2]" /> Nueva
           </button>
         </div>
       </div>
 
-      {/* RENDERIZADO REACTIVO DE GRID */}
+      {/* RENDERIZADO REACTIVO DE GRID CON DEEP GLASS */}
       {isLoading && rooms.length === 0 ? (
         <InventorySkeleton />
       ) : rooms.length === 0 ? (
-        <EmptyState 
-          icon={BedDouble}
-          title="Sin Coincidencias"
-          description={searchTerm ? "Modifique los filtros de búsqueda superior." : "Inicie la configuración topológica de su hotel añadiendo una unidad."}
-          actionLabel={searchTerm ? "Limpiar Filtros" : "Añadir Unidad"}
-          actionOnClick={searchTerm ? () => { setSearchTerm(''); setFilterStatus('all'); } : () => onOpenEditor()}
-          color="zinc"
-        />
+        <EmptyState icon={BedDouble} title="Sin Coincidencias" description={searchTerm ? "Modifique los filtros de búsqueda superior." : "Inicie la configuración topológica de su hotel añadiendo una unidad."} actionLabel={searchTerm ? "Limpiar Filtros" : "Añadir Unidad"} actionOnClick={searchTerm ? () => { setSearchTerm(''); setFilterStatus('all'); } : () => onOpenEditor()} color="zinc" />
       ) : (
         <motion.div layout className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
           <AnimatePresence>
             {rooms.map((room) => {
               const statusConfig = getStatusConfig(room.status);
               
+              // 🚨 FIX FORENSE: Extracción robusta de la imagen de portada (String o JSON Object)
+              let coverImage = null;
+              if (Array.isArray(room.gallery) && room.gallery.length > 0) {
+                coverImage = typeof room.gallery[0] === 'string' ? room.gallery[0] : room.gallery[0]?.url;
+              }
+              
               return (
                 <motion.div 
-                  key={room.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                  animate={{ opacity: 1, scale: 1, y: 0 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  whileHover={{ y: -5 }}
-                  className='bg-zinc-900/40 backdrop-blur-2xl rounded-[2.5rem] p-6 border border-white/5 shadow-2xl relative overflow-hidden group flex flex-col justify-between'
+                  key={room.id} layout initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} whileHover={{ y: -5 }}
+                  className='bg-zinc-900/40 backdrop-blur-2xl rounded-[2.5rem] p-6 border border-white/5 shadow-2xl relative overflow-hidden group flex flex-col justify-between min-h-[340px]'
                 >
-                  <div className="absolute -right-20 -top-20 w-48 h-48 bg-white/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors duration-700 ease-out"></div>
+                  {/* BACKGROUND LAYER (Deep Glass) */}
+                  {coverImage ? (
+                    <>
+                      <div className="absolute inset-0 bg-cover bg-center opacity-30 group-hover:opacity-50 transition-opacity duration-700 blur-[2px] group-hover:blur-0" style={{ backgroundImage: `url(${coverImage})` }} />
+                      <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/90 to-zinc-950/40" />
+                    </>
+                  ) : (
+                    <div className="absolute -right-20 -top-20 w-48 h-48 bg-white/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors duration-700 ease-out"></div>
+                  )}
                   
-                  <div className="relative z-10">
-                    <div className='flex justify-between items-start mb-6'>
-                      <div className='size-14 rounded-[1.2rem] bg-zinc-950 border border-white/10 flex items-center justify-center text-zinc-400 group-hover:text-indigo-400 shadow-inner transition-colors'>
-                        <BedDouble className="size-6 stroke-[1.5]" />
+                  <div className="relative z-10 flex-1 flex flex-col">
+                    <div className='flex justify-between items-start mb-auto'>
+                      <div className='size-14 rounded-[1.2rem] bg-zinc-950/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-zinc-400 group-hover:text-indigo-400 shadow-inner transition-colors'>
+                        {coverImage ? <ImageIcon className="size-6 stroke-[1.5] opacity-50" /> : <BedDouble className="size-6 stroke-[1.5]" />}
                       </div>
                       <div className='flex items-center gap-2'>
                         <span className={cn("size-2 rounded-full", statusConfig.dot)}></span>
-                        <span className={cn(`px-3 py-1 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] border`, statusConfig.badge)}>
+                        <span className={cn(`px-3 py-1 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] border backdrop-blur-md`, statusConfig.badge)}>
                           {statusConfig.label}
                         </span>
                       </div>
                     </div>
 
-                    <h3 className='text-2xl font-bold text-white tracking-tighter mb-1'>{room.name}</h3>
-                    <p className='text-[10px] text-zinc-500 uppercase tracking-widest font-bold mb-6'>{(room.type || 'ESTÁNDAR')}</p>
+                    <div className="mt-8">
+                      <h3 className='text-2xl font-bold text-white tracking-tighter mb-1 drop-shadow-md'>{room.name}</h3>
+                      <p className='text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-4 drop-shadow-md'>{(room.type || 'ESTÁNDAR')}</p>
 
-                    <div className='space-y-2 mb-8'>
-                      <div className='flex justify-between items-center text-zinc-300 text-sm bg-zinc-950/40 px-4 py-3 rounded-2xl border border-white/5'>
-                        <span className='flex items-center font-medium text-zinc-500 text-xs uppercase tracking-wider'>
-                          <Users className='size-4 mr-2' /> Capacidad
-                        </span>
-                        <span className='font-bold'>{room.capacity} Pax</span>
-                      </div>
-                      <div className='flex justify-between items-center text-zinc-300 text-sm bg-zinc-950/40 px-4 py-3 rounded-2xl border border-white/5'>
-                        <span className='flex items-center font-medium text-zinc-500 text-xs uppercase tracking-wider'>
-                          <DollarSign className='size-4 mr-2 text-emerald-500/50' /> Tarifa Base
-                        </span>
-                        <span className='font-mono font-bold text-emerald-400'>${(room.base_price || room.price || 0).toLocaleString()}</span>
-                      </div>
-                      
-                      {room.ical_import_url && (
-                        <div className='mt-4 flex items-center justify-center text-[10px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 py-2 rounded-xl border border-sky-500/20'>
-                          <Link2 className='size-3 mr-2' /> OTA Sync Activa
+                      <div className='space-y-2 mb-6'>
+                        <div className='flex justify-between items-center text-zinc-200 text-sm bg-zinc-950/60 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/5 shadow-inner'>
+                          <span className='flex items-center font-medium text-zinc-400 text-xs uppercase tracking-wider'><Users className='size-4 mr-2' /> Aforo</span>
+                          <span className='font-bold'>{room.capacity} Pax</span>
                         </div>
-                      )}
+                        <div className='flex justify-between items-center text-zinc-200 text-sm bg-zinc-950/60 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/5 shadow-inner'>
+                          <span className='flex items-center font-medium text-zinc-400 text-xs uppercase tracking-wider'><DollarSign className='size-4 mr-2 text-emerald-500/70' /> Tarifa Base</span>
+                          <span className='font-mono font-bold text-emerald-400'>${(room.price || 0).toLocaleString()}</span>
+                        </div>
+                        {room.ical_import_url && (
+                          <div className='mt-3 flex items-center justify-center text-[9px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 py-2 rounded-xl border border-sky-500/20 backdrop-blur-md'>
+                            <Link2 className='size-3 mr-2' /> OTA Sync Activa
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
 
-                  <button 
-                    onClick={() => onOpenEditor(room)}
-                    className='relative z-10 w-full py-4 bg-zinc-950 hover:bg-white border border-white/10 hover:border-white text-zinc-400 hover:text-black rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_20px_rgba(255,255,255,0.1)]'
-                  >
+                  <button onClick={() => onOpenEditor(room)} className='relative z-10 w-full py-4 bg-zinc-950/80 backdrop-blur-xl hover:bg-white border border-white/10 hover:border-white text-zinc-300 hover:text-black rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]'>
                     <Edit className='size-4 stroke-[2]' /> Editar Unidad
                   </button>
                 </motion.div>
@@ -220,20 +198,19 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
 };
 
 // ==========================================
-// BLOQUE 4: COMPONENTE CONTENEDOR (Data Logic)
+// BLOQUE 3: COMPONENTE CONTENEDOR (Data Logic)
 // ==========================================
 
 export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanelContainerProps) {
-  // 🛡️ REPARACIÓN: Inicializamos el estado local con los datos del servidor para hidratación instantánea
-  const [localRooms, setLocalRooms] = useState<Room[]>(initialRooms);
-  
-  // Asumimos que useInventory ahora se usa solo para operaciones subsecuentes o ignoramos isLoading si hay datos.
+  const [localRooms, setLocalRooms] = useState<Room[]>(initialRooms || []);
   const { rooms, isLoading, syncRooms } = useInventory(hotelId);
   
-  // Sincronización de memoria si el hook trae datos frescos
+  // 🚨 FIX FORENSE: Sincronización Absoluta (Zero-Trust)
+  // Se elimina la restricción `rooms.length > 0` que causaba el "Estado Fantasma".
+  // El componente ahora confía ciegamente en el hook: Si la BD reporta 0, renderiza 0.
   useEffect(() => {
-    if (rooms && rooms.length > 0) {
-      setLocalRooms(rooms);
+    if (rooms) { 
+      setLocalRooms(rooms); 
     }
   }, [rooms]);
 
@@ -243,7 +220,6 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
 
-  // Filtrado Seguro
   const filteredRooms = useMemo(() => {
     const safeRooms = Array.isArray(localRooms) ? localRooms : [];
     return safeRooms.filter((room) => {
@@ -255,53 +231,28 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
 
   const handleManualSync = async () => {
     setIsSyncing(true);
-    try {
-      await syncChannelManagerAction(hotelId);
-      await syncRooms(); 
-    } catch (error) {
-      console.error('Fallo en sincronización OTA:', error);
-    } finally {
-      setIsSyncing(false);
-    }
+    try { await syncChannelManagerAction(hotelId); await syncRooms(); } 
+    catch (error) { console.error('Fallo OTA:', error); } 
+    finally { setIsSyncing(false); }
   };
 
-  const handleOpenEditor = (room?: Room) => {
-    setSelectedRoom(room);
-    setIsEditorOpen(true);
-  };
-
+  const handleOpenEditor = (room?: Room) => { setSelectedRoom(room); setIsEditorOpen(true); };
+  
   const handleCloseEditor = async (needsRefresh?: boolean) => {
-    setIsEditorOpen(false);
+    setIsEditorOpen(false); 
     setSelectedRoom(undefined);
-    if (needsRefresh) {
-      await syncRooms();
-    }
+    if (needsRefresh) { await syncRooms(); }
   };
 
-  // Se oculta el skeleton si ya tenemos initialRooms
   const showLoading = isLoading && localRooms.length === 0;
 
   return (
     <>
       <InventoryPanelView 
-        rooms={filteredRooms}
-        isLoading={showLoading}
-        searchTerm={searchTerm}
-        setSearchTerm={setSearchTerm}
-        filterStatus={filterStatus}
-        setFilterStatus={setFilterStatus}
-        isSyncing={isSyncing}
-        onSync={handleManualSync}
-        onOpenEditor={handleOpenEditor}
+        rooms={filteredRooms} isLoading={showLoading} searchTerm={searchTerm} setSearchTerm={setSearchTerm}
+        filterStatus={filterStatus} setFilterStatus={setFilterStatus} isSyncing={isSyncing} onSync={handleManualSync} onOpenEditor={handleOpenEditor}
       />
-
-      {isEditorOpen && (
-        <RoomEditorModal 
-          hotelId={hotelId} 
-          initialData={selectedRoom} 
-          onClose={handleCloseEditor} 
-        />
-      )}
+      {isEditorOpen && <RoomEditorModal hotelId={hotelId} initialData={selectedRoom} onClose={handleCloseEditor} />}
     </>
   );
 }

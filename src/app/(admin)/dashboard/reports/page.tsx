@@ -20,8 +20,8 @@ export default async function ReportsPage() {
   const formattedSales = bookings?.map((b) => ({
       id: b.id,
       date: new Date(b.created_at).toISOString().split('T')[0],
-      guest: b.guests?.full_name || 'Anónimo',
-      room: b.rooms?.name || 'N/A',
+      guest: b.guests?.[0]?.full_name || 'Anónimo',
+      room: b.rooms?.[0]?.name || 'N/A',
       total: b.total_price,
       status: b.status === 'checked_out' ? 'Pagado' : 'Pendiente',
   })) || [];

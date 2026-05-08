@@ -40,15 +40,15 @@ export default async function CalendarPage() {
 
   const { data: bookings } = await supabase
     .from('bookings')
-    .select(`id, room_id, check_in, check_out, status, guests (full_name)`)
+    .select(`id, room_id, check_in, check_out, status, total_price, guests (full_name)`)
     .eq('hotel_id', hotel.id)
     .gte('check_out', startFilter)
     .neq('status', 'cancelled');
 
-  const formattedBookings = bookings?.map((b) => ({
+  const formattedBookings = (bookings?.map((b) => ({
       ...b,
-      guest_name: b.guests?.full_name || 'Huésped',
-  })) || [];
+      guest_name: b.guests?.[0]?.full_name || 'Huésped',
+  })) || []) as unknown as import('@/hooks/useCalendar').Booking[];
 
   return (
     <div className='h-full'>

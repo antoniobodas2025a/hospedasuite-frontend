@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, Plus, Coffee, Minus, CreditCard, BedDouble, Search, Utensils, X, Save
 } from 'lucide-react';
-import { usePOS, MenuItem, RoomOption } from '@/hooks/usePOS';
+import { usePOS, MenuItem, RoomOption, BookingOption } from '@/hooks/usePOS';
 import EmptyState from '@/components/ui/EmptyState';
 import { cn } from '@/lib/utils';
 
@@ -221,7 +221,7 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelConta
     selectedRoomId, setSelectedRoomId, createOrder,
     isProductModalOpen, setIsProductModalOpen,
     productForm, setProductForm, createProduct,
-  } = usePOS(initialItems, rooms, hotelId);
+  } = usePOS(initialItems, rooms as BookingOption[], hotelId);
 
   const [activeCategory, setActiveCategory] = useState('General');
 
@@ -245,7 +245,7 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelConta
         selectedRoomId={selectedRoomId}
         setSelectedRoomId={setSelectedRoomId}
         onAddToCart={addToCart}
-        onAdjustQuantity={adjustQuantity}
+        onAdjustQuantity={(id: string, delta: number) => adjustQuantity(Number(id), delta)}
         onCreateOrder={createOrder}
         onOpenProductModal={() => setIsProductModalOpen(true)}
         rooms={rooms}
@@ -322,7 +322,7 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelConta
                 </button>
                 <button 
                   onClick={createProduct} 
-                  disabled={!productForm.name || productForm.price <= 0} 
+                  disabled={!productForm.name || (productForm.price ?? 0) <= 0} 
                   className='flex-[2] py-4 px-8 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-bold rounded-2xl shadow-2xl transition-all flex items-center justify-center gap-2'
                 >
                   <Save size={18} /> Compilar Producto

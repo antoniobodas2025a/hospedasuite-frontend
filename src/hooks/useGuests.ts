@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { createGuestAction, updateGuestAction, deleteGuestAction } from '@/app/actions/guests';
+import { createGuestAction, updateGuestAction, deleteGuestAction, type GuestPayload } from '@/app/actions/guests';
 
 export interface Guest {
   id: string;
@@ -54,7 +54,7 @@ export const useGuests = (initialGuests: Guest[], hotelId?: string) => {
   const createGuest = async () => {
     if (!hotelId) return alert('Violación de Contexto: Hotel ID no detectado.');
     try {
-      const result = await createGuestAction({ ...guestForm, hotel_id: hotelId });
+      const result = await createGuestAction(guestForm as GuestPayload);
       if (result.success) {
         setIsEditing(false);
         resetForm();

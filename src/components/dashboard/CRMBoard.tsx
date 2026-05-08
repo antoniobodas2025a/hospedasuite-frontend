@@ -18,7 +18,7 @@ interface CRMBoardContainerProps {
 
 interface CRMBoardPanelViewProps {
   leads: Lead[];
-  onMoveLead: (id: string, status: Lead['status']) => void;
+  onMoveLead: (id: number, status: Lead['status']) => void;
   onOpenModal: () => void;
   onCloseModal: () => void;
   isModalOpen: boolean;
@@ -121,7 +121,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                         <div className='flex gap-2 pt-3 border-t border-white/5 opacity-0 group-hover:opacity-100 transition-opacity relative z-10'>
                           {col.id !== 'won' && (
                             <button
-                              onClick={() => onMoveLead(String(lead.id), 'won')}
+                              onClick={() => onMoveLead(lead.id, 'won')}
                               className='flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white text-[10px] font-bold rounded-lg border border-emerald-500/20 transition-all'
                             >
                               Ganar
@@ -129,7 +129,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                           )}
                           {col.id !== 'contacted' && col.id !== 'won' && (
                             <button
-                              onClick={() => onMoveLead(String(lead.id), 'contacted')}
+                              onClick={() => onMoveLead(lead.id, 'contacted')}
                               className='flex-1 py-1.5 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-300 hover:text-white text-[10px] font-bold rounded-lg border border-indigo-500/20 transition-all'
                             >
                               Contactar

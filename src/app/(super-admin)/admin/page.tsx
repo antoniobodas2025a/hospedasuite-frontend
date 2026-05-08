@@ -81,7 +81,7 @@ export default async function SuperAdminPage() {
           <PlusCircle className='text-emerald-400' /> Alta Rápida de Propiedad
         </h3>
 
-        <form action={createHotelAction} className='grid grid-cols-1 md:grid-cols-5 gap-4 items-end'>
+        <form action={async (formData) => { await createHotelAction(formData); }} className='grid grid-cols-1 md:grid-cols-5 gap-4 items-end'>
           <div className='space-y-2'>
             <label className='text-xs font-bold text-white/50 uppercase ml-2'>Hotel</label>
             <input name='name' required placeholder='Ej: Hotel Alpha' className='w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white outline-none focus:border-emerald-500/50' />

@@ -243,7 +243,7 @@ export default function PremiumOnboardingWizard() {
 
   const slideVariants = {
     enter: { x: 20, opacity: 0 },
-    center: { x: 0, opacity: 1, transition: { type: 'spring', stiffness: 300, damping: 24 } },
+    center: { x: 0, opacity: 1, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } },
     exit: { x: -20, opacity: 0, transition: { duration: 0.15 } }
   };
 

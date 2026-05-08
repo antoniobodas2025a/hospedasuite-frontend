@@ -12,10 +12,10 @@ const getAdminClient = () => {
 
 export async function GET(
   request: Request,
-  { params }: { params: Promise<{ token: string }> } // 🛡️ Zero-Trust: Token Criptográfico Anti-Espionaje
+  { params }: { params: Promise<{ roomId: string }> }
 ) {
   try {
-    const { token } = await params;
+    const token = (await params).roomId;
 
     // 🚨 1. Validación temprana del Token
     if (!token || token.length < 10) {

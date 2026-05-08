@@ -1,29 +1,45 @@
-import { z } from 'zod';
+import * as z from "zod";
 
-// 🛡️ ESQUEMA DE INVENTARIO (Sincronizado con Channel Manager)
+/**
+ * 🛡️ CONTRATO DE INVENTARIO TIER-1 (HYBRID MODE)
+ * Resolución de error de grabación: Soporta URLs directas (WebP) y Objetos Legacy.
+ */
 export const RoomSchema = z.object({
-  name: z.string().min(3, "El nombre debe tener al menos 3 letras"),
-  capacity: z.number().min(1).max(20),
-  price: z.number().min(0, "El precio no puede ser negativo"),
-  status: z.enum(['active', 'maintenance', 'trial']).default('active'),
-  size_sqm: z.number().optional(),
+  name: z.string().min(1, "El nombre/número de unidad es obligatorio."),
   
-  // 📡 CAMPO CRÍTICO: Enlace para recibir reservas de Booking/Airbnb
-  ical_import_url: z.string().url("Debe ser una URL válida").optional().or(z.literal('')),
+  capacity: z.number().min(1, "Aforo mínimo: 1 PAX."),
   
-  // Validación estricta para la galería estructurada JSONB
-  gallery: z.array(z.object({
-    url: z.string().url("Debe ser una URL válida"),
-    alt: z.string().max(100),
-    order: z.number()
-  })).max(10, "Máximo 10 fotos por habitación").default([]),
+  price: z.number().min(0, "La tarifa no puede ser negativa."),
   
-  // Tipado estricto de amenidades JSONB
-  amenities: z.array(z.object({
-    id: z.string(),
-    isFree: z.boolean().default(true),
-    details: z.string().optional()
-  })).default([])
+  description: z.string().optional().nullable(),
+  
+  // 🛡️ Mantenemos el Enum para evitar inconsistencias en la lógica de UI
+  status: z.enum(['active', 'maintenance', 'dirty', 'clean', 'occupied']).default('active'),
+  
+  // 🚨 REPARACIÓN CRÍTICA: Unión de tipos para evitar el bloqueo de grabación.
+  // Acepta: "https://..." O { url: "https://...", alt: "..." }
+  gallery: z.array(
+    z.union([
+      z.string().url(),
+      z.object({
+        url: z.string().url(),
+        alt: z.string().optional(),
+        order: z.number().optional()
+      })
+    ])
+  ).default([]),
+  
+  amenities: z.array(z.string()).default([]),
+  
+  // 🌐 Sincronización OTA (Null-safe)
+  ical_import_url: z.string()
+    .url("Formato de URL iCal no válido.")
+    .or(z.literal(""))
+    .optional()
+    .nullable(),
+    
+  size_sqm: z.number().optional().nullable(),
 });
 
+// Extracción determinista de tipos para el motor de HospedaSuite
 export type RoomFormValues = z.infer<typeof RoomSchema>;

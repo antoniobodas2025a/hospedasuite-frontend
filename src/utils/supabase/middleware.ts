@@ -24,7 +24,7 @@ export async function updateSession(request: NextRequest) {
   sweepExpiredIPs(now);
 
   // --- 🛡️ BARRERA 1: RATE LIMITING (Zero-Trust) ---
-  const ip = request.ip || request.headers.get('x-forwarded-for') || '127.0.0.1';
+  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
   const ipRecord = ipMap.get(ip);
 
   if (!ipRecord || now - ipRecord.lastReset > RATE_LIMIT_WINDOW_MS) {

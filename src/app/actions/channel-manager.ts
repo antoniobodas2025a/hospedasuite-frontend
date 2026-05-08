@@ -96,43 +96,42 @@ export async function syncChannelManagerAction(hotelId: string) {
         const events = await ical.async.fromURL(room.ical_import_url);
 
         for (const event of Object.values(events)) {
-          if (event.type === 'VEVENT') {
-            const externalId = event.uid;
-            const checkInDate = new Date(event.start as Date);
-            const checkOutDate = new Date(event.end as Date);
+          if (event?.type !== 'VEVENT') continue;
+          const externalId = event.uid;
+          const checkInDate = new Date(event.start);
+          const checkOutDate = new Date(event.end as Date);
+          
+          const checkIn = checkInDate.toISOString().split('T')[0];
+          const checkOut = checkOutDate.toISOString().split('T')[0];
+
+          // Evitamos procesar eventos del pasado
+          const today = new Date().toISOString().split('T')[0];
+          if (checkOut <= today) continue; 
+
+          // Verificamos si esta reserva de OTA ya existe en nuestra base de datos (Deduplicación)
+          const { data: existingBooking } = await supabaseAdmin
+            .from('bookings')
+            .select('id')
+            .eq('external_id', externalId)
+            .single();
+
+          if (!existingBooking) {
+            // 🛡️ Prevenir colisión: Insertamos asegurando el guest_id
+            const { error: insertError } = await supabaseAdmin.from('bookings').insert([{
+              hotel_id: hotelId,
+              room_id: room.id,
+              guest_id: otaGuest.id,
+              check_in: checkIn,
+              check_out: checkOut,
+              status: 'blocked_ota',
+              total_price: 0, 
+              external_id: externalId
+            }]);
             
-            const checkIn = checkInDate.toISOString().split('T')[0];
-            const checkOut = checkOutDate.toISOString().split('T')[0];
-
-            // Evitamos procesar eventos del pasado
-            const today = new Date().toISOString().split('T')[0];
-            if (checkOut <= today) continue; 
-
-            // Verificamos si esta reserva de OTA ya existe en nuestra base de datos (Deduplicación)
-            const { data: existingBooking } = await supabaseAdmin
-              .from('bookings')
-              .select('id')
-              .eq('external_id', externalId)
-              .single();
-
-            if (!existingBooking) {
-              // 🛡️ Prevenir colisión: Insertamos asegurando el guest_id
-              const { error: insertError } = await supabaseAdmin.from('bookings').insert([{
-                hotel_id: hotelId,
-                room_id: room.id,
-                guest_id: otaGuest.id, // Llave foránea restaurada
-                check_in: checkIn,
-                check_out: checkOut,
-                status: 'blocked_ota', // Diferenciador de OTA
-                total_price: 0, 
-                external_id: externalId
-              }]);
-              
-              if (insertError) {
-                console.error(`[SEC-OPS] Fallo de inserción OTA para hab ${room.id}:`, insertError);
-              } else {
-                importedCount++;
-              }
+            if (insertError) {
+              console.error(`[SEC-OPS] Fallo de inserción OTA para hab ${room.id}:`, insertError);
+            } else {
+              importedCount++;
             }
           }
         }

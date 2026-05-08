@@ -354,62 +354,28 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
 }
 
 /**
- * 🛡️ PROTOCOLO DE CHECK-IN BLINDADO (DOCTORADO)
- * Realiza la transición de estado de la reserva validando la integridad física de la habitación.
+ * 🛡️ PROTOCOLO DE CHECK-IN ATÓMICO (RPC)
+ * Delega la transacción completa a PostgreSQL: validaciones + updates en un solo viaje.
+ * Elimina la ventana de race condition y el rollback manual.
  */
 export async function processCheckInAction(bookingId: string) {
   try {
     const currentHotel = await getCurrentHotel();
     if (!currentHotel) throw new Error('AUTH_ERROR: Nodo no autorizado.');
 
-    // 1. OBTENCIÓN Y BLOQUEO DE CONTEXTO (Zero-Trust)
-    const { data: booking, error: fetchErr } = await supabaseAdmin
-      .from('bookings')
-      .select('room_id, hotel_id, status, rooms(status, name)')
-      .eq('id', bookingId)
-      .eq('hotel_id', currentHotel.id)
-      .single();
+    // 1. EJECUCIÓN TRANSACCIONAL (RPC Atómico en PostgreSQL)
+    const { data, error: rpcError } = await supabaseAdmin
+      .rpc('atomic_check_in', { p_booking_id: bookingId });
 
-    if (fetchErr || !booking) throw new Error('NOT_FOUND: La reserva no existe en este nodo.');
-    
-    const room = booking.rooms as any;
-
-    // 2. VALIDACIÓN DE INVARIANTE FÍSICO
-    // Si la habitación está sucia o en mantenimiento, abortamos la transacción.
-    if (room.status === 'dirty') {
-      throw new Error(`ROOM_DIRTY: La unidad ${room.name} requiere aseo profundo antes del Check-in.`);
-    }
-    
-    if (room.status === 'maintenance') {
-      throw new Error(`ROOM_MAINTENANCE: La unidad ${room.name} está bajo protocolos de reparación.`);
+    if (rpcError) {
+      throw new Error(`RPC_ERROR: ${rpcError.message}`);
     }
 
-    if (room.status === 'occupied' && booking.status !== 'checked_in') {
-      throw new Error(`ROOM_CONFLICT: La unidad ${room.name} ya figura como ocupada por otro folio.`);
+    if (!data?.success) {
+      throw new Error(data?.error || 'CHECKIN_FAILED: Error desconocido en la transacción.');
     }
 
-    // 3. EJECUCIÓN TRANSACCIONAL (Atómica en PostgreSQL)
-    // Actualizamos la Reserva
-    const { error: bookingUpdateErr } = await supabaseAdmin
-      .from('bookings')
-      .update({ status: 'checked_in' })
-      .eq('id', bookingId);
-
-    if (bookingUpdateErr) throw new Error(`UPDATE_FAILED: ${bookingUpdateErr.message}`);
-
-    // Sincronizamos el estado de la Habitación a 'occupied'
-    const { error: roomUpdateErr } = await supabaseAdmin
-      .from('rooms')
-      .update({ status: 'occupied' })
-      .eq('id', booking.room_id);
-
-    if (roomUpdateErr) {
-      // Rollback manual (para compensar si falla la segunda parte)
-      await supabaseAdmin.from('bookings').update({ status: 'confirmed' }).eq('id', bookingId);
-      throw new Error(`ROOM_SYNC_FAILED: ${roomUpdateErr.message}`);
-    }
-
-    // 4. PURGA DE CACHÉ GLOBAL
+    // 2. PURGA DE CACHÉ GLOBAL
     revalidatePath('/dashboard', 'layout'); 
     
     return { success: true };

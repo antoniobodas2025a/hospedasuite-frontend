@@ -50,7 +50,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
       roomId: room.id,
       checkin: checkIn,
       checkout: checkOut,
-      source: isOta ? 'ota' : 'direct',
+      source: (isOta ? 'ota' : 'direct') as 'ota' | 'direct',
       upsells: selectedUpsells 
     };
     

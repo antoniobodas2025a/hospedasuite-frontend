@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import { saveRoomAction, deleteRoomAction } from '@/app/actions/inventory';
+import { createClient } from '@supabase/supabase-js';
 
 // ==========================================
 // BLOQUE 1: INTERFACES Y CONTRATOS ESTRICTOS
@@ -15,7 +15,7 @@ export interface Room {
   capacity: number;
   price: number;
   weekend_price?: number; 
-  status: 'clean' | 'dirty' | 'maintenance' | 'active'; 
+  status: 'clean' | 'dirty' | 'maintenance' | 'active' | string; 
   gallery?: any[];
   amenities?: any[];
   size_sqm?: number;
@@ -24,119 +24,61 @@ export interface Room {
 }
 
 // ==========================================
-// BLOQUE 2: LÓGICA DEL HOOK (Motor Operativo)
+// BLOQUE 2: LÓGICA DEL HOOK (Motor de Sincronización Puro)
 // ==========================================
 
-export const useInventory = (initialRooms: Room[], hotelId: string) => {
+// 🚨 FIX FORENSE: El contrato ahora coincide exactamente con lo que espera InventoryPanel.tsx
+export const useInventory = (hotelId: string) => {
   const router = useRouter();
   
-  // 🛡️ Sincronización Server-to-Client: Garantiza coherencia tras mutaciones externas
-  const [rooms, setRooms] = useState<Room[]>(initialRooms);
-  useEffect(() => { 
-    setRooms(initialRooms); 
-  }, [initialRooms]);
+  // Estado inicial 'undefined' permite que InventoryPanel use sus initialRooms
+  const [rooms, setRooms] = useState<Room[] | undefined>(undefined);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const [isEditing, setIsEditing] = useState(false);
-  const [selectedRoom, setSelectedRoom] = useState<Room | null>(null);
-
-  const [roomForm, setRoomForm] = useState<Partial<Room>>({
-    name: '', 
-    type: 'standard', 
-    capacity: 2, 
-    price: 0, 
-    status: 'active',
-    gallery: [], 
-    amenities: [], 
-    ical_import_url: '',
-  });
-
-  // 🛡️ SANEAMIENTO DE PAYLOAD (Protocolo Zero-Trust)
-  // Evita el envío de campos basura o malformados a la Server Action
-  const getSanitizedPayload = () => ({
-    name: roomForm.name || '',
-    capacity: Number(roomForm.capacity) || 2,
-    price: Number(roomForm.price) || 0,
-    status: (roomForm.status as 'active' | 'maintenance') || 'active',
-    size_sqm: roomForm.size_sqm,
-    gallery: roomForm.gallery || [],
-    amenities: roomForm.amenities || [],
-    ical_import_url: roomForm.ical_import_url || '',
-  });
-
-  // CONTROLADORES DE ACCIÓN
-  const createRoom = async () => {
-    if (!hotelId) return alert('Error Crítico: Hotel ID no detectado en el contexto.');
+  // 🛡️ SINCRONIZACIÓN ABSOLUTA: Trae datos frescos directamente de la BD 
+  // para evitar recargas completas de página y parpadeos.
+  const syncRooms = useCallback(async () => {
+    if (!hotelId) return;
+    
+    setIsLoading(true);
     try {
-      const res = await saveRoomAction(hotelId, getSanitizedPayload());
-      if (!res.success) throw new Error(res.error);
+      // Cliente público seguro para operaciones de lectura en el borde
+      const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+      const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY;
       
-      setIsEditing(false);
-      router.refresh();
-      alert('✅ Unidad registrada exitosamente.');
-    } catch (e: any) {
-      console.error("[CRITICAL] Inventory Creation Failure:", e);
-      alert('Fallo Operativo: ' + e.message);
-    }
-  };
+      if (!supabaseUrl || !supabaseKey) {
+        throw new Error("Credenciales de Supabase no encontradas en el cliente.");
+      }
 
-  const updateRoom = async () => {
-    if (!selectedRoom?.id || !hotelId) return;
-    try {
-      const res = await saveRoomAction(hotelId, getSanitizedPayload(), selectedRoom.id);
-      if (!res.success) throw new Error(res.error);
+      const supabase = createClient(supabaseUrl, supabaseKey);
+
+      // Consulta topológica estricta
+      const { data, error } = await supabase
+        .from('rooms')
+        .select('*')
+        .eq('hotel_id', hotelId)
+        .order('name', { ascending: true });
+
+      if (error) throw new Error(error.message);
       
-      setIsEditing(false);
-      router.refresh();
-      alert('✅ Cambios persistidos en el nodo central.');
-    } catch (e: any) {
-      console.error("[CRITICAL] Inventory Update Failure:", e);
-      alert('Fallo Operativo: ' + e.message);
-    }
-  };
-
-  const deleteRoom = useCallback(async (id: string) => {
-    if (!confirm('¿Desea anular permanentemente este nodo de inventario?')) return;
-    try {
-      const res = await deleteRoomAction(id);
-      if (!res.success) throw new Error(res.error);
+      // 1. Hidratación del estado local del panel (Reactividad Instantánea)
+      setRooms(data || []);
       
-      // Mutación optimista del estado local para latencia cero
-      setRooms(prev => prev.filter(r => r.id !== id));
+      // 2. Purga del caché de Next.js (Mantiene los Server Components sincronizados)
       router.refresh();
-    } catch (e: any) {
-      alert('Falla Crítica de Eliminación: ' + e.message);
+      
+    } catch (error: any) {
+      console.error('[CRITICAL] Falla en sincronización de inventario:', error.message);
+      // Fallback: Si falla la red del cliente, forzamos recarga del servidor
+      router.refresh();
+    } finally {
+      setIsLoading(false);
     }
-  }, [router]);
-
-  const openNewRoomModal = useCallback(() => {
-    setRoomForm({ 
-      name: '', type: 'standard', capacity: 2, price: 0, 
-      status: 'active', gallery: [], amenities: [], ical_import_url: '' 
-    });
-    setSelectedRoom(null);
-    setIsEditing(true);
-  }, []);
-
-  const syncRooms = useCallback(() => {
-    router.refresh();
-  }, [router]);
+  }, [hotelId, router]);
 
   return {
-    rooms, 
-    isEditing, 
-    setIsEditing, 
-    roomForm, 
-    setRoomForm,
-    createRoom, 
-    updateRoom, 
-    deleteRoom, 
-    openNewRoomModal, 
-    openEditModal: (room: Room) => { 
-      setRoomForm(room); 
-      setSelectedRoom(room); 
-      setIsEditing(true); 
-    },
-    selectedRoom, 
-    syncRooms
+    rooms,       // Expuesto para sobreescribir los initialRooms tras un cambio
+    isLoading,   // Expuesto para manejar el UI Skeleton
+    syncRooms    // Expuesto para ser llamado tras crear, editar o eliminar
   };
 };
