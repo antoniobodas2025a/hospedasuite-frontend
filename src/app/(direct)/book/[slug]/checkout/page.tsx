@@ -50,7 +50,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
 
   const { data: room, error: roomError } = await supabase
     .from('rooms')
-    .select('id, name, price, base_price, capacity, description, gallery') // 🛡️ Columnas exactas, sin price_per_night
+    .select('id, hotel_id, name, price, base_price, capacity, status, description, gallery')
     .eq('id', roomId)
     .eq('hotel_id', hotel.id)
     .single();

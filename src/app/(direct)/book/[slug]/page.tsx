@@ -2,7 +2,6 @@ import React from 'react';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { notFound as nextNotFound } from 'next/navigation';
 import { MapPin, CalendarDays, KeyRound, Users, Star, ShieldCheck, Zap } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 
@@ -12,8 +11,6 @@ interface HotelShowcasePageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
 }
-
-const isValidDateISO = (dateStr: string) => /^\d{4}-\d{2}-\d{2}$/.test(dateStr);
 
 export default async function HotelShowcasePage({ params, searchParams }: HotelShowcasePageProps) {
   const { slug } = await params;
@@ -25,10 +22,10 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
   // 1. Instanciación segura del cliente de Supabase (Lado Servidor)
   const supabase = await createClient();
 
-  // --- INICIO DEL BLOQUE INSTRUMENTADO ---
+  // --- CARGA PRINCIPAL DEL HOTEL ---
   const { data: hotel, error: hotelError } = await supabase
     .from('hotels')
-    .select('id, name, primary_color, cancellation_policy')
+    .select('id, name, primary_color, cancellation_policy, cover_photo_url, main_image_url, address, location, description, hotel_amenities')
     .eq('slug', slug)
     .single();
 
@@ -39,25 +36,10 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
     notFound();
   }
 
-  const { data: room, error: roomError } = await supabase
-    .from('rooms')
-    .select('id, name, price')
-    .eq('id', roomId)
-    .eq('hotel_id', hotel.id)
-    .single();
-
-  if (roomError) console.error("[AUDITORIA CHECKOUT] Error crítico en Habitación:", roomError);
-  
-  if (!room) {
-    console.error(`[AUDITORIA CHECKOUT] Abortando: Habitación no encontrada para id "${roomId}"`);
-    notFound();
-  }
-  // --- FIN DEL BLOQUE INSTRUMENTADO ---
-
   // 3. Consulta 2: Obtener Habitaciones disponibles del Hotel
   const { data: rooms, error: roomsError } = await supabase
     .from('rooms')
-    .select('id, hotel_id, name, price, capacity, status, gallery, description')
+    .select('id, hotel_id, name, price, price_per_night, capacity, status, gallery, description')
     .eq('hotel_id', hotel.id)
     .eq('status', 'active') // Alineado con el esquema real de la BD
     .order('price', { ascending: true }); // Ordenar por precio más bajo

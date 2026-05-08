@@ -6,9 +6,22 @@ export interface WompiSignature {
   checksum: string;
 }
 
+export interface WompiTransaction {
+  id: string;
+  reference: string;
+  status: string;
+  amount_in_cents?: number;
+  [key: string]: unknown;
+}
+
+export interface WompiEventData {
+  transaction: WompiTransaction;
+  [key: string]: unknown;
+}
+
 export interface WompiEventPayload {
   event: string;
-  data: Record<string, unknown>;
+  data: WompiEventData;
   environment: string;
   signature: WompiSignature;
   timestamp: number; // Unix Epoch proporcionado por Wompi

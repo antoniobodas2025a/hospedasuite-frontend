@@ -23,6 +23,11 @@ export interface CartItem extends MenuItem {
   quantity: number;
 }
 
+export interface RoomOption {
+  id: string;
+  name: string;
+}
+
 export interface BookingOption {
   id: string;
   room_id: string;
