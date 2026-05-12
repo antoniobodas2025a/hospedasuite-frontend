@@ -32,7 +32,7 @@ export function calculateStayPrice(
   const effectiveWeekendPrice = weekendPrice && weekendPrice > 0 ? weekendPrice : basePrice;
 
   // Iteramos noche por noche para saber qué día de la semana cae
-  let currentDate = new Date(checkIn.getTime());
+  const currentDate = new Date(checkIn.getTime());
 
   for (let i = 0; i < totalNights; i++) {
     const dayOfWeek = currentDate.getUTCDay();

@@ -22,8 +22,8 @@ export const metadata: Metadata = {
 
 export default function OTALayout({ children }: { children: React.ReactNode }) {
   return (
-    // Reemplazamos html/body por este div contenedor
-    <div className={`${inter.variable} ${calistoga.variable} font-sans bg-slate-50 min-h-screen`}>
+    // data-theme="ota" activates Tierra & Sal palette via CSS cascade
+    <div data-theme="ota" className={`${inter.variable} ${calistoga.variable} font-sans bg-background text-foreground min-h-screen`}>
       <AttributionTracker />
       {children}
     </div>

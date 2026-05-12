@@ -19,10 +19,8 @@ const nextConfig = {
   },
   
   // 🛡️ CONFIGURACIÓN DE COMPILACIÓN
-  typescript: {
-    // Nota: Mantener en true solo si las dependencias de terceros tienen tipos rotos.
-    ignoreBuildErrors: true, 
-  },
+  // TS ahora tiene 0 errores — este bloque se mantiene vacío pero disponible
+  // si en el futuro se necesita configurar type checking del build.
 
   // 🛡️ BARRERA WAF: Cabeceras HTTP Estrictas (Security-First)
   async headers() {

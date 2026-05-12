@@ -2,16 +2,20 @@
 // The config you add here will be used whenever one of the edge features is loaded.
 // Note that this config is unrelated to the Vercel Edge Runtime and is also required when running locally.
 // https://docs.sentry.io/platforms/javascript/guides/nextjs/
+// 🛡️ Inicialización condicional: solo en producción para evitar timeouts
+// contra ingest.us.sentry.io desde redes locales/restrictivas.
 
 import * as Sentry from "@sentry/nextjs";
 
-Sentry.init({
-  dsn: "https://ef838f2e770ce69e434d309c2d9b0a5a@o4511225008619520.ingest.us.sentry.io/4511225010323456",
+if (process.env.NODE_ENV === 'production') {
+  Sentry.init({
+    dsn: "https://ef838f2e770ce69e434d309c2d9b0a5a@o4511225008619520.ingest.us.sentry.io/4511225010323456",
 
-  // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
-  tracesSampleRate: 1,
+    // Define how likely traces are sampled. Adjust this value in production, or use tracesSampler for greater control.
+    tracesSampleRate: 1,
 
-  // Enable sending user PII (Personally Identifiable Information)
-  // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
-  sendDefaultPii: true,
-});
+    // Enable sending user PII (Personally Identifiable Information)
+    // https://docs.sentry.io/platforms/javascript/guides/nextjs/configuration/options/#sendDefaultPii
+    sendDefaultPii: true,
+  });
+}

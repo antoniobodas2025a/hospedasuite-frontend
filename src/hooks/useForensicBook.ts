@@ -33,7 +33,7 @@ export interface ForensicEntry {
  * 🛡️ ACL (Anti-Corruption Layer): Garantiza la integridad del Ledger
  * incluso si los nodos de la base de datos están malformados o incompletos.
  */
-const sanitizeEntries = (data: any[]): ForensicEntry[] => {
+const sanitizeEntries = (data: ForensicEntry[]): ForensicEntry[] => {
   if (!Array.isArray(data)) return [];
   return data.map(e => ({
     ...e,

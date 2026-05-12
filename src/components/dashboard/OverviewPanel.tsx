@@ -22,8 +22,8 @@ interface DashboardStats {
   chartData: Array<{ name: string; ingresos: number }>;
   upcomingArrivals: Array<{
     id: string;
-    guests?: { full_name: string }[];
-    rooms?: { name: string }[];
+    guests: { full_name: string }[] | null;
+    rooms: { name: string }[] | null;
     check_in: string;
     check_out?: string | null;
     total_price?: number | null;
@@ -145,7 +145,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
                 <Tooltip 
                   cursor={{ fill: '#27272a', opacity: 0.4 }}
                   contentStyle={{ backgroundColor: '#09090b', borderRadius: '0.75rem', border: '1px solid #27272a', color: '#f4f4f5', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}
-                  formatter={((value: number) => `$${value.toLocaleString()}`) as any}
+                  formatter={(value, _name, _item, _index, _payload) => `$${Number(value ?? 0).toLocaleString()}`}
                 />
                 <Bar dataKey="ingresos" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>

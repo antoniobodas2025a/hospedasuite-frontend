@@ -100,8 +100,9 @@ export async function getDashboardStats(hotelId: string) {
       }
     };
 
-  } catch (error: any) {
-    console.error('🔥 Error Crítico en getDashboardStats:', error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error crítico de dashboard';
+    console.error('🔥 Error Crítico en getDashboardStats:', message);
+    return { success: false, error: message };
   }
 }

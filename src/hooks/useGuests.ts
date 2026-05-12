@@ -3,18 +3,7 @@
 import { useState, useMemo, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createGuestAction, updateGuestAction, deleteGuestAction, type GuestPayload } from '@/app/actions/guests';
-
-export interface Guest {
-  id: string;
-  full_name: string;
-  doc_type: string;
-  doc_number: string;
-  phone: string;
-  email?: string;
-  country?: string;
-  notes?: string;
-  hotel_id?: string;
-}
+import type { Guest } from '@/types';
 
 const sanitizeGuests = (data: any[]): Guest[] => {
   if (!Array.isArray(data)) return [];
@@ -42,7 +31,7 @@ export const useGuests = (initialGuests: Guest[], hotelId?: string) => {
       !term || 
       g.full_name.toLowerCase().includes(term) || 
       g.doc_number.includes(term) || 
-      g.phone.includes(term)
+      (g.phone?.includes(term) ?? false)
     );
     return { guests: safeData, filteredGuests: filtered };
   }, [initialGuests, searchTerm]);

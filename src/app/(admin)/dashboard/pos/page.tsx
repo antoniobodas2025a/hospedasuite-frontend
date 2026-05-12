@@ -36,7 +36,7 @@ export default async function POSPage() {
           description="Para poder usar el Punto de Venta y cargar consumos, primero debes configurar las habitaciones de tu propiedad."
           actionLabel="Ir al Inventario"
           actionHref="/dashboard/inventory"
-          color="orange"
+          color="warm"
         />
       </div>
     );

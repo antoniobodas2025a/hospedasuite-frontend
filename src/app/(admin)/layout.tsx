@@ -30,11 +30,11 @@ export default async function AdminLayout({
   };
 
   return (
-    // 🛡️ ACTUALIZACIÓN CLAUDE 2026: bg-zinc-950 establece el lienzo oscuro base para todo el PMS
-    <div className='flex h-screen bg-zinc-950 text-zinc-50 overflow-hidden font-poppins selection:bg-indigo-500/30 selection:text-indigo-200'>
+    // Océano Profundo dark theme — PMS/Dashboard
+    <div className='flex h-screen bg-sidebar text-sidebar-foreground overflow-hidden font-poppins selection:bg-brand-500/30 selection:text-brand-200'>
       
       {/* Sidebar para Desktop */}
-      <aside className='hidden lg:block w-72 h-full border-r border-zinc-800/50 bg-zinc-950/50 relative z-20'>
+      <aside className='hidden lg:block w-72 h-full border-r border-sidebar-border bg-sidebar/50 relative z-20'>
         <Sidebar 
           user={plainUser} 
           hotelName={hotel?.name || 'HospedaSuite'} 
@@ -42,7 +42,7 @@ export default async function AdminLayout({
       </aside>
 
       {/* Contenido Principal */}
-      <main className='flex-1 flex flex-col min-w-0 overflow-hidden relative bg-[#09090b]'>
+      <main className='flex-1 flex flex-col min-w-0 overflow-hidden relative bg-background'>
         {/* Nav para Móvil */}
         <MobileNav />
         

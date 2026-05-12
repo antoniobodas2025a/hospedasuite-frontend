@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { generateUniqueSlug } from '@/lib/slug';
 
 export async function POST(request: Request) {
   // 1. Inicialización de Supabase con Service Role (Bypass RLS)
@@ -55,10 +56,21 @@ export async function POST(request: Request) {
       console.warn('⚠️ [Onboarding] Advertencia en tabla profiles:', profileError.message);
     }
 
-    // FASE C: Creación del Tenant (Hotel) y Configuración de Facturación
+    // FASE C: Generar slug único para el hotel
+    const slug = await generateUniqueSlug(hotelData.name, async (s) => {
+      const { data } = await supabaseAdmin
+        .from('hotels')
+        .select('id')
+        .eq('slug', s)
+        .maybeSingle();
+      return !!data;
+    });
+
+    // FASE D: Creación del Tenant (Hotel) y Configuración de Facturación
     const { error: hotelError } = await supabaseAdmin.from('hotels').insert({
       owner_id: createdUserId,
       name: hotelData.name,
+      slug,
       city: hotelData.city,
       location: hotelData.location || hotelData.city,
       email: adminData.email, 

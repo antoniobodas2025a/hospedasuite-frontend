@@ -28,7 +28,7 @@ export default async function CalendarPage() {
           description="Para poder visualizar y gestionar tus reservas, primero necesitas crear las habitaciones de tu hotel en el inventario."
           actionLabel="Ir al Inventario"
           actionHref="/dashboard/inventory"
-          color="hospeda"
+          color="brand"
         />
       </div>
     );

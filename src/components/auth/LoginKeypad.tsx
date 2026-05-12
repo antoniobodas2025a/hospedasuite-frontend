@@ -6,7 +6,6 @@ import { verifyPin } from '@/app/actions/auth';
 import { useRouter } from 'next/navigation';
 import { Loader2, Lock } from 'lucide-react';
 
-// CAMBIO IMPORTANTE: El nombre de la función ahora es LoginKeypad
 export default function LoginKeypad() {
   const [pin, setPin] = useState('');
   const [loading, setLoading] = useState(false);
@@ -41,10 +40,10 @@ export default function LoginKeypad() {
   };
 
   return (
-    <div className='min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-hospeda-950'>
+    <div className='min-h-screen flex flex-col items-center justify-center p-4 relative overflow-hidden bg-sidebar'>
       {/* Fondo Ambient */}
-      <div className='absolute top-[-20%] left-[-10%] w-96 h-96 bg-hospeda-600/30 rounded-full blur-[100px] animate-pulse' />
-      <div className='absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-cyan-500/20 rounded-full blur-[100px]' />
+      <div className='absolute top-[-20%] left-[-10%] w-96 h-96 bg-brand-600/30 rounded-full blur-[100px] animate-pulse' />
+      <div className='absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-brand-400/20 rounded-full blur-[100px]' />
 
       <div className='glass-card w-full max-w-md p-8 rounded-3xl flex flex-col items-center relative z-10 backdrop-blur-xl bg-black/40 border-white/10'>
         {/* Identidad Corporativa */}
@@ -54,16 +53,15 @@ export default function LoginKeypad() {
               src='/logo.png'
               alt='HospedaSuite Logo'
               fill
-              // [AUDITORÍA] Agregamos esto para calmar a Next.js:
               sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
               className='object-contain p-1'
               priority
             />
           </div>
           <h1 className='text-2xl font-display text-white tracking-widest uppercase text-center'>
-            Hospeda<span className='text-hospeda-400 font-bold'>Suite</span>
+            Hospeda<span className='text-brand-400 font-bold'>Suite</span>
           </h1>
-          <p className='text-[10px] text-hospeda-300 tracking-[0.3em] mt-1 uppercase'>
+          <p className='text-[10px] text-brand-300 tracking-[0.3em] mt-1 uppercase'>
             Sistema Forense V27.0
           </p>
         </div>
@@ -75,7 +73,7 @@ export default function LoginKeypad() {
               key={i}
               className={`w-3 h-3 rounded-full transition-all duration-300 ${
                 pin.length > i
-                  ? 'bg-hospeda-400 shadow-[0_0_15px_#38bdf8]'
+                  ? 'bg-brand-400 shadow-[0_0_15px_rgba(56,189,248,0.5)]'
                   : 'bg-white/10 border border-white/20'
               }`}
             />
@@ -84,12 +82,12 @@ export default function LoginKeypad() {
 
         {/* Mensaje de Error */}
         {error && (
-          <div className='mb-6 text-red-300 text-xs font-mono bg-red-950/50 px-4 py-2 rounded-lg border border-red-500/20 animate-bounce'>
-            ⚠ {error}
+          <div className='mb-6 text-destructive text-xs font-mono bg-destructive/10 px-4 py-2 rounded-lg border border-destructive/20 animate-bounce'>
+            {error}
           </div>
         )}
 
-        {/* Teclado Numérico */}
+        {/* Teclado Numerico */}
         <div className='grid grid-cols-3 gap-4 w-full max-w-[260px]'>
           {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
             <button
@@ -115,7 +113,7 @@ export default function LoginKeypad() {
           <button
             onClick={handleSubmit}
             disabled={loading || pin.length !== 4}
-            className='h-16 w-16 rounded-2xl bg-hospeda-600/20 hover:bg-hospeda-500/40 border border-hospeda-500/30 flex items-center justify-center text-hospeda-400 hover:text-white transition-all mx-auto disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(14,165,233,0.1)]'
+            className='h-16 w-16 rounded-2xl bg-brand-600/20 hover:bg-brand-500/40 border border-brand-500/30 flex items-center justify-center text-brand-400 hover:text-white transition-all mx-auto disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(14,165,233,0.1)]'
           >
             {loading ? (
               <Loader2 className='animate-spin' />

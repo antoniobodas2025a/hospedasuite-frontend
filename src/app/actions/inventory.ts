@@ -117,3 +117,61 @@ export async function deleteRoomAction(id: string) {
     return { success: false, error: error.message };
   }
 }
+
+/**
+ * generateIcalToken: Función pura que genera un token UUID v4 para la
+ * exportación iCal pública. Se extrae como función pura para testeo sin
+ * dependencias de entorno.
+ */
+export async function generateIcalToken(): Promise<string> {
+  return crypto.randomUUID();
+}
+
+/**
+ * regenerateIcalTokenAction: Regenera el ical_export_token de una habitación.
+ * El token se usa en la URL pública de exportación iCal:
+ *   /api/webhooks/tenant/ical/{token}
+ *
+ * 🛡️ Verifica hotel ownership antes de la mutación.
+ */
+export async function regenerateIcalTokenAction(roomId: string): Promise<{ success: boolean; token?: string; error?: string }> {
+  try {
+    // 🛡️ BARRERA DE SEGURIDAD TIER-1: Verificación de pertenencia de Tenant
+    const currentHotel = await getCurrentHotel();
+    if (!currentHotel) {
+      throw new Error("AUTH_ERROR: Sesión administrativa no válida.");
+    }
+
+    const supabaseAdmin = getAdminClient();
+
+    // 🛡️ VERIFICACIÓN PRE-VUELO: ¿La habitación pertenece al hotel del usuario?
+    const { data: room, error: fetchError } = await supabaseAdmin
+      .from('rooms')
+      .select('hotel_id')
+      .eq('id', roomId)
+      .single();
+
+    if (fetchError || !room || room.hotel_id !== currentHotel.id) {
+      throw new Error("SEC_VIOLATION: Intento de alteración de nodo externo o inexistente.");
+    }
+
+    // 🔑 Generar nuevo token
+    const newToken = await generateIcalToken();
+
+    // 💾 Persistir en la base de datos
+    const { error: updateError } = await supabaseAdmin
+      .from('rooms')
+      .update({ ical_export_token: newToken })
+      .eq('id', roomId);
+
+    if (updateError) throw new Error(`DB_UPDATE_ERROR: ${updateError.message}`);
+
+    revalidatePath('/dashboard/inventory');
+
+    return { success: true, token: newToken };
+
+  } catch (error: any) {
+    console.error("🔥 [ICAL_TOKEN_ACTION_FAILURE]:", error.message);
+    return { success: false, error: error.message };
+  }
+}

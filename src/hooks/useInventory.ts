@@ -3,25 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@supabase/supabase-js';
-
-// ==========================================
-// BLOQUE 1: INTERFACES Y CONTRATOS ESTRICTOS
-// ==========================================
-
-export interface Room {
-  id: string;
-  name: string;
-  type: string;
-  capacity: number;
-  price: number;
-  weekend_price?: number; 
-  status: 'clean' | 'dirty' | 'maintenance' | 'active' | string; 
-  gallery?: any[];
-  amenities?: any[];
-  size_sqm?: number;
-  hotel_id?: string;
-  ical_import_url?: string;
-}
+import type { Room } from '@/types';
 
 // ==========================================
 // BLOQUE 2: LÓGICA DEL HOOK (Motor de Sincronización Puro)

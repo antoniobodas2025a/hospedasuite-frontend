@@ -24,14 +24,14 @@ export default function DirectLayout({
   children: React.ReactNode;
 }) {
   return (
-    // Reemplazamos html/body por un div contenedor con flex-col
-    <div className={`${inter.variable} ${calistoga.variable} font-sans bg-white min-h-screen flex flex-col`}>
+    // data-theme="ota" activates Tierra & Sal palette for direct booking channel
+    <div data-theme="ota" className={`${inter.variable} ${calistoga.variable} font-sans bg-background text-foreground min-h-screen flex flex-col`}>
       {children}
-      {/* Footer Minimalista (Solución de Identidad) */}
-      <div className='py-6 text-center border-t border-slate-100 mt-auto'>
-        <p className='text-[10px] text-slate-400 font-medium uppercase tracking-widest'>
+      {/* Footer Minimalista */}
+      <div className='py-6 text-center border-t border-border mt-auto'>
+        <p className='text-[10px] text-muted-foreground font-medium uppercase tracking-widest'>
           Powered by{' '}
-          <span className='font-bold text-slate-600'>HospedaSuite Tech</span>
+          <span className='font-bold text-foreground/60'>HospedaSuite Tech</span>
         </p>
       </div>
     </div>

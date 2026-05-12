@@ -2,9 +2,11 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BedDouble, Users, DollarSign, Plus, Edit, Link2, RefreshCw, Search, Filter, Image as ImageIcon } from 'lucide-react';
-import { useInventory, Room } from '@/hooks/useInventory';
+import { BedDouble, Users, DollarSign, Plus, Edit, Link2, RefreshCw, Search, Filter, Image as ImageIcon, Copy, KeyRound, Check } from 'lucide-react';
+import { useInventory } from '@/hooks/useInventory';
+import type { Room } from '@/types';
 import { syncChannelManagerAction } from '@/app/actions/channel-manager';
+import { regenerateIcalTokenAction } from '@/app/actions/inventory';
 import EmptyState from '@/components/ui/EmptyState'; 
 import RoomEditorModal from './RoomEditorModal';
 import { cn } from '@/lib/utils';
@@ -28,6 +30,10 @@ interface InventoryPanelViewProps {
   isSyncing: boolean;
   onSync: () => void;
   onOpenEditor: (room?: Room) => void;
+  copiedId: string | null;
+  regeneratingId: string | null;
+  onCopyUrl: (roomId: string, url: string) => void;
+  onRegenerateToken: (roomId: string) => void;
 }
 
 const getStatusConfig = (status: string) => {
@@ -67,7 +73,8 @@ const InventorySkeleton = () => (
 // ==========================================
 
 const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
-  rooms, isLoading, searchTerm, setSearchTerm, filterStatus, setFilterStatus, isSyncing, onSync, onOpenEditor
+  rooms, isLoading, searchTerm, setSearchTerm, filterStatus, setFilterStatus, isSyncing, onSync, onOpenEditor,
+  copiedId, regeneratingId, onCopyUrl, onRegenerateToken
 }) => {
   return (
     <div className='space-y-8 pb-20 font-poppins text-zinc-100'>
@@ -180,6 +187,48 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                             <Link2 className='size-3 mr-2' /> OTA Sync Activa
                           </div>
                         )}
+                        
+                        {/* ─── iCal Export URL ────────────────────────── */}
+                        {room.ical_export_token ? (
+                          <div className='mt-3 flex items-center gap-2 text-[9px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 py-2 px-3 rounded-xl border border-emerald-500/20 backdrop-blur-md'>
+                            <Link2 className='size-3 flex-shrink-0' />
+                            <span className='truncate flex-1 text-[8px] tracking-normal font-mono lowercase'>
+                              iCal: .../{room.ical_export_token.substring(0, 8)}...
+                            </span>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                const url = `${window.location.origin}/api/webhooks/tenant/ical/${room.ical_export_token}`;
+                                onCopyUrl(room.id, url);
+                              }}
+                              className='flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-all text-[8px] font-sans uppercase tracking-widest'
+                              title='Copiar URL iCal'
+                            >
+                              {copiedId === room.id ? (
+                                <><Check className='size-3' /> Copiado!</>
+                              ) : (
+                                <><Copy className='size-3' /> Copiar</>
+                              )}
+                            </button>
+                          </div>
+                        ) : (
+                          <div className='mt-3 flex items-center justify-center'>
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                onRegenerateToken(room.id);
+                              }}
+                              disabled={regeneratingId === room.id}
+                              className='flex items-center gap-2 text-[9px] font-bold text-amber-400 uppercase tracking-widest bg-amber-500/10 hover:bg-amber-500/20 px-4 py-2 rounded-xl border border-amber-500/20 backdrop-blur-md transition-all disabled:opacity-50 disabled:cursor-not-allowed'
+                            >
+                              {regeneratingId === room.id ? (
+                                <><RefreshCw className='size-3 animate-spin' /> Generando...</>
+                              ) : (
+                                <><KeyRound className='size-3' /> Generar Token iCal</>
+                              )}
+                            </button>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
@@ -219,6 +268,8 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
   const [isSyncing, setIsSyncing] = useState(false);
   const [isEditorOpen, setIsEditorOpen] = useState(false);
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
 
   const filteredRooms = useMemo(() => {
     const safeRooms = Array.isArray(localRooms) ? localRooms : [];
@@ -238,6 +289,21 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
 
   const handleOpenEditor = (room?: Room) => { setSelectedRoom(room); setIsEditorOpen(true); };
   
+  const handleCopyUrl = async (roomId: string, url: string) => {
+    await navigator.clipboard.writeText(url);
+    setCopiedId(roomId);
+    setTimeout(() => setCopiedId(null), 2000);
+  };
+
+  const handleRegenerateToken = async (roomId: string) => {
+    setRegeneratingId(roomId);
+    const result = await regenerateIcalTokenAction(roomId);
+    if (result.success) {
+      await syncRooms();
+    }
+    setRegeneratingId(null);
+  };
+  
   const handleCloseEditor = async (needsRefresh?: boolean) => {
     setIsEditorOpen(false); 
     setSelectedRoom(undefined);
@@ -251,6 +317,7 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
       <InventoryPanelView 
         rooms={filteredRooms} isLoading={showLoading} searchTerm={searchTerm} setSearchTerm={setSearchTerm}
         filterStatus={filterStatus} setFilterStatus={setFilterStatus} isSyncing={isSyncing} onSync={handleManualSync} onOpenEditor={handleOpenEditor}
+        copiedId={copiedId} regeneratingId={regeneratingId} onCopyUrl={handleCopyUrl} onRegenerateToken={handleRegenerateToken}
       />
       {isEditorOpen && <RoomEditorModal hotelId={hotelId} initialData={selectedRoom} onClose={handleCloseEditor} />}
     </>

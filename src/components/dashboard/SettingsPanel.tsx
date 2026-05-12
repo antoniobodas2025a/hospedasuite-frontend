@@ -6,11 +6,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Save, MessageCircle, ShieldAlert, Wifi, 
   Coffee, Car, Waves, Building, CreditCard, UploadCloud, 
-  Users, Palette, Trash2, KeyRound, Globe, Check,
+  Users, Palette, Trash2, KeyRound, Globe, Check, Plus,
   AlertOctagon, RefreshCcw
 } from 'lucide-react';
-import { createClient } from '@/utils/supabase/client';
-import { saveSettingsAction, updateHotelProfileAction } from '@/app/actions/settings';
+import { saveSettingsAction, updateHotelProfileAction, uploadOptimizedImageAction } from '@/app/actions/settings';
 import { createStaffAction, deleteStaffAction } from '@/app/actions/staff';
 import { executeCleanSlateAction } from '@/app/actions/seeding';
 import { useRouter } from 'next/navigation';
@@ -33,10 +32,11 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
   const [isCleaning, setIsCleaning] = useState(false);
   const [activeTab, setActiveTab] = useState<'general' | 'ota' | 'staff'>('general');
   const [coverPhotoPreview, setCoverPhotoPreview] = useState<string | null>(initialData?.cover_photo_url || null);
+  const [mainImagePreview, setMainImagePreview] = useState<string | null>(initialData?.main_image_url || null);
+  const [galleryPreviews, setGalleryPreviews] = useState<string[]>(initialData?.gallery_urls || []);
   const [localStaff, setLocalStaff] = useState(initialStaff);
   
   const router = useRouter();
-  const supabase = createClient();
   const hotelId = initialData.id;
 
   const { register, handleSubmit, setValue, watch } = useForm({
@@ -60,18 +60,64 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
     const file = event.target.files?.[0];
     if (!file) return;
     setIsSaving(true);
-    const filePath = `covers/${hotelId}_${Date.now()}.${file.name.split('.').pop()}`;
     try {
-      const { error: uploadError } = await supabase.storage.from('hotel-media').upload(filePath, file);
-      if (uploadError) throw uploadError;
-      const { data: { publicUrl } } = supabase.storage.from('hotel-media').getPublicUrl(filePath);
-      setValue('cover_photo_url', publicUrl);
-      setCoverPhotoPreview(publicUrl);
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await uploadOptimizedImageAction(formData, 'covers');
+      if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
+      setValue('cover_photo_url', result.url);
+      setCoverPhotoPreview(result.url);
     } catch (error: any) {
-      alert('Error en Storage: ' + error.message);
+      alert('Error al subir imagen: ' + error.message);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const handleMainImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    setIsSaving(true);
+    try {
+      const formData = new FormData();
+      formData.append('file', file);
+      const result = await uploadOptimizedImageAction(formData, 'hero');
+      if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
+      setValue('main_image_url', result.url);
+      setMainImagePreview(result.url);
+    } catch (error: any) {
+      alert('Error al subir imagen (Hero): ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const files = event.target.files;
+    if (!files || files.length === 0) return;
+    setIsSaving(true);
+    try {
+      const newUrls: string[] = [...galleryPreviews];
+      for (const file of Array.from(files)) {
+        const formData = new FormData();
+        formData.append('file', file);
+        const result = await uploadOptimizedImageAction(formData, 'gallery');
+        if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
+        newUrls.push(result.url);
+      }
+      setGalleryPreviews(newUrls);
+      setValue('gallery_urls', newUrls);
+    } catch (error: any) {
+      alert('Error al subir galería: ' + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const removeGalleryImage = (index: number) => {
+    const updated = galleryPreviews.filter((_, i) => i !== index);
+    setGalleryPreviews(updated);
+    setValue('gallery_urls', updated);
   };
 
   const handleCreateStaff = async (e: React.FormEvent) => {
@@ -138,7 +184,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
         </div>
         <div className="flex bg-zinc-950/60 p-2 rounded-3xl border border-white/5 gap-2">
           {[{ id: 'general', label: 'Operación', icon: Building }, { id: 'ota', label: 'Perfil OTA', icon: Globe }, { id: 'staff', label: 'Equipo', icon: Users }].map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as any)} className={cn("flex-1 px-8 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 border", activeTab === tab.id ? "bg-indigo-600 text-white border-indigo-400 shadow-lg" : "bg-transparent text-zinc-500 border-transparent hover:text-zinc-300")}>
+            <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)} className={cn("flex-1 px-8 py-4 rounded-2xl text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 border", activeTab === tab.id ? "bg-indigo-600 text-white border-indigo-400 shadow-lg" : "bg-transparent text-zinc-500 border-transparent hover:text-zinc-300")}>
               <tab.icon size={18} /> {tab.label}
             </button>
           ))}
@@ -189,13 +235,50 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                 </div>
               </div>
               <div className="space-y-8">
+                {/* HERO IMAGE — La foto principal del hotel */}
                 <div className="bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5">
-                  <h3 className="text-xl font-bold mb-6 flex items-center gap-3"><UploadCloud className="text-indigo-400" /> Foto</h3>
-                  <div className="relative w-full h-56 bg-zinc-950 rounded-3xl border-2 border-dashed border-white/10 overflow-hidden group">
-                    {coverPhotoPreview ? <img src={coverPhotoPreview} alt="C" className="w-full h-full object-cover opacity-60" /> : <div className="flex h-full items-center justify-center opacity-20"><UploadCloud size={40}/></div>}
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-3"><UploadCloud className="text-indigo-400" /> Foto Hero</h3>
+                  <p className="text-[10px] text-zinc-500 mb-4 uppercase tracking-widest">Imagen principal del hotel en la página pública</p>
+                  <div className="relative w-full h-48 bg-zinc-950 rounded-3xl border-2 border-dashed border-white/10 overflow-hidden group">
+                    {mainImagePreview ? <img src={mainImagePreview} alt="Hero" className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" /> : <div className="flex flex-col h-full items-center justify-center opacity-20"><UploadCloud size={40}/><span className="text-[9px] mt-2 font-bold uppercase">Click para subir</span></div>}
+                    <input type="file" accept="image/*" onChange={handleMainImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
+                  </div>
+                </div>
+
+                {/* COVER PHOTO — Vista secundaria */}
+                <div className="bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5">
+                  <h3 className="text-xl font-bold mb-4 flex items-center gap-3"><UploadCloud className="text-sky-400" /> Foto Secundaria</h3>
+                  <div className="relative w-full h-40 bg-zinc-950 rounded-3xl border-2 border-dashed border-white/10 overflow-hidden group">
+                    {coverPhotoPreview ? <img src={coverPhotoPreview} alt="C" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" /> : <div className="flex h-full items-center justify-center opacity-20"><UploadCloud size={40}/></div>}
                     <input type="file" accept="image/*" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                   </div>
                 </div>
+
+                {/* GALLERY — Múltiples fotos del hotel */}
+                <div className="bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5">
+                  <h3 className="text-xl font-bold mb-2 flex items-center gap-3"><UploadCloud className="text-emerald-400" /> Galería del Hotel</h3>
+                  <p className="text-[10px] text-zinc-500 mb-4 uppercase tracking-widest">{galleryPreviews.length}/8 fotos — Historial visual</p>
+                  {galleryPreviews.length > 0 && (
+                    <div className="grid grid-cols-2 gap-2 mb-4">
+                      {galleryPreviews.map((url, i) => (
+                        <div key={i} className="relative h-24 rounded-xl overflow-hidden border border-white/10 group">
+                          <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
+                          <button type="button" onClick={() => removeGalleryImage(i)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                            <Trash2 className="size-4 text-rose-400" />
+                          </button>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {galleryPreviews.length < 8 && (
+                    <label className="flex flex-col items-center justify-center w-full h-20 bg-zinc-950 border-2 border-dashed border-white/10 rounded-2xl cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group">
+                      <Plus className="text-zinc-600 group-hover:text-emerald-400 mb-1" size={18} />
+                      <span className="text-[9px] text-zinc-500 font-bold uppercase">Agregar fotos</span>
+                      <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
+                    </label>
+                  )}
+                </div>
+
                 <div className="bg-zinc-950/80 p-8 rounded-[3rem] border border-amber-500/20 text-zinc-400 text-xs italic">
                   <h3 className="text-xl font-bold flex items-center gap-3 mb-6 text-zinc-100"><ShieldAlert className="text-amber-500/70"/> Protocolos</h3>
                   <textarea {...register('cancellation_policy')} rows={6} className="w-full bg-transparent outline-none resize-none" placeholder="Reglas..." />

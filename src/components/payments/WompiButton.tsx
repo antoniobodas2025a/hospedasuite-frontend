@@ -5,6 +5,15 @@ import { generateWompiSignature } from '@/app/actions/wompi';
 import { Loader2, CreditCard, ShieldCheck } from 'lucide-react';
 import Script from 'next/script';
 
+// 🛡️ Declaración de tipo para el widget de Wompi (inyectado vía script externo)
+declare global {
+  interface Window {
+    WidgetCheckout: new (config: Record<string, unknown>) => {
+      open: (callback: (result: { transaction: { id: string; status: string } }) => void) => void;
+    };
+  }
+}
+
 interface WompiButtonProps {
   amount: number;
   reference: string;
@@ -65,9 +74,9 @@ const WompiButton = ({
     }
 
     // 3. INYECCIÓN DEL IFRAME DE BÓVEDA (PCI-DSS)
-    const checkout = new (window as any).WidgetCheckout(widgetConfig);
+    const checkout = new window.WidgetCheckout(widgetConfig);
     
-    checkout.open((result: any) => {
+    checkout.open((result) => {
       const transaction = result.transaction;
       if (transaction.status === 'APPROVED') {
         if (onSuccess) onSuccess(transaction.id);

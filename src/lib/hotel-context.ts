@@ -47,6 +47,17 @@ export const getCurrentHotel = cache(async () => {
 
   // 4. Manejo de Estado Huérfano y Auto-Sanación
   if (!hotel) {
+    // Superadmins no necesitan hotel vinculado — van al panel admin
+    const { data: roleData } = await supabase
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (roleData?.role === 'superadmin') {
+      redirect('/admin');
+    }
+    
     console.warn(`⚠️ [HotelContext] Identidad ${user.id} validada sin propiedad vinculada.`);
     // Redirección determinista al embudo de creación (Onboarding)
     redirect('/software/onboarding'); 

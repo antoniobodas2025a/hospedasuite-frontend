@@ -3,7 +3,8 @@
 import React, { useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { User, Search, Plus, MapPin, Phone, Mail, Edit, Trash2, Fingerprint, X, Save } from 'lucide-react';
-import { useGuests, Guest } from '@/hooks/useGuests';
+import { useGuests } from '@/hooks/useGuests';
+import type { Guest } from '@/types';
 import { cn } from '@/lib/utils';
 
 // ==========================================

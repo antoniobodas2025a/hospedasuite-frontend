@@ -76,10 +76,16 @@ export async function updateGuestAction(id: string, guestData: Partial<GuestPayl
       throw new Error('SEC_VIOLATION: Intento de alteración de identidad externa bloqueado.');
     }
 
-    // 2. SANITIZACIÓN DEL PAYLOAD (Evitar inyección de llaves foráneas)
-    const safePayload = { ...guestData };
-    delete (safePayload as any).hotel_id; // Garantizamos que el hotel_id no pueda cambiar
-    delete (safePayload as any).id;
+    // 2. SANITIZACIÓN DEL PAYLOAD (Solo campos permitidos — Zero-Trust)
+    const safePayload: Partial<GuestPayload> = {
+      full_name: guestData.full_name,
+      doc_type: guestData.doc_type,
+      doc_number: guestData.doc_number,
+      phone: guestData.phone,
+      email: guestData.email,
+      country: guestData.country,
+      notes: guestData.notes,
+    };
 
     const { error } = await supabaseAdmin
       .from('guests')

@@ -2,34 +2,73 @@
 
 import React, { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import Image from 'next/image';
 import { 
-  X, ArrowRight, Users, Maximize, BedDouble, Calendar, 
+  X, ArrowRight, Users, Calendar, 
   Wifi, Coffee, Wind, Bath, Flame, Droplets, Sun, Star,
   Info, ClipboardList, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import type { Room, GalleryItem } from '@/types';
+import RoomGallery from './RoomGallery';
+
+interface HotelForModal {
+  slug: string;
+  name?: string;
+  rooms?: Array<Partial<Room> & { price_per_night?: number }>;
+}
 
 // ============================================================================
-// DICCIONARIO DE STORYTELLING EDITABLE (PLANTILLAS TIER-1)
+// DICCIONARIO DE STORYTELLING EDITABLE
 // ============================================================================
 const AMENITY_TEMPLATES: Record<string, { icon: React.ElementType, title: string, story: string }> = {
-  'wifi': { icon: Wifi, title: 'Conexión Ininterrumpida', story: 'Alta velocidad mediante fibra óptica para mantenerse conectado o desconectar bajo sus propios términos.' },
-  'minibar': { icon: Coffee, title: 'Minibar de Autor', story: 'Una selección curada de sabores locales lista para ser descubierta a su llegada.' },
-  'ac': { icon: Wind, title: 'Climatización Perfecta', story: 'Control térmico de precisión para ignorar el frío de la montaña o el calor de la tarde.' },
-  'jacuzzi': { icon: Bath, title: 'Burbujas de Relajación', story: 'Sumerja sus sentidos en hidromasaje privado con vistas inigualables al valle.' },
-  'chimenea': { icon: Flame, title: 'Fuego Prócer', story: 'Chimenea real de leña para calentar conversaciones y revivir la nostalgia boyacense.' },
-  'ducha_lluvia': { icon: Droplets, title: 'Ducha Sensorial', story: 'Arquitectura hídrica diseñada para simular una lluvia constante de alta presión.' },
-  'techo_panoramico': { icon: Sun, title: 'Cielo de Plata', story: 'Visualización directa a la Vía Láctea desde la comodidad absoluta de su domo.' }
+  'wifi': { icon: Wifi, title: 'Conexion Ininterrumpida', story: 'Alta velocidad mediante fibra optica para mantenerse conectado o desconectar bajo sus propios terminos.' },
+  'minibar': { icon: Coffee, title: 'Minibar de Autor', story: 'Una seleccion curada de sabores locales lista para ser descubierta a su llegada.' },
+  'ac': { icon: Wind, title: 'Climatizacion Perfecta', story: 'Control termico de precision para ignorar el frio de la montana o el calor de la tarde.' },
+  'jacuzzi': { icon: Bath, title: 'Burbujas de Relajacion', story: 'Sumerja sus sentidos en hidromasaje privado con vistas inigualables al valle.' },
+  'chimenea': { icon: Flame, title: 'Fuego Procer', story: 'Chimenea real de lena para calentar conversaciones y revivir la nostalgia boyacense.' },
+  'ducha_lluvia': { icon: Droplets, title: 'Ducha Sensorial', story: 'Arquitectura hidrica disenada para simular una lluvia constante de alta presion.' },
+  'techo_panoramico': { icon: Sun, title: 'Cielo de Plata', story: 'Visualizacion directa a la Via Lactea desde la comodidad absoluta de su domo.' }
 };
 
-export function RoomShowcaseModal({ hotel }: { hotel: any }) {
+// ============================================================================
+// GLASS CARD
+// ============================================================================
+function GlassCard({ children, className }: { children: React.ReactNode; className?: string }) {
+  return (
+    <div className={cn(
+      'rounded-[1.25rem] border',
+      'bg-white/40 backdrop-blur-xl',
+      'border-white/30 shadow-sm shadow-muted/40',
+      className,
+    )}>
+      {children}
+    </div>
+  );
+}
+
+// ============================================================================
+// AMENITY GLASS
+// ============================================================================
+function AmenityGlass({ icon: Icon, title, story }: { icon: React.ElementType; title: string; story: string }) {
+  return (
+    <div className="group flex gap-3 p-3 rounded-xl transition-all duration-300 hover:bg-white/40 hover:shadow-md hover:shadow-brand-500/5">
+      <div className="shrink-0 size-10 rounded-xl bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center transition-all group-hover:from-brand-500/20 group-hover:to-warm-400/20 group-hover:scale-105">
+        <Icon size={18} className="text-brand-500" strokeWidth={1.5} />
+      </div>
+      <div>
+        <p className="text-sm font-semibold text-foreground">{title}</p>
+        <p className="text-[11px] text-muted-foreground leading-relaxed font-lora">{story}</p>
+      </div>
+    </div>
+  );
+}
+
+export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   
-  // 🚨 ÚNICA FUENTE DE VERDAD (SSOT): Estado leído exclusivamente de la URL
   const roomId = searchParams.get('showRoom');
   const checkIn = searchParams.get('checkin');
   const checkOut = searchParams.get('checkout');
@@ -38,12 +77,10 @@ export function RoomShowcaseModal({ hotel }: { hotel: any }) {
 
   const totalGuests = adults + children;
 
-  // Resolución Topológica de la Habitación
   const room = useMemo(() => 
-    hotel.rooms?.find((r: any) => r.id === roomId), 
+    hotel.rooms?.find((r) => r.id === roomId), 
   [hotel.rooms, roomId]);
 
-  // Gatekeepers de Navegación
   const closeModal = () => {
     const params = new URLSearchParams(searchParams.toString());
     params.delete('showRoom');
@@ -52,17 +89,19 @@ export function RoomShowcaseModal({ hotel }: { hotel: any }) {
 
   if (!roomId) return null;
 
-  // 🛡️ ESCUDO UX: Fechas Faltantes (Protección de Integridad)
+  // ESCUDO UX: Fechas Faltantes
   if (!checkIn || !checkOut) {
     return (
       <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
-        <div className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm" onClick={closeModal} />
-        <div className="bg-white rounded-[2.5rem] p-10 w-full max-w-md relative z-10 text-center shadow-2xl border border-slate-100 animate-in zoom-in-95 duration-200">
-          <Calendar size={48} className="text-indigo-600 mx-auto mb-6" strokeWidth={1.5} />
-          <h2 className="text-2xl font-black text-slate-900 mb-2">Defina su Estadía</h2>
-          <p className="text-slate-500 mb-8 text-sm">Para garantizar la tarifa exacta, necesitamos saber cuándo nos visitará.</p>
+        <div className="absolute inset-0 bg-foreground/40 backdrop-blur-xl" onClick={closeModal} />
+        <div className="relative z-10 bg-white/70 backdrop-blur-3xl rounded-[2rem] p-10 w-full max-w-md text-center shadow-2xl shadow-black/10 border border-white/40 animate-in zoom-in-95 duration-200">
+          <div className="size-16 rounded-2xl bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center mx-auto mb-6">
+            <Calendar size={28} className="text-brand-500" strokeWidth={1.5} />
+          </div>
+          <h2 className="text-2xl font-black text-foreground mb-2">Defina su Estadia</h2>
+          <p className="text-muted-foreground mb-8 text-sm">Para garantizar la tarifa exacta, necesitamos saber cuando nos visitara.</p>
           <button onClick={() => { closeModal(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
-            className="w-full bg-slate-900 text-white font-bold py-4 rounded-2xl hover:bg-indigo-600 transition-all flex items-center justify-center gap-2 shadow-lg active:scale-95">
+            className="w-full bg-foreground/90 backdrop-blur-sm text-background font-semibold py-4 rounded-2xl hover:bg-brand-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-[0.98]">
             Seleccionar Fechas <ArrowRight size={18} />
           </button>
         </div>
@@ -72,185 +111,323 @@ export function RoomShowcaseModal({ hotel }: { hotel: any }) {
 
   if (!room) return null;
 
-  // Cálculos Financieros y Temporales Seguros
   const dateFrom = parseISO(checkIn);
   const dateTo = parseISO(checkOut);
   const nights = Math.max(1, Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 3600 * 24)));
   const basePrice = room.price_per_night || room.price || 0;
   const totalPrice = basePrice * nights;
-  
-  // Validación de Reglas de Negocio
-  const isOverCapacity = totalGuests > room.capacity;
+  const isOverCapacity = totalGuests > Number(room.capacity ?? 0);
 
   const handleCheckout = () => {
     if (isOverCapacity) return;
     const params = new URLSearchParams();
-    params.set('room', room.id);
+    params.set('room', room.id!);
     params.set('checkin', checkIn);
     params.set('checkout', checkOut);
     params.set('adults', adults.toString());
     params.set('children', children.toString());
-    // Delegación al procesador final (Wompi)
     router.push(`/book/${hotel.slug}/checkout?${params.toString()}`);
   };
 
-  const images = room.gallery?.length > 0 ? room.gallery : [{ url: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32' }];
+  const rawGallery = room.gallery ?? [];
+  const images: GalleryItem[] = Array.isArray(rawGallery)
+    ? (rawGallery as (string | GalleryItem)[]).map((img) => typeof img === 'string' ? { url: img } : img)
+    : [];
+  if (images.length === 0) {
+    images.push({ url: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32' });
+  }
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center sm:p-6 animate-in fade-in duration-200">
-      <div className="absolute inset-0 bg-slate-900/60 backdrop-blur-md" onClick={closeModal} />
+    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center sm:p-3 lg:p-5 animate-in fade-in duration-200">
+      {/* Backdrop con blur pesado */}
+      <div className="absolute inset-0 bg-foreground/50 backdrop-blur-2xl" onClick={closeModal} />
       
-      <div className="bg-white sm:rounded-[2.5rem] rounded-t-[2.5rem] w-full max-w-6xl h-[92vh] flex flex-col relative shadow-2xl overflow-hidden animate-in slide-in-from-bottom-10 duration-300">
+      {/* MODAL CONTAINER — Liquid Glass */}
+      <div className="relative w-full max-w-7xl h-[96vh] sm:h-[92vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-300 sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl shadow-black/20 border border-white/20 bg-white/60 backdrop-blur-3xl">
         
-        {/* Header Flotante (Boton Cerrar Mac-Style) */}
-        <button onClick={closeModal} className="absolute top-6 right-6 z-30 bg-white/90 backdrop-blur-md p-3 rounded-full shadow-lg text-slate-800 hover:scale-110 transition-all border border-slate-200">
-          <X size={20} strokeWidth={3} />
+        {/* Boton cerrar glass */}
+        <button onClick={closeModal} className="absolute top-4 right-4 z-30 size-10 flex items-center justify-center rounded-full bg-white/15 backdrop-blur-xl border border-white/25 text-foreground/70 hover:bg-white/25 hover:scale-110 hover:text-foreground transition-all shadow-lg shadow-black/5 active:scale-95">
+          <X size={18} strokeWidth={2.5} />
         </button>
 
-        <div className="overflow-y-auto custom-scrollbar flex-1 pb-32 bg-slate-50">
+        {/* DESKTOP SPLIT PANEL (lg+) */}
+        <div className="hidden lg:flex flex-1 overflow-hidden">
           
-          {/* MOSAICO CINEMATOGRÁFICO DE IMÁGENES */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-2 p-2 h-[300px] md:h-[500px]">
-            <div className="md:col-span-2 relative h-full rounded-3xl overflow-hidden shadow-inner bg-slate-200">
-              <Image src={images[0].url || images[0]} alt={room.name} fill className="object-cover" priority quality={90} />
-            </div>
-            <div className="hidden md:grid md:col-span-2 grid-cols-2 gap-2">
-              {images.slice(1, 5).map((img: any, i: number) => (
-                <div key={i} className="relative h-full rounded-2xl overflow-hidden bg-slate-200 group">
-                  <Image src={img.url || img} alt={`${room.name} ${i+1}`} fill className="object-cover group-hover:scale-110 transition-transform duration-700" />
-                </div>
-              ))}
-              {images.length < 5 && Array(4 - (images.length - 1)).fill(0).map((_, i) => (
-                <div key={`fill-${i}`} className="bg-slate-100 rounded-2xl flex items-center justify-center border border-dashed border-slate-200">
-                  <Star className="text-slate-200" size={24} />
-                </div>
-              ))}
-            </div>
+          {/* PANEL IZQUIERDO: Galeria (fondo oscuro, sin scroll) */}
+          <div className="w-1/2 bg-foreground relative">
+            <RoomGallery 
+              images={images} 
+              roomName={room.name ?? 'Habitacion'} 
+              onClose={closeModal}
+              variant="inline"
+            />
           </div>
 
-          <div className="px-6 py-10 md:px-16 max-w-5xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-12">
+          {/* PANEL DERECHO: Info + Resumen (scrolleable, fondo claro) */}
+          <div className="w-1/2 flex flex-col overflow-hidden bg-gradient-to-b from-muted/80 to-background/60">
             
-            {/* COLUMNA IZQUIERDA: MANIFIESTO Y NARRATIVA */}
-            <div className="lg:col-span-2 space-y-10">
-              <div>
-                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-50 border border-amber-100 text-amber-700 text-[10px] font-bold uppercase tracking-widest mb-4">
-                  <Star size={12} className="fill-amber-500" /> Selección de Autor
-                </span>
-                <h2 className="text-4xl md:text-5xl font-black text-slate-900 tracking-tight mb-6">{room.name}</h2>
-                <p className="text-lg text-slate-600 font-lora leading-relaxed italic">
-                  {room.description || "Un refugio diseñado para quienes buscan silenciar el ruido del mundo y reconectar con la esencia de la montaña."}
-                </p>
-              </div>
-
-              {/* AMENIDADES CON STORYTELLING */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-8 pt-8 border-t border-slate-200">
-                {room.amenities?.map((amenity: any, idx: number) => {
-                  const id = typeof amenity === 'string' ? amenity : amenity.id;
-                  const template = AMENITY_TEMPLATES[id] || { 
-                    icon: Star, 
-                    title: typeof amenity === 'string' ? amenity.toUpperCase() : amenity.details, 
-                    story: "Servicio premium garantizado por HospedaSuite." 
-                  };
-                  const Icon = template.icon;
-                  return (
-                    <div key={idx} className="flex gap-4">
-                      <div className="shrink-0 size-12 rounded-2xl bg-white border border-slate-100 shadow-sm flex items-center justify-center">
-                        <Icon size={24} className="text-indigo-500" strokeWidth={1.5} />
-                      </div>
-                      <div>
-                        <p className="font-bold text-slate-900">{template.title}</p>
-                        <p className="text-xs text-slate-500 leading-relaxed font-lora">{template.story}</p>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* COLUMNA DERECHA: WIDGET DE RESUMEN (READ-ONLY) */}
-            <div className="lg:col-span-1">
-              <div className="sticky top-4 bg-white rounded-[2rem] p-8 shadow-xl border border-slate-100 ring-1 ring-slate-900/5">
+            {/* Contenido scrolleable */}
+            <div className="flex-1 overflow-y-auto custom-scrollbar">
+              <div className="p-7 xl:p-9 space-y-6">
                 
-                <h3 className="text-lg font-bold text-slate-900 mb-6 flex items-center gap-2">
-                  <ClipboardList size={20} className="text-indigo-600" /> Resumen de Reserva
-                </h3>
-
+                {/* Nombre + Descripcion */}
                 <div className="space-y-4">
-                  
-                  {/* Fila 1: Fechas y Noches */}
-                  <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                     <div>
-                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1 flex items-center gap-1"><Clock size={10} /> Estadía</p>
-                       <p className="text-sm font-bold text-slate-900">
-                         {format(dateFrom, "dd MMM", { locale: es })} — {format(dateTo, "dd MMM", { locale: es })}
-                       </p>
-                     </div>
-                     <div className="bg-white px-3 py-1.5 rounded-xl border border-slate-200 shadow-sm">
-                       <span className="text-xs font-bold text-slate-700">{nights} Noche{nights > 1 ? 's' : ''}</span>
-                     </div>
-                  </div>
+                  <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warm-500/10 backdrop-blur-xl border border-warm-500/20 text-warm-700 text-[10px] font-bold uppercase tracking-widest">
+                    <Star size={11} className="fill-warm-500" /> Seleccion de Autor
+                  </span>
+                  <h2 className="text-3xl xl:text-4xl font-black text-foreground tracking-tight leading-tight">{room.name}</h2>
+                  <p className="text-[15px] text-muted-foreground font-lora leading-relaxed italic">
+                    {room.description || "Un refugio disenado para quienes buscan silenciar el ruido del mundo y reconectar con la esencia de la montana."}
+                  </p>
+                </div>
 
-                  {/* Fila 2: Ocupación Verificada */}
-                  <div className="flex justify-between items-center bg-slate-50 p-4 rounded-2xl border border-slate-100">
-                     <div>
-                       <p className="text-[10px] text-slate-400 font-bold uppercase tracking-widest mb-1">Ocupación</p>
-                       <p className="text-sm font-bold text-slate-900">
-                         {adults} Adulto{adults > 1 ? 's' : ''} {children > 0 ? `y ${children} Niños` : ''}
-                       </p>
-                     </div>
-                     <Users size={18} className="text-slate-400" />
-                  </div>
+                {/* Amenidades con Glass Cards */}
+                {room.amenities && room.amenities.length > 0 && (
+                  <GlassCard className="p-5">
+                    <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                      <span className="size-1.5 rounded-full bg-brand-400" />
+                      Amenidades
+                    </h3>
+                    <div className="grid grid-cols-1 xl:grid-cols-2 gap-1">
+                      {room.amenities.map((amenity: string | { id: string; details?: string }, idx: number) => {
+                        const id = typeof amenity === 'string' ? amenity : amenity.id;
+                        const template = AMENITY_TEMPLATES[id] || { 
+                          icon: Star, 
+                          title: typeof amenity === 'string' ? amenity.toUpperCase() : amenity.details, 
+                          story: "Servicio premium garantizado por HospedaSuite." 
+                        };
+                        return (
+                          <AmenityGlass
+                            key={idx}
+                            icon={template.icon}
+                            title={template.title}
+                            story={template.story}
+                          />
+                        );
+                      })}
+                    </div>
+                  </GlassCard>
+                )}
 
-                  {/* Escudo Dinámico: Alerta de Capacidad (Si se forzó por URL maliciosa) */}
-                  {isOverCapacity && (
-                    <div className="flex gap-2 p-4 bg-rose-50 border border-rose-100 rounded-2xl text-rose-700">
-                      <Info size={16} className="shrink-0 mt-0.5" />
+                {/* Resumen de Reserva — Glass Card */}
+                <GlassCard className="p-5">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <ClipboardList size={13} className="text-brand-500" />
+                    Resumen de Reserva
+                  </h3>
+                  <div className="space-y-4">
+                    
+                    {/* Fechas */}
+                    <div className="flex justify-between items-center">
                       <div>
-                        <p className="text-xs font-bold mb-1">Aforo Excedido</p>
-                        <p className="text-[10px] leading-tight">
-                          Esta unidad solo permite un máximo de {room.capacity} personas. Por favor, cierre esta ventana y ajuste su búsqueda.
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
+                          <Clock size={10} /> Estadia
+                        </p>
+                        <p className="text-sm font-bold text-foreground">
+                          {format(dateFrom, "dd MMM", { locale: es })} — {format(dateTo, "dd MMM", { locale: es })}
                         </p>
                       </div>
+                      <div className="px-3 py-1.5 rounded-xl bg-white/60 backdrop-blur-sm border border-white/30 shadow-sm">
+                        <span className="text-xs font-bold text-foreground/80">{nights} Noche{nights > 1 ? 's' : ''}</span>
+                      </div>
                     </div>
-                  )}
 
-                  {/* Desglose Financiero Básico */}
-                  <div className="pt-6 border-t border-slate-100">
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-xs font-medium text-slate-500">Tarifa Base ({nights} noches)</span>
-                      <span className="text-sm font-bold text-slate-900">${totalPrice.toLocaleString()}</span>
+                    {/* Ocupacion */}
+                    <div className="flex justify-between items-center pt-3 border-t border-border/40">
+                      <div>
+                        <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">Ocupacion</p>
+                        <p className="text-sm font-bold text-foreground">
+                          {adults} Adulto{adults > 1 ? 's' : ''} {children > 0 ? `y ${children} Ninos` : ''}
+                        </p>
+                      </div>
+                      <Users size={16} className="text-muted-foreground/40" />
                     </div>
-                    <div className="flex justify-between items-center mb-4">
-                      <span className="text-xs font-medium text-slate-500">Impuestos y Tasas</span>
-                      <span className="text-[10px] font-bold bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full uppercase">Incluido</span>
+
+                    {/* Alerta de capacidad */}
+                    {isOverCapacity && (
+                      <div className="flex gap-2 p-3 bg-destructive/10 backdrop-blur-sm border border-destructive/20 text-destructive">
+                        <Info size={14} className="shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-bold mb-1">Aforo Excedido</p>
+                          <p className="text-[10px] leading-tight">
+                            Esta unidad permite maximo {room.capacity} personas.
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Desglose financiero */}
+                    <div className="pt-3 border-t border-border/40">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs font-medium text-muted-foreground">Tarifa Base ({nights} noches)</span>
+                        <span className="text-sm font-bold text-foreground">${totalPrice.toLocaleString()}</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span className="text-xs font-medium text-muted-foreground">Impuestos y Tasas</span>
+                        <span className="text-[10px] font-bold bg-muted/60 text-muted-foreground px-2 py-0.5 rounded-full uppercase">Incluido</span>
+                      </div>
                     </div>
                   </div>
+                </GlassCard>
 
-                </div>
               </div>
             </div>
+
+            {/* Dock de cierre — barra flotante glass */}
+            <div className="shrink-0 p-4">
+              <div className="flex items-center justify-between px-5 py-4 rounded-[1.25rem] bg-white/50 backdrop-blur-2xl border border-white/30 shadow-lg shadow-muted/30">
+                <div>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-0.5">Total</p>
+                  <p className="text-xl font-black text-foreground">${totalPrice.toLocaleString()} <span className="text-xs font-medium text-muted-foreground">COP</span></p>
+                </div>
+                <button 
+                  disabled={isOverCapacity}
+                  onClick={handleCheckout}
+                  className={cn(
+                    "px-7 py-3.5 rounded-xl font-semibold text-background transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
+                    isOverCapacity 
+                      ? "bg-muted/60 text-muted-foreground cursor-not-allowed" 
+                      : "bg-foreground/90 hover:bg-brand-600 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40"
+                  )}
+                >
+                  {isOverCapacity ? 'Ajuste la Busqueda' : 'Reservar'} <ArrowRight size={16} strokeWidth={2.5} />
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
 
-        {/* 💳 DOCK DE CIERRE FINANCIERO (Fijado Abajo) */}
-        <div className="absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-xl border-t border-slate-200 p-6 md:px-12 flex items-center justify-between z-20 shadow-[0_-10px_40px_rgba(0,0,0,0.05)]">
-          <div className="hidden sm:block">
-            <p className="text-[10px] font-bold text-slate-400 uppercase tracking-[0.2em] mb-1">Total a Invertir</p>
-            <p className="text-3xl font-black text-slate-900">${totalPrice.toLocaleString()} <span className="text-sm font-medium text-slate-400">COP</span></p>
-          </div>
+        {/* MOBILE/ TABLET STACKED (< lg) */}
+        <div className="lg:hidden flex flex-col flex-1 overflow-hidden bg-gradient-to-b from-muted/80 to-background/60">
           
-          <button 
-            disabled={isOverCapacity}
-            onClick={handleCheckout}
-            className={cn(
-              "w-full sm:w-auto px-10 py-5 rounded-2xl font-bold text-white transition-all shadow-xl flex items-center justify-center gap-3 active:scale-95",
-              isOverCapacity 
-                ? "bg-slate-200 text-slate-400 cursor-not-allowed shadow-none" 
-                : "bg-slate-900 hover:bg-indigo-600 shadow-indigo-500/20"
-            )}
-          >
-            {isOverCapacity ? 'Ajuste la Búsqueda' : 'Confirmar y Reservar'} <ArrowRight size={20} strokeWidth={2.5} />
-          </button>
+          {/* Galeria compacta */}
+          <div className="shrink-0 p-2">
+            <RoomGallery 
+              images={images} 
+              roomName={room.name ?? 'Habitacion'} 
+              onClose={closeModal}
+              variant="compact"
+            />
+          </div>
+
+          {/* Info scrolleable */}
+          <div className="flex-1 overflow-y-auto custom-scrollbar pb-32">
+            <div className="px-4 py-5 space-y-5">
+              
+              {/* Nombre + Descripcion */}
+              <div className="space-y-3">
+                <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warm-500/10 backdrop-blur-xl border border-warm-500/20 text-warm-700 text-[10px] font-bold uppercase tracking-widest">
+                  <Star size={11} className="fill-warm-500" /> Seleccion de Autor
+                </span>
+                <h2 className="text-2xl font-black text-foreground tracking-tight">{room.name}</h2>
+                <p className="text-[15px] text-muted-foreground font-lora leading-relaxed italic">
+                  {room.description || "Un refugio disenado para quienes buscan silenciar el ruido del mundo y reconectar con la esencia de la montana."}
+                </p>
+              </div>
+
+              {/* Amenidades */}
+              {room.amenities && room.amenities.length > 0 && (
+                <GlassCard className="p-4">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+                    <span className="size-1.5 rounded-full bg-brand-400" />
+                    Amenidades
+                  </h3>
+                  <div className="grid grid-cols-1 gap-1">
+                    {room.amenities.map((amenity: string | { id: string; details?: string }, idx: number) => {
+                      const id = typeof amenity === 'string' ? amenity : amenity.id;
+                      const template = AMENITY_TEMPLATES[id] || { 
+                        icon: Star, 
+                        title: typeof amenity === 'string' ? amenity.toUpperCase() : amenity.details, 
+                        story: "Servicio premium garantizado por HospedaSuite." 
+                      };
+                      return (
+                        <AmenityGlass
+                          key={idx}
+                          icon={template.icon}
+                          title={template.title}
+                          story={template.story}
+                        />
+                      );
+                    })}
+                  </div>
+                </GlassCard>
+              )}
+
+              {/* Resumen */}
+              <GlassCard className="p-4">
+                <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
+                  <ClipboardList size={13} className="text-brand-500" />
+                  Resumen de Reserva
+                </h3>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 flex items-center gap-1"><Clock size={10} /> Estadia</p>
+                      <p className="text-sm font-bold text-foreground">
+                        {format(dateFrom, "dd MMM", { locale: es })} — {format(dateTo, "dd MMM", { locale: es })}
+                      </p>
+                    </div>
+                    <div className="px-3 py-1.5 rounded-xl bg-white/60 backdrop-blur-sm border border-white/30">
+                      <span className="text-xs font-bold text-foreground/80">{nights} Noche{nights > 1 ? 's' : ''}</span>
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center pt-3 border-t border-border/40">
+                    <div>
+                      <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">Ocupacion</p>
+                      <p className="text-sm font-bold text-foreground">
+                        {adults} Adulto{adults > 1 ? 's' : ''} {children > 0 ? `y ${children} Ninos` : ''}
+                      </p>
+                    </div>
+                    <Users size={16} className="text-muted-foreground/40" />
+                  </div>
+                  {isOverCapacity && (
+                    <div className="flex gap-2 p-3 bg-destructive/10 backdrop-blur-sm border border-destructive/20 text-destructive">
+                      <Info size={14} className="shrink-0 mt-0.5" />
+                      <div>
+                        <p className="text-xs font-bold mb-1">Aforo Excedido</p>
+                        <p className="text-[10px] leading-tight">Maximo {room.capacity} personas.</p>
+                      </div>
+                    </div>
+                  )}
+                  <div className="pt-3 border-t border-border/40">
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-xs font-medium text-muted-foreground">Tarifa Base ({nights} noches)</span>
+                      <span className="text-sm font-bold text-foreground">${totalPrice.toLocaleString()}</span>
+                    </div>
+                    <div className="flex justify-between items-center">
+                      <span className="text-xs font-medium text-muted-foreground">Impuestos y Tasas</span>
+                      <span className="text-[10px] font-bold bg-muted/60 text-muted-foreground px-2 py-0.5 rounded-full uppercase">Incluido</span>
+                    </div>
+                  </div>
+                </div>
+              </GlassCard>
+
+            </div>
+          </div>
+
+          {/* Dock de cierre mobile — glass flotante */}
+          <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
+            <div className="flex items-center justify-between px-5 py-4 rounded-[1.25rem] bg-white/50 backdrop-blur-2xl border border-white/30 shadow-xl shadow-black/10">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-0.5">Total</p>
+                <p className="text-xl font-black text-foreground">${totalPrice.toLocaleString()} <span className="text-xs font-medium text-muted-foreground">COP</span></p>
+              </div>
+              <button 
+                disabled={isOverCapacity}
+                onClick={handleCheckout}
+                className={cn(
+                  "px-7 py-3.5 rounded-xl font-semibold text-background transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
+                  isOverCapacity 
+                    ? "bg-muted/60 text-muted-foreground cursor-not-allowed" 
+                    : "bg-foreground/90 hover:bg-brand-600 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40"
+                )}
+              >
+                {isOverCapacity ? 'Ajuste' : 'Reservar'} <ArrowRight size={16} strokeWidth={2.5} />
+              </button>
+            </div>
+          </div>
+
         </div>
 
       </div>

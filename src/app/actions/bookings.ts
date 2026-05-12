@@ -4,6 +4,7 @@ import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { cookies } from 'next/headers';
+import { isTemporalCollision, type PostgresError } from '@/lib/booking-helpers';
 
 // 🛡️ CLIENTE PRIVILEGIADO GLOBAL (Admin Tier)
 const supabaseAdmin = createSupabaseClient(
@@ -39,12 +40,38 @@ interface PendingBookingPayload {
   checkout: string;
   source: 'direct' | 'ota';
   upsells: string[];
-  amount: number; 
+  amount: number;
+}
+
+interface UpdateBookingPayload {
+  guestName?: string;
+  guestDoc?: string;
+  guestPhone?: string;
+  guestEmail?: string;
+  price?: number;
+  checkIn?: string;
+  checkOut?: string;
+  roomId?: string;
 }
 
 // ==========================================
 // BLOQUE 2: UTILIDADES DE AUDITORÍA
 // ==========================================
+
+/**
+ * Extrae el mensaje de error de cualquier tipo de error lanzado en un catch.
+ * Narrowing seguro: soporta PostgresError, Error estándar, y strings.
+ */
+function getErrorMessage(error: unknown): string {
+  if (!error) return 'Error desconocido';
+  if (typeof error === 'string') return error;
+  if (error instanceof Error) return error.message;
+  if (typeof error === 'object' && error !== null) {
+    const pg = error as PostgresError;
+    if (pg.message) return pg.message;
+  }
+  return 'Error desconocido';
+}
 
 async function getActiveStaffId(): Promise<string | null> {
   try {
@@ -54,30 +81,17 @@ async function getActiveStaffId(): Promise<string | null> {
       const staffData = JSON.parse(staffCookie.value);
       return staffData.id || null;
     }
-  } catch (error) {
-    console.warn('Fallo al parsear la sesión del staff:', error);
+  } catch (_error: unknown) {
+    console.warn('Fallo al parsear la sesión del staff:', _error);
   }
   return null;
 }
-
-/**
- * 🛡️ HELPER: Verificador de Colisión Temporal
- * Mapea las restricciones de exclusión de PostgreSQL al lenguaje del Frontend.
- */
-const isTemporalCollision = (error: any): boolean => {
-  if (!error) return false;
-  return (
-    error.message?.includes('no_overlapping_bookings') || 
-    error.message?.includes('prevent_double_booking') || 
-    error.code === '23P04'
-  );
-};
 
 // ==========================================
 // BLOQUE 3: ACCIONES CORE (ADMIN)
 // ==========================================
 
-export async function updateBookingDetailsAction(bookingId: string, data: any) {
+export async function updateBookingDetailsAction(bookingId: string, data: UpdateBookingPayload) {
   try {
     const currentHotel = await getCurrentHotel();
     if (!currentHotel) throw new Error('No autorizado');
@@ -125,9 +139,10 @@ export async function updateBookingDetailsAction(bookingId: string, data: any) {
     revalidatePath('/dashboard/calendar');
     return { success: true };
     
-  } catch (error: any) {
-    console.error("[CRITICAL] Booking Update Error:", error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = getErrorMessage(error);
+    console.error("[CRITICAL] Booking Update Error:", message);
+    return { success: false, error: message };
   }
 }
 
@@ -189,8 +204,8 @@ export async function createBookingAction(data: BookingPayload) {
 
     revalidatePath('/dashboard/calendar');
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -212,8 +227,8 @@ export async function updateBookingDatesAction(bookingId: string, newRoomId: str
 
     revalidatePath('/dashboard/calendar');
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -232,8 +247,8 @@ export async function cancelBookingAction(bookingId: string) {
 
     revalidatePath('/dashboard/calendar');
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -272,8 +287,8 @@ export async function duplicateBookingAction(bookingId: string, newRoomId: strin
 
     revalidatePath('/dashboard/calendar');
     return { success: true };
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -348,8 +363,8 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
     revalidatePath('/dashboard/calendar');
     return { success: true, bookingId: link.id };
 
-  } catch (error: any) {
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
   }
 }
 
@@ -380,8 +395,9 @@ export async function processCheckInAction(bookingId: string) {
     
     return { success: true };
 
-  } catch (error: any) {
-    console.error('🚨 CHECKIN_FORENSIC_ERROR:', error.message);
-    return { success: false, error: error.message };
+  } catch (error: unknown) {
+    const message = getErrorMessage(error);
+    console.error('🚨 CHECKIN_FORENSIC_ERROR:', message);
+    return { success: false, error: message };
   }
 }

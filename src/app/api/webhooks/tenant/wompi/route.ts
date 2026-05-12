@@ -1,7 +1,9 @@
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
+import { Client } from '@upstash/qstash';
 import { verifyWompiSignature, WompiEventPayload } from '@/lib/wompi-crypto';
-import { sendBookingConfirmationEmail } from '@/app/actions/notifications';
+
+const qstashClient = new Client({ token: process.env.QSTASH_TOKEN! });
 
 /**
  * 🛡️ CONFIGURACIÓN DE SEGURIDAD NIVEL 0
@@ -102,7 +104,7 @@ export async function POST(request: Request) {
 
         console.log(`💳 [Finanzas] Reconciliación exitosa. Reserva ${reference} CONFIRMADA.`);
 
-        // 📧 DESPACHO DE NOTIFICACIONES ASÍNCRONO
+        // 📧 NOTIFICACIÓN ASÍNCRONA VÍA QSTASH (con reintentos automáticos)
         try {
           const { data: bookingDetails } = await supabaseAdmin
             .from('bookings')
@@ -111,20 +113,27 @@ export async function POST(request: Request) {
             .single();
 
           if (bookingDetails?.guests?.email) {
-            await sendBookingConfirmationEmail({
-              guestEmail: bookingDetails.guests.email,
-              guestName: bookingDetails.guests.full_name,
-              hotelName: hotel.name,
-              checkIn: bookingDetails.check_in,
-              checkOut: bookingDetails.check_out,
-              roomName: bookingDetails.rooms?.name || 'Habitación Reservada',
-              bookingId: reference,
-              amount: amount
+            await qstashClient.publishJSON({
+              url: `${process.env.NEXT_PUBLIC_APP_URL}/api/webhooks/qstash/send-confirmation`,
+              body: {
+                guestEmail: bookingDetails.guests.email,
+                guestName: bookingDetails.guests.full_name,
+                hotelName: hotel.name,
+                checkIn: bookingDetails.check_in,
+                checkOut: bookingDetails.check_out,
+                roomName: bookingDetails.rooms?.name || 'Habitación Reservada',
+                bookingId: reference,
+                amount: amount,
+              },
+              // 🛡️ QStash reintenta hasta 3 veces si el worker falla
+              retries: 3,
             });
-            console.log(`✅ [Notificaciones] Voucher enviado a ${bookingDetails.guests.email}`);
+            console.log(`✅ [Notificaciones] Email encolado para ${bookingDetails.guests.email}`);
           }
         } catch (notifErr) {
-          console.error('⚠️ [SecOps] Falla aislada en motor de notificación: ', notifErr);
+          // ⚠️ El enqueuing a QStash rara vez falla (solo si el token es inválido
+          // o la URL es incorrecta). Si pasa, se loggea pero no detiene el flujo.
+          console.error('⚠️ [SecOps] Falla al encolar notificación en QStash: ', notifErr);
         }
       } 
       

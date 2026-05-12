@@ -1,5 +1,6 @@
 'use server';
 import { createClient } from '@supabase/supabase-js';
+import type { Room } from '@/types';
 
 // 🚨 FIX QA CRÍTICO: Patrón Factory + Sanitización de Variables (.trim)
 // Esto evita que espacios invisibles en el .env rompan el motor fetch de Node.js
@@ -52,7 +53,7 @@ export async function fetchOTAHotelsAction(
     }
 
     const otaHotels = hotels?.map(h => {
-      const roomPrices = h.rooms?.map((r: any) => r.price) || [];
+      const roomPrices = h.rooms?.map((r: { price: number }) => r.price) || [];
       return {
         id: h.id, 
         name: h.name, 
@@ -68,9 +69,10 @@ export async function fetchOTAHotelsAction(
     const hasMore = hotels ? hotels.length === limit : false;
     return { success: true, data: otaHotels, hasMore };
     
-  } catch (error: any) {
-    console.error("❌ FALLO EN ACCIÓN OTA:", error.message);
-    return { success: false, error: error.message, data: [], hasMore: false };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error desconocido en OTA';
+    console.error("❌ FALLO EN ACCIÓN OTA:", message);
+    return { success: false, error: message, data: [], hasMore: false };
   }
 }
 
@@ -128,8 +130,8 @@ export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string
     const premiumHotel = {
       ...hotel,
       rooms: finalRooms
-        .filter((r: any) => r.status !== 'maintenance') // 🛡️ BARRERA FORENSE RESTAURADA
-        .map((r: any) => ({
+        .filter((r: Partial<Room>) => r.status !== 'maintenance') // 🛡️ BARRERA FORENSE RESTAURADA
+        .map((r: Partial<Room>) => ({
           ...r,
           price_per_night: r.price // Compatibilidad con componentes frontend
         }))
@@ -137,8 +139,120 @@ export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string
 
     return { success: true, hotel: premiumHotel };
 
-  } catch (error: any) {
-    console.error(`❌ FALLO CRÍTICO EN ACCIÓN DETALLE HOTEL:`, error.message);
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    console.error(`❌ FALLO CRÍTICO EN ACCIÓN DETALLE HOTEL:`, message);
     return { success: false, hotel: null };
+  }
+}
+
+// ============================================================================
+// REVIEWS — Guest review system with moderation
+// ============================================================================
+
+export interface ReviewSubmission {
+  hotelId: string;
+  guestName: string;
+  guestEmail: string;
+  guestLocation?: string;
+  rating: number;
+  comment: string;
+  stayDate?: string;
+}
+
+export async function submitReviewAction(submission: ReviewSubmission) {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const { error } = await supabaseAdmin.from('reviews').insert({
+      hotel_id: submission.hotelId,
+      guest_name: submission.guestName.trim(),
+      guest_email: submission.guestEmail.trim().toLowerCase(),
+      guest_location: submission.guestLocation?.trim() || null,
+      rating: submission.rating,
+      comment: submission.comment.trim(),
+      stay_date: submission.stayDate || null,
+      status: 'pending',
+    });
+
+    if (error) {
+      console.error('[REVIEWS] Error submitting review:', error.message);
+      return { success: false, error: error.message };
+    }
+
+    return { success: true };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('[REVIEWS] Failed to submit review:', message);
+    return { success: false, error: message };
+  }
+}
+
+export async function getApprovedReviewsAction(hotelId: string) {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const { data, error } = await supabaseAdmin
+      .from('reviews')
+      .select('id, guest_name, guest_location, rating, comment, stay_date, created_at')
+      .eq('hotel_id', hotelId)
+      .eq('status', 'approved')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('[REVIEWS] Error fetching approved reviews:', error.message);
+      return { success: false, error: error.message, data: [] };
+    }
+
+    return { success: true, data: data || [] };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('[REVIEWS] Failed to fetch approved reviews:', message);
+    return { success: false, error: message, data: [] };
+  }
+}
+
+export async function getReviewStatsAction(hotelId: string) {
+  try {
+    const supabaseAdmin = getSupabaseAdmin();
+
+    const { data, error } = await supabaseAdmin
+      .from('reviews')
+      .select('rating')
+      .eq('hotel_id', hotelId)
+      .eq('status', 'approved');
+
+    if (error) {
+      console.error('[REVIEWS] Error fetching review stats:', error.message);
+      return { success: false, error: error.message, data: null };
+    }
+
+    const reviews = data || [];
+    const total = reviews.length;
+
+    if (total === 0) {
+      return {
+        success: true,
+        data: {
+          overall: 0,
+          total: 0,
+          breakdown: { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 },
+        },
+      };
+    }
+
+    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    const overall = Math.round((sum / total) * 10) / 10;
+
+    const breakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
+    reviews.forEach((r) => {
+      breakdown[r.rating as keyof typeof breakdown]++;
+    });
+
+    return { success: true, data: { overall, total, breakdown } };
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('[REVIEWS] Failed to fetch review stats:', message);
+    return { success: false, error: message, data: null };
   }
 }

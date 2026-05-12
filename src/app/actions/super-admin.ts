@@ -2,6 +2,7 @@
 
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+import { generateUniqueSlug } from '@/lib/slug';
 
 /**
  * 🛡️ CONFIGURACIÓN DE SEGURIDAD NIVEL 0
@@ -44,6 +45,15 @@ export async function createHotelAction(formData: FormData) {
     createdAuthId = authUser.user.id;
 
     // 2. Crear Hotel vinculado al usuario y RECUPERAR el ID
+    const slug = await generateUniqueSlug(name, async (s) => {
+      const { data } = await supabaseAdmin
+        .from('hotels')
+        .select('id')
+        .eq('slug', s)
+        .maybeSingle();
+      return !!data;
+    });
+
     const { data: hotelData, error: dbError } = await supabaseAdmin.from('hotels').insert({
       name,
       email,
@@ -51,7 +61,7 @@ export async function createHotelAction(formData: FormData) {
       owner_id: createdAuthId,
       subscription_plan: plan,
       status: 'active',
-      slug: name.toLowerCase().replace(/ /g, '-').replace(/[^\w-]+/g, '')
+      slug,
     }).select('id').single();
 
     if (dbError) throw dbError;

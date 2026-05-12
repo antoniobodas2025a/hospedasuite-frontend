@@ -1,11 +1,24 @@
 import { getHotelDetailsBySlugAction } from '@/app/actions/ota';
 import { notFound } from 'next/navigation';
+import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, ShieldCheck, CalendarX2, Star, CheckCircle2, Users } from 'lucide-react';
+import { MapPin, ShieldCheck, Star, CheckCircle2, Wifi, Car, Waves, Coffee } from 'lucide-react';
 import type { Metadata } from 'next';
 import { RoomShowcaseModal } from '@/components/ota/RoomShowcaseModal'; 
 import AvailabilitySearchBar from '@/components/ota/AvailabilitySearchBar'; 
 import RoomCard from '@/components/ota/RoomCard'; 
+import HeroGallery from '@/components/ota/HeroGallery';
+import BookingWidget from '@/components/ota/BookingWidget';
+import ReviewsSection from '@/components/ota/ReviewsSection';
+import ReviewForm from '@/components/ota/ReviewForm';
+import HotelInfoSection from '@/components/ota/HotelInfoSection';
+import MobileStickyCta from '@/components/ota/MobileStickyCta';
+import RecentActivity from '@/components/ota/RecentActivity';
+import RoomsListWithFilters from '@/components/ota/RoomsListWithFilters';
+import HotelJsonLd from '@/components/seo/HotelJsonLd';
+import RoomCardSkeleton from '@/components/ota/RoomCardSkeleton';
+import ReviewSkeleton from '@/components/ota/ReviewSkeleton';
+import MapSkeleton from '@/components/ota/MapSkeleton';
 import { Suspense } from 'react';
 
 // Mandato de renderizado dinámico para control de inventario en tiempo real
@@ -18,6 +31,8 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
+  if (!slug || slug === 'null' || slug.length < 2) return { title: 'Propiedad no encontrada' };
+
   const { success, hotel } = await getHotelDetailsBySlugAction(slug);
   
   if (!success || !hotel) return { title: 'Propiedad no encontrada' };
@@ -35,6 +50,10 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 export default async function OTAHotelDetailPage({ params, searchParams }: PageProps) {
   // Resolución asíncrona de parámetros para compatibilidad con Next.js 15
   const { slug } = await params;
+
+  // 🛡️ GUARDA TEMPRANA: slugs inválidos no llegan a la DB
+  if (!slug || slug === 'null' || slug.length < 2) notFound();
+
   const resolvedSearchParams = await searchParams;
   
   const checkin = resolvedSearchParams?.checkin;
@@ -56,56 +75,98 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
   // Certificamos que la habitación solo sea visible si puede alojar al total de huéspedes.
   const availableRooms = (hotel.rooms || []).filter((room: any) => {
     const isActive = room.status === 'active';
-    const hasCapacity = room.capacity >= totalRequiredGuests;
+    const hasCapacity = Number(room.capacity ?? 0) >= totalRequiredGuests;
     return isActive && hasCapacity;
   });
 
   const isSearchingDates = !!(checkin && checkout);
   const coverImage = hotel.main_image_url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb';
 
+  // Galería del hotel — hero + secundaria + galería completa
+  const hotelGalleryImages = [
+    { url: coverImage, alt: hotel.name },
+    ...(hotel.cover_photo_url && hotel.cover_photo_url !== coverImage
+      ? [{ url: hotel.cover_photo_url, alt: `${hotel.name} — vista general` }]
+      : []),
+    ...(Array.isArray(hotel.gallery_urls)
+      ? hotel.gallery_urls.map((url: string, i: number) => ({ url, alt: `${hotel.name} — foto ${i + 3}` }))
+      : []),
+  ];
+
+  // Iconos de amenidades del hotel
+  const AMENITY_ICONS: Record<string, React.ElementType> = {
+    wifi: Wifi,
+    parking: Car,
+    pool: Waves,
+    breakfast: Coffee,
+  };
+
   return (
-    <main className="min-h-screen bg-slate-50 text-slate-900 pb-24 font-poppins selection:bg-indigo-500/30">
+    <main className="min-h-screen bg-background text-foreground pb-24 font-poppins selection:bg-brand-500/30">
       
+      {/* SEO Structured Data */}
+      <HotelJsonLd hotel={hotel} />
+
       {/* Componente Cliente (Modal) Aislado por Suspense */}
       <Suspense fallback={null}>
         <RoomShowcaseModal hotel={hotel} />
       </Suspense>
 
-      {/* 🌌 HERO SECTION */}
-      <div className="relative h-[65vh] min-h-[500px] w-full overflow-hidden">
-        <div className="absolute inset-0">
-          <Image 
-            src={coverImage} 
-            alt={hotel.name} 
-            fill 
-            className="object-cover object-center scale-105" 
-            priority 
-            quality={100}
-            sizes="100vw"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-900/30 to-transparent" />
-        </div>
+      {/* 🖼️ HERO GALLERY — Grid interactivo estilo Airbnb */}
+      <HeroGallery images={hotelGalleryImages} hotelName={hotel.name} />
 
-        <div className="absolute bottom-0 left-0 right-0 max-w-6xl mx-auto px-6 pb-24 z-10">
-          <div className="flex items-center gap-2 mb-4">
-            <span className="bg-white/20 backdrop-blur-md border border-white/30 text-white text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
-              <Star className="size-3 text-amber-400 fill-amber-400" />
+      {/* BREADCRUMB — Navegacion contextual */}
+      <div className="max-w-6xl mx-auto px-6 pt-6">
+        <nav className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Link href="/" className="hover:text-foreground transition-colors">Inicio</Link>
+          <span>/</span>
+          {hotel.location && (
+            <>
+              <span className="text-muted-foreground">{hotel.location}</span>
+              <span>/</span>
+            </>
+          )}
+          <span className="text-foreground font-medium">{hotel.name}</span>
+        </nav>
+      </div>
+
+      {/* 📍 HEADER DE INFORMACIÓN */}
+      <div className="max-w-6xl mx-auto px-6 pt-8">
+        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+          <div className="flex items-start gap-4">
+            {/* Logo del hotel */}
+            {hotel.logo_url ? (
+              <div className="size-16 md:size-20 rounded-2xl overflow-hidden border border-border bg-card shadow-sm shrink-0">
+                <Image src={hotel.logo_url} alt={`${hotel.name} logo`} width={80} height={80} className="w-full h-full object-cover" />
+              </div>
+            ) : (
+              <div className="size-16 md:size-20 rounded-2xl bg-gradient-to-br from-brand-500 to-warm-600 flex items-center justify-center text-primary-foreground font-black text-2xl shadow-sm shrink-0">
+                {hotel.name.charAt(0).toUpperCase()}
+              </div>
+            )}
+            <div>
+              <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-2">
+                {hotel.name}
+              </h1>
+              <div className="flex items-center gap-2 text-muted-foreground text-sm">
+                <MapPin size={16} className="text-brand-500" />
+                {hotel.location}
+              </div>
+            </div>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
+              <Star size={12} className="fill-amber-500" />
               Categoría Premium
             </span>
-          </div>
-          <h1 className="text-5xl md:text-7xl font-black text-white tracking-tighter mb-4 drop-shadow-lg">
-            {hotel.name}
-          </h1>
-          <div className="flex items-center gap-2 text-white font-medium text-sm md:text-base bg-black/30 backdrop-blur-md w-max px-4 py-2 rounded-2xl border border-white/10 shadow-sm">
-            <MapPin size={18} className="text-indigo-400" /> {hotel.location}
           </div>
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-6 relative z-20 -mt-12">
+      <div className="max-w-6xl mx-auto px-6 mt-8">
         
         {/* BARRA DE BÚSQUEDA INTERACTIVA */}
-        <div className="relative z-[100] mb-16 rounded-[2rem] bg-white/90 backdrop-blur-3xl border border-slate-200/60 p-2 shadow-2xl shadow-slate-200/50 ring-1 ring-slate-900/5">
+        <div id="search-bar" className="mb-12">
           <AvailabilitySearchBar />
         </div>
         
@@ -113,15 +174,74 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
           
           <div className="lg:col-span-2 space-y-10">
             
-            <div className="bg-white/60 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-slate-200/60">
-              <h2 className="text-sm font-bold text-slate-400 uppercase tracking-widest mb-4 border-l-2 border-indigo-500 pl-3">La Experiencia</h2>
-              <p className="text-slate-600 leading-relaxed text-base font-lora italic">
+            {/* AMENIDADES DEL HOTEL — Lo que ofrece la propiedad */}
+            {hotel.hotel_amenities && hotel.hotel_amenities.length > 0 && (
+              <div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40">
+                <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <span className="size-1.5 rounded-full bg-brand-400" />
+                  Lo que ofrece {hotel.name}
+                </h2>
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {hotel.hotel_amenities.map((amenity: string) => {
+                    const Icon = AMENITY_ICONS[amenity] || Star;
+                    const labels: Record<string, string> = {
+                      wifi: 'Wi-Fi Gratis',
+                      parking: 'Parqueadero',
+                      pool: 'Piscina',
+                      breakfast: 'Desayuno',
+                    };
+                    return (
+                      <div key={amenity} className="flex items-center gap-2.5 p-3 rounded-xl bg-muted border border-border">
+                        <Icon size={16} className="text-brand-500 shrink-0" />
+                        <span className="text-xs font-medium text-foreground/80">{labels[amenity] || amenity}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* LA HISTORIA — Narrativa emocional */}
+            <div className="bg-white/40 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-white/30">
+              <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-warm-400" />
+                La Historia
+              </h2>
+              <p className="text-muted-foreground leading-relaxed text-base font-lora italic mb-6">
                 {hotel.description || `Bienvenido a ${hotel.name}. Una joya en el corazón de ${hotel.location}.`}
               </p>
+              {/* Micro-stats para generar confianza */}
+              <div className="flex flex-wrap gap-6 pt-6 border-t border-border/50">
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
+                    <CheckCircle2 size={14} className="text-emerald-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground">Reserva Directa</p>
+                    <p className="text-[10px] text-muted-foreground">Sin intermediarios</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="size-8 rounded-lg bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center">
+                    <ShieldCheck size={14} className="text-indigo-600" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-foreground">Confirmación Inmediata</p>
+                    <p className="text-[10px] text-muted-foreground">Bloqueo al instante</p>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-4 border-b border-slate-200 pb-6">
-              <h3 className="text-3xl font-black text-slate-900 tracking-tight">
+            {/* SEPARADOR + HABITACIONES — El producto primero */}
+            <div className="flex items-center gap-4 pt-4">
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+              <Star size={14} className="text-warm-400 fill-warm-400" />
+              <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-4">
+              <h3 className="text-3xl font-black text-foreground tracking-tight">
                 {isSearchingDates ? 'Inventario Disponible' : 'Nuestras Unidades'}
               </h3>
               {isSearchingDates && (
@@ -130,75 +250,72 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                 </span>
               )}
             </div>
-            
-            {/* ITERADOR DE INVENTARIO FILTRADO */}
-            <div className="space-y-6">
-              {availableRooms.length === 0 ? (
-                <div className="bg-white p-16 rounded-[3rem] border border-slate-200 text-center flex flex-col items-center justify-center shadow-sm">
-                   <div className="w-20 h-20 bg-slate-50 rounded-[2rem] border border-slate-100 flex items-center justify-center mb-6 shadow-inner">
-                     {totalRequiredGuests > 0 ? <Users size={32} className="text-slate-400" /> : <CalendarX2 size={32} className="text-slate-400" />}
-                   </div>
-                   <h4 className="text-2xl font-bold text-slate-900 mb-2 tracking-tight">
-                     {totalRequiredGuests > 0 ? `Capacidad para ${totalRequiredGuests} no disponible` : 'Inventario Agotado'}
-                   </h4>
-                   <p className="text-slate-500 max-w-sm mx-auto text-sm">
-                     No encontramos unidades que cumplan con la capacidad solicitada para estas fechas. Prueba reduciendo el número de huéspedes o modificando tu estancia.
-                   </p>
-                </div>
-              ) : (
-                availableRooms.map((room: any) => (
-                  <RoomCard 
-                    key={room.id}
-                    room={room}
-                    hotelSlug={slug}
-                    checkIn={checkin}
-                    checkOut={checkout}
-                    adults={adults}
-                    children={children}
-                    isSearchingDates={isSearchingDates}
-                  />
-                ))
-              )}
-            </div>
+
+            {/* ACTIVIDAD RECIENTE — Urgencia social */}
+            {isSearchingDates && <RecentActivity hotelName={hotel.name} />}
+
+            {/* FILTROS DE HABITACIONES + LISTADO */}
+            <Suspense fallback={<div className="space-y-6"><RoomCardSkeleton /><RoomCardSkeleton /></div>}>
+              <RoomsListWithFilters
+                rooms={hotel.rooms || []}
+                availableRooms={availableRooms}
+                slug={slug}
+                checkin={checkin}
+                checkout={checkout}
+                adults={adults}
+                children={children}
+                isSearchingDates={isSearchingDates}
+              />
+            </Suspense>
+
+            {/* REVIEWS — Opiniones de huespedes + Formulario */}
+            <Suspense fallback={<div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40 space-y-6"><ReviewSkeleton /><ReviewSkeleton /><ReviewSkeleton /></div>}>
+              <ReviewsSection hotelId={hotel.id} hotelName={hotel.name} />
+            </Suspense>
+
+            {/* REVIEW FORM — Submit a review */}
+            <ReviewForm hotelId={hotel.id} hotelName={hotel.name} />
+
+            {/* UBICACIÓN Y POLÍTICAS — Mapa, horarios, cancelación */}
+            <Suspense fallback={<MapSkeleton />}>
+              <HotelInfoSection
+                hotelName={hotel.name}
+                location={hotel.location}
+                address={hotel.address}
+                phone={hotel.phone}
+                googleMapsUrl={hotel.google_maps_url}
+                cancellationPolicy={hotel.cancellation_policy}
+              />
+            </Suspense>
           </div>
 
-          {/* WIDGET DE CONFIANZA */}
+          {/* BOOKING WIDGET — Motor de conversión */}
           <div className="hidden lg:block relative z-10">
-            <div className="sticky top-8 bg-white/80 backdrop-blur-3xl p-8 rounded-[2.5rem] shadow-xl shadow-slate-200/50 border border-slate-200/60">
-              <div className="flex flex-col items-center text-center gap-3 mb-8 pb-8 border-b border-slate-100">
-                 <div className="size-16 rounded-[1.5rem] bg-indigo-600 border border-indigo-100 flex items-center justify-center shadow-inner">
-                    <ShieldCheck className="text-white" size={32} />
-                 </div>
-                 <div>
-                    <p className="font-bold text-slate-900 text-lg tracking-tight">Reserva Garantizada</p>
-                    <p className="text-xs text-slate-500 uppercase tracking-widest mt-1">HospedaSuite Protocol</p>
-                 </div>
-              </div>
-              <ul className="space-y-6">
-                <li className="flex items-start gap-4 text-slate-600">
-                  <div className="mt-1 size-6 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
-                    <CheckCircle2 className="size-4 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Transacción Cifrada</p>
-                    <p className="text-xs text-slate-500 mt-1">Conexión directa con la pasarela bancaria. Sin intermediarios.</p>
-                  </div>
-                </li>
-                <li className="flex items-start gap-4 text-slate-600">
-                  <div className="mt-1 size-6 rounded-full bg-emerald-50 flex items-center justify-center shrink-0 border border-emerald-100">
-                    <CheckCircle2 className="size-4 text-emerald-600" />
-                  </div>
-                  <div>
-                    <p className="text-sm font-bold text-slate-900">Confirmación Inmediata</p>
-                    <p className="text-xs text-slate-500 mt-1">Su habitación se bloquea en el inventario global al instante.</p>
-                  </div>
-                </li>
-              </ul>
-            </div>
+            <BookingWidget
+              hotelName={hotel.name}
+              rooms={hotel.rooms || []}
+              checkIn={checkin}
+              checkOut={checkout}
+              adults={adults}
+              children={children}
+              cancellationPolicy={hotel.cancellation_policy}
+              totalRooms={(hotel.rooms || []).length}
+            />
           </div>
 
         </div>
       </div>
+
+      {/* STICKY CTA MOBILE — Barra inferior con precio + reservar */}
+      <MobileStickyCta
+        minPrice={(() => {
+          const active = (hotel.rooms || []).filter((r: any) => r.status === 'active');
+          return active.length > 0 ? Math.min(...active.map((r: any) => r.price)) : 0;
+        })()}
+        availableCount={availableRooms.length}
+        checkIn={checkin}
+        checkOut={checkout}
+      />
     </main>
   );
 }

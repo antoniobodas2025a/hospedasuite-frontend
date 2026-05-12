@@ -129,8 +129,8 @@ export default function AvailabilitySearchBar() {
       {/* 🔮 SMART PILL INTERACTIVO MULTI-ZONA */}
       <div 
         className={cn(
-          "flex flex-col sm:flex-row items-stretch sm:items-center bg-white rounded-[2rem] sm:rounded-full p-2 transition-all duration-300",
-          activePopover ? "ring-2 ring-indigo-500 shadow-xl" : "hover:border-slate-300 hover:shadow-md",
+          "flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[2rem] sm:rounded-full p-2 transition-all duration-300",
+          activePopover ? "ring-2 ring-ring shadow-xl" : "hover:border-border hover:shadow-md",
           isPending && "opacity-70 pointer-events-none grayscale-[0.2]"
         )}
       >
@@ -138,36 +138,36 @@ export default function AvailabilitySearchBar() {
         {/* ZONA 1: FECHAS */}
         <div 
           onClick={() => !isPending && setActivePopover(activePopover === 'dates' ? null : 'dates')}
-          className="flex-1 flex items-center gap-4 px-4 py-3 sm:py-2 cursor-pointer hover:bg-slate-50 rounded-t-[1.5rem] sm:rounded-l-full sm:rounded-r-none transition-colors"
+          className="flex-1 flex items-center gap-4 px-4 py-3 sm:py-2 cursor-pointer hover:bg-muted rounded-t-[1.5rem] sm:rounded-l-full sm:rounded-r-none transition-colors"
         >
-          <div className="size-10 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
-            {isPending ? <Loader2 size={18} className="text-indigo-600 animate-spin" /> : 
-             (date?.from && date?.to ? <CheckCircle2 size={18} className="text-emerald-500" /> : <CalendarIcon size={18} className="text-indigo-600" />)}
+          <div className="size-10 rounded-full bg-brand-50 flex items-center justify-center shrink-0">
+            {isPending ? <Loader2 size={18} className="text-brand-600 animate-spin" /> : 
+             (date?.from && date?.to ? <CheckCircle2 size={18} className="text-secondary" /> : <CalendarIcon size={18} className="text-brand-600" />)}
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Estadía</span>
-            <span className={cn("text-base tracking-tight", date?.from ? "text-slate-900 font-bold" : "text-slate-500 font-medium")}>
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Estadía</span>
+            <span className={cn("text-base tracking-tight", date?.from ? "text-foreground font-bold" : "text-muted-foreground font-medium")}>
               {displayRange()}
             </span>
           </div>
         </div>
 
         {/* DIVISOR */}
-        <div className="h-px w-full sm:w-px sm:h-10 bg-slate-200 mx-0 sm:mx-2 hidden sm:block"></div>
-        <div className="h-px w-full sm:w-px sm:h-10 bg-slate-100 mx-0 sm:mx-2 block sm:hidden my-1"></div>
+        <div className="h-px w-full sm:w-px sm:h-10 bg-border mx-0 sm:mx-2 hidden sm:block"></div>
+        <div className="h-px w-full sm:w-px sm:h-10 bg-muted mx-0 sm:mx-2 block sm:hidden my-1"></div>
 
         {/* ZONA 2: HUÉSPEDES */}
         <div 
           onClick={() => !isPending && setActivePopover(activePopover === 'guests' ? null : 'guests')}
-          className="flex-1 flex items-center justify-between px-4 py-3 sm:py-2 cursor-pointer hover:bg-slate-50 rounded-b-[1.5rem] sm:rounded-r-full sm:rounded-l-none transition-colors"
+          className="flex-1 flex items-center justify-between px-4 py-3 sm:py-2 cursor-pointer hover:bg-muted rounded-b-[1.5rem] sm:rounded-r-full sm:rounded-l-none transition-colors"
         >
           <div className="flex items-center gap-4">
-            <div className="size-10 rounded-full bg-indigo-50 flex items-center justify-center shrink-0">
-              <Users size={18} className="text-indigo-600" />
+            <div className="size-10 rounded-full bg-brand-50 flex items-center justify-center shrink-0">
+              <Users size={18} className="text-brand-600" />
             </div>
             <div className="flex flex-col">
-              <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Ocupación</span>
-              <span className="text-base tracking-tight text-slate-900 font-bold">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">Ocupación</span>
+              <span className="text-base tracking-tight text-foreground font-bold">
                 {totalGuests} Huésped{totalGuests > 1 ? 'es' : ''}
               </span>
             </div>
@@ -177,7 +177,7 @@ export default function AvailabilitySearchBar() {
           {(date?.from || adults > 2 || children > 0) && !isPending && (
             <button 
               onClick={clearAll}
-              className="p-2 ml-2 hover:bg-rose-100 rounded-full transition-colors text-slate-400 hover:text-rose-500 shadow-inner bg-white border border-slate-100"
+              className="p-2 ml-2 hover:bg-destructive/10 rounded-full transition-colors text-muted-foreground hover:text-destructive shadow-inner bg-card border border-border"
               title="Borrar filtros"
             >
               <X size={16} strokeWidth={2.5} />
@@ -196,7 +196,7 @@ export default function AvailabilitySearchBar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="absolute top-[110%] left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2 z-50 bg-white/95 backdrop-blur-3xl p-6 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-slate-200/60 ring-1 ring-slate-900/5 date-picker-b2c"
+            className="absolute top-[110%] left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2 z-50 bg-popover/95 backdrop-blur-3xl p-6 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-border/60 ring-1 ring-foreground/5 date-picker-b2c"
           >
             <DayPicker
               mode="range"
@@ -205,10 +205,10 @@ export default function AvailabilitySearchBar() {
               locale={es}
               numberOfMonths={typeof window !== 'undefined' && window.innerWidth > 768 ? 2 : 1}
               disabled={{ before: today }}
-              className="text-slate-800 font-sans"
+              className="text-foreground font-sans"
               modifiersClassNames={{
-                selected: 'bg-indigo-600 text-white font-bold shadow-md rounded-xl',
-                range_middle: 'bg-indigo-50 text-indigo-900 rounded-none',
+                selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md rounded-xl',
+                range_middle: 'bg-brand-50 text-brand-900 rounded-none',
                 range_start: 'rounded-l-xl rounded-r-none',
                 range_end: 'rounded-r-xl rounded-l-none'
               }}
@@ -223,31 +223,31 @@ export default function AvailabilitySearchBar() {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: -10, scale: 0.95 }}
             transition={{ type: 'spring', damping: 25, stiffness: 300 }}
-            className="absolute top-[110%] right-0 w-full sm:w-[340px] z-50 bg-white/95 backdrop-blur-3xl p-6 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-slate-200/60 ring-1 ring-slate-900/5"
+            className="absolute top-[110%] right-0 w-full sm:w-[340px] z-50 bg-popover/95 backdrop-blur-3xl p-6 rounded-[2.5rem] shadow-[0_20px_60px_rgba(0,0,0,0.12)] border border-border/60 ring-1 ring-foreground/5"
           >
             <div className="space-y-6">
-              <h3 className="font-black text-slate-900 tracking-tight mb-2 text-lg">Detalles del Grupo</h3>
+              <h3 className="font-black text-foreground tracking-tight mb-2 text-lg">Detalles del Grupo</h3>
               
               {/* Counter Adultos */}
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="font-bold text-slate-900">Adultos</p>
-                  <p className="text-xs text-slate-500 font-medium">13+ años</p>
+                  <p className="font-bold text-foreground">Adultos</p>
+                  <p className="text-xs text-muted-foreground font-medium">13+ años</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <button 
                     onClick={() => setAdults(Math.max(1, adults - 1))}
                     disabled={adults <= 1}
-                    className="size-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-30 transition-colors"
+                    className="size-10 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-accent disabled:opacity-30 transition-colors"
                   >
-                    <Minus size={16} className="text-slate-600" />
+                    <Minus size={16} className="text-muted-foreground" />
                   </button>
-                  <span className="font-bold text-slate-900 text-lg w-4 text-center">{adults}</span>
+                  <span className="font-bold text-foreground text-lg w-4 text-center">{adults}</span>
                   <button 
                     onClick={() => setAdults(adults + 1)}
-                    className="size-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors"
+                    className="size-10 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-accent transition-colors"
                   >
-                    <Plus size={16} className="text-slate-600" />
+                    <Plus size={16} className="text-muted-foreground" />
                   </button>
                 </div>
               </div>
@@ -255,32 +255,32 @@ export default function AvailabilitySearchBar() {
               {/* Counter Niños */}
               <div className="flex justify-between items-center">
                 <div>
-                  <p className="font-bold text-slate-900">Niños</p>
-                  <p className="text-xs text-slate-500 font-medium">0 - 12 años</p>
+                  <p className="font-bold text-foreground">Niños</p>
+                  <p className="text-xs text-muted-foreground font-medium">0 - 12 años</p>
                 </div>
                 <div className="flex items-center gap-4">
                   <button 
                     onClick={() => setChildren(Math.max(0, children - 1))}
                     disabled={children <= 0}
-                    className="size-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center hover:bg-slate-100 disabled:opacity-30 transition-colors"
+                    className="size-10 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-accent disabled:opacity-30 transition-colors"
                   >
-                    <Minus size={16} className="text-slate-600" />
+                    <Minus size={16} className="text-muted-foreground" />
                   </button>
-                  <span className="font-bold text-slate-900 text-lg w-4 text-center">{children}</span>
+                  <span className="font-bold text-foreground text-lg w-4 text-center">{children}</span>
                   <button 
                     onClick={() => setChildren(children + 1)}
-                    className="size-10 rounded-full bg-slate-50 border border-slate-200 flex items-center justify-center hover:bg-slate-100 transition-colors"
+                    className="size-10 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-accent transition-colors"
                   >
-                    <Plus size={16} className="text-slate-600" />
+                    <Plus size={16} className="text-muted-foreground" />
                   </button>
                 </div>
               </div>
 
               {/* Botón de Aplicar */}
-              <div className="pt-4 border-t border-slate-100 mt-2">
+              <div className="pt-4 border-t border-border mt-2">
                 <button 
                   onClick={handleApplyGuests}
-                  className="w-full bg-slate-900 hover:bg-indigo-600 text-white font-bold py-4 rounded-2xl transition-all shadow-md active:scale-95"
+                  className="w-full bg-foreground hover:bg-brand-600 text-primary-foreground font-bold py-4 rounded-2xl transition-all shadow-md active:scale-95"
                 >
                   Aplicar y Buscar
                 </button>

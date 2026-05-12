@@ -10,23 +10,13 @@ import {
   updateBookingDetailsAction 
 } from '@/app/actions/bookings';
 import { createClient } from '@/utils/supabase/client';
+import type { Booking, BookingStatus } from '@/types';
 
 // ==========================================
 // BLOQUE 1: TIPADO Y ESTRUCTURAS
 // ==========================================
 
-export type BookingStatus = 'confirmed' | 'checked_in' | 'checked_out' | 'maintenance' | 'cancelled';
-
-export interface Booking {
-  id: string; 
-  room_id: string;
-  check_in: string;
-  check_out: string;
-  status: BookingStatus;
-  total_price: number;
-  guest_name?: string; 
-  guests?: { full_name: string; doc_number?: string; phone?: string; };
-}
+export type { Booking, BookingStatus };
 
 export interface BookingForm {
   id?: string;
