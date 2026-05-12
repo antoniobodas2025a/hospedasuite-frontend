@@ -100,6 +100,11 @@ const updateProfileSchema = z.object({
   check_in_time: z.string().nullable().optional(),
   check_out_time: z.string().nullable().optional(),
   reception_hours: z.string().nullable().optional(),
+  story_section_title: z.string().nullable().optional(),
+  trust_badge_1_title: z.string().nullable().optional(),
+  trust_badge_1_subtitle: z.string().nullable().optional(),
+  trust_badge_2_title: z.string().nullable().optional(),
+  trust_badge_2_subtitle: z.string().nullable().optional(),
 });
 
 export async function updateHotelProfileAction(hotelId: string, formData: any) {
@@ -138,6 +143,11 @@ export async function updateHotelProfileAction(hotelId: string, formData: any) {
         check_in_time: validData.check_in_time,
         check_out_time: validData.check_out_time,
         reception_hours: validData.reception_hours,
+        story_section_title: validData.story_section_title,
+        trust_badge_1_title: validData.trust_badge_1_title,
+        trust_badge_1_subtitle: validData.trust_badge_1_subtitle,
+        trust_badge_2_title: validData.trust_badge_2_title,
+        trust_badge_2_subtitle: validData.trust_badge_2_subtitle,
       })
       .eq('id', hotelId);
 

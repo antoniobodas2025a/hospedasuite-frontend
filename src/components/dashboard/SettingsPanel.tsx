@@ -216,7 +216,11 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
               <div className="lg:col-span-2 space-y-8">
                 <div className="bg-zinc-900/40 p-10 rounded-[3rem] border border-white/5 shadow-xl space-y-6">
                   <h3 className="text-xl font-bold flex items-center gap-3"><MessageCircle className="text-indigo-400"/> Vitrina</h3>
-                  <textarea {...register('description')} rows={5} className="w-full p-6 bg-zinc-950/50 border border-white/10 rounded-3xl" />
+                  <div>
+                    <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Titulo seccion "La Historia"</label>
+                    <input {...register('story_section_title')} className="w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-sm" placeholder="La Historia" />
+                  </div>
+                  <textarea {...register('description')} rows={5} className="w-full p-6 bg-zinc-950/50 border border-white/10 rounded-3xl" placeholder="Descripcion del hotel..." />
                   <div className="grid grid-cols-2 gap-6">
                     <input {...register('whatsapp_number')} placeholder="WA" className="p-5 bg-zinc-950 border border-white/10 rounded-2xl" />
                     <input {...register('google_maps_url')} placeholder="Maps" className="p-5 bg-zinc-950 border border-white/10 rounded-2xl text-xs" />
@@ -311,6 +315,31 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                     </button>
                   </div>
                   <p className="text-[10px] text-zinc-500 uppercase tracking-widest">"Reserva Directa" y "Confirmacion Inmediata" en la seccion La Historia</p>
+                  
+                  {watch('show_trust_badges') && (
+                    <div className="space-y-4 pt-2">
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1 block">Badge 1 — Titulo</label>
+                          <input {...register('trust_badge_1_title')} className="w-full p-3 bg-zinc-950 border border-white/10 rounded-xl text-xs" placeholder="Reserva Directa" />
+                        </div>
+                        <div>
+                          <label className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1 block">Badge 1 — Subtitulo</label>
+                          <input {...register('trust_badge_1_subtitle')} className="w-full p-3 bg-zinc-950 border border-white/10 rounded-xl text-xs" placeholder="Sin intermediarios" />
+                        </div>
+                      </div>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div>
+                          <label className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1 block">Badge 2 — Titulo</label>
+                          <input {...register('trust_badge_2_title')} className="w-full p-3 bg-zinc-950 border border-white/10 rounded-xl text-xs" placeholder="Confirmacion Inmediata" />
+                        </div>
+                        <div>
+                          <label className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1 block">Badge 2 — Subtitulo</label>
+                          <input {...register('trust_badge_2_subtitle')} className="w-full p-3 bg-zinc-950 border border-white/10 rounded-xl text-xs" placeholder="Bloqueo al instante" />
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
 
                 {/* RECENT ACTIVITY — Social proof control */}

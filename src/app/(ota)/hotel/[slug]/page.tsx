@@ -203,10 +203,10 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             <div className="bg-white/40 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-white/30">
               <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-warm-400" />
-                La Historia
+                {hotel.story_section_title || 'La Historia'}
               </h2>
               <p className="text-muted-foreground leading-relaxed text-base font-lora italic mb-6">
-                {hotel.description || `Bienvenido a ${hotel.name}. Una joya en el corazón de ${hotel.location}.`}
+                {hotel.description || `Bienvenido a ${hotel.name}. Una joya en el corazon de ${hotel.location}.`}
               </p>
               {/* Micro-stats para generar confianza */}
               {hotel.show_trust_badges !== false && (
@@ -216,8 +216,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                       <CheckCircle2 size={14} className="text-emerald-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-foreground">Reserva Directa</p>
-                      <p className="text-[10px] text-muted-foreground">Sin intermediarios</p>
+                      <p className="text-xs font-bold text-foreground">{hotel.trust_badge_1_title || 'Reserva Directa'}</p>
+                      <p className="text-[10px] text-muted-foreground">{hotel.trust_badge_1_subtitle || 'Sin intermediarios'}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
@@ -225,8 +225,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                       <ShieldCheck size={14} className="text-indigo-600" />
                     </div>
                     <div>
-                      <p className="text-xs font-bold text-foreground">Confirmacion Inmediata</p>
-                      <p className="text-[10px] text-muted-foreground">Bloqueo al instante</p>
+                      <p className="text-xs font-bold text-foreground">{hotel.trust_badge_2_title || 'Confirmacion Inmediata'}</p>
+                      <p className="text-[10px] text-muted-foreground">{hotel.trust_badge_2_subtitle || 'Bloqueo al instante'}</p>
                     </div>
                   </div>
                 </div>
