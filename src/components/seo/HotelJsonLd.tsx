@@ -2,27 +2,30 @@
 // HOTEL JSON-LD — Structured data para SEO de Google
 //
 // Genera el script JSON-LD con schema.org/Hotel para rich snippets.
-// Esto ayuda a Google a mostrar precio, rating, amenities en los resultados.
+// Usa datos reales de la DB: reviews, amenities, horarios, categoria.
 // ============================================================================
+
+import { getAmenityLabel } from '@/lib/amenity-registry';
 
 interface HotelJsonLdProps {
   hotel: any;
+  reviewStats?: { overall: number; total: number };
   baseUrl?: string;
 }
 
-export default function HotelJsonLd({ hotel, baseUrl = 'https://hospedasuite.com' }: HotelJsonLdProps) {
+export default function HotelJsonLd({ hotel, reviewStats, baseUrl = 'https://hospedasuite.com' }: HotelJsonLdProps) {
   const rooms = hotel.rooms || [];
   const activeRooms = rooms.filter((r: any) => r.status === 'active');
-  const minPrice = activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price_per_night || r.price || 0)) : 0;
-  const maxPrice = activeRooms.length > 0 ? Math.max(...activeRooms.map((r) => r.price_per_night || r.price || 0)) : 0;
+  const minPrice = activeRooms.length > 0 ? Math.min(...activeRooms.map((r: any) => r.price_per_night || r.price || 0)) : 0;
+  const maxPrice = activeRooms.length > 0 ? Math.max(...activeRooms.map((r: any) => r.price_per_night || r.price || 0)) : 0;
 
-  const structuredData = {
+  const structuredData: Record<string, any> = {
     '@context': 'https://schema.org',
     '@type': 'Hotel',
     name: hotel.name,
     description: hotel.description || `Hotel en ${hotel.location}`,
-    image: hotel.main_image_url || hotel.cover_photo_url,
-    url: `${baseUrl}/hotel/${hotel.slug}`,
+    image: hotel.seo_og_image_url || hotel.main_image_url || hotel.cover_photo_url,
+    url: hotel.seo_canonical_url || `${baseUrl}/hotel/${hotel.slug}`,
     telephone: hotel.whatsapp_number || hotel.phone,
     address: {
       '@type': 'PostalAddress',
@@ -30,33 +33,59 @@ export default function HotelJsonLd({ hotel, baseUrl = 'https://hospedasuite.com
       addressLocality: hotel.city || hotel.location || '',
       addressCountry: 'CO',
     },
-    geo: hotel.google_maps_url
-      ? {
-          '@type': 'GeoCoordinates',
-          // Extraer coordenadas del URL de Google Maps si es posible
-          // Por ahora dejamos placeholder hasta tener lat/lng en DB
-        }
-      : undefined,
-    priceRange: minPrice > 0 ? `$${minPrice.toLocaleString()} - $${maxPrice.toLocaleString()} COP` : undefined,
     amenityFeature: (hotel.hotel_amenities || []).map((amenity: string) => ({
       '@type': 'LocationFeatureSpecification',
-      name: amenity,
+      name: getAmenityLabel(amenity),
     })),
     hasMap: hotel.google_maps_url,
-    starRating: {
-      '@type': 'Rating',
-      ratingValue: '4', // Placeholder hasta tener rating real
-    },
-    offers: activeRooms.slice(0, 5).map((room) => ({
-      '@type': 'Offer',
-      name: room.name,
-      description: room.description || '',
-      price: room.price_per_night || room.price,
-      priceCurrency: 'COP',
-      availability: 'https://schema.org/InStock',
-      url: `${baseUrl}/hotel/${hotel.slug}`,
-    })),
+    checkinTime: hotel.check_in_time || '15:00',
+    checkoutTime: hotel.check_out_time || '13:00',
+    petsAllowed: false,
   };
+
+  // Precio solo si hay habitaciones activas
+  if (minPrice > 0) {
+    structuredData.priceRange = `$${minPrice.toLocaleString()} - $${maxPrice.toLocaleString()} COP`;
+  }
+
+  // Rating de categoria (badge) si existe
+  if (hotel.category_badge) {
+    structuredData.starRating = {
+      '@type': 'Rating',
+      ratingValue: hotel.category_badge.toLowerCase().includes('premium') ? '5' : '4',
+    };
+  }
+
+  // Review aggregation si hay stats reales
+  if (reviewStats && reviewStats.total > 0) {
+    structuredData.aggregateRating = {
+      '@type': 'AggregateRating',
+      ratingValue: reviewStats.overall,
+      reviewCount: reviewStats.total,
+      bestRating: 5,
+      worstRating: 1,
+    };
+  }
+
+  // Ofertas de habitaciones
+  if (activeRooms.length > 0) {
+    structuredData.offers = {
+      '@type': 'AggregateOffer',
+      priceCurrency: 'COP',
+      lowPrice: minPrice,
+      highPrice: maxPrice,
+      offerCount: activeRooms.length,
+      offers: activeRooms.slice(0, 5).map((room: any) => ({
+        '@type': 'Offer',
+        name: room.name,
+        description: room.description || '',
+        price: room.price_per_night || room.price,
+        priceCurrency: 'COP',
+        availability: 'https://schema.org/InStock',
+        url: hotel.seo_canonical_url || `${baseUrl}/hotel/${hotel.slug}`,
+      })),
+    };
+  }
 
   return (
     <script

@@ -1,4 +1,4 @@
-import { getHotelDetailsBySlugAction } from '@/app/actions/ota';
+import { getHotelDetailsBySlugAction, getReviewStatsAction } from '@/app/actions/ota';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -74,7 +74,11 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
 
   if (!success || !hotel) notFound(); 
 
-  // 2. Aplicación del Filtro de Integridad Física (Filtro Pax)
+  // Fetch review stats for structured data (non-blocking)
+  const reviewStatsResult = await getReviewStatsAction(hotel.id);
+  const reviewStats = reviewStatsResult.success ? reviewStatsResult.data : null;
+
+  // 2. Aplicacion del Filtro de Integridad Fisica (Filtro Pax)
   // Certificamos que la habitación solo sea visible si puede alojar al total de huéspedes.
   const availableRooms = (hotel.rooms || []).filter((room: any) => {
     const isActive = room.status === 'active';
@@ -103,7 +107,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
     <main className="min-h-screen bg-background text-foreground pb-24 font-poppins selection:bg-brand-500/30">
       
       {/* SEO Structured Data */}
-      <HotelJsonLd hotel={hotel} />
+      <HotelJsonLd hotel={hotel} reviewStats={reviewStats ?? undefined} />
 
       {/* Componente Cliente (Modal) Aislado por Suspense */}
       <Suspense fallback={null}>
