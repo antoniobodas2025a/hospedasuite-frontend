@@ -155,6 +155,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
         <button
           onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
           className="relative overflow-hidden cursor-pointer h-full"
+          aria-label={`Ver foto 1 de ${hotelName}`}
         >
           <GalleryImage
             src={displayImages[0].url}
@@ -176,6 +177,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
               key={i}
               onClick={() => { setActiveIndex(i); setLightboxOpen(true); }}
               className="relative overflow-hidden cursor-pointer"
+              aria-label={`Ver foto ${i + 1} de ${hotelName}`}
             >
               <GalleryImage
                 src={img.url}
@@ -197,6 +199,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
           <button
             onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
             className="col-span-2 relative overflow-hidden cursor-pointer"
+            aria-label={`Ver foto 1 de ${hotelName}`}
           >
             <GalleryImage
               src={displayImages[0].url}
@@ -241,6 +244,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
         <button
           onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
           className={cn('relative overflow-hidden cursor-pointer', heroSpan)}
+          aria-label={`Ver foto 1 de ${hotelName}`}
         >
           <GalleryImage
             src={displayImages[0].url}
@@ -258,6 +262,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
             key={i}
             onClick={() => { setActiveIndex(i + 1); setLightboxOpen(true); }}
             className="relative overflow-hidden cursor-pointer"
+            aria-label={`Ver foto ${i + 2} de ${hotelName}`}
           >
             <GalleryImage
               src={img.url}
@@ -283,9 +288,13 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
               sizes={totalDisplay >= 6 ? '33vw' : '25vw'}
               loading="lazy"
             />
-            <div className="absolute inset-0 flex items-center justify-center">
+            <button
+              onClick={() => setLightboxOpen(true)}
+              className="absolute inset-0 flex items-center justify-center"
+              aria-label={`Ver las ${images.length} fotos de ${hotelName}`}
+            >
               <span className="text-white font-bold text-sm">+{images.length - (totalDisplay >= 6 ? 6 : 4)} fotos</span>
-            </div>
+            </button>
           </div>
         )}
       </div>
@@ -336,12 +345,14 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
               <button
                 onClick={prevMobile}
                 className="absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center hover:bg-white transition-colors z-10 active:scale-90"
+                aria-label="Foto anterior"
               >
                 <ChevronLeft size={20} className="text-foreground" />
               </button>
               <button
                 onClick={nextMobile}
                 className="absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center hover:bg-white transition-colors z-10 active:scale-90"
+                aria-label="Siguiente foto"
               >
                 <ChevronRight size={20} className="text-foreground" />
               </button>
@@ -354,6 +365,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
           <button
             onClick={() => setLightboxOpen(true)}
             className="hidden md:flex absolute bottom-6 right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-5 py-3 rounded-xl text-sm font-bold text-foreground shadow-xl hover:bg-white hover:shadow-2xl transition-all active:scale-95 z-10"
+            aria-label={`Ver las ${images.length} fotos de ${hotelName}`}
           >
             <Grid size={16} />
             Ver las {images.length} fotos
@@ -364,6 +376,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
         <button
           onClick={() => setLightboxOpen(true)}
           className="absolute bottom-4 right-4 md:hidden flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs font-bold text-foreground shadow-lg hover:bg-white transition-colors z-10"
+          aria-label={`Ver las ${images.length} fotos de ${hotelName}`}
         >
           <Grid size={14} />
           {images.length} fotos
@@ -436,6 +449,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
                     'relative size-16 rounded-lg overflow-hidden border-2 transition-all shrink-0',
                     i === activeIndex ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100',
                   )}
+                  aria-label={`Ir a foto ${i + 1}`}
                 >
                   <GalleryImage
                     src={img.url}

@@ -229,9 +229,9 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             </div>
 
             <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 pt-4">
-              <h3 className="text-3xl font-black text-foreground tracking-tight">
+              <h2 className="text-3xl font-black text-foreground tracking-tight">
                 {isSearchingDates ? 'Inventario Disponible' : 'Nuestras Unidades'}
-              </h3>
+              </h2>
               {isSearchingDates && (
                 <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
                   <CheckCircle2 className="size-4" /> Fechas Confirmadas
@@ -259,7 +259,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             </Suspense>
 
             {/* LA HISTORIA — Narrativa emocional (despues del producto) */}
-            <div id="story" className="bg-white/40 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-white/30">
+            <div id="story" className="bg-card/80 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-border/40">
               <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
                 <span className="size-1.5 rounded-full bg-warm-400" />
                 {hotel.story_section_title || 'La Historia'}
@@ -293,10 +293,54 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             </div>
 
             {/* REVIEWS — Opiniones de huespedes + Formulario */}
-            <div id="reviews">
-            <Suspense fallback={<div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40 space-y-6"><ReviewSkeleton /><ReviewSkeleton /><ReviewSkeleton /></div>}>
-              <ReviewsSection hotelId={hotel.id} hotelName={hotel.name} />
-            </Suspense>
+            <div id="reviews" className="space-y-6">
+              {/* Review summary — Social proof cuantificable arriba de las reviews */}
+              {reviewStats && reviewStats.total > 0 && (
+                <div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40">
+                  <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                    <span className="size-1.5 rounded-full bg-emerald-400" />
+                    Opiniones de Huespedes
+                  </h2>
+                  <div className="flex items-center gap-6">
+                    <div className="text-center">
+                      <div className="text-5xl font-black text-foreground tracking-tight">{reviewStats.overall}</div>
+                      <div className="flex items-center gap-1 mt-1 justify-center">
+                        {[1, 2, 3, 4, 5].map((star) => (
+                          <Star
+                            key={star}
+                            size={16}
+                            className={star <= Math.round(reviewStats.overall) ? 'fill-warm-400 text-warm-400' : 'text-muted-foreground/30'}
+                          />
+                        ))}
+                      </div>
+                      <p className="text-xs text-muted-foreground mt-1">{reviewStats.total} opiniones</p>
+                    </div>
+                    <div className="flex-1 space-y-1.5">
+                      {Object.entries(reviewStats.breakdown ?? {}).reverse().map(([score, count]) => {
+                        const total = reviewStats.total;
+                        const pct = total > 0 ? ((count as number) / total) * 100 : 0;
+                        return (
+                          <div key={score} className="flex items-center gap-2 text-xs">
+                            <span className="w-3 text-right font-bold text-foreground">{score}</span>
+                            <Star size={10} className="fill-warm-400 text-warm-400 shrink-0" />
+                            <div className="flex-1 h-2 bg-muted rounded-full overflow-hidden">
+                              <div
+                                className="h-full bg-warm-400 rounded-full transition-all"
+                                style={{ width: `${pct}%` }}
+                              />
+                            </div>
+                            <span className="w-6 text-right text-muted-foreground">{count}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              <Suspense fallback={<div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40 space-y-6"><ReviewSkeleton /><ReviewSkeleton /><ReviewSkeleton /></div>}>
+                <ReviewsSection hotelId={hotel.id} hotelName={hotel.name} />
+              </Suspense>
             </div>
 
             {/* REVIEW FORM — Submit a review */}
