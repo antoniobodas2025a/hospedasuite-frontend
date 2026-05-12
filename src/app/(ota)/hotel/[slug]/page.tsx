@@ -283,6 +283,9 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                 phone={hotel.phone}
                 googleMapsUrl={hotel.google_maps_url}
                 cancellationPolicy={hotel.cancellation_policy}
+                checkInTime={hotel.check_in_time}
+                checkOutTime={hotel.check_out_time}
+                receptionHours={hotel.reception_hours}
               />
             </Suspense>
           </div>

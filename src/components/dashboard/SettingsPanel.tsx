@@ -427,6 +427,37 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                   </div>
                 </div>
 
+                {/* CHECK-IN/OUT — Horarios operativos */}
+                <div className="bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5 space-y-4">
+                  <h3 className="text-xl font-bold flex items-center gap-3"><Clock className="text-cyan-400" /> Horarios</h3>
+                  <div className="grid grid-cols-3 gap-4">
+                    <div>
+                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Check-in</label>
+                      <input
+                        {...register('check_in_time')}
+                        placeholder="15:00"
+                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-sm text-center font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Check-out</label>
+                      <input
+                        {...register('check_out_time')}
+                        placeholder="13:00"
+                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-sm text-center font-mono"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Recepcion</label>
+                      <input
+                        {...register('reception_hours')}
+                        placeholder="24/7"
+                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-sm text-center"
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 <div className="bg-zinc-950/80 p-8 rounded-[3rem] border border-amber-500/20 text-zinc-400 text-xs italic">
                   <h3 className="text-xl font-bold flex items-center gap-3 mb-6 text-zinc-100"><ShieldAlert className="text-amber-500/70"/> Protocolos</h3>
                   <textarea {...register('cancellation_policy')} rows={6} className="w-full bg-transparent outline-none resize-none" placeholder="Reglas..." />

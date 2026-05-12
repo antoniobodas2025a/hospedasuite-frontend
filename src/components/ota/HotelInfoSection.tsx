@@ -14,6 +14,9 @@ interface HotelInfoSectionProps {
   phone?: string | null;
   googleMapsUrl?: string | null;
   cancellationPolicy?: string | null;
+  checkInTime?: string | null;
+  checkOutTime?: string | null;
+  receptionHours?: string | null;
 }
 
 export default function HotelInfoSection({
@@ -23,6 +26,9 @@ export default function HotelInfoSection({
   phone,
   googleMapsUrl,
   cancellationPolicy,
+  checkInTime,
+  checkOutTime,
+  receptionHours,
 }: HotelInfoSectionProps) {
   return (
     <div className="bg-card/60 backdrop-blur-xl rounded-[2rem] shadow-sm border border-border/40 overflow-hidden">
@@ -100,15 +106,15 @@ export default function HotelInfoSection({
             <div className="space-y-2">
               <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-xl">
                 <span className="text-sm text-muted-foreground">Check-in</span>
-                <span className="text-sm font-bold text-foreground">15:00</span>
+                <span className="text-sm font-bold text-foreground">{checkInTime || '15:00'}</span>
               </div>
               <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-xl">
                 <span className="text-sm text-muted-foreground">Check-out</span>
-                <span className="text-sm font-bold text-foreground">13:00</span>
+                <span className="text-sm font-bold text-foreground">{checkOutTime || '13:00'}</span>
               </div>
               <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-xl">
                 <span className="text-sm text-muted-foreground">Recepcion</span>
-                <span className="text-sm font-bold text-foreground">24/7</span>
+                <span className="text-sm font-bold text-foreground">{receptionHours || '24/7'}</span>
               </div>
             </div>
           </div>
