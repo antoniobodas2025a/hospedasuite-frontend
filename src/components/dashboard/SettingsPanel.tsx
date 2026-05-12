@@ -7,7 +7,7 @@ import {
   Save, MessageCircle, ShieldAlert, Wifi, 
   Coffee, Car, Waves, Building, CreditCard, UploadCloud, 
   Users, Palette, Trash2, KeyRound, Globe, Check, Plus,
-  AlertOctagon, RefreshCcw
+  AlertOctagon, RefreshCcw, TrendingUp, Clock, Eye
 } from 'lucide-react';
 import { saveSettingsAction, updateHotelProfileAction, uploadOptimizedImageAction } from '@/app/actions/settings';
 import { createStaffAction, deleteStaffAction } from '@/app/actions/staff';
@@ -256,7 +256,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
 
                 {/* GALLERY — Múltiples fotos del hotel */}
                 <div className="bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5">
-                  <h3 className="text-xl font-bold mb-2 flex items-center gap-3"><UploadCloud className="text-emerald-400" /> Galería del Hotel</h3>
+                  <h3 className="text-xl font-bold mb-2 flex items-center gap-3"><UploadCloud className="text-emerald-400" /> Galeria del Hotel</h3>
                   <p className="text-[10px] text-zinc-500 mb-4 uppercase tracking-widest">{galleryPreviews.length}/8 fotos — Historial visual</p>
                   {galleryPreviews.length > 0 && (
                     <div className="grid grid-cols-2 gap-2 mb-4">
@@ -277,6 +277,120 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                       <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
                     </label>
                   )}
+                </div>
+
+                {/* RECENT ACTIVITY — Social proof control */}
+                <div className="bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5 space-y-6">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold flex items-center gap-3"><TrendingUp className="text-amber-400" /> Actividad Reciente</h3>
+                    <button
+                      type="button"
+                      onClick={() => setValue('show_recent_activity', !watch('show_recent_activity'))}
+                      className={cn(
+                        "relative w-12 h-7 rounded-full transition-all",
+                        watch('show_recent_activity') ? "bg-emerald-500" : "bg-zinc-700"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-0.5 size-6 rounded-full bg-white shadow transition-all",
+                        watch('show_recent_activity') ? "left-5" : "left-0.5"
+                      )} />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Indicadores de urgencia social en la pagina publica</p>
+                  
+                  {watch('show_recent_activity') && (
+                    <div className="space-y-3">
+                      {(watch('recent_activity_messages') || [
+                        { icon: 'TrendingUp', text: '3 reservas en las ultimas 24 horas', color: 'text-emerald-600' },
+                        { icon: 'Clock', text: '2 personas estan viendo esta propiedad ahora', color: 'text-amber-600' },
+                      ]).map((msg: any, i: number) => (
+                        <div key={i} className="flex items-center gap-3 p-3 bg-zinc-950/50 rounded-2xl border border-white/5">
+                          <div className="size-8 rounded-lg bg-zinc-800 flex items-center justify-center shrink-0">
+                            {msg.icon === 'TrendingUp' ? <TrendingUp size={14} className="text-emerald-400" /> : <Clock size={14} className="text-amber-400" />}
+                          </div>
+                          <input
+                            value={msg.text}
+                            onChange={(e) => {
+                              const msgs = [...(watch('recent_activity_messages') || [])];
+                              msgs[i] = { ...msg, text: e.target.value };
+                              setValue('recent_activity_messages', msgs);
+                            }}
+                            className="flex-1 bg-transparent text-xs text-zinc-300 outline-none"
+                            placeholder="Mensaje de actividad..."
+                          />
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const msgs = (watch('recent_activity_messages') || []).filter((_: any, idx: number) => idx !== i);
+                              setValue('recent_activity_messages', msgs);
+                            }}
+                            className="p-1 text-zinc-600 hover:text-rose-400 transition-colors"
+                          >
+                            <Trash2 size={14} />
+                          </button>
+                        </div>
+                      ))}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const msgs = [...(watch('recent_activity_messages') || []), { icon: 'TrendingUp', text: '', color: 'text-emerald-600' }];
+                          setValue('recent_activity_messages', msgs);
+                        }}
+                        className="flex items-center gap-2 text-xs text-zinc-500 hover:text-emerald-400 transition-colors"
+                      >
+                        <Plus size={14} /> Agregar mensaje
+                      </button>
+                    </div>
+                  )}
+                </div>
+
+                {/* SEO — Meta tags y Open Graph */}
+                <div className="bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5 space-y-6">
+                  <h3 className="text-xl font-bold flex items-center gap-3"><Globe className="text-sky-400" /> SEO y Redes Sociales</h3>
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Como aparece tu propiedad en Google y al compartir en redes</p>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Meta Title</label>
+                      <input
+                        {...register('seo_meta_title')}
+                        placeholder="Ej: Hotel Los Andes | Reserva Oficial en Mendoza"
+                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-sm"
+                      />
+                      <p className="text-[9px] text-zinc-600 mt-1">{(watch('seo_meta_title') || '').length}/60 caracteres recomendados</p>
+                    </div>
+                    
+                    <div>
+                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Meta Description</label>
+                      <textarea
+                        {...register('seo_meta_description')}
+                        rows={3}
+                        placeholder="Ej: Disfruta de la mejor experiencia en Mendoza. Piscina, desayuno incluido y vistas panoramicas."
+                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-sm resize-none"
+                      />
+                      <p className="text-[9px] text-zinc-600 mt-1">{(watch('seo_meta_description') || '').length}/160 caracteres recomendados</p>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">OG Image URL</label>
+                      <input
+                        {...register('seo_og_image_url')}
+                        placeholder="https://..."
+                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-xs"
+                      />
+                      <p className="text-[9px] text-zinc-600 mt-1">Imagen que aparece al compartir en WhatsApp, Facebook, etc.</p>
+                    </div>
+
+                    <div>
+                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Canonical URL</label>
+                      <input
+                        {...register('seo_canonical_url')}
+                        placeholder="https://tuhotel.com/hotel/slug"
+                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-xs"
+                      />
+                    </div>
+                  </div>
                 </div>
 
                 <div className="bg-zinc-950/80 p-8 rounded-[3rem] border border-amber-500/20 text-zinc-400 text-xs italic">

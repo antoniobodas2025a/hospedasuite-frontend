@@ -38,12 +38,14 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
   if (!success || !hotel) return { title: 'Propiedad no encontrada' };
   
   return {
-    title: `${hotel.name} | Reserva Oficial | HospedaSuite`,
-    description: `Descubre la experiencia en ${hotel.name} ubicado en ${hotel.location}. Reserva directa al mejor precio garantizado.`,
+    title: hotel.seo_meta_title || `${hotel.name} | Reserva Oficial | HospedaSuite`,
+    description: hotel.seo_meta_description || `Descubre la experiencia en ${hotel.name} ubicado en ${hotel.location}. Reserva directa al mejor precio garantizado.`,
     openGraph: { 
-      images: [hotel.main_image_url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb'],
-      title: `${hotel.name} | Experiencia de Lujo`,
+      images: [hotel.seo_og_image_url || hotel.main_image_url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb'],
+      title: hotel.seo_meta_title || `${hotel.name} | Experiencia de Lujo`,
+      description: hotel.seo_meta_description || `Descubre la experiencia en ${hotel.name} ubicado en ${hotel.location}. Reserva directa al mejor precio garantizado.`,
     },
+    alternates: hotel.seo_canonical_url ? { canonical: hotel.seo_canonical_url } : undefined,
   };
 }
 
@@ -251,8 +253,10 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
               )}
             </div>
 
-            {/* ACTIVIDAD RECIENTE — Urgencia social */}
-            {isSearchingDates && <RecentActivity hotelName={hotel.name} />}
+            {/* ACTIVIDAD RECIENTE — Urgencia social (configurable desde dashboard) */}
+            {isSearchingDates && hotel.show_recent_activity !== false && (
+              <RecentActivity messages={hotel.recent_activity_messages} />
+            )}
 
             {/* FILTROS DE HABITACIONES + LISTADO */}
             <Suspense fallback={<div className="space-y-6"><RoomCardSkeleton /><RoomCardSkeleton /></div>}>

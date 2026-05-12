@@ -85,6 +85,16 @@ const updateProfileSchema = z.object({
   main_image_url: z.string().url().nullable().optional().or(z.literal('')),
   cover_photo_url: z.string().url().nullable().optional().or(z.literal('')),
   gallery_urls: z.array(z.string().url()).nullable().optional(),
+  show_recent_activity: z.boolean().optional(),
+  recent_activity_messages: z.array(z.object({
+    icon: z.string(),
+    text: z.string(),
+    color: z.string(),
+  })).nullable().optional(),
+  seo_meta_title: z.string().nullable().optional(),
+  seo_meta_description: z.string().nullable().optional(),
+  seo_og_image_url: z.string().url().nullable().optional().or(z.literal('')),
+  seo_canonical_url: z.string().url().nullable().optional().or(z.literal('')),
 });
 
 export async function updateHotelProfileAction(hotelId: string, formData: any) {
@@ -112,6 +122,12 @@ export async function updateHotelProfileAction(hotelId: string, formData: any) {
         main_image_url: validData.main_image_url,
         cover_photo_url: validData.cover_photo_url,
         gallery_urls: validData.gallery_urls,
+        show_recent_activity: validData.show_recent_activity,
+        recent_activity_messages: validData.recent_activity_messages,
+        seo_meta_title: validData.seo_meta_title,
+        seo_meta_description: validData.seo_meta_description,
+        seo_og_image_url: validData.seo_og_image_url,
+        seo_canonical_url: validData.seo_canonical_url,
       })
       .eq('id', hotelId);
 
