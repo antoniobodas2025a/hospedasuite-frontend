@@ -20,6 +20,7 @@ import HotelJsonLd from '@/components/seo/HotelJsonLd';
 import RoomCardSkeleton from '@/components/ota/RoomCardSkeleton';
 import ReviewSkeleton from '@/components/ota/ReviewSkeleton';
 import MapSkeleton from '@/components/ota/MapSkeleton';
+import StickySubNav from '@/components/ota/StickySubNav';
 import { Suspense } from 'react';
 
 // Mandato de renderizado dinámico para control de inventario en tiempo real
@@ -117,7 +118,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
       {/* 🖼️ HERO GALLERY — Grid interactivo estilo Airbnb */}
       <HeroGallery images={hotelGalleryImages} hotelName={hotel.name} />
 
-      {/* BREADCRUMB — Navegacion contextual */}
+      {/* BREADCRUMB — Navegacion contextual (oculto temporalmente) */}
+      {false && (
       <div className="max-w-6xl mx-auto px-6 pt-6">
         <nav className="flex items-center gap-2 text-xs text-muted-foreground">
           <Link href="/" className="hover:text-foreground transition-colors">Inicio</Link>
@@ -131,6 +133,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
           <span className="text-foreground font-medium">{hotel.name}</span>
         </nav>
       </div>
+      )}
 
       {/* 📍 HEADER DE INFORMACIÓN */}
       <div className="max-w-6xl mx-auto px-6 pt-8">
@@ -156,7 +159,13 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
+            {reviewStats && reviewStats.total > 0 && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
+                <Star size={12} className="fill-emerald-500 text-emerald-500" />
+                {reviewStats.overall} ({reviewStats.total})
+              </span>
+            )}
             {hotel.category_badge && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
                 <Star size={12} className="fill-amber-500" />
@@ -165,6 +174,19 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             )}
           </div>
         </div>
+      </div>
+
+      {/* STICKY SUB-NAV — Anchor links con Mac 2026 glassmorphism */}
+      <div className="mt-8">
+        <StickySubNav
+          sections={[
+            { id: 'amenities', label: 'Amenidades' },
+            { id: 'rooms', label: 'Habitaciones' },
+            { id: 'story', label: 'La Historia' },
+            { id: 'reviews', label: 'Opiniones' },
+            { id: 'location', label: 'Ubicacion' },
+          ]}
+        />
       </div>
 
       <div className="max-w-6xl mx-auto px-6 mt-8">
@@ -180,7 +202,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             
             {/* AMENIDADES DEL HOTEL — Lo que ofrece la propiedad */}
             {hotel.hotel_amenities && hotel.hotel_amenities.length > 0 && (
-              <div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40">
+              <div id="amenities" className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40">
                 <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
                   <span className="size-1.5 rounded-full bg-brand-400" />
                   Lo que ofrece {hotel.name}
@@ -199,42 +221,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
               </div>
             )}
 
-            {/* LA HISTORIA — Narrativa emocional */}
-            <div className="bg-white/40 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-white/30">
-              <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-warm-400" />
-                {hotel.story_section_title || 'La Historia'}
-              </h2>
-              <p className="text-muted-foreground leading-relaxed text-base font-lora italic mb-6">
-                {hotel.description || `Bienvenido a ${hotel.name}. Una joya en el corazon de ${hotel.location}.`}
-              </p>
-              {/* Micro-stats para generar confianza */}
-              {hotel.show_trust_badges !== false && (
-                <div className="flex flex-wrap gap-6 pt-6 border-t border-border/50">
-                  <div className="flex items-center gap-2">
-                    <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
-                      <CheckCircle2 size={14} className="text-emerald-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-foreground">{hotel.trust_badge_1_title || 'Reserva Directa'}</p>
-                      <p className="text-[10px] text-muted-foreground">{hotel.trust_badge_1_subtitle || 'Sin intermediarios'}</p>
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <div className="size-8 rounded-lg bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center">
-                      <ShieldCheck size={14} className="text-indigo-600" />
-                    </div>
-                    <div>
-                      <p className="text-xs font-bold text-foreground">{hotel.trust_badge_2_title || 'Confirmacion Inmediata'}</p>
-                      <p className="text-[10px] text-muted-foreground">{hotel.trust_badge_2_subtitle || 'Bloqueo al instante'}</p>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
             {/* SEPARADOR + HABITACIONES — El producto primero */}
-            <div className="flex items-center gap-4 pt-4">
+            <div id="rooms" className="flex items-center gap-4 pt-4">
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
               <Star size={14} className="text-warm-400 fill-warm-400" />
               <div className="flex-1 h-px bg-gradient-to-r from-transparent via-border to-transparent" />
@@ -270,16 +258,53 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
               />
             </Suspense>
 
+            {/* LA HISTORIA — Narrativa emocional (despues del producto) */}
+            <div id="story" className="bg-white/40 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-white/30">
+              <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
+                <span className="size-1.5 rounded-full bg-warm-400" />
+                {hotel.story_section_title || 'La Historia'}
+              </h2>
+              <p className="text-muted-foreground leading-relaxed text-base font-lora italic mb-6">
+                {hotel.description || `Bienvenido a ${hotel.name}. Una joya en el corazon de ${hotel.location}.`}
+              </p>
+              {/* Micro-stats para generar confianza */}
+              {hotel.show_trust_badges !== false && (
+                <div className="flex flex-wrap gap-6 pt-6 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
+                      <CheckCircle2 size={14} className="text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground">{hotel.trust_badge_1_title || 'Reserva Directa'}</p>
+                      <p className="text-[10px] text-muted-foreground">{hotel.trust_badge_1_subtitle || 'Sin intermediarios'}</p>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="size-8 rounded-lg bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center">
+                      <ShieldCheck size={14} className="text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground">{hotel.trust_badge_2_title || 'Confirmacion Inmediata'}</p>
+                      <p className="text-[10px] text-muted-foreground">{hotel.trust_badge_2_subtitle || 'Bloqueo al instante'}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
+
             {/* REVIEWS — Opiniones de huespedes + Formulario */}
+            <div id="reviews">
             <Suspense fallback={<div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40 space-y-6"><ReviewSkeleton /><ReviewSkeleton /><ReviewSkeleton /></div>}>
               <ReviewsSection hotelId={hotel.id} hotelName={hotel.name} />
             </Suspense>
+            </div>
 
             {/* REVIEW FORM — Submit a review */}
             <ReviewForm hotelId={hotel.id} hotelName={hotel.name} />
 
             {/* UBICACIÓN Y POLÍTICAS — Mapa, horarios, cancelación */}
             <Suspense fallback={<MapSkeleton />}>
+              <div id="location">
               <HotelInfoSection
                 hotelName={hotel.name}
                 location={hotel.location}
@@ -291,6 +316,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                 checkOutTime={hotel.check_out_time}
                 receptionHours={hotel.reception_hours}
               />
+              </div>
             </Suspense>
           </div>
 

@@ -121,6 +121,27 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [lightboxOpen, nextLightbox, prevLightbox]);
 
+  // Back button fix: push history state when lightbox opens, pop on close
+  useEffect(() => {
+    if (lightboxOpen) {
+      history.pushState({ lightbox: true }, '');
+    }
+
+    const onPopState = () => {
+      setLightboxOpen(false);
+    };
+
+    window.addEventListener('popstate', onPopState);
+    return () => window.removeEventListener('popstate', onPopState);
+  }, [lightboxOpen]);
+
+  const closeLightbox = useCallback(() => {
+    setLightboxOpen(false);
+    if (window.location.hash === '#gallery') {
+      history.back();
+    }
+  }, []);
+
   if (images.length === 0) return null;
 
   // Layouts adaptativos segun cantidad de fotos
@@ -351,12 +372,33 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
 
       {/* ─── Lightbox ───────────────────────────────────────────────────── */}
       {lightboxOpen && (
-        <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center">
+        <div
+          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center"
+          role="dialog"
+          aria-modal="true"
+          aria-label="Galeria de fotos"
+        >
           <button
-            onClick={() => setLightboxOpen(false)}
+            onClick={closeLightbox}
             className="absolute top-6 right-6 z-10 size-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+            aria-label="Cerrar galeria"
           >
             <X size={24} />
+          </button>
+
+          <button
+            onClick={prevLightbox}
+            className="absolute left-6 top-1/2 -translate-y-1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+            aria-label="Foto anterior"
+          >
+            <ChevronLeft size={28} />
+          </button>
+          <button
+            onClick={nextLightbox}
+            className="absolute right-6 top-1/2 -translate-y/1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+            aria-label="Siguiente foto"
+          >
+            <ChevronRight size={28} />
           </button>
 
           <button

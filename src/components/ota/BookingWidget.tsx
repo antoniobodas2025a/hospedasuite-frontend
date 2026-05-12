@@ -172,15 +172,22 @@ export default function BookingWidget({
           {/* Divider */}
           <div className="h-px bg-border/40" />
 
-          {/* Beneficios */}
-          <div className="space-y-3">
-            <div className="flex items-start gap-3">
-              <ShieldCheck size={16} className="text-secondary shrink-0 mt-0.5" />
+          {/* Mejor precio garantizado — Badge destacado para canal directo */}
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-50 to-warm-50 border border-brand-200/60 p-4">
+            <div className="absolute top-0 right-0 size-16 bg-brand-500/5 rounded-full -translate-y-8 translate-x-8" />
+            <div className="relative flex items-start gap-3">
+              <div className="size-9 rounded-xl bg-brand-500/10 border border-brand-500/15 flex items-center justify-center shrink-0 mt-0.5">
+                <ShieldCheck size={16} className="text-brand-600" />
+              </div>
               <div>
                 <p className="text-xs font-bold text-foreground">Mejor precio garantizado</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Reserva directo sin comisiones de intermediarios.</p>
+                <p className="text-[11px] text-muted-foreground mt-0.5">Reserva directo sin comisiones de intermediarios. El precio que ves aqui es el mejor disponible.</p>
               </div>
             </div>
+          </div>
+
+          {/* Beneficios adicionales */}
+          <div className="space-y-3">
             <div className="flex items-start gap-3">
               <CheckCircle2 size={16} className="text-secondary shrink-0 mt-0.5" />
               <div>
