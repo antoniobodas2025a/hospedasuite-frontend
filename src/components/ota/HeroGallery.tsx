@@ -6,12 +6,15 @@ import { X, ChevronLeft, ChevronRight, Grid } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
 // ============================================================================
-// HERO GALLERY — Grid estilo Airbnb para página de hotel OTA
+// HERO GALLERY — Grid estilo Airbnb para pagina de hotel OTA
 //
-// Muestra las primeras 5 fotos del hotel en un grid interactivo:
-// - Desktop: 1 foto grande (izq) + 2x2 grid (der) + botón "Ver todas"
-// - Mobile: carrusel infinito con touch swipe + dots
-// - Lightbox: navegación infinita con thumbnails
+// Mejoras vs version anterior:
+// - Sin hydration mismatch: CSS responsive en vez de window.innerWidth
+// - preload en vez de priority (Next.js 16 compatible)
+// - decoding="async" en todas las imagenes
+// - Thumbnails con loading="lazy" + quality bajo
+// - onError fallback por imagen
+// - Soporta 1-9 fotos con layout adaptativo
 // ============================================================================
 
 interface HeroGalleryProps {
@@ -33,7 +36,6 @@ function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
     const deltaX = e.changedTouches[0].clientX - touchStartX.current;
     const deltaY = e.changedTouches[0].clientY - touchStartY.current;
 
-    // Solo considerar swipe horizontal (más horizontal que vertical)
     if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
       if (deltaX < 0) onSwipeLeft();
       else onSwipeRight();
@@ -43,15 +45,62 @@ function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
   return { onTouchStart, onTouchEnd };
 }
 
+// Imagen con fallback por error de carga
+function GalleryImage({
+  src,
+  alt,
+  fill,
+  className,
+  sizes,
+  quality,
+  priority,
+  loading,
+}: {
+  src: string;
+  alt: string;
+  fill?: boolean;
+  className?: string;
+  sizes?: string;
+  quality?: number;
+  priority?: boolean;
+  loading?: 'lazy' | 'eager';
+}) {
+  const [error, setError] = useState(false);
+
+  if (error) {
+    return (
+      <div className={cn('bg-muted flex items-center justify-center', className)}>
+        <Grid size={24} className="text-muted-foreground/30" />
+      </div>
+    );
+  }
+
+  return (
+    <Image
+      src={src}
+      alt={alt}
+      fill={fill}
+      className={className}
+      sizes={sizes}
+      quality={quality ?? 75}
+      preload={priority}
+      loading={loading ?? 'eager'}
+      decoding="async"
+      onError={() => setError(true)}
+    />
+  );
+}
+
 export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
 
-  const displayImages = images.slice(0, 5);
+  // Mostrar hasta 9 fotos en el grid (antes solo 5)
+  const displayImages = images.slice(0, 9);
   const totalDisplay = displayImages.length;
 
-  // ─── Navegación infinita (loop) ─────────────────────────────────────────
+  // Navegacion infinita (loop)
   const nextMobile = useCallback(() => setMobileIndex((i) => (i + 1) % totalDisplay), [totalDisplay]);
   const prevMobile = useCallback(() => setMobileIndex((i) => (i - 1 + totalDisplay) % totalDisplay), [totalDisplay]);
 
@@ -60,9 +109,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
 
   const swipeHandlers = useSwipe(nextMobile, prevMobile);
 
-  if (images.length === 0) return null;
-
-  // ─── Keyboard navigation en lightbox ────────────────────────────────────
+  // Keyboard navigation en lightbox
   useEffect(() => {
     if (!lightboxOpen) return;
     const handleKey = (e: KeyboardEvent) => {
@@ -74,27 +121,178 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
     return () => window.removeEventListener('keydown', handleKey);
   }, [lightboxOpen, nextLightbox, prevLightbox]);
 
-  // ─── Mobile: Carrusel infinito ──────────────────────────────────────────
-  const isMobile = typeof window !== 'undefined' && window.innerWidth < 768;
+  if (images.length === 0) return null;
 
-  if (isMobile) {
+  // Layouts adaptativos segun cantidad de fotos
+  // 1 foto: full width
+  // 2 fotos: 50/50
+  // 3 fotos: 2/3 + 1/3 apilado
+  // 4+ fotos: grid estilo Airbnb (hero + thumbnails)
+  const getDesktopGrid = () => {
+    if (totalDisplay === 1) {
+      return (
+        <button
+          onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
+          className="relative overflow-hidden cursor-pointer h-full"
+        >
+          <GalleryImage
+            src={displayImages[0].url}
+            alt={displayImages[0].alt || hotelName}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes="(max-width: 768px) 100vw, 100vw"
+            priority
+          />
+        </button>
+      );
+    }
+
+    if (totalDisplay === 2) {
+      return (
+        <div className="grid grid-cols-2 h-full gap-1">
+          {displayImages.map((img, i) => (
+            <button
+              key={i}
+              onClick={() => { setActiveIndex(i); setLightboxOpen(true); }}
+              className="relative overflow-hidden cursor-pointer"
+            >
+              <GalleryImage
+                src={img.url}
+                alt={img.alt || `${hotelName} ${i + 1}`}
+                fill
+                className="object-cover transition-transform duration-700 group-hover:scale-105"
+                sizes="(max-width: 768px) 100vw, 50vw"
+                priority={i === 0}
+              />
+            </button>
+          ))}
+        </div>
+      );
+    }
+
+    if (totalDisplay === 3) {
+      return (
+        <div className="grid grid-cols-3 h-full gap-1">
+          <button
+            onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
+            className="col-span-2 relative overflow-hidden cursor-pointer"
+          >
+            <GalleryImage
+              src={displayImages[0].url}
+              alt={displayImages[0].alt || hotelName}
+              fill
+              className="object-cover transition-transform duration-700 group-hover:scale-105"
+              sizes="(max-width: 768px) 100vw, 66vw"
+              priority
+            />
+          </button>
+          <div className="flex flex-col gap-1">
+            {displayImages.slice(1, 3).map((img, i) => (
+              <button
+                key={i}
+                onClick={() => { setActiveIndex(i + 1); setLightboxOpen(true); }}
+                className="relative flex-1 overflow-hidden cursor-pointer"
+              >
+                <GalleryImage
+                  src={img.url}
+                  alt={img.alt || `${hotelName} ${i + 2}`}
+                  fill
+                  className="object-cover transition-transform duration-500 hover:scale-110"
+                  sizes="33vw"
+                  quality={80}
+                />
+              </button>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // 4+ fotos: layout Airbnb con hero + grid de thumbnails
+    const heroSpan = totalDisplay >= 6 ? 'md:col-span-2 md:row-span-2' : 'md:col-span-2';
+    const thumbCount = Math.min(totalDisplay - 1, totalDisplay >= 6 ? 5 : 3);
+
     return (
-      <>
+      <div className={cn(
+        'h-full gap-1',
+        totalDisplay >= 6 ? 'grid grid-cols-1 md:grid-cols-3 md:grid-rows-2' : 'grid grid-cols-1 md:grid-cols-4'
+      )}>
+        <button
+          onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
+          className={cn('relative overflow-hidden cursor-pointer', heroSpan)}
+        >
+          <GalleryImage
+            src={displayImages[0].url}
+            alt={displayImages[0].alt || hotelName}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            sizes={totalDisplay >= 6 ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 100vw, 50vw'}
+            priority
+          />
+          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
+        </button>
+
+        {displayImages.slice(1, 1 + thumbCount).map((img, i) => (
+          <button
+            key={i}
+            onClick={() => { setActiveIndex(i + 1); setLightboxOpen(true); }}
+            className="relative overflow-hidden cursor-pointer"
+          >
+            <GalleryImage
+              src={img.url}
+              alt={img.alt || `${hotelName} ${i + 2}`}
+              fill
+              className="object-cover transition-transform duration-500 hover:scale-110"
+              sizes={totalDisplay >= 6 ? '33vw' : '25vw'}
+              quality={80}
+              loading="lazy"
+            />
+            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
+          </button>
+        ))}
+
+        {/* Si hay mas de las que mostramos, overlay "Ver todas" */}
+        {totalDisplay > (totalDisplay >= 6 ? 6 : 4) && (
+          <div className="relative overflow-hidden">
+            <GalleryImage
+              src={displayImages[totalDisplay >= 6 ? 6 : 4].url}
+              alt="Ver todas las fotos"
+              fill
+              className="object-cover brightness-50"
+              sizes={totalDisplay >= 6 ? '33vw' : '25vw'}
+              loading="lazy"
+            />
+            <div className="absolute inset-0 flex items-center justify-center">
+              <span className="text-white font-bold text-sm">+{images.length - (totalDisplay >= 6 ? 6 : 4)} fotos</span>
+            </div>
+          </div>
+        )}
+      </div>
+    );
+  };
+
+  return (
+    <>
+      {/* ─── HERO CONTAINER ─────────────────────────────────────────────── */}
+      <div className="relative w-full h-[45vh] min-h-[300px] md:h-[500px] lg:h-[550px] rounded-b-3xl overflow-hidden group bg-foreground">
+        {getDesktopGrid()}
+
+        {/* ─── Mobile: Carrusel (visible solo en pantallas pequenas) ────── */}
         <div
-          className="relative w-full h-[45vh] min-h-[300px] bg-foreground select-none"
+          className="absolute inset-0 md:hidden select-none"
           onTouchStart={swipeHandlers.onTouchStart}
           onTouchEnd={swipeHandlers.onTouchEnd}
         >
-          <Image
+          <GalleryImage
             src={displayImages[mobileIndex].url}
             alt={displayImages[mobileIndex].alt || hotelName}
             fill
             className="object-cover transition-opacity duration-300"
-            priority
             sizes="100vw"
+            priority
           />
 
-          {/* Dots indicator — infinito */}
+          {/* Dots indicator */}
           {totalDisplay > 1 && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
               {displayImages.map((_, i) => (
@@ -111,7 +309,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
             </div>
           )}
 
-          {/* Flechas siempre visibles (loop infinito) */}
+          {/* Flechas */}
           {totalDisplay > 1 && (
             <>
               <button
@@ -128,119 +326,30 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
               </button>
             </>
           )}
-
-          {/* Photo count */}
-          <button
-            onClick={() => setLightboxOpen(true)}
-            className="absolute bottom-4 right-4 flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs font-bold text-foreground shadow-lg hover:bg-white transition-colors z-10"
-          >
-            <Grid size={14} />
-            {images.length} fotos
-          </button>
         </div>
 
-        {/* Lightbox mobile — infinito */}
-        {lightboxOpen && (
-          <div className="fixed inset-0 z-[200] bg-black flex items-center justify-center">
-            <button
-              onClick={() => setLightboxOpen(false)}
-              className="absolute top-4 right-4 z-10 size-10 rounded-full bg-black/50 flex items-center justify-center text-white hover:bg-black/70"
-            >
-              <X size={20} />
-            </button>
-            <button
-              onClick={prevLightbox}
-              className="absolute left-4 top-1/2 -translate-y-1/2 size-12 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 z-10"
-            >
-              <ChevronLeft size={24} />
-            </button>
-            <button
-              onClick={nextLightbox}
-              className="absolute right-4 top-1/2 -translate-y-1/2 size-12 rounded-full bg-white/20 flex items-center justify-center text-white hover:bg-white/30 z-10"
-            >
-              <ChevronRight size={24} />
-            </button>
-            <div className="relative w-full h-full">
-              <Image
-                src={images[activeIndex].url}
-                alt={images[activeIndex].alt || hotelName}
-                fill
-                className="object-contain"
-                sizes="100vw"
-                priority
-              />
-            </div>
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 text-white text-sm font-medium">
-              {activeIndex + 1} / {images.length}
-            </div>
-          </div>
-        )}
-      </>
-    );
-  }
-
-  // ─── Desktop: Grid estilo Airbnb ────────────────────────────────────────
-  return (
-    <>
-      <div className="relative w-full h-[55vh] min-h-[400px] md:h-[500px] lg:h-[550px] rounded-b-3xl overflow-hidden group">
-        <div className="grid grid-cols-1 md:grid-cols-4 h-full gap-1 p-1 bg-foreground">
-          {/* Foto principal — ocupa 2 columnas */}
-          <button
-            onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
-            className="md:col-span-2 relative overflow-hidden cursor-pointer"
-          >
-            <Image
-              src={displayImages[0].url}
-              alt={displayImages[0].alt || hotelName}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              sizes="(max-width: 768px) 100vw, 50vw"
-              priority
-            />
-            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
-          </button>
-
-          {/* Grid 2x2 de thumbnails */}
-          <div className="hidden md:grid grid-cols-2 grid-rows-2 gap-1">
-            {displayImages.slice(1, 5).map((img, i) => (
-              <button
-                key={i}
-                onClick={() => { setActiveIndex(i + 1); setLightboxOpen(true); }}
-                className="relative overflow-hidden cursor-pointer"
-              >
-                <Image
-                  src={img.url}
-                  alt={img.alt || `${hotelName} ${i + 2}`}
-                  fill
-                  className="object-cover transition-transform duration-500 hover:scale-110"
-                  sizes="25vw"
-                  quality={80}
-                />
-                <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
-              </button>
-            ))}
-
-            {/* Si hay menos de 5 fotos, rellenar con placeholder */}
-            {displayImages.length < 5 &&
-              Array.from({ length: 4 - (displayImages.length - 1) }).map((_, i) => (
-                <div key={`placeholder-${i}`} className="bg-foreground/80" />
-              ))}
-          </div>
-        </div>
-
-        {/* Botón "Ver todas las fotos" */}
-        {images.length > 5 && (
+        {/* Boton "Ver todas las fotos" */}
+        {images.length > (totalDisplay >= 6 ? 6 : 4) && (
           <button
             onClick={() => setLightboxOpen(true)}
-            className="absolute bottom-6 right-6 flex items-center gap-2 bg-white/95 backdrop-blur-sm px-5 py-3 rounded-xl text-sm font-bold text-foreground shadow-xl hover:bg-white hover:shadow-2xl transition-all active:scale-95 z-10"
+            className="hidden md:flex absolute bottom-6 right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-5 py-3 rounded-xl text-sm font-bold text-foreground shadow-xl hover:bg-white hover:shadow-2xl transition-all active:scale-95 z-10"
           >
             <Grid size={16} />
             Ver las {images.length} fotos
           </button>
         )}
+
+        {/* Mobile photo count */}
+        <button
+          onClick={() => setLightboxOpen(true)}
+          className="absolute bottom-4 right-4 md:hidden flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs font-bold text-foreground shadow-lg hover:bg-white transition-colors z-10"
+        >
+          <Grid size={14} />
+          {images.length} fotos
+        </button>
       </div>
 
-      {/* Lightbox desktop — infinito */}
+      {/* ─── Lightbox ───────────────────────────────────────────────────── */}
       {lightboxOpen && (
         <div className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center">
           <button
@@ -250,7 +359,6 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
             <X size={24} />
           </button>
 
-          {/* Flechas siempre visibles (loop infinito) */}
           <button
             onClick={prevLightbox}
             className="absolute left-6 top-1/2 -translate-y-1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
@@ -264,9 +372,8 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
             <ChevronRight size={28} />
           </button>
 
-          {/* Imagen principal */}
           <div className="relative w-full max-w-5xl h-[80vh]">
-            <Image
+            <GalleryImage
               src={images[activeIndex].url}
               alt={images[activeIndex].alt || hotelName}
               fill
@@ -276,7 +383,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
             />
           </div>
 
-          {/* Thumbnails en la parte inferior */}
+          {/* Thumbnails */}
           {images.length > 1 && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 max-w-2xl overflow-x-auto px-4 pb-2">
               {images.slice(0, 10).map((img, i) => (
@@ -288,13 +395,20 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
                     i === activeIndex ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100',
                   )}
                 >
-                  <Image src={img.url} alt={img.alt || ''} fill className="object-cover" sizes="64px" />
+                  <GalleryImage
+                    src={img.url}
+                    alt={img.alt || ''}
+                    fill
+                    className="object-cover"
+                    sizes="64px"
+                    quality={50}
+                    loading="lazy"
+                  />
                 </button>
               ))}
             </div>
           )}
 
-          {/* Contador */}
           <div className="absolute top-6 left-6 text-white text-sm font-medium bg-black/40 px-3 py-1.5 rounded-lg backdrop-blur-sm">
             {activeIndex + 1} / {images.length}
           </div>
