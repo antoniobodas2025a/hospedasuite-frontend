@@ -157,10 +157,12 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
-              <Star size={12} className="fill-amber-500" />
-              Categoría Premium
-            </span>
+            {hotel.category_badge && (
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
+                <Star size={12} className="fill-amber-500" />
+                {hotel.category_badge}
+              </span>
+            )}
           </div>
         </div>
       </div>

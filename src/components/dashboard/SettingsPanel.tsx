@@ -7,7 +7,7 @@ import {
   Save, MessageCircle, ShieldAlert, Wifi, 
   Coffee, Car, Waves, Building, CreditCard, UploadCloud, 
   Users, Palette, Trash2, KeyRound, Globe, Check, Plus,
-  AlertOctagon, RefreshCcw, TrendingUp, Clock, Eye
+  AlertOctagon, RefreshCcw, TrendingUp, Clock, Eye, Star
 } from 'lucide-react';
 import { saveSettingsAction, updateHotelProfileAction, uploadOptimizedImageAction } from '@/app/actions/settings';
 import { createStaffAction, deleteStaffAction } from '@/app/actions/staff';
@@ -276,6 +276,23 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                       <span className="text-[9px] text-zinc-500 font-bold uppercase">Agregar fotos</span>
                       <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
                     </label>
+                  )}
+                </div>
+
+                {/* CATEGORY BADGE — Insignia de categoria en OTA */}
+                <div className="bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5 space-y-4">
+                  <h3 className="text-xl font-bold flex items-center gap-3"><Star className="text-amber-400" /> Insignia de Categoria</h3>
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest">Texto que aparece junto al nombre del hotel en la pagina publica. Dejar vacio para ocultar.</p>
+                  <input
+                    {...register('category_badge')}
+                    placeholder="Ej: Categoria Premium, Boutique Hotel, Eco-Lodge..."
+                    className="w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-sm"
+                  />
+                  {watch('category_badge') && (
+                    <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-2xl">
+                      <Star size={12} className="text-amber-400 fill-amber-400" />
+                      <span className="text-xs font-bold text-amber-300">{watch('category_badge')}</span>
+                    </div>
                   )}
                 </div>
 
