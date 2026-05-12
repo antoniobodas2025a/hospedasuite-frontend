@@ -4,8 +4,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Save, MessageCircle, ShieldAlert, ShieldCheck, Wifi, 
-  Coffee, Car, Waves, Building, CreditCard, UploadCloud, 
+  Save, MessageCircle, ShieldAlert, ShieldCheck, Building, CreditCard, UploadCloud, 
   Users, Palette, Trash2, KeyRound, Globe, Check, Plus,
   AlertOctagon, RefreshCcw, TrendingUp, Clock, Eye, Star
 } from 'lucide-react';
@@ -15,12 +14,9 @@ import { executeCleanSlateAction } from '@/app/actions/seeding';
 import { useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 
-const HOTEL_AMENITIES = [
-  { id: 'wifi', label: 'Wi-Fi Gratis', icon: Wifi },
-  { id: 'parking', label: 'Parqueadero', icon: Car },
-  { id: 'pool', label: 'Piscina', icon: Waves },
-  { id: 'breakfast', label: 'Desayuno', icon: Coffee },
-];
+import { getAmenityById, AMENITY_REGISTRY } from '@/lib/amenity-registry';
+
+const HOTEL_AMENITIES = Object.values(AMENITY_REGISTRY);
 
 interface SettingsPanelProps {
   initialData: any;

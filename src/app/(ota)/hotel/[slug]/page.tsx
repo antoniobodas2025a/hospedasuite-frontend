@@ -2,7 +2,8 @@ import { getHotelDetailsBySlugAction } from '@/app/actions/ota';
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, ShieldCheck, Star, CheckCircle2, Wifi, Car, Waves, Coffee } from 'lucide-react';
+import { MapPin, ShieldCheck, Star, CheckCircle2 } from 'lucide-react';
+import { getAmenityById } from '@/lib/amenity-registry';
 import type { Metadata } from 'next';
 import { RoomShowcaseModal } from '@/components/ota/RoomShowcaseModal'; 
 import AvailabilitySearchBar from '@/components/ota/AvailabilitySearchBar'; 
@@ -95,13 +96,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
       : []),
   ];
 
-  // Iconos de amenidades del hotel
-  const AMENITY_ICONS: Record<string, React.ElementType> = {
-    wifi: Wifi,
-    parking: Car,
-    pool: Waves,
-    breakfast: Coffee,
-  };
+  // Iconos de amenidades del hotel — fuente unica de verdad
+  // Ver src/lib/amenity-registry.ts para el catalogo completo
 
   return (
     <main className="min-h-screen bg-background text-foreground pb-24 font-poppins selection:bg-brand-500/30">
@@ -187,17 +183,11 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                 </h2>
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {hotel.hotel_amenities.map((amenity: string) => {
-                    const Icon = AMENITY_ICONS[amenity] || Star;
-                    const labels: Record<string, string> = {
-                      wifi: 'Wi-Fi Gratis',
-                      parking: 'Parqueadero',
-                      pool: 'Piscina',
-                      breakfast: 'Desayuno',
-                    };
+                    const { icon: Icon, label } = getAmenityById(amenity);
                     return (
                       <div key={amenity} className="flex items-center gap-2.5 p-3 rounded-xl bg-muted border border-border">
                         <Icon size={16} className="text-brand-500 shrink-0" />
-                        <span className="text-xs font-medium text-foreground/80">{labels[amenity] || amenity}</span>
+                        <span className="text-xs font-medium text-foreground/80">{label}</span>
                       </div>
                     );
                   })}
