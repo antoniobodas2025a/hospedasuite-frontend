@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
-  Save, MessageCircle, ShieldAlert, Wifi, 
+  Save, MessageCircle, ShieldAlert, ShieldCheck, Wifi, 
   Coffee, Car, Waves, Building, CreditCard, UploadCloud, 
   Users, Palette, Trash2, KeyRound, Globe, Check, Plus,
   AlertOctagon, RefreshCcw, TrendingUp, Clock, Eye, Star
@@ -294,6 +294,27 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                       <span className="text-xs font-bold text-amber-300">{watch('category_badge')}</span>
                     </div>
                   )}
+                </div>
+
+                {/* TRUST BADGES — Sellos de confianza en OTA */}
+                <div className="bg-zinc-900/40 p-8 rounded-[3rem] border border-white/5 space-y-4">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-xl font-bold flex items-center gap-3"><ShieldCheck className="text-emerald-400" /> Sellos de Confianza</h3>
+                    <button
+                      type="button"
+                      onClick={() => setValue('show_trust_badges', !watch('show_trust_badges'))}
+                      className={cn(
+                        "relative w-12 h-7 rounded-full transition-all",
+                        watch('show_trust_badges') ? "bg-emerald-500" : "bg-zinc-700"
+                      )}
+                    >
+                      <div className={cn(
+                        "absolute top-0.5 size-6 rounded-full bg-white shadow transition-all",
+                        watch('show_trust_badges') ? "left-5" : "left-0.5"
+                      )} />
+                    </button>
+                  </div>
+                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest">"Reserva Directa" y "Confirmacion Inmediata" en la seccion La Historia</p>
                 </div>
 
                 {/* RECENT ACTIVITY — Social proof control */}

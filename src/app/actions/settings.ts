@@ -96,6 +96,7 @@ const updateProfileSchema = z.object({
   seo_og_image_url: z.string().url().nullable().optional().or(z.literal('')),
   seo_canonical_url: z.string().url().nullable().optional().or(z.literal('')),
   category_badge: z.string().nullable().optional(),
+  show_trust_badges: z.boolean().optional(),
 });
 
 export async function updateHotelProfileAction(hotelId: string, formData: any) {
@@ -130,6 +131,7 @@ export async function updateHotelProfileAction(hotelId: string, formData: any) {
         seo_og_image_url: validData.seo_og_image_url,
         seo_canonical_url: validData.seo_canonical_url,
         category_badge: validData.category_badge,
+        show_trust_badges: validData.show_trust_badges,
       })
       .eq('id', hotelId);
 

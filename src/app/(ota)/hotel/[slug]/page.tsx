@@ -215,26 +215,28 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                 {hotel.description || `Bienvenido a ${hotel.name}. Una joya en el corazón de ${hotel.location}.`}
               </p>
               {/* Micro-stats para generar confianza */}
-              <div className="flex flex-wrap gap-6 pt-6 border-t border-border/50">
-                <div className="flex items-center gap-2">
-                  <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
-                    <CheckCircle2 size={14} className="text-emerald-600" />
+              {hotel.show_trust_badges !== false && (
+                <div className="flex flex-wrap gap-6 pt-6 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
+                      <CheckCircle2 size={14} className="text-emerald-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Reserva Directa</p>
+                      <p className="text-[10px] text-muted-foreground">Sin intermediarios</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">Reserva Directa</p>
-                    <p className="text-[10px] text-muted-foreground">Sin intermediarios</p>
+                  <div className="flex items-center gap-2">
+                    <div className="size-8 rounded-lg bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center">
+                      <ShieldCheck size={14} className="text-indigo-600" />
+                    </div>
+                    <div>
+                      <p className="text-xs font-bold text-foreground">Confirmacion Inmediata</p>
+                      <p className="text-[10px] text-muted-foreground">Bloqueo al instante</p>
+                    </div>
                   </div>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="size-8 rounded-lg bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center">
-                    <ShieldCheck size={14} className="text-indigo-600" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-foreground">Confirmación Inmediata</p>
-                    <p className="text-[10px] text-muted-foreground">Bloqueo al instante</p>
-                  </div>
-                </div>
-              </div>
+              )}
             </div>
 
             {/* SEPARADOR + HABITACIONES — El producto primero */}
