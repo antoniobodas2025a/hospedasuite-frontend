@@ -88,7 +88,7 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
             </span>
           </div>
 
-          <div className='w-10 h-10 rounded-full bg-white text-black flex items-center justify-center group-hover:bg-brand-400 group-hover:text-white transition-all transform group-hover:rotate-[-45deg]'>
+          <div className='w-10 h-10 rounded-full bg-white text-foreground flex items-center justify-center group-hover:bg-brand-400 group-hover:text-white transition-all transform group-hover:rotate-[-45deg]'>
             <svg
               xmlns='http://www.w3.org/2000/svg'
               width='20'

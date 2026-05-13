@@ -77,7 +77,7 @@ export default function BookingWidget({
       {/* Mac 2026 Glassmorphism: GlassCard with squircle radii + depth-aware blur */}
       <GlassCard className="overflow-hidden">
         {/* Header con precio */}
-        <div className="bg-gradient-to-br from-primary to-brand-700 p-6 text-primary-foreground">
+        <div className="bg-gradient-to-br from-primary to-primary/90 p-6 text-primary-foreground">
           <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">Desde</p>
           <div className="flex items-baseline gap-2">
             <p className="text-4xl font-black tracking-tight">${minPrice.toLocaleString()}</p>
@@ -167,7 +167,7 @@ export default function BookingWidget({
               availableCount === 0
                 ? 'bg-muted text-muted-foreground/40 cursor-not-allowed shadow-none'
                 : checkIn && checkOut
-                  ? 'bg-primary hover:bg-brand-700 text-primary-foreground shadow-cta hover:shadow-cta'
+                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta hover:shadow-cta'
                   : 'bg-foreground hover:bg-primary text-background shadow-foreground/20',
             )}
           >

@@ -174,7 +174,7 @@ export default function RoomFilters({ rooms, onFilterChange }: RoomFiltersProps)
 
           <button
             onClick={applyFilters}
-            className="w-full bg-primary hover:bg-brand-700 text-primary-foreground font-bold py-3 rounded-[var(--radius-squircle-lg)] transition-all text-sm active:scale-[0.98]"
+            className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-3 rounded-[var(--radius-squircle-lg)] transition-all text-sm active:scale-[0.98]"
           >
             Aplicar filtros
           </button>

@@ -11,6 +11,7 @@ import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import type { Room, GalleryItem } from '@/types';
+import { GlassCard } from '@/components/ui/glass';
 import RoomGallery from './RoomGallery';
 
 interface HotelForModal {
@@ -32,21 +33,7 @@ const AMENITY_TEMPLATES: Record<string, { icon: React.ElementType, title: string
   'techo_panoramico': { icon: Sun, title: 'Cielo de Plata', story: 'Visualizacion directa a la Via Lactea desde la comodidad absoluta de su domo.' }
 };
 
-// ============================================================================
-// GLASS CARD
-// ============================================================================
-function GlassCard({ children, className }: { children: React.ReactNode; className?: string }) {
-  return (
-    <div className={cn(
-      'rounded-[1.25rem] border',
-      'glass-card',
-      'border-white/30 shadow-sm shadow-muted/40',
-      className,
-    )}>
-      {children}
-    </div>
-  );
-}
+// GlassCard imported from @/components/ui/glass (design system, theme-aware)
 
 // ============================================================================
 // AMENITY GLASS
@@ -94,14 +81,14 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
     return (
       <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-foreground/40 backdrop-blur-xl" onClick={closeModal} />
-        <div className="relative z-10 glass-panel p-10 w-full max-w-md text-center shadow-2xl shadow-black/10 animate-in zoom-in-95 duration-200">
+        <div className="relative z-10 glass-panel p-10 w-full max-w-md text-center shadow-2xl shadow-elev-2 animate-in zoom-in-95 duration-200">
           <div className="size-16 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center mx-auto mb-6">
             <Calendar size={28} className="text-brand-500" strokeWidth={1.5} />
           </div>
           <h2 className="text-2xl font-black text-foreground mb-2">Defina su Estadia</h2>
           <p className="text-muted-foreground mb-8 text-sm">Para garantizar la tarifa exacta, necesitamos saber cuando nos visitara.</p>
           <button onClick={() => { closeModal(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
-            className="w-full glass-card text-background font-semibold py-4 hover:bg-brand-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-[0.98]">
+            className="w-full glass-card text-foreground font-semibold py-4 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-[0.98]">
             Seleccionar Fechas <ArrowRight size={18} />
           </button>
         </div>
@@ -146,7 +133,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
       <div className="relative w-full max-w-7xl h-[96vh] sm:h-[92vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-300 sm:rounded-[var(--radius-squircle-2xl)] rounded-t-[2rem] glass-panel">
         
         {/* Boton cerrar glass */}
-        <button onClick={closeModal} className="absolute top-4 right-4 z-30 size-10 flex items-center justify-center rounded-full glass-pill text-foreground/70 hover:bg-white/25 hover:scale-110 hover:text-foreground transition-all shadow-lg shadow-black/5 active:scale-95">
+        <button onClick={closeModal} className="absolute top-4 right-4 z-30 size-10 flex items-center justify-center rounded-full glass-pill text-foreground/70 hover:bg-accent/25 hover:scale-110 hover:text-foreground transition-all shadow-lg shadow-elev-1 active:scale-95">
           <X size={18} strokeWidth={2.5} />
         </button>
 
@@ -284,10 +271,10 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                   disabled={isOverCapacity}
                   onClick={handleCheckout}
                   className={cn(
-                    "px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-background transition-all flex items-center justify-center gap-2 active:scale-[0.97] shadow-cta",
+                    "px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97] shadow-cta",
                     isOverCapacity 
                       ? "bg-muted/60 text-muted-foreground cursor-not-allowed" 
-                      : "bg-foreground/90 hover:bg-brand-600 shadow-cta hover:shadow-cta"
+                      : "bg-foreground/90 hover:bg-primary/90 shadow-cta hover:shadow-cta"
                   )}
                 >
                   {isOverCapacity ? 'Ajuste la Busqueda' : 'Reservar'} <ArrowRight size={16} strokeWidth={2.5} />
@@ -417,10 +404,10 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                 disabled={isOverCapacity}
                 onClick={handleCheckout}
                 className={cn(
-                  "px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-background transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
+                  "px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
                   isOverCapacity 
                     ? "bg-muted/60 text-muted-foreground cursor-not-allowed" 
-                    : "bg-foreground/90 hover:bg-brand-600 shadow-cta hover:shadow-cta"
+                    : "bg-foreground/90 hover:bg-primary/90 shadow-cta hover:shadow-cta"
                 )}
               >
                 {isOverCapacity ? 'Ajuste' : 'Reservar'} <ArrowRight size={16} strokeWidth={2.5} />

@@ -67,7 +67,7 @@ export default function StickySubNav({ sections }: StickySubNavProps) {
       ref={navRef}
       className={`sticky top-0 z-[var(--z-sticky)] transition-all duration-300 ${
         scrolled
-          ? 'shadow-lg shadow-black/5 glass-panel !rounded-none'
+          ? 'shadow-lg shadow-elev-1 glass-panel !rounded-none'
           : 'bg-transparent'
       }`}
     >

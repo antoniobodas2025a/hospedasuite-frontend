@@ -211,7 +211,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
           disabled={isPending}
           whileTap={{ scale: 0.97 }}
           transition={springSnappy()}
-          className="w-full bg-primary hover:bg-brand-700 text-primary-foreground font-bold py-4 rounded-[var(--radius-squircle-md)] transition-all flex items-center justify-center gap-2 shadow-md shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+          className="w-full bg-primary hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-[var(--radius-squircle-md)] transition-all flex items-center justify-center gap-2 shadow-md shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
         >
           {isPending ? (
             <>

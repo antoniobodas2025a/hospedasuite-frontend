@@ -287,7 +287,7 @@ export default function AvailabilitySearchBar() {
                     onClick={handleApplyGuests}
                     whileTap={{ scale: 0.96 }}
                     transition={springSnappy()}
-                    className="w-full bg-foreground hover:bg-brand-600 text-primary-foreground font-bold py-4 rounded-[var(--radius-squircle-2xl)] transition-all shadow-md"
+                    className="w-full bg-foreground hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-[var(--radius-squircle-2xl)] transition-all shadow-md"
                   >
                     Aplicar y Buscar
                   </motion.button>

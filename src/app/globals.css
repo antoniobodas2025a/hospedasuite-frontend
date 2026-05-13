@@ -350,6 +350,11 @@
   --trust-muted: oklch(0.92 0.03 250);
   --trust-border: oklch(0.82 0.06 250);
 
+  /* Status foreground tokens for readable text on status backgrounds */
+  --success-foreground: oklch(0.22 0.05 145);
+  --warning-foreground: oklch(0.22 0.05 75);
+  --urgent-foreground: oklch(0.97 0.02 75);
+
   /* Light mode — warm linen background */
   --background: oklch(0.96 0.02 75);
   --foreground: oklch(0.32 0.10 28);
@@ -383,6 +388,14 @@
   --sidebar-accent-foreground: oklch(0.32 0.10 28);
   --sidebar-border: oklch(0.90 0.02 75);
   --sidebar-ring: oklch(0.52 0.18 35);
+
+  /* Glass visibility overrides for OTA light mode */
+  --glass-light-surface: oklch(from var(--card) l c h / 0.72);
+  --glass-light-border: oklch(from var(--border) l c h / 0.40);
+  --glass-heavy-surface: oklch(from var(--card) l c h / 0.55);
+  --glass-heavy-border: oklch(from var(--border) l c h / 0.35);
+  --glass-pill-surface: oklch(from var(--card) l c h / 0.85);
+  --glass-pill-border: oklch(from var(--border) l c h / 0.45);
 }
 
 [data-theme="ota"].dark {

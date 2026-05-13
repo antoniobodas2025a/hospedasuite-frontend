@@ -369,14 +369,14 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
             <>
               <button
                 onClick={prevMobile}
-                className="absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center hover:bg-white transition-colors z-10 active:scale-90"
+                className="absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
                 aria-label="Foto anterior"
               >
                 <ChevronLeft size={20} className="text-foreground" />
               </button>
               <button
                 onClick={nextMobile}
-                className="absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-white/90 shadow-lg flex items-center justify-center hover:bg-white transition-colors z-10 active:scale-90"
+                className="absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
                 aria-label="Siguiente foto"
               >
                 <ChevronRight size={20} className="text-foreground" />

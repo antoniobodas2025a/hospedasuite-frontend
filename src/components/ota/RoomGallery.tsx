@@ -194,7 +194,7 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
         <button
           type="button"
           onClick={() => { setIndex(0); setOpen(true); }}
-          className="relative block h-[260px] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-black/10 group cursor-pointer"
+          className="relative block h-[260px] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
           aria-label={`Ver galería de ${roomName}`}
         >
           <Image

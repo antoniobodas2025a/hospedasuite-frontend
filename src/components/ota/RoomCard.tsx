@@ -95,27 +95,27 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
           {/* Badges superpuestos — Semantic status colors */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">
             {isBestValue && (
-              <div className="bg-success text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <div className="bg-success text-success-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
                 <Award size={12} /> Mejor Valor
               </div>
             )}
             {isGreatDeal && (
-              <div className="bg-brand-500 text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <div className="bg-brand-500 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
                 <Star size={12} className="fill-white" /> Oferta
               </div>
             )}
             {isPopular && (
-              <div className="bg-warning text-white text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <div className="bg-warning text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
                 <TrendingUp size={12} /> Mas Popular
               </div>
             )}
             {isAlmostGone && (
-              <div className="bg-urgent text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <div className="bg-urgent text-urgent-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
                 <Flame size={12} className="fill-white" /> Solo {availableCount} disponible{availableCount > 1 ? 's' : ''}
               </div>
             )}
             {isLowStock && !isAlmostGone && (
-              <div className="bg-warning/80 text-white text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <div className="bg-warning/80 text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
                 <TrendingUp size={12} /> Alta Demanda
               </div>
             )}
@@ -195,7 +195,7 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
                 className={cn(
                   "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md",
                   isSearchingDates 
-                    ? "bg-primary hover:bg-brand-800 text-primary-foreground shadow-cta" 
+                    ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta" 
                     : "bg-foreground hover:bg-primary text-background"
                 )}
               >

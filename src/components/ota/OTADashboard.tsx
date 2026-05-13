@@ -93,7 +93,7 @@ export default function OTADashboard({
         <div className='max-w-7xl mx-auto px-4 h-20 flex items-center justify-between'>
           <div className='flex items-center gap-3'>
             <div className='relative w-10 h-10'>
-              <div className='w-full h-full bg-brand-600 rounded-[var(--radius-squircle-md)] flex items-center justify-center text-white font-bold'>
+              <div className='w-full h-full bg-brand-600 rounded-[var(--radius-squircle-md)] flex items-center justify-center text-primary-foreground font-bold'>
                 H
               </div>
             </div>
@@ -136,7 +136,7 @@ export default function OTADashboard({
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
-              <button className='bg-foreground text-background px-6 py-2 rounded-full font-medium hover:bg-brand-800 transition-colors'>
+              <button className='bg-foreground text-background px-6 py-2 rounded-full font-medium hover:bg-primary/90 transition-colors'>
                 Buscar
               </button>
             </div>
@@ -152,7 +152,7 @@ export default function OTADashboard({
               className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all duration-300 ${
                 activeCategory === cat.id
                   ? 'bg-foreground text-background shadow-lg scale-105'
-                  : 'bg-card text-brand-600 hover:bg-brand-50 border border-border'
+                  : 'bg-card text-brand-600 hover:bg-accent border border-border'
               }`}
             >
               <cat.icon size={16} />
@@ -197,7 +197,7 @@ export default function OTADashboard({
             <button
               onClick={loadMoreHotels}
               disabled={isLoadingMore}
-              className='flex items-center gap-2 px-8 py-4 bg-card border border-border rounded-full text-brand-600 font-bold hover:shadow-xl hover:bg-brand-50 transition-all disabled:opacity-50'
+              className='flex items-center gap-2 px-8 py-4 bg-card border border-border rounded-full text-brand-600 font-bold hover:shadow-xl hover:bg-accent transition-all disabled:opacity-50'
             >
               {isLoadingMore ? (
                 <>
