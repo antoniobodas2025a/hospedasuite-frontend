@@ -54,7 +54,7 @@ function DisclosureSection({
           <Icon className={iconColor} />
           <div className="text-left">
             <h3 className="text-xl font-bold">{title}</h3>
-            {description && <p className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">{description}</p>}
+            {description && <div className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">{description}</div>}
           </div>
         </div>
         <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
