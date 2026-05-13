@@ -77,13 +77,13 @@
   --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.1);
 
   /* Glassmorphism 2.0 — material stack levels */
-  /* Glassmorphism 2.0 — Dark mode variants */
-  --glass-light-surface-dark: rgba(24,24,27,0.40);
-  --glass-light-border-dark: rgba(255,255,255,0.05);
-  --glass-heavy-surface-dark: rgba(9,9,11,0.80);
-  --glass-heavy-border-dark: rgba(255,255,255,0.10);
-  --glass-pill-surface-dark: rgba(24,24,27,0.60);
-  --glass-pill-border-dark: rgba(255,255,255,0.08);
+  /* Glassmorphism 2.0 — Dark mode variants (Océano Profundo navy palette) */
+  --glass-light-surface-dark: oklch(0.22 0.04 255 / 0.55);
+  --glass-light-border-dark: oklch(0.32 0.06 255 / 0.25);
+  --glass-heavy-surface-dark: oklch(0.14 0.03 258 / 0.75);
+  --glass-heavy-border-dark: oklch(0.28 0.04 255 / 0.30);
+  --glass-pill-surface-dark: oklch(0.18 0.04 258 / 0.65);
+  --glass-pill-border-dark: oklch(0.28 0.04 255 / 0.20);
 
   /* Glassmorphism 2.0 — Light mode (default) */
   --glass-light-surface: rgba(255,255,255,0.40);
