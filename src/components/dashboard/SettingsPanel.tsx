@@ -550,7 +550,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                       <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Check-in</label>
                       <input
                         {...register('check_in_time')}
-                        placeholder="15:00"
+                        type="time"
                         className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-sm text-center font-mono"
                       />
                     </div>
@@ -558,7 +558,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                       <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Check-out</label>
                       <input
                         {...register('check_out_time')}
-                        placeholder="13:00"
+                        type="time"
                         className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-sm text-center font-mono"
                       />
                     </div>

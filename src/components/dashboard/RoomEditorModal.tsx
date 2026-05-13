@@ -11,23 +11,14 @@ import { saveRoomAction } from '@/app/actions/inventory';
 import { motion } from 'framer-motion';
 import { createClient } from '@supabase/supabase-js';
 import { cn } from '@/lib/utils';
-import { 
-  X, Trash2, Wifi, Tv, Wind, Bath, 
-  Car, Coffee, Copy, RefreshCw, Image as ImageIcon, Building2, Plus, UploadCloud, Loader2
+import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
+import {
+  X, Trash2, Copy, RefreshCw, Image as ImageIcon, Building2, Plus, UploadCloud, Loader2
 } from 'lucide-react';
 
 // ==========================================
 // BLOQUE 1: CONSTANTES Y TIPADOS
 // ==========================================
-
-const AVAILABLE_AMENITIES = [
-  { id: 'wifi', label: 'Wi-Fi 6', icon: Wifi },
-  { id: 'tv', label: 'Smart TV', icon: Tv },
-  { id: 'ac', label: 'Climatización', icon: Wind },
-  { id: 'jacuzzi', label: 'Jacuzzi', icon: Bath },
-  { id: 'parking', label: 'Parqueadero', icon: Car },
-  { id: 'minibar', label: 'Minibar', icon: Coffee },
-];
 
 interface RoomEditorModalProps {
   hotelId: string;
@@ -224,7 +215,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                 <div>
                   <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Comodidades</h3>
                   <div className="flex flex-wrap gap-2">
-                    {AVAILABLE_AMENITIES.map((amenity) => (
+                    {Object.values(ROOM_AMENITY_REGISTRY).map((amenity) => (
                       <button type="button" key={amenity.id} onClick={() => toggleAmenity(amenity.id)} className={cn("flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-lg)] border text-[11px] font-medium transition-all", currentAmenities.includes(amenity.id) ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground")}>
                         <amenity.icon className="size-3.5" /> {amenity.label}
                       </button>

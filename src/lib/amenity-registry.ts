@@ -1,4 +1,4 @@
-import { Wifi, Car, Waves, Coffee, Star, Snowflake, Tv, Dumbbell, Utensils, Wine, Bath, Mountain, Palmtree, Shield, Phone, CreditCard, Luggage, Key } from 'lucide-react';
+import { Wifi, Car, Waves, Coffee, Star, Snowflake, Tv, Dumbbell, Utensils, Wine, Bath, Mountain, Palmtree, Shield, Phone, CreditCard, Luggage, Key, Flame, Sun, Droplets, BedDouble, Wind } from 'lucide-react';
 
 // ============================================================================
 // AMENITY REGISTRY — Fuente unica de verdad para amenidades del hotel
@@ -50,4 +50,118 @@ export function getAmenityLabel(id: string): string {
 
 export function getAmenityIcon(id: string): React.ElementType {
   return AMENITY_REGISTRY[id]?.icon || DEFAULT_AMENITY.icon;
+}
+
+// ============================================================================
+// ROOM AMENITY REGISTRY — Fuente unica de verdad para amenidades de habitacion
+//
+// Usado por:
+// - RoomEditorModal.tsx (seleccion de comodidades)
+// - RoomFilters.tsx (filtros de amenidades OTA)
+// - RoomComparison.tsx (tabla comparativa OTA)
+// - RoomCard.tsx (badges de storytelling OTA)
+// - RoomShowcaseModal.tsx (amenity glass OTA)
+// - onboarding/page.tsx (wizard de aprovisionamiento)
+//
+// Para agregar una nueva amenidad de habitacion:
+// 1. Agregar entrada aqui con id, label, icon
+// 2. Opcional: agregar storyTitle y storyDescription para OTA storytelling
+// ============================================================================
+
+export interface RoomAmenityDefinition {
+  id: string;
+  label: string;
+  icon: React.ElementType;
+  storyTitle?: string;
+  storyDescription?: string;
+}
+
+export const ROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
+  wifi: {
+    id: 'wifi',
+    label: 'Wi-Fi Gratis',
+    icon: Wifi,
+    storyTitle: 'Conexion Ininterrumpida',
+    storyDescription: 'Alta velocidad mediante fibra optica para mantenerse conectado o desconectar bajo sus propios terminos.',
+  },
+  tv: {
+    id: 'tv',
+    label: 'TV Pantalla Plana',
+    icon: Tv,
+    storyTitle: 'Entretenimiento Premium',
+    storyDescription: 'Pantalla de alta definicion con contenido bajo demanda para sus noches de descanso.',
+  },
+  ac: {
+    id: 'ac',
+    label: 'Climatizacion',
+    icon: Snowflake,
+    storyTitle: 'Climatizacion Perfecta',
+    storyDescription: 'Control termico de precision para ignorar el frio de la montana o el calor de la tarde.',
+  },
+  jacuzzi: {
+    id: 'jacuzzi',
+    label: 'Jacuzzi',
+    icon: Bath,
+    storyTitle: 'Burbujas de Relajacion',
+    storyDescription: 'Sumerja sus sentidos en hidromasaje privado con vistas inigualables al valle.',
+  },
+  parking: {
+    id: 'parking',
+    label: 'Parqueadero',
+    icon: Car,
+  },
+  minibar: {
+    id: 'minibar',
+    label: 'Minibar',
+    icon: Coffee,
+    storyTitle: 'Minibar de Autor',
+    storyDescription: 'Una seleccion curada de sabores locales lista para ser descubierta a su llegada.',
+  },
+  chimenea: {
+    id: 'chimenea',
+    label: 'Chimenea',
+    icon: Flame,
+    storyTitle: 'Fuego Procer',
+    storyDescription: 'Chimenea real de lena para calentar conversaciones y revivir la nostalgia boyacense.',
+  },
+  techo_panoramico: {
+    id: 'techo_panoramico',
+    label: 'Techo Panoramico',
+    icon: Sun,
+    storyTitle: 'Cielo de Plata',
+    storyDescription: 'Visualizacion directa a la Via Lactea desde la comodidad absoluta de su domo.',
+  },
+  ducha_lluvia: {
+    id: 'ducha_lluvia',
+    label: 'Ducha Lluvia',
+    icon: Droplets,
+    storyTitle: 'Ducha Sensorial',
+    storyDescription: 'Arquitectura hidrica disenada para simular una lluvia constante de alta presion.',
+  },
+  cama_premium: {
+    id: 'cama_premium',
+    label: 'Cama Premium',
+    icon: BedDouble,
+    storyTitle: 'Santuario de Hilos',
+    storyDescription: 'Ropa de cama de alta calidad para un descanso reparador entre montanas.',
+  },
+  balcon: {
+    id: 'balcon',
+    label: 'Balcon',
+    icon: Mountain,
+  },
+};
+
+export const DEFAULT_ROOM_AMENITY: RoomAmenityDefinition = { id: 'default', label: 'Amenidad', icon: Star };
+
+export function getRoomAmenityById(id: string): RoomAmenityDefinition {
+  return ROOM_AMENITY_REGISTRY[id] || DEFAULT_ROOM_AMENITY;
+}
+
+export function getRoomAmenityLabel(id: string): string {
+  return ROOM_AMENITY_REGISTRY[id]?.label || id;
+}
+
+export function getRoomAmenityIcon(id: string): React.ElementType {
+  return ROOM_AMENITY_REGISTRY[id]?.icon || DEFAULT_ROOM_AMENITY.icon;
 }

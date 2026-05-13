@@ -4,26 +4,18 @@ import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { 
   Building2, UploadCloud, Plus, Trash2, Loader2, ArrowRight, 
-  CheckCircle2, AlertCircle, Wifi, Wind, Bath, Tv, Coffee, 
+  CheckCircle2, AlertCircle,
   Image as ImageIcon, CalendarDays
 } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/utils/supabase/client';
 import WompiButton from '@/components/payments/WompiButton';
+import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 
 // 📅 LIBRERÍAS DE CALENDARIO (TIER-1)
 import { DayPicker, DateRange } from 'react-day-picker';
 import { es } from 'date-fns/locale';
 import 'react-day-picker/dist/style.css'; 
-
-// --- DICCIONARIO DE AMENITIES ---
-const AMENITY_OPTIONS = [
-  { id: 'wifi', label: 'Wi-Fi 6', icon: Wifi },
-  { id: 'ac', label: 'Climatización', icon: Wind },
-  { id: 'jacuzzi', label: 'Jacuzzi', icon: Bath },
-  { id: 'tv', label: 'Smart TV', icon: Tv },
-  { id: 'minibar', label: 'Minibar', icon: Coffee }
-];
 
 interface RoomTemplate {
   id: string;
@@ -322,7 +314,7 @@ export default function PremiumOnboardingWizard() {
                           <div className="space-y-3">
                             <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Comodidades (Amenities)</p>
                             <div className="flex flex-wrap gap-2">
-                              {AMENITY_OPTIONS.map(amenity => {
+                              {Object.values(ROOM_AMENITY_REGISTRY).map(amenity => {
                                 const isActive = room.amenities.includes(amenity.id);
                                 const Icon = amenity.icon;
                                 return (

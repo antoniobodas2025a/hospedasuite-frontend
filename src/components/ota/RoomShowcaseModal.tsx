@@ -4,7 +4,7 @@ import React, { useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { 
   X, ArrowRight, Users, Calendar, 
-  Wifi, Coffee, Wind, Bath, Flame, Droplets, Sun, Star,
+  Star,
   Info, ClipboardList, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -13,25 +13,13 @@ import { es } from 'date-fns/locale';
 import type { Room, GalleryItem } from '@/types';
 import { GlassCard } from '@/components/ui/glass';
 import RoomGallery from './RoomGallery';
+import { getRoomAmenityById } from '@/lib/amenity-registry';
 
 interface HotelForModal {
   slug: string;
   name?: string;
   rooms?: Array<Partial<Room> & { price_per_night?: number }>;
 }
-
-// ============================================================================
-// DICCIONARIO DE STORYTELLING EDITABLE
-// ============================================================================
-const AMENITY_TEMPLATES: Record<string, { icon: React.ElementType, title: string, story: string }> = {
-  'wifi': { icon: Wifi, title: 'Conexion Ininterrumpida', story: 'Alta velocidad mediante fibra optica para mantenerse conectado o desconectar bajo sus propios terminos.' },
-  'minibar': { icon: Coffee, title: 'Minibar de Autor', story: 'Una seleccion curada de sabores locales lista para ser descubierta a su llegada.' },
-  'ac': { icon: Wind, title: 'Climatizacion Perfecta', story: 'Control termico de precision para ignorar el frio de la montana o el calor de la tarde.' },
-  'jacuzzi': { icon: Bath, title: 'Burbujas de Relajacion', story: 'Sumerja sus sentidos en hidromasaje privado con vistas inigualables al valle.' },
-  'chimenea': { icon: Flame, title: 'Fuego Procer', story: 'Chimenea real de lena para calentar conversaciones y revivir la nostalgia boyacense.' },
-  'ducha_lluvia': { icon: Droplets, title: 'Ducha Sensorial', story: 'Arquitectura hidrica disenada para simular una lluvia constante de alta presion.' },
-  'techo_panoramico': { icon: Sun, title: 'Cielo de Plata', story: 'Visualizacion directa a la Via Lactea desde la comodidad absoluta de su domo.' }
-};
 
 // GlassCard imported from @/components/ui/glass (design system, theme-aware)
 
@@ -178,11 +166,10 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                     <div className="grid grid-cols-1 xl:grid-cols-2 gap-1">
                       {room.amenities.map((amenity: string | { id: string; details?: string }, idx: number) => {
                         const id = typeof amenity === 'string' ? amenity : amenity.id;
-                        const template = AMENITY_TEMPLATES[id] || { 
-                          icon: Star, 
-                          title: typeof amenity === 'string' ? amenity.toUpperCase() : amenity.details, 
-                          story: "Servicio premium garantizado por HospedaSuite." 
-                        };
+                        const entry = getRoomAmenityById(id);
+                        const template = entry.storyTitle
+                          ? { icon: entry.icon, title: entry.storyTitle, story: entry.storyDescription || 'Servicio premium garantizado por HospedaSuite.' }
+                          : { icon: entry.icon, title: entry.label.toUpperCase(), story: 'Servicio premium garantizado por HospedaSuite.' };
                         return (
                           <AmenityGlass
                             key={idx}
@@ -323,11 +310,10 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                   <div className="grid grid-cols-1 gap-1">
                     {room.amenities.map((amenity: string | { id: string; details?: string }, idx: number) => {
                       const id = typeof amenity === 'string' ? amenity : amenity.id;
-                      const template = AMENITY_TEMPLATES[id] || { 
-                        icon: Star, 
-                        title: typeof amenity === 'string' ? amenity.toUpperCase() : amenity.details, 
-                        story: "Servicio premium garantizado por HospedaSuite." 
-                      };
+                        const entry = getRoomAmenityById(id);
+                        const template = entry.storyTitle
+                          ? { icon: entry.icon, title: entry.storyTitle, story: entry.storyDescription || 'Servicio premium garantizado por HospedaSuite.' }
+                          : { icon: entry.icon, title: entry.label.toUpperCase(), story: 'Servicio premium garantizado por HospedaSuite.' };
                       return (
                         <AmenityGlass
                           key={idx}

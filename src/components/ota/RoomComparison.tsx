@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Check, X, ChevronDown, ChevronUp } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 
 // ============================================================================
 // ROOM COMPARISON TABLE — Tabla comparativa de habitaciones
@@ -23,17 +24,6 @@ interface RoomComparisonProps {
     size_sqm?: number;
   }>;
 }
-
-const ALL_AMENITIES = [
-  { id: 'chimenea', label: 'Chimenea' },
-  { id: 'techo_panoramico', label: 'Techo Panoramico' },
-  { id: 'ducha_lluvia', label: 'Ducha Sensorial' },
-  { id: 'cama_premium', label: 'Cama Premium' },
-  { id: 'wifi', label: 'Wi-Fi' },
-  { id: 'minibar', label: 'Minibar' },
-  { id: 'balcon', label: 'Balcon' },
-  { id: 'jacuzzi', label: 'Jacuzzi' },
-];
 
 export default function RoomComparison({ rooms }: RoomComparisonProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -91,7 +81,7 @@ export default function RoomComparison({ rooms }: RoomComparisonProps) {
                 </tr>
 
                 {/* Amenidades */}
-                {ALL_AMENITIES.map((amenity) => (
+                {Object.values(ROOM_AMENITY_REGISTRY).map((amenity) => (
                   <tr key={amenity.id} className="border-b border-border/20">
                     <td className="py-3 px-4 text-muted-foreground font-medium">{amenity.label}</td>
                     {rooms.map((room) => {

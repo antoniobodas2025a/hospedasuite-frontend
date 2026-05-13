@@ -3,6 +3,7 @@
 import React, { useState, useMemo } from 'react';
 import { SlidersHorizontal, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 
 interface RoomFiltersProps {
   rooms: RoomItem[];
@@ -17,13 +18,6 @@ interface RoomItem {
   capacity?: number;
   amenities?: string[];
 }
-
-const AMENITY_FILTERS = [
-  { id: 'chimenea', label: 'Chimenea' },
-  { id: 'techo_panoramico', label: 'Techo Panoramico' },
-  { id: 'ducha_lluvia', label: 'Ducha Lluvia' },
-  { id: 'cama_premium', label: 'Cama Premium' },
-];
 
 export default function RoomFilters({ rooms, onFilterChange }: RoomFiltersProps) {
   const [isOpen, setIsOpen] = useState(false);
@@ -151,7 +145,7 @@ export default function RoomFilters({ rooms, onFilterChange }: RoomFiltersProps)
               Amenidades
             </label>
             <div className="flex flex-wrap gap-2">
-              {AMENITY_FILTERS.map((amenity) => (
+              {Object.values(ROOM_AMENITY_REGISTRY).map((amenity) => (
                 <button
                   key={amenity.id}
                   onClick={() => toggleAmenity(amenity.id)}

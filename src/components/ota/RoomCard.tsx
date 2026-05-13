@@ -6,16 +6,9 @@ import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
-import { Users, ArrowRight, ShieldCheck, Flame, Sun, Droplets, BedDouble, Star, TrendingUp, Award } from 'lucide-react';
+import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
-
-// Diccionario de Persuasion
-const STORY_AMENITIES: Record<string, { icon: React.ElementType, title: string }> = {
-  'chimenea': { icon: Flame, title: 'Fuego Procer' },
-  'techo_panoramico': { icon: Sun, title: 'Boveda Celeste' },
-  'ducha_lluvia': { icon: Droplets, title: 'Ducha Sensorial' },
-  'cama_premium': { icon: BedDouble, title: 'Santuario de Hilos' },
-};
+import { getRoomAmenityById } from '@/lib/amenity-registry';
 
 interface RoomCardProps {
   room: any;
@@ -140,12 +133,12 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
             <div className="flex flex-wrap gap-2 mb-6">
               {room.amenities?.slice(0, 2).map((amenity: any, idx: number) => {
                 const id = typeof amenity === 'string' ? amenity : amenity.id;
-                const story = STORY_AMENITIES[id];
-                if (!story) return null;
-                const Icon = story.icon;
+                const entry = getRoomAmenityById(id);
+                if (!entry.storyTitle) return null;
+                const Icon = entry.icon;
                 return (
                   <div key={idx} className="flex items-center gap-1.5 bg-brand-50/50 text-brand-700 border border-brand-100/50 px-2.5 py-1 rounded-[var(--radius-squircle-md)] text-xs font-medium">
-                    <Icon size={14} /> {story.title}
+                    <Icon size={14} /> {entry.storyTitle}
                   </div>
                 );
               })}
