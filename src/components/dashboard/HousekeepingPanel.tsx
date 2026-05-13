@@ -53,7 +53,7 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {dirtyRooms.map(room => (
-              <div key={room.id} className="group relative overflow-hidden p-6 bg-zinc-900/40 border border-rose-500/20 rounded-[var(--radius-squircle-3xl)] flex justify-between items-center transition-all hover:bg-zinc-900/60 shadow-2xl shadow-rose-500/5">
+              <div key={room.id} className="group relative overflow-hidden p-6 glass-card border border-rose-500/20 flex justify-between items-center transition-all hover:bg-white/10 shadow-2xl shadow-rose-500/5">
                 <div>
                   <h4 className="text-2xl font-bold text-zinc-100 tracking-tighter">{room.name}</h4>
                   <div className="flex items-center gap-2 mt-1">
@@ -96,7 +96,7 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
                 className={cn(
                   "p-4 rounded-[1.5rem] border transition-all flex flex-col gap-4",
                   isDirty ? "bg-rose-500/5 border-rose-500/20" : 
-                  isAvailable ? "bg-zinc-900/40 border-white/5" :
+                  isAvailable ? "glass-card" :
                   "bg-indigo-500/5 border-indigo-500/20"
                 )}
               >

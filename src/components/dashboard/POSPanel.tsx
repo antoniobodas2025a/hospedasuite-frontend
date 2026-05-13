@@ -81,7 +81,7 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
         ) : (
           <>
             {/* Navegación de Categorías (Neón Tab) */}
-            <div className='px-6 py-4 flex gap-2 overflow-x-auto border-b border-white/5 bg-zinc-950/20 hide-scrollbar'>
+            <div className='px-6 py-4 flex gap-2 overflow-x-auto border-b border-white/5 glass-card !rounded-none hide-scrollbar'>
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
@@ -90,7 +90,7 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
                     "px-5 py-2 rounded-[var(--radius-squircle-lg)] text-xs font-bold transition-all duration-300 whitespace-nowrap border",
                     activeCategory === cat 
                       ? "bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-500/20" 
-                      : "bg-zinc-900/50 text-zinc-500 border-white/5 hover:text-zinc-300 hover:bg-zinc-800"
+                      : "glass-card text-zinc-500 hover:text-zinc-300 hover:bg-white/10"
                   )}
                 >
                   {cat}
@@ -109,7 +109,7 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
                     animate={{ opacity: 1, scale: 1 }}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => onAddToCart(item)}
-                    className='bg-zinc-900/40 border border-white/5 hover:border-indigo-500/30 p-5 rounded-[1.8rem] flex flex-col items-center gap-4 text-center transition-all group relative overflow-hidden shadow-xl'
+                    className='glass-card p-5 flex flex-col items-center gap-4 text-center transition-all group relative overflow-hidden shadow-xl hover:border-indigo-500/30'
                   >
                     <div className="absolute -right-4 -top-4 size-20 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
                     <div className='text-5xl group-hover:scale-110 transition-transform duration-500 z-10'>{item.image_emoji}</div>
@@ -154,7 +154,7 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
                   animate={{ opacity: 1, x: 0 }} 
                   exit={{ opacity: 0, scale: 0.9 }}
                   key={item.id} 
-                  className='flex justify-between items-center p-4 bg-zinc-900/30 border border-white/5 rounded-[var(--radius-squircle-2xl)] shadow-lg'
+                  className='flex justify-between items-center p-4 glass-card shadow-lg'
                 >
                   <div className='flex items-center gap-3'>
                     <span className='text-2xl'>{item.image_emoji}</span>

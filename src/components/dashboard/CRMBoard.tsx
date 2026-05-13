@@ -75,7 +75,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                 <h3 className='font-bold uppercase text-[10px] tracking-ultra'>
                   {col.label}
                 </h3>
-                <span className='bg-zinc-950/50 px-2.5 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-mono font-bold text-zinc-400 border border-white/5'>
+                <span className='glass-card px-2.5 py-1 text-[10px] font-mono font-bold text-zinc-400'>
                   {leads.filter((l) => l.status === col.id).length}
                 </span>
               </div>
@@ -112,7 +112,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                         )}
 
                         {lead.notes && (
-                          <p className='text-[10px] leading-relaxed text-zinc-500 bg-zinc-950/50 p-3 rounded-[var(--radius-squircle-lg)] mb-4 line-clamp-2 italic'>
+                          <p className='text-[10px] leading-relaxed text-zinc-500 glass-card p-3 mb-4 line-clamp-2 italic'>
                             "{lead.notes}"
                           </p>
                         )}

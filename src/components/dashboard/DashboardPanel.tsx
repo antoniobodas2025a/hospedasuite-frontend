@@ -109,7 +109,7 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
           </p>
         </div>
 
-        <div className="bg-zinc-950/80 px-6 py-3 rounded-[var(--radius-squircle-2xl)] border border-white/5 flex items-center gap-4 shadow-inner">
+        <div className="glass-card px-6 py-3 flex items-center gap-4 shadow-inner">
           <Clock className="size-5 text-indigo-500 stroke-[1.5]" />
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Hora Local</span>
@@ -209,11 +209,11 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
             </div>
             
             <div className="space-y-3">
-              <div className="flex justify-between items-center bg-zinc-950/50 p-3 rounded-[var(--radius-squircle-lg)] border border-white/5">
+              <div className="flex justify-between items-center glass-card p-3">
                 <span className="text-xs text-zinc-400 font-medium">A Habitación</span>
                 <span className="font-mono text-sm font-bold text-sky-400">${metrics.totalPosRevenue.toLocaleString('es-CO')}</span>
               </div>
-              <div className="flex justify-between items-center bg-zinc-950/50 p-3 rounded-[var(--radius-squircle-lg)] border border-white/5">
+              <div className="flex justify-between items-center glass-card p-3">
                 <span className="text-xs text-zinc-400 font-medium">Mostrador</span>
                 <span className="font-mono text-sm font-bold text-emerald-400">${metrics.totalWalkInRevenue.toLocaleString('es-CO')}</span>
               </div>

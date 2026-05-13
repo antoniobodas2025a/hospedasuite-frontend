@@ -225,7 +225,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                   <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Comodidades</h3>
                   <div className="flex flex-wrap gap-2">
                     {AVAILABLE_AMENITIES.map((amenity) => (
-                      <button type="button" key={amenity.id} onClick={() => toggleAmenity(amenity.id)} className={cn("flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-lg)] border text-[11px] font-medium transition-all", currentAmenities.includes(amenity.id) ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-white/5 bg-zinc-900/30 text-zinc-500")}>
+                      <button type="button" key={amenity.id} onClick={() => toggleAmenity(amenity.id)} className={cn("flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-lg)] border text-[11px] font-medium transition-all", currentAmenities.includes(amenity.id) ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-300")}>
                         <amenity.icon className="size-3.5" /> {amenity.label}
                       </button>
                     ))}

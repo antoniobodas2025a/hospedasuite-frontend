@@ -76,7 +76,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
         
         {/* Card: Ingresos */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, ease: [0.23, 1, 0.32, 1] }} 
-          className='bg-zinc-900/80 rounded-[var(--radius-squircle-2xl)] p-6 border border-zinc-800/60 shadow-xl relative overflow-hidden group'>
+          className='glass-card p-6 border border-white/5 shadow-xl relative overflow-hidden group'>
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors duration-500"></div>
           <div className="relative z-10">
             <div className='flex items-center gap-3 mb-4'>
@@ -94,7 +94,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
 
         {/* Card: Ocupación */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, ease: [0.23, 1, 0.32, 1] }} 
-          className='bg-zinc-900/80 rounded-[var(--radius-squircle-2xl)] p-6 border border-zinc-800/60 shadow-xl relative overflow-hidden group'>
+          className='glass-card p-6 border border-white/5 shadow-xl relative overflow-hidden group'>
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-colors duration-500"></div>
           <div className="relative z-10">
             <div className='flex items-center gap-3 mb-4'>
@@ -114,7 +114,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
 
         {/* Card: Reservas */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, ease: [0.23, 1, 0.32, 1] }} 
-          className='bg-zinc-900/80 rounded-[var(--radius-squircle-2xl)] p-6 border border-zinc-800/60 shadow-xl relative overflow-hidden group'>
+          className='glass-card p-6 border border-white/5 shadow-xl relative overflow-hidden group'>
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl group-hover:bg-sky-500/20 transition-colors duration-500"></div>
           <div className="relative z-10">
             <div className='flex items-center gap-3 mb-4'>
@@ -172,7 +172,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
             ) : (
               stats.upcomingArrivals.map((booking) => (
                 <div key={booking.id} 
-                  className='bg-zinc-900/50 border border-zinc-800/50 rounded-[var(--radius-squircle-lg)] p-3.5 hover:bg-zinc-800/80 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between group cursor-default'>
+                  className='glass-card p-3.5 hover:bg-white/10 hover:border-white/10 transition-all duration-300 flex items-center justify-between group cursor-default'>
                   <div className="min-w-0 pr-2">
                     <p className='font-medium text-sm text-zinc-200 group-hover:text-white transition-colors truncate'>
                       {booking.guests?.[0]?.full_name || 'Huésped no registrado'}

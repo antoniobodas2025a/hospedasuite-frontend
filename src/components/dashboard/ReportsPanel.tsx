@@ -57,7 +57,7 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
 
         <div className='flex flex-wrap items-center gap-4 w-full lg:w-auto'>
           {/* Selector de Rango Temporal (Liquid Tabs) */}
-          <div className='flex bg-zinc-950/60 p-1.5 rounded-[var(--radius-squircle-2xl)] border border-white/5'>
+          <div className='flex glass-pill p-1.5'>
             {['month', 'year', 'all'].map((range) => (
               <button
                 key={range}

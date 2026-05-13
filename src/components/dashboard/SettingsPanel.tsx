@@ -336,7 +336,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                   <h3 className="text-xl font-bold flex items-center gap-3 mb-[var(--space-focus)]"><UtensilsCrossed className="text-indigo-400"/> Amenidades</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-[var(--space-focus)]">
                     {HOTEL_AMENITIES.map((am) => (
-                      <button type="button" key={am.id} onClick={() => toggleAmenity(am.id)} className={cn("p-6 rounded-[var(--radius-squircle-3xl)] border text-[10px] font-bold uppercase flex flex-col items-center gap-4 transition-all", currentAmenities.includes(am.id) ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-300" : "border-white/5 bg-zinc-950/30 text-zinc-600")}>
+                      <button type="button" key={am.id} onClick={() => toggleAmenity(am.id)} className={cn("p-6 rounded-[var(--radius-squircle-3xl)] border text-[10px] font-bold uppercase flex flex-col items-center gap-4 transition-all", currentAmenities.includes(am.id) ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-300" : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-300")}>
                         <am.icon size={24} /> {am.label}
                       </button>
                     ))}
@@ -687,7 +687,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                 </div>
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {localStaff.map((p) => (
-                    <div key={p.id} className="flex justify-between items-center p-5 bg-zinc-950/80 border border-white/5 rounded-[var(--radius-squircle-xl)] hover:bg-zinc-950 transition-all">
+                    <div key={p.id} className="flex justify-between items-center p-5 bg-white/5 border border-white/10 rounded-[var(--radius-squircle-xl)] hover:bg-white/10 transition-all">
                       <div className="flex items-center gap-4"><div className="size-10 rounded-[var(--radius-squircle-lg)] bg-zinc-800 flex items-center justify-center text-xs font-bold">{p.name.charAt(0)}</div><div><p className="font-bold">{p.name}</p><p className="text-[10px] opacity-50 uppercase tracking-tighter">{p.role}</p></div></div>
                       <button type="button" onClick={() => handleDeleteStaff(p.id)} className="p-3 text-zinc-700 hover:text-rose-400 hover:bg-rose-500/10 rounded-[var(--radius-squircle-lg)]"><Trash2 size={20}/></button>
                     </div>
