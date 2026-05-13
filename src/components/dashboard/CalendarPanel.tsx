@@ -22,8 +22,8 @@ const CalendarCell = ({ dateStr, roomId, children }: { dateStr: string, roomId: 
     <div 
       ref={setNodeRef} 
       className={cn(
-        "flex-1 min-w-[100px] h-16 border-r border-white/5 border-b relative p-1 transition-colors",
-        isOver ? "bg-indigo-500/20 ring-2 ring-inset ring-indigo-400/50" : "hover:bg-white/[0.02]"
+        "flex-1 min-w-[100px] h-16 border-r border-border border-b relative p-1 transition-colors",
+        isOver ? "bg-indigo-500/20 ring-2 ring-inset ring-indigo-400/50" : "hover:bg-accent/10"
       )}
     >
       {children}
@@ -65,7 +65,7 @@ const DraggableBooking = ({
     maintenance: "bg-amber-500/80 border-amber-400 text-white shadow-amber-500/20",
     confirmed: "bg-indigo-500/80 border-indigo-400 text-white shadow-indigo-500/20",
     // 🏁 ESTADO FINAL: Desaturación visual para evitar confusión operativa
-    checked_out: "bg-zinc-800/50 border-zinc-700 text-zinc-500 grayscale opacity-60 shadow-none line-through"
+    checked_out: "bg-muted border-border text-muted-foreground grayscale opacity-60 shadow-none line-through"
   };
 
   const currentStyle = statusStyles[booking.status as keyof typeof statusStyles] || statusStyles.confirmed;
@@ -83,7 +83,7 @@ const DraggableBooking = ({
       className={cn(
         "absolute top-1 bottom-1 rounded-[var(--radius-squircle-md)] text-[10px] font-bold p-2 shadow-lg cursor-pointer active:cursor-grabbing z-10 select-none touch-none overflow-hidden flex items-center gap-1.5 glass-card transition-all",
         currentStyle,
-        isDragging ? (isAltPressed ? 'opacity-80 border-dashed border-2 ring-2 ring-emerald-400' : 'opacity-40 border-dashed border-2 pointer-events-none') : 'animate-in fade-in zoom-in-95 duration-200 hover:ring-2 hover:ring-white/50'
+        isDragging ? (isAltPressed ? 'opacity-80 border-dashed border-2 ring-2 ring-emerald-400' : 'opacity-40 border-dashed border-2 pointer-events-none') : 'animate-in fade-in zoom-in-95 duration-200 hover:ring-2 hover:ring-ring'
       )}
     >
       <span className="whitespace-nowrap flex items-center gap-1 pointer-events-none drop-shadow-md">
@@ -150,27 +150,27 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
 
   return (
     <>
-      <div className='space-y-6 pb-20 font-poppins text-zinc-100'>
-        <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-card p-6 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl'>
+      <div className='space-y-6 pb-20 font-poppins text-foreground'>
+        <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-card p-6 rounded-[var(--radius-squircle-3xl)] border border-border shadow-2xl'>
           <div>
-            <h2 className='text-2xl font-bold tracking-tight text-zinc-50 flex items-center gap-3'>
+            <h2 className='text-2xl font-bold tracking-tight text-foreground flex items-center gap-3'>
               <CalendarIcon className="size-6 text-indigo-400" /> Matriz de Ocupación
             </h2>
-            <p className='text-zinc-400 text-sm mt-1 capitalize'>{monthName}</p>
+            <p className='text-muted-foreground text-sm mt-1 capitalize'>{monthName}</p>
           </div>
           
           <div className='flex flex-wrap items-center gap-4'>
             <button onClick={openNewBookingModal} className='flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[var(--radius-squircle-lg)] font-bold text-sm transition-all active:scale-95'>
               <Plus className="size-4 stroke-[2]" /> Nueva Reserva
             </button>
-            <div className='flex bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] p-1'>
-              <button onClick={() => moveDate(-7)} className='p-2 text-zinc-400 hover:text-zinc-50 hover:bg-white/5 rounded-[var(--radius-squircle-md)] transition-colors'>
+            <div className='flex bg-background border border-border rounded-[var(--radius-squircle-lg)] p-1'>
+              <button onClick={() => moveDate(-7)} className='p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-[var(--radius-squircle-md)] transition-colors'>
                 <ChevronLeft className="size-5" />
               </button>
-              <span className='px-4 py-2 text-sm font-bold text-zinc-200 min-w-[120px] text-center capitalize'>
+              <span className='px-4 py-2 text-sm font-bold text-foreground min-w-[120px] text-center capitalize'>
                 {currentDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
               </span>
-              <button onClick={() => moveDate(7)} className='p-2 text-zinc-400 hover:text-zinc-50 hover:bg-white/5 rounded-[var(--radius-squircle-md)] transition-colors'>
+              <button onClick={() => moveDate(7)} className='p-2 text-muted-foreground hover:text-foreground hover:bg-accent rounded-[var(--radius-squircle-md)] transition-colors'>
                 <ChevronRight className="size-5" />
               </button>
             </div>
@@ -178,27 +178,27 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
         </div>
 
         <DndContext sensors={sensors} onDragStart={(e) => setActiveDragBooking(e.active.data.current?.booking as Booking)} onDragEnd={onDragEnd}>
-          <div className='glass-panel border border-white/5 shadow-2xl rounded-[var(--radius-squircle-3xl)] overflow-hidden flex flex-col'>
+          <div className='glass-panel border border-border shadow-2xl rounded-[var(--radius-squircle-3xl)] overflow-hidden flex flex-col'>
             <div className='flex-1 overflow-auto custom-scrollbar relative'>
               <div className='min-w-[1200px]'>
-                <div className='flex sticky top-0 z-20 glass-panel border-b border-white/10 !rounded-none'>
-                  <div className='w-48 shrink-0 p-4 border-r border-white/10 flex items-center justify-center sticky left-0 z-30 bg-zinc-950'>
-                    <span className='text-xs font-bold text-zinc-500 uppercase tracking-widest'>Unidad</span>
+                <div className='flex sticky top-0 z-20 glass-panel border-b border-border !rounded-none'>
+                  <div className='w-48 shrink-0 p-4 border-r border-border flex items-center justify-center sticky left-0 z-30 bg-background'>
+                    <span className='text-xs font-bold text-muted-foreground uppercase tracking-widest'>Unidad</span>
                   </div>
                   {dateRange.map((date, idx) => (
-                    <div key={idx} className={cn('flex-1 min-w-[100px] border-r border-white/5 p-3 flex flex-col items-center justify-center', date.getDay() === 0 || date.getDay() === 6 ? 'bg-indigo-500/5' : '')}>
-                      <span className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest'>{date.toLocaleString('es-ES', { weekday: 'short' })}</span>
-                      <span className={cn('text-lg font-bold', date.toDateString() === new Date().toDateString() ? 'text-indigo-400' : 'text-zinc-300')}>{date.getDate()}</span>
+                    <div key={idx} className={cn('flex-1 min-w-[100px] border-r border-border p-3 flex flex-col items-center justify-center', date.getDay() === 0 || date.getDay() === 6 ? 'bg-indigo-500/5' : '')}>
+                      <span className='text-[10px] font-bold text-muted-foreground uppercase tracking-widest'>{date.toLocaleString('es-ES', { weekday: 'short' })}</span>
+                      <span className={cn('text-lg font-bold', date.toDateString() === new Date().toDateString() ? 'text-indigo-400' : 'text-foreground')}>{date.getDate()}</span>
                     </div>
                   ))}
                 </div>
 
-                <div className='bg-[#09090b]/80'>
+                <div className='bg-card'>
                   {rooms.map((room) => (
-                    <div key={room.id} className='flex group hover:bg-white/[0.02] transition-colors'>
-                      <div className='w-48 shrink-0 p-4 border-r border-white/5 border-b flex flex-col justify-center bg-zinc-950/80 sticky left-0 z-10 group-hover:bg-zinc-900/80'>
-                        <span className='text-sm font-bold text-zinc-200 truncate'>{room.name}</span>
-                        <span className='text-[10px] text-zinc-500 font-mono uppercase'>${(room.price || 0).toLocaleString()}</span>
+                    <div key={room.id} className='flex group hover:bg-accent/10 transition-colors'>
+                      <div className='w-48 shrink-0 p-4 border-r border-border border-b flex flex-col justify-center bg-muted sticky left-0 z-10 group-hover:bg-card'>
+                        <span className='text-sm font-bold text-foreground truncate'>{room.name}</span>
+                        <span className='text-[10px] text-muted-foreground font-mono uppercase'>${(room.price || 0).toLocaleString()}</span>
                       </div>
                       
                       {dateRange.map((date, idx) => {
@@ -219,7 +219,7 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
                             {booking && !isStart && (
                               <div className={cn(
                                 "pointer-events-none h-full absolute top-1 bottom-1 left-0 right-0 z-0 opacity-20",
-                                booking.status === 'checked_out' ? "bg-zinc-800 line-through" :
+                                booking.status === 'checked_out' ? "bg-muted line-through" :
                                 booking.status === 'checked_in' ? 'bg-emerald-500' : 
                                 booking.status === 'maintenance' ? 'bg-amber-500' : 'bg-indigo-50'
                               )} />
@@ -237,8 +237,8 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
           <DragOverlay dropAnimation={null}>
             {activeDragBooking && (
               <div className={cn(
-                "h-14 rounded-[var(--radius-squircle-md)] text-[10px] font-bold p-2 text-white shadow-2xl cursor-grabbing border border-white/50 opacity-90 scale-105 flex items-center gap-1.5",
-                activeDragBooking.status === 'checked_out' ? "bg-zinc-800" :
+                "h-14 rounded-[var(--radius-squircle-md)] text-[10px] font-bold p-2 text-white shadow-2xl cursor-grabbing border border-ring opacity-90 scale-105 flex items-center gap-1.5",
+                activeDragBooking.status === 'checked_out' ? "bg-muted" :
                 activeDragBooking.status === 'checked_in' ? 'bg-emerald-500' : 
                 activeDragBooking.status === 'maintenance' ? 'bg-amber-500' : 'bg-indigo-500',
               )} style={{ width: '160px' }}>

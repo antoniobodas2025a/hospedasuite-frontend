@@ -48,14 +48,14 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
         {dirtyRooms.length === 0 ? (
           <div className="glass-card p-12 text-center">
             <CheckCircle2 className="mx-auto size-8 text-emerald-500/30 mb-3" />
-            <p className="text-zinc-500 font-medium italic text-sm">Planta física en estado óptimo.</p>
+            <p className="text-muted-foreground font-medium italic text-sm">Planta física en estado óptimo.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {dirtyRooms.map(room => (
-              <div key={room.id} className="group relative overflow-hidden p-6 glass-card border border-rose-500/20 flex justify-between items-center transition-all hover:bg-white/10 shadow-2xl shadow-rose-500/5">
+              <div key={room.id} className="group relative overflow-hidden p-6 glass-card border border-rose-500/20 flex justify-between items-center transition-all hover:bg-accent shadow-2xl shadow-rose-500/5">
                 <div>
-                  <h4 className="text-2xl font-bold text-zinc-100 tracking-tighter">{room.name}</h4>
+                  <h4 className="text-2xl font-bold text-foreground tracking-tighter">{room.name}</h4>
                   <div className="flex items-center gap-2 mt-1">
                     <span className="size-1.5 rounded-full bg-rose-500 animate-pulse" />
                     <p className="text-[10px] font-bold text-rose-400 uppercase tracking-widest">Sucia / Post-Salida</p>
@@ -80,7 +80,7 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
 
       {/* 2. GRID DE DISPONIBILIDAD (Estado de Planta) */}
       <section className="space-y-6">
-        <h3 className="text-[10px] font-black uppercase tracking-extreme text-zinc-500 ml-2">
+        <h3 className="text-[10px] font-black uppercase tracking-extreme text-muted-foreground ml-2">
           Inventario de Unidades ({rooms.length})
         </h3>
         
@@ -101,7 +101,7 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
                 )}
               >
                 <div className="flex justify-between items-start">
-                  <span className="font-bold text-zinc-100 tracking-tighter">{room.name}</span>
+                  <span className="font-bold text-foreground tracking-tighter">{room.name}</span>
                   <div className={cn(
                     "size-2 rounded-full",
                     isAvailable ? "bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]" :
@@ -112,7 +112,7 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
                 <select 
                   value={room.status}
                   onChange={(e) => handleStatusChange(room.id, e.target.value as RoomStatus)}
-                  className="bg-zinc-950/50 border-none text-[9px] font-black uppercase tracking-widest text-zinc-400 rounded-[var(--radius-squircle-lg)] p-2 outline-none cursor-pointer appearance-none text-center"
+                  className="bg-muted border-none text-[9px] font-black uppercase tracking-widest text-muted-foreground rounded-[var(--radius-squircle-lg)] p-2 outline-none cursor-pointer appearance-none text-center"
                 >
                   <option value="available">✓ Disponible</option>
                   <option value="dirty">⚠ Sucia</option>

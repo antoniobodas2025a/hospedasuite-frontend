@@ -44,21 +44,21 @@ function DisclosureSection({
   children: React.ReactNode;
 }) {
   return (
-    <div className="bg-zinc-900/40 border border-white/5 overflow-hidden transition-all duration-300">
+    <div className="bg-muted border border-border overflow-hidden transition-all duration-300">
       <button
         type="button"
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-8 hover:bg-white/[0.02] transition-colors"
+        className="w-full flex items-center justify-between p-8 hover:bg-accent/10 transition-colors"
       >
         <div className="flex items-center gap-3">
           <Icon className={iconColor} />
           <div className="text-left">
             <h3 className="text-xl font-bold">{title}</h3>
-            {description && <div className="text-[10px] text-zinc-500 uppercase tracking-widest mt-0.5">{description}</div>}
+            {description && <div className="text-[10px] text-muted-foreground uppercase tracking-widest mt-0.5">{description}</div>}
           </div>
         </div>
         <motion.div animate={{ rotate: isOpen ? 180 : 0 }} transition={{ duration: 0.2 }}>
-          <ChevronDown className="text-zinc-500" size={20} />
+          <ChevronDown className="text-muted-foreground" size={20} />
         </motion.div>
       </button>
       <AnimatePresence>
@@ -70,7 +70,7 @@ function DisclosureSection({
             transition={{ duration: 0.25, ease: [0.23, 1, 0.32, 1] }}
             className="overflow-hidden"
           >
-            <div className="px-8 pb-8 border-t border-white/5 pt-6">
+            <div className="px-8 pb-8 border-t border-border pt-6">
               {children}
             </div>
           </motion.div>
@@ -259,22 +259,22 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
   };
 
   return (
-    <div className='w-full max-w-7xl mx-auto space-y-[var(--space-pause)] pb-40 font-poppins text-zinc-100 p-8'>
-      <div className="glass-card p-[var(--space-breath)] rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl ring-1 ring-white/10">
+    <div className='w-full max-w-7xl mx-auto space-y-[var(--space-pause)] pb-40 font-poppins text-foreground p-8'>
+      <div className="glass-card p-[var(--space-breath)] rounded-[var(--radius-squircle-3xl)] border border-border shadow-2xl ring-1 ring-border">
         <div className="mb-[var(--space-breath)]">
-          <h2 className="text-4xl font-bold text-zinc-50 tracking-tight flex items-center gap-3">
+          <h2 className="text-4xl font-bold text-foreground tracking-tight flex items-center gap-3">
             <KeyRound className="text-indigo-400 size-8" /> Centro de Mando
           </h2>
-          <p className="text-zinc-400 text-sm mt-[var(--space-focus)] font-lora italic">Administración operativa del tenant.</p>
+          <p className="text-muted-foreground text-sm mt-[var(--space-focus)] font-lora italic">Administración operativa del tenant.</p>
         </div>
-        <div className="flex bg-zinc-950/60 p-2 rounded-[var(--radius-squircle-3xl)] border border-white/5 gap-2">
+        <div className="flex bg-background/60 p-2 rounded-[var(--radius-squircle-3xl)] border border-border gap-2">
           {[{ id: 'general', label: 'Operación', icon: Building }, { id: 'ota', label: 'Perfil OTA', icon: Globe }, { id: 'staff', label: 'Equipo', icon: Users }].map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)} className={cn("flex-1 px-8 py-4 rounded-[var(--radius-squircle-xl)] text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 border", activeTab === tab.id ? "bg-indigo-600 text-white border-indigo-400 shadow-lg" : "bg-transparent text-zinc-500 border-transparent hover:text-zinc-300")}>
+            <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)} className={cn("flex-1 px-8 py-4 rounded-[var(--radius-squircle-xl)] text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 border", activeTab === tab.id ? "bg-indigo-600 text-white border-indigo-400 shadow-lg" : "bg-transparent text-muted-foreground border-transparent hover:text-foreground")}>
               <tab.icon size={18} /> {tab.label}
             </button>
           ))}
           {/* Advanced mode toggle — Mac 2026: complexity layers */}
-          <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className={cn("px-4 py-4 rounded-[var(--radius-squircle-xl)] text-xs font-bold uppercase tracking-widest transition-all border flex items-center gap-2", showAdvanced ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-transparent text-zinc-600 border-transparent hover:text-zinc-400")}>
+          <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className={cn("px-4 py-4 rounded-[var(--radius-squircle-xl)] text-xs font-bold uppercase tracking-widest transition-all border flex items-center gap-2", showAdvanced ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-transparent text-muted-foreground border-transparent hover:text-muted-foreground")}>
             <Settings2 size={18} />
           </button>
         </div>
@@ -284,28 +284,28 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
         <AnimatePresence mode="wait">
           {activeTab === 'general' && (
             <motion.div key="gen" initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -10 }} className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div className="bg-zinc-900/40 p-10 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-xl space-y-8">
+              <div className="bg-muted p-10 rounded-[var(--radius-squircle-3xl)] border border-border shadow-xl space-y-8">
                 <h3 className="text-xl font-bold flex items-center gap-3"><Building className="text-indigo-400" /> Negocio</h3>
                 <div className="space-y-6">
-                  <input {...register('name')} placeholder="Nombre" className="w-full p-5 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)]" />
+                  <input {...register('name')} placeholder="Nombre" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
                   <div className="grid grid-cols-2 gap-6">
-                    <input {...register('phone')} placeholder="Tel" className="p-5 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)]" />
-                    <input {...register('email')} placeholder="Email" className="p-5 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)]" />
+                    <input {...register('phone')} placeholder="Tel" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+                    <input {...register('email')} placeholder="Email" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
                   </div>
                 </div>
               </div>
-              <div className="bg-zinc-900/60 p-10 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl space-y-8">
+              <div className="bg-card/60 p-10 rounded-[var(--radius-squircle-3xl)] border border-border shadow-2xl space-y-8">
                 <h3 className="text-xl font-bold flex items-center gap-3">
                   <CreditCard className="text-sky-400" /> Wompi
                   <GlassTooltip content="Claves de API de Wompi para procesar pagos online. Se obtienen en el dashboard de Wompi > Desarrollo > API Keys." side="right">
-                    <span className="cursor-help text-zinc-600 hover:text-zinc-400 transition-colors">
+                    <span className="cursor-help text-muted-foreground hover:text-muted-foreground transition-colors">
                       <Eye size={16} />
                     </span>
                   </GlassTooltip>
                 </h3>
                 <div className="space-y-6">
-                  <input {...register('wompi_public_key')} type="password" placeholder="Public Key" className="w-full p-5 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)]" />
-                  <input {...register('wompi_integrity_secret')} type="password" placeholder="Integrity Secret" className="w-full p-5 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)]" />
+                  <input {...register('wompi_public_key')} type="password" placeholder="Public Key" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+                  <input {...register('wompi_integrity_secret')} type="password" placeholder="Integrity Secret" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
                 </div>
               </div>
             </motion.div>
@@ -320,13 +320,13 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                   <h3 className="text-xl font-bold flex items-center gap-3 mb-[var(--space-focus)]"><MessageCircle className="text-indigo-400"/> Identidad del Hotel</h3>
                   <div className="space-y-[var(--space-focus)]">
                     <div>
-                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Titulo seccion "La Historia"</label>
-                      <input {...register('story_section_title')} className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-sm" placeholder="La Historia" />
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Titulo seccion "La Historia"</label>
+                      <input {...register('story_section_title')} className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-sm" placeholder="La Historia" />
                     </div>
-                    <textarea {...register('description')} rows={5} className="w-full p-6 bg-zinc-950/50 border border-white/10 rounded-[var(--radius-squircle-3xl)]" placeholder="Descripcion del hotel..." />
+                    <textarea {...register('description')} rows={5} className="w-full p-6 bg-muted border border-border rounded-[var(--radius-squircle-3xl)]" placeholder="Descripcion del hotel..." />
                     <div className="grid grid-cols-2 gap-[var(--space-focus)]">
-                      <input {...register('whatsapp_number')} placeholder="WhatsApp" className="p-5 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)]" />
-                      <input {...register('google_maps_url')} placeholder="Google Maps" className="p-5 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-xs" />
+                      <input {...register('whatsapp_number')} placeholder="WhatsApp" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+                      <input {...register('google_maps_url')} placeholder="Google Maps" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-xs" />
                     </div>
                   </div>
                 </div>
@@ -336,7 +336,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                   <h3 className="text-xl font-bold flex items-center gap-3 mb-[var(--space-focus)]"><UtensilsCrossed className="text-indigo-400"/> Amenidades</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-[var(--space-focus)]">
                     {HOTEL_AMENITIES.map((am) => (
-                      <button type="button" key={am.id} onClick={() => toggleAmenity(am.id)} className={cn("p-6 rounded-[var(--radius-squircle-3xl)] border text-[10px] font-bold uppercase flex flex-col items-center gap-4 transition-all", currentAmenities.includes(am.id) ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-300" : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-300")}>
+                      <button type="button" key={am.id} onClick={() => toggleAmenity(am.id)} className={cn("p-6 rounded-[var(--radius-squircle-3xl)] border text-[10px] font-bold uppercase flex flex-col items-center gap-4 transition-all", currentAmenities.includes(am.id) ? "border-indigo-500/40 bg-indigo-500/10 text-indigo-300" : "border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground")}>
                         <am.icon size={24} /> {am.label}
                       </button>
                     ))}
@@ -356,8 +356,8 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                     {/* HERO IMAGE */}
                     <div>
                       <h4 className="text-sm font-bold mb-3 flex items-center gap-2"><UploadCloud className="text-indigo-400" size={16} /> Foto Hero</h4>
-                      <p className="text-[10px] text-zinc-500 mb-3 uppercase tracking-widest">Imagen principal del hotel en la pagina publica</p>
-                      <div className="relative w-full h-48 bg-zinc-950 rounded-[var(--radius-squircle-3xl)] border-2 border-dashed border-white/10 overflow-hidden group">
+                      <p className="text-[10px] text-muted-foreground mb-3 uppercase tracking-widest">Imagen principal del hotel en la pagina publica</p>
+                      <div className="relative w-full h-48 bg-background rounded-[var(--radius-squircle-3xl)] border-2 border-dashed border-border overflow-hidden group">
                         {mainImagePreview ? <img src={mainImagePreview} alt="Hero" className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" /> : <div className="flex flex-col h-full items-center justify-center opacity-20"><UploadCloud size={40}/><span className="text-[9px] mt-2 font-bold uppercase">Click para subir</span></div>}
                         <input type="file" accept="image/*" onChange={handleMainImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
@@ -366,7 +366,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                     {/* COVER PHOTO */}
                     <div>
                       <h4 className="text-sm font-bold mb-3 flex items-center gap-2"><UploadCloud className="text-sky-400" size={16} /> Foto Secundaria</h4>
-                      <div className="relative w-full h-40 bg-zinc-950 rounded-[var(--radius-squircle-3xl)] border-2 border-dashed border-white/10 overflow-hidden group">
+                      <div className="relative w-full h-40 bg-background rounded-[var(--radius-squircle-3xl)] border-2 border-dashed border-border overflow-hidden group">
                         {coverPhotoPreview ? <img src={coverPhotoPreview} alt="C" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" /> : <div className="flex h-full items-center justify-center opacity-20"><UploadCloud size={40}/></div>}
                         <input type="file" accept="image/*" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
@@ -375,11 +375,11 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                     {/* GALLERY */}
                     <div>
                       <h4 className="text-sm font-bold mb-3 flex items-center gap-2"><UploadCloud className="text-emerald-400" size={16} /> Galeria del Hotel</h4>
-                      <p className="text-[10px] text-zinc-500 mb-3 uppercase tracking-widest">{galleryPreviews.length}/8 fotos</p>
+                      <p className="text-[10px] text-muted-foreground mb-3 uppercase tracking-widest">{galleryPreviews.length}/8 fotos</p>
                       {galleryPreviews.length > 0 && (
                         <div className="grid grid-cols-2 gap-2 mb-4">
                           {galleryPreviews.map((url, i) => (
-                            <div key={i} className="relative h-24 rounded-[var(--radius-squircle-lg)] overflow-hidden border border-white/10 group">
+                            <div key={i} className="relative h-24 rounded-[var(--radius-squircle-lg)] overflow-hidden border border-border group">
                               <img src={url} alt={`Gallery ${i + 1}`} className="w-full h-full object-cover" />
                               <button type="button" onClick={() => removeGalleryImage(i)} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                                 <Trash2 className="size-4 text-rose-400" />
@@ -389,9 +389,9 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                         </div>
                       )}
                       {galleryPreviews.length < 8 && (
-                        <label className="flex flex-col items-center justify-center w-full h-20 bg-zinc-950 border-2 border-dashed border-white/10 rounded-[var(--radius-squircle-2xl)] cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group">
-                          <Plus className="text-zinc-600 group-hover:text-emerald-400 mb-1" size={18} />
-                          <span className="text-[9px] text-zinc-500 font-bold uppercase">Agregar fotos</span>
+                        <label className="flex flex-col items-center justify-center w-full h-20 bg-background border-2 border-dashed border-border rounded-[var(--radius-squircle-2xl)] cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group">
+                          <Plus className="text-muted-foreground group-hover:text-emerald-400 mb-1" size={18} />
+                          <span className="text-[9px] text-muted-foreground font-bold uppercase">Agregar fotos</span>
                           <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />
                         </label>
                       )}
@@ -408,7 +408,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                     <span className="inline-flex items-center gap-1">
                       Reserva Directa y Confirmacion Inmediata
                       <GlassTooltip content="Estos sellos aparecen en la seccion 'La Historia' de tu pagina publica para generar confianza en el huesped." side="top">
-                        <span className="cursor-help text-zinc-600 hover:text-zinc-400 transition-colors">
+                        <span className="cursor-help text-muted-foreground hover:text-muted-foreground transition-colors">
                           <Eye size={12} />
                         </span>
                       </GlassTooltip>
@@ -419,13 +419,13 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                 >
                   <div className="space-y-[var(--space-focus)]">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-zinc-400">Mostrar sellos en la pagina publica</p>
+                      <p className="text-xs text-muted-foreground">Mostrar sellos en la pagina publica</p>
                       <button
                         type="button"
                         onClick={() => setValue('show_trust_badges', !watch('show_trust_badges'))}
                         className={cn(
                           "relative w-12 h-7 rounded-full transition-all",
-                          watch('show_trust_badges') ? "bg-emerald-500" : "bg-zinc-700"
+                          watch('show_trust_badges') ? "bg-emerald-500" : "bg-muted"
                         )}
                       >
                         <div className={cn(
@@ -439,22 +439,22 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                       <div className="space-y-[var(--space-focus)] pt-2">
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1 block">Badge 1 — Titulo</label>
-                            <input {...register('trust_badge_1_title')} className="w-full p-3 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] text-xs" placeholder="Reserva Directa" />
+                            <label className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1 block">Badge 1 — Titulo</label>
+                            <input {...register('trust_badge_1_title')} className="w-full p-3 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-xs" placeholder="Reserva Directa" />
                           </div>
                           <div>
-                            <label className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1 block">Badge 1 — Subtitulo</label>
-                            <input {...register('trust_badge_1_subtitle')} className="w-full p-3 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] text-xs" placeholder="Sin intermediarios" />
+                            <label className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1 block">Badge 1 — Subtitulo</label>
+                            <input {...register('trust_badge_1_subtitle')} className="w-full p-3 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-xs" placeholder="Sin intermediarios" />
                           </div>
                         </div>
                         <div className="grid grid-cols-2 gap-3">
                           <div>
-                            <label className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1 block">Badge 2 — Titulo</label>
-                            <input {...register('trust_badge_2_title')} className="w-full p-3 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] text-xs" placeholder="Confirmacion Inmediata" />
+                            <label className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1 block">Badge 2 — Titulo</label>
+                            <input {...register('trust_badge_2_title')} className="w-full p-3 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-xs" placeholder="Confirmacion Inmediata" />
                           </div>
                           <div>
-                            <label className="text-[9px] text-zinc-600 uppercase tracking-widest mb-1 block">Badge 2 — Subtitulo</label>
-                            <input {...register('trust_badge_2_subtitle')} className="w-full p-3 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] text-xs" placeholder="Bloqueo al instante" />
+                            <label className="text-[9px] text-muted-foreground uppercase tracking-widest mb-1 block">Badge 2 — Subtitulo</label>
+                            <input {...register('trust_badge_2_subtitle')} className="w-full p-3 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-xs" placeholder="Bloqueo al instante" />
                           </div>
                         </div>
                       </div>
@@ -473,13 +473,13 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                 >
                   <div className="space-y-[var(--space-focus)]">
                     <div className="flex items-center justify-between">
-                      <p className="text-xs text-zinc-400">Mostrar actividad reciente</p>
+                      <p className="text-xs text-muted-foreground">Mostrar actividad reciente</p>
                       <button
                         type="button"
                         onClick={() => setValue('show_recent_activity', !watch('show_recent_activity'))}
                         className={cn(
                           "relative w-12 h-7 rounded-full transition-all",
-                          watch('show_recent_activity') ? "bg-emerald-500" : "bg-zinc-700"
+                          watch('show_recent_activity') ? "bg-emerald-500" : "bg-muted"
                         )}
                       >
                         <div className={cn(
@@ -495,8 +495,8 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                           { icon: 'TrendingUp', text: '3 reservas en las ultimas 24 horas', color: 'text-emerald-600' },
                           { icon: 'Clock', text: '2 personas estan viendo esta propiedad ahora', color: 'text-amber-600' },
                         ]).map((msg: any, i: number) => (
-                          <div key={i} className="flex items-center gap-3 p-3 bg-zinc-950/50 rounded-[var(--radius-squircle-2xl)] border border-white/5">
-                            <div className="size-8 rounded-[var(--radius-squircle-md)] bg-zinc-800 flex items-center justify-center shrink-0">
+                          <div key={i} className="flex items-center gap-3 p-3 bg-muted rounded-[var(--radius-squircle-2xl)] border border-border">
+                            <div className="size-8 rounded-[var(--radius-squircle-md)] bg-muted flex items-center justify-center shrink-0">
                               {msg.icon === 'TrendingUp' ? <TrendingUp size={14} className="text-emerald-400" /> : <Clock size={14} className="text-amber-400" />}
                             </div>
                             <input
@@ -506,7 +506,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                                 msgs[i] = { ...msg, text: e.target.value };
                                 setValue('recent_activity_messages', msgs);
                               }}
-                              className="flex-1 bg-transparent text-xs text-zinc-300 outline-none"
+                              className="flex-1 bg-transparent text-xs text-foreground outline-none"
                               placeholder="Mensaje de actividad..."
                             />
                             <button
@@ -515,7 +515,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                                 const msgs = (watch('recent_activity_messages') || []).filter((_: any, idx: number) => idx !== i);
                                 setValue('recent_activity_messages', msgs);
                               }}
-                              className="p-1 text-zinc-600 hover:text-rose-400 transition-colors"
+                              className="p-1 text-muted-foreground hover:text-rose-400 transition-colors"
                             >
                               <Trash2 size={14} />
                             </button>
@@ -527,7 +527,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                             const msgs = [...(watch('recent_activity_messages') || []), { icon: 'TrendingUp', text: '', color: 'text-emerald-600' }];
                             setValue('recent_activity_messages', msgs);
                           }}
-                          className="flex items-center gap-2 text-xs text-zinc-500 hover:text-emerald-400 transition-colors"
+                          className="flex items-center gap-2 text-xs text-muted-foreground hover:text-emerald-400 transition-colors"
                         >
                           <Plus size={14} /> Agregar mensaje
                         </button>
@@ -547,27 +547,27 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                 >
                   <div className="grid grid-cols-3 gap-[var(--space-focus)]">
                     <div>
-                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Check-in</label>
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Check-in</label>
                       <input
                         {...register('check_in_time')}
                         placeholder="15:00"
-                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-sm text-center font-mono"
+                        className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-sm text-center font-mono"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Check-out</label>
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Check-out</label>
                       <input
                         {...register('check_out_time')}
                         placeholder="13:00"
-                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-sm text-center font-mono"
+                        className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-sm text-center font-mono"
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Recepcion</label>
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Recepcion</label>
                       <input
                         {...register('reception_hours')}
                         placeholder="24/7"
-                        className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-sm text-center"
+                        className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-sm text-center"
                       />
                     </div>
                   </div>
@@ -582,8 +582,8 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                   isOpen={showOtaProtocols}
                   onToggle={() => setShowOtaProtocols(!showOtaProtocols)}
                 >
-                  <div className="bg-zinc-950/80 p-6 rounded-[var(--radius-squircle-2xl)] border border-amber-500/20">
-                    <textarea {...register('cancellation_policy')} rows={6} className="w-full bg-transparent outline-none resize-none text-zinc-400 text-xs italic" placeholder="Reglas de cancelacion..." />
+                  <div className="bg-muted p-6 rounded-[var(--radius-squircle-2xl)] border border-amber-500/20">
+                    <textarea {...register('cancellation_policy')} rows={6} className="w-full bg-transparent outline-none resize-none text-muted-foreground text-xs italic" placeholder="Reglas de cancelacion..." />
                   </div>
                 </DisclosureSection>
               </div>
@@ -593,11 +593,11 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                 {/* TIER 1: ESENCIAL — Category Badge (always visible) */}
                 <div className="glass-card p-[var(--space-breath)]">
                   <h3 className="text-xl font-bold flex items-center gap-3 mb-[var(--space-focus)]"><Star className="text-amber-400" /> Insignia de Categoria</h3>
-                  <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-[var(--space-focus)]">Texto que aparece junto al nombre del hotel en la pagina publica. Dejar vacio para ocultar.</p>
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-[var(--space-focus)]">Texto que aparece junto al nombre del hotel en la pagina publica. Dejar vacio para ocultar.</p>
                   <input
                     {...register('category_badge')}
                     placeholder="Ej: Categoria Premium, Boutique Hotel, Eco-Lodge..."
-                    className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-sm"
+                    className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-sm"
                   />
                   {watch('category_badge') && (
                     <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-[var(--radius-squircle-2xl)] mt-[var(--space-focus)]">
@@ -614,52 +614,52 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                       <Globe className="text-amber-400 size-5" />
                       <h3 className="text-lg font-bold text-amber-300">SEO y Redes Sociales</h3>
                     </div>
-                    <p className="text-[10px] text-zinc-500 uppercase tracking-widest mb-[var(--space-focus)]">
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-[var(--space-focus)]">
                       Meta tags y Open Graph
                       <GlassTooltip content="Controla como aparece tu hotel en Google, WhatsApp y Facebook. El OG Image es la foto que se muestra al compartir el link." side="top">
-                        <span className="cursor-help text-zinc-600 hover:text-zinc-400 transition-colors ml-1">
+                        <span className="cursor-help text-muted-foreground hover:text-muted-foreground transition-colors ml-1">
                           <Eye size={12} />
                         </span>
                       </GlassTooltip>
                     </p>
                     <div className="space-y-[var(--space-focus)]">
                       <div>
-                        <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Meta Title</label>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Meta Title</label>
                         <input
                           {...register('seo_meta_title')}
                           placeholder="Ej: Hotel Los Andes | Reserva Oficial en Mendoza"
-                          className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-sm"
+                          className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-sm"
                         />
-                        <p className="text-[9px] text-zinc-600 mt-1">{(watch('seo_meta_title') || '').length}/60 caracteres recomendados</p>
+                        <p className="text-[9px] text-muted-foreground mt-1">{(watch('seo_meta_title') || '').length}/60 caracteres recomendados</p>
                       </div>
                       
                       <div>
-                        <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Meta Description</label>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Meta Description</label>
                         <textarea
                           {...register('seo_meta_description')}
                           rows={3}
                           placeholder="Ej: Disfruta de la mejor experiencia en Mendoza. Piscina, desayuno incluido y vistas panoramicas."
-                          className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-sm resize-none"
+                          className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-sm resize-none"
                         />
-                        <p className="text-[9px] text-zinc-600 mt-1">{(watch('seo_meta_description') || '').length}/160 caracteres recomendados</p>
+                        <p className="text-[9px] text-muted-foreground mt-1">{(watch('seo_meta_description') || '').length}/160 caracteres recomendados</p>
                       </div>
 
                       <div>
-                        <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">OG Image URL</label>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">OG Image URL</label>
                         <input
                           {...register('seo_og_image_url')}
                           placeholder="https://..."
-                          className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-xs"
+                          className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-xs"
                         />
-                        <p className="text-[9px] text-zinc-600 mt-1">Imagen que aparece al compartir en WhatsApp, Facebook, etc.</p>
+                        <p className="text-[9px] text-muted-foreground mt-1">Imagen que aparece al compartir en WhatsApp, Facebook, etc.</p>
                       </div>
 
                       <div>
-                        <label className="text-[10px] text-zinc-500 uppercase tracking-widest mb-1 block">Canonical URL</label>
+                        <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Canonical URL</label>
                         <input
                           {...register('seo_canonical_url')}
                           placeholder="https://tuhotel.com/hotel/slug"
-                          className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-xs"
+                          className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-xs"
                         />
                       </div>
                     </div>
@@ -671,25 +671,25 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
 
           {activeTab === 'staff' && (
             <motion.div key="stf" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-zinc-900/40 p-10 rounded-[var(--radius-squircle-3xl)] border border-white/5 space-y-8">
+              <div className="bg-muted p-10 rounded-[var(--radius-squircle-3xl)] border border-border space-y-8">
                 <h3 className="text-xl font-bold flex items-center gap-3"><Palette className="text-indigo-400"/> Marca</h3>
-                <div className="bg-zinc-950 p-8 rounded-[var(--radius-squircle-3xl)] flex gap-6 items-center">
+                <div className="bg-background p-8 rounded-[var(--radius-squircle-3xl)] flex gap-6 items-center">
                   <div className="size-20 rounded-[var(--radius-squircle-xl)] shadow-2xl" style={{ backgroundColor: primaryColor }} />
-                  <input {...register('primary_color')} className="flex-1 p-4 bg-zinc-900 border border-white/10 rounded-[var(--radius-squircle-lg)] text-xl font-bold text-indigo-400 text-center" />
+                  <input {...register('primary_color')} className="flex-1 p-4 bg-card border border-border rounded-[var(--radius-squircle-lg)] text-xl font-bold text-indigo-400 text-center" />
                 </div>
               </div>
-              <div className="bg-zinc-900/40 p-10 rounded-[var(--radius-squircle-3xl)] border border-white/5 flex flex-col">
+              <div className="bg-muted p-10 rounded-[var(--radius-squircle-3xl)] border border-border flex flex-col">
                 <h3 className="text-xl font-bold flex items-center gap-3 mb-8"><Users className="text-sky-400"/> Equipo</h3>
-                <div className="bg-zinc-950 p-6 rounded-[var(--radius-squircle-3xl)] border border-white/5 grid grid-cols-12 gap-4 items-end mb-8">
-                  <div className="col-span-7"><input {...register('staff_name')} className="w-full p-4 bg-zinc-900 border border-white/10 rounded-[var(--radius-squircle-lg)]" placeholder="Nombre" /></div>
-                  <div className="col-span-3"><input {...register('staff_pin')} maxLength={4} className="w-full p-4 bg-zinc-900 border border-white/10 rounded-[var(--radius-squircle-lg)] font-mono text-center" placeholder="PIN" /></div>
+                <div className="bg-background p-6 rounded-[var(--radius-squircle-3xl)] border border-border grid grid-cols-12 gap-4 items-end mb-8">
+                  <div className="col-span-7"><input {...register('staff_name')} className="w-full p-4 bg-card border border-border rounded-[var(--radius-squircle-lg)]" placeholder="Nombre" /></div>
+                  <div className="col-span-3"><input {...register('staff_pin')} maxLength={4} className="w-full p-4 bg-card border border-border rounded-[var(--radius-squircle-lg)] font-mono text-center" placeholder="PIN" /></div>
                   <div className="col-span-2"><button type="button" onClick={handleCreateStaff} className="w-full bg-indigo-600 h-[56px] rounded-[var(--radius-squircle-lg)] flex items-center justify-center"><Check size={24}/></button></div>
                 </div>
                 <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2 custom-scrollbar">
                   {localStaff.map((p) => (
-                    <div key={p.id} className="flex justify-between items-center p-5 bg-white/5 border border-white/10 rounded-[var(--radius-squircle-xl)] hover:bg-white/10 transition-all">
-                      <div className="flex items-center gap-4"><div className="size-10 rounded-[var(--radius-squircle-lg)] bg-zinc-800 flex items-center justify-center text-xs font-bold">{p.name.charAt(0)}</div><div><p className="font-bold">{p.name}</p><p className="text-[10px] opacity-50 uppercase tracking-tighter">{p.role}</p></div></div>
-                      <button type="button" onClick={() => handleDeleteStaff(p.id)} className="p-3 text-zinc-700 hover:text-rose-400 hover:bg-rose-500/10 rounded-[var(--radius-squircle-lg)]"><Trash2 size={20}/></button>
+                    <div key={p.id} className="flex justify-between items-center p-5 bg-muted border border-border rounded-[var(--radius-squircle-xl)] hover:bg-accent transition-all">
+                      <div className="flex items-center gap-4"><div className="size-10 rounded-[var(--radius-squircle-lg)] bg-muted flex items-center justify-center text-xs font-bold">{p.name.charAt(0)}</div><div><p className="font-bold">{p.name}</p><p className="text-[10px] opacity-50 uppercase tracking-tighter">{p.role}</p></div></div>
+                      <button type="button" onClick={() => handleDeleteStaff(p.id)} className="p-3 text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 rounded-[var(--radius-squircle-lg)]"><Trash2 size={20}/></button>
                     </div>
                   ))}
                 </div>
@@ -704,47 +704,47 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                 <div className="flex items-center gap-3 mb-8">
                   <Settings2 className="text-amber-400 size-6" />
                   <div>
-                    <h3 className="text-xl font-bold text-zinc-50">Configuración Avanzada</h3>
-                    <p className="text-xs text-zinc-500 uppercase tracking-widest mt-1">API, Webhooks y Channel Manager</p>
+                    <h3 className="text-xl font-bold text-foreground">Configuración Avanzada</h3>
+                    <p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">API, Webhooks y Channel Manager</p>
                   </div>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                   {/* API Keys */}
                   <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-zinc-300 flex items-center gap-2"><KeyRound size={16} className="text-indigo-400" /> API Keys</h4>
+                    <h4 className="text-sm font-bold text-foreground flex items-center gap-2"><KeyRound size={16} className="text-indigo-400" /> API Keys</h4>
                     <div>
-                      <label className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1 block">Public Key</label>
-                      <input readOnly value="pk_live_••••••••••••" className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-500 font-mono text-sm" />
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Public Key</label>
+                      <input readOnly value="pk_live_••••••••••••" className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-muted-foreground font-mono text-sm" />
                     </div>
                     <div>
-                      <label className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1 block">Secret Key</label>
-                      <input readOnly value="sk_live_••••••••••••" className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-500 font-mono text-sm" />
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Secret Key</label>
+                      <input readOnly value="sk_live_••••••••••••" className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-muted-foreground font-mono text-sm" />
                     </div>
                   </div>
 
                   {/* Webhooks */}
                   <div className="space-y-4">
-                    <h4 className="text-sm font-bold text-zinc-300 flex items-center gap-2"><Globe size={16} className="text-emerald-400" /> Webhook Endpoint</h4>
+                    <h4 className="text-sm font-bold text-foreground flex items-center gap-2"><Globe size={16} className="text-emerald-400" /> Webhook Endpoint</h4>
                     <div>
-                      <label className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1 block">URL</label>
-                      <input placeholder="https://tu-servidor.com/webhooks/hospedasuite" className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-200 font-mono text-sm" />
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">URL</label>
+                      <input placeholder="https://tu-servidor.com/webhooks/hospedasuite" className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-foreground font-mono text-sm" />
                     </div>
                     <div>
-                      <label className="text-[10px] text-zinc-600 uppercase tracking-widest mb-1 block">Signing Secret</label>
-                      <input readOnly value="whsec_••••••••••••" className="w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-500 font-mono text-sm" />
+                      <label className="text-[10px] text-muted-foreground uppercase tracking-widest mb-1 block">Signing Secret</label>
+                      <input readOnly value="whsec_••••••••••••" className="w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-muted-foreground font-mono text-sm" />
                     </div>
                   </div>
                 </div>
 
                 {/* Channel Manager */}
-                <div className="mt-8 pt-8 border-t border-white/5">
-                  <h4 className="text-sm font-bold text-zinc-300 flex items-center gap-2 mb-4"><RefreshCcw size={16} className="text-sky-400" /> Channel Manager</h4>
-                  <div className="p-6 bg-zinc-950/50 rounded-[var(--radius-squircle-2xl)] border border-white/5">
-                    <p className="text-xs text-zinc-500 mb-4">Conecta con OTAs externas para sincronización automática de inventario.</p>
+                <div className="mt-8 pt-8 border-t border-border">
+                  <h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4"><RefreshCcw size={16} className="text-sky-400" /> Channel Manager</h4>
+                  <div className="p-6 bg-muted rounded-[var(--radius-squircle-2xl)] border border-border">
+                    <p className="text-xs text-muted-foreground mb-4">Conecta con OTAs externas para sincronización automática de inventario.</p>
                     <div className="flex items-center gap-4">
-                      <span className="text-xs font-bold text-zinc-400 bg-zinc-800 px-3 py-1.5 rounded-[var(--radius-squircle-md)]">Booking.com</span>
-                      <span className="text-xs font-bold text-zinc-600 bg-zinc-900 px-3 py-1.5 rounded-[var(--radius-squircle-md)] border border-white/5">Airbnb</span>
-                      <span className="text-xs font-bold text-zinc-600 bg-zinc-900 px-3 py-1.5 rounded-[var(--radius-squircle-md)] border border-white/5">Expedia</span>
+                      <span className="text-xs font-bold text-muted-foreground bg-muted px-3 py-1.5 rounded-[var(--radius-squircle-md)]">Booking.com</span>
+                      <span className="text-xs font-bold text-muted-foreground bg-card px-3 py-1.5 rounded-[var(--radius-squircle-md)] border border-border">Airbnb</span>
+                      <span className="text-xs font-bold text-muted-foreground bg-card px-3 py-1.5 rounded-[var(--radius-squircle-md)] border border-border">Expedia</span>
                     </div>
                   </div>
                 </div>
@@ -773,7 +773,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
 
       <div className="fixed bottom-10 left-0 right-0 px-8 z-50 pointer-events-none">
         <div className="max-w-7xl mx-auto flex justify-center lg:justify-end">
-          <button form="master-settings-form" type="submit" disabled={isSaving || isCleaning} className="pointer-events-auto bg-indigo-600 hover:bg-indigo-500 text-white px-12 py-6 rounded-[var(--radius-squircle-3xl)] font-bold shadow-cta hover:scale-105 active:scale-95 transition-all flex items-center gap-4 disabled:opacity-50 ring-1 ring-white/20">
+          <button form="master-settings-form" type="submit" disabled={isSaving || isCleaning} className="pointer-events-auto bg-indigo-600 hover:bg-indigo-500 text-white px-12 py-6 rounded-[var(--radius-squircle-3xl)] font-bold shadow-cta hover:scale-105 active:scale-95 transition-all flex items-center gap-4 disabled:opacity-50 ring-1 ring-border">
             {isSaving ? <RefreshCcw className="animate-spin" size={24}/> : <Save size={24}/>}
             <span className="text-lg uppercase tracking-tight">Sincronizar Bóveda</span>
           </button>

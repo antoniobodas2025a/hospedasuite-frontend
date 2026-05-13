@@ -52,19 +52,19 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
         description="El hotel está en línea, pero los vectores de datos están vacíos. Registre su primera reserva para comenzar el mapeo de métricas."
         actionLabel="Desplegar Calendario"
         actionHref="/dashboard/calendar"
-        color="zinc" 
+        color="muted" 
       />
     );
   }
 
   return (
-    <div className='space-y-6 pb-20 font-poppins text-zinc-100'>
+    <div className='space-y-6 pb-20 font-poppins text-sidebar-foreground'>
       
       {/* HEADER: Liquid Glass 2.0 */}
-      <div className='flex justify-between items-center glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 shadow-2xl shadow-black/50 ring-1 ring-inset ring-white/10'>
+      <div className='flex justify-between items-center glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-border shadow-2xl shadow-black/50 ring-1 ring-inset ring-border'>
         <div>
-          <h2 className='text-2xl font-bold tracking-tight text-zinc-50'>Estado del Hotel</h2>
-          <p className='text-zinc-400 font-lora text-sm mt-1'>Rendimiento operativo y flujo financiero en tiempo real.</p>
+          <h2 className='text-2xl font-bold tracking-tight text-sidebar-foreground'>Estado del Hotel</h2>
+          <p className='text-muted-foreground font-lora text-sm mt-1'>Rendimiento operativo y flujo financiero en tiempo real.</p>
         </div>
         <div className='px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-[var(--radius-squircle-md)] font-medium text-xs flex items-center gap-2 border border-emerald-500/20 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]'>
           <TrendingUp className="size-4 stroke-[1.5]" /> Enlace Supabase Activo
@@ -76,17 +76,17 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
         
         {/* Card: Ingresos */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, ease: [0.23, 1, 0.32, 1] }} 
-          className='glass-card p-6 border border-white/5 shadow-xl relative overflow-hidden group'>
+          className='glass-card p-6 border border-border shadow-xl relative overflow-hidden group'>
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors duration-500"></div>
           <div className="relative z-10">
             <div className='flex items-center gap-3 mb-4'>
-              <div className='size-10 rounded-[var(--radius-squircle-lg)] bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-indigo-400'>
+              <div className='size-10 rounded-[var(--radius-squircle-lg)] bg-sidebar-accent border border-sidebar-border/50 flex items-center justify-center text-brand-400'>
                 <DollarSign className="size-5 stroke-[1.5]" />
               </div>
-              <h3 className='font-semibold text-zinc-400 text-xs tracking-widest uppercase'>Flujo del Mes</h3>
+              <h3 className='font-semibold text-muted-foreground text-xs tracking-widest uppercase'>Flujo del Mes</h3>
             </div>
-            <p className='text-4xl font-bold text-zinc-50 flex items-baseline gap-1'>
-              <span className='text-xl text-zinc-500'>$</span>
+            <p className='text-4xl font-bold text-sidebar-foreground flex items-baseline gap-1'>
+              <span className='text-xl text-muted-foreground'>$</span>
               {(stats?.totalRevenue || 0).toLocaleString()}
             </p>
           </div>
@@ -94,18 +94,18 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
 
         {/* Card: Ocupación */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, ease: [0.23, 1, 0.32, 1] }} 
-          className='glass-card p-6 border border-white/5 shadow-xl relative overflow-hidden group'>
+          className='glass-card p-6 border border-border shadow-xl relative overflow-hidden group'>
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-colors duration-500"></div>
           <div className="relative z-10">
             <div className='flex items-center gap-3 mb-4'>
-              <div className='size-10 rounded-[var(--radius-squircle-lg)] bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-emerald-400'>
+              <div className='size-10 rounded-[var(--radius-squircle-lg)] bg-sidebar-accent border border-sidebar-border/50 flex items-center justify-center text-success'>
                 <Users className="size-5 stroke-[1.5]" />
               </div>
-              <h3 className='font-semibold text-zinc-400 text-xs tracking-widest uppercase'>Densidad Actual</h3>
+              <h3 className='font-semibold text-muted-foreground text-xs tracking-widest uppercase'>Densidad Actual</h3>
             </div>
             <div className='flex items-end gap-3'>
-              <p className='text-4xl font-bold text-zinc-50'>{stats?.occupancyRate || 0}%</p>
-              <div className="flex-1 h-1.5 bg-zinc-800 rounded-full mb-2.5 overflow-hidden">
+              <p className='text-4xl font-bold text-sidebar-foreground'>{stats?.occupancyRate || 0}%</p>
+              <div className="flex-1 h-1.5 bg-sidebar-accent rounded-full mb-2.5 overflow-hidden">
                 <div className="h-full bg-emerald-500 rounded-full shadow-[0_0_10px_rgba(16,185,129,0.5)]" style={{ width: `${stats?.occupancyRate || 0}%` }}></div>
               </div>
             </div>
@@ -114,16 +114,16 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
 
         {/* Card: Reservas */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, ease: [0.23, 1, 0.32, 1] }} 
-          className='glass-card p-6 border border-white/5 shadow-xl relative overflow-hidden group'>
+          className='glass-card p-6 border border-border shadow-xl relative overflow-hidden group'>
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl group-hover:bg-sky-500/20 transition-colors duration-500"></div>
           <div className="relative z-10">
             <div className='flex items-center gap-3 mb-4'>
-              <div className='size-10 rounded-[var(--radius-squircle-lg)] bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-sky-400'>
+              <div className='size-10 rounded-[var(--radius-squircle-lg)] bg-sidebar-accent border border-sidebar-border/50 flex items-center justify-center text-brand-400'>
                 <CalendarDays className="size-5 stroke-[1.5]" />
               </div>
-              <h3 className='font-semibold text-zinc-400 text-xs tracking-widest uppercase'>Contratos Activos</h3>
+              <h3 className='font-semibold text-muted-foreground text-xs tracking-widest uppercase'>Contratos Activos</h3>
             </div>
-            <p className='text-4xl font-bold text-zinc-50'>{stats?.totalBookings || 0}</p>
+            <p className='text-4xl font-bold text-sidebar-foreground'>{stats?.totalBookings || 0}</p>
           </div>
         </motion.div>
 
@@ -135,19 +135,19 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
         {/* Gráfico de Ingresos */}
         <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} 
           className='lg:col-span-2 glass-card p-8'>
-          <h3 className='text-sm font-semibold text-zinc-400 mb-6 uppercase tracking-wider'>Evolución de Ingresos (Mes en Curso)</h3>
+          <h3 className='text-sm font-semibold text-muted-foreground mb-6 uppercase tracking-wider'>Evolución de Ingresos (Mes en Curso)</h3>
           <div className='h-[300px] w-full'>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={stats?.chartData || []} margin={{ top: 10, right: 10, left: -20, bottom: 0 }}>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#27272a" />
-                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'inherit' }} dy={10} />
-                <YAxis axisLine={false} tickLine={false} tick={{ fill: '#71717a', fontSize: 11, fontFamily: 'inherit' }} tickFormatter={(value) => `$${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
+                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--border)" />
+                <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 11, fontFamily: 'inherit' }} dy={10} />
+                <YAxis axisLine={false} tickLine={false} tick={{ fill: 'var(--muted-foreground)', fontSize: 11, fontFamily: 'inherit' }} tickFormatter={(value) => `$${value >= 1000 ? (value/1000).toFixed(0) + 'k' : value}`} />
                 <Tooltip 
-                  cursor={{ fill: '#27272a', opacity: 0.4 }}
-                  contentStyle={{ backgroundColor: '#09090b', borderRadius: '0.75rem', border: '1px solid #27272a', color: '#f4f4f5', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}
+                  cursor={{ fill: 'var(--muted)', opacity: 0.4 }}
+                  contentStyle={{ backgroundColor: 'var(--popover)', borderRadius: '0.75rem', border: '1px solid var(--border)', color: 'var(--popover-foreground)', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.5)' }}
                   formatter={(value, _name, _item, _index, _payload) => `$${Number(value ?? 0).toLocaleString()}`}
                 />
-                <Bar dataKey="ingresos" fill="#6366f1" radius={[4, 4, 0, 0]} maxBarSize={40} />
+                <Bar dataKey="ingresos" fill="var(--brand-500)" radius={[4, 4, 0, 0]} maxBarSize={40} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -155,38 +155,38 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
 
         {/* Próximas Llegadas */}
         <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} 
-          className='bg-[#0F0F0F] rounded-[var(--radius-squircle-2xl)] p-8 border border-zinc-800/80 shadow-2xl relative overflow-hidden flex flex-col'>
-          <div className="absolute top-0 right-0 w-40 h-40 bg-zinc-800/20 rounded-full blur-3xl z-0"></div>
+          className='bg-background rounded-[var(--radius-squircle-2xl)] p-8 border border-border shadow-2xl relative overflow-hidden flex flex-col'>
+          <div className="absolute top-0 right-0 w-40 h-40 bg-sidebar-accent/20 rounded-full blur-3xl z-0"></div>
           
-          <h3 className='text-sm font-semibold text-zinc-400 mb-6 relative z-10 flex items-center justify-between uppercase tracking-wider'>
+          <h3 className='text-sm font-semibold text-muted-foreground mb-6 relative z-10 flex items-center justify-between uppercase tracking-wider'>
             Llegadas Inminentes
-            <span className='text-[10px] font-bold bg-zinc-800 px-2.5 py-1 rounded-md text-zinc-300'>TOP 5</span>
+            <span className='text-[10px] font-bold bg-sidebar-accent px-2.5 py-1 rounded-md text-sidebar-accent-foreground'>TOP 5</span>
           </h3>
 
           <div className='flex-1 space-y-3 relative z-10'>
             {!stats?.upcomingArrivals || stats.upcomingArrivals.length === 0 ? (
-              <div className="h-full flex flex-col items-center justify-center text-zinc-600 gap-3">
+              <div className="h-full flex flex-col items-center justify-center text-muted-foreground gap-3">
                 <BedDouble className="size-8 stroke-[1]" />
                 <p className="font-lora italic text-sm">Sin vectores de llegada próximos.</p>
               </div>
             ) : (
               stats.upcomingArrivals.map((booking) => (
                 <div key={booking.id} 
-                  className='glass-card p-3.5 hover:bg-white/10 hover:border-white/10 transition-all duration-300 flex items-center justify-between group cursor-default'>
+                  className='glass-card p-3.5 hover:bg-accent hover:border-border transition-all duration-300 flex items-center justify-between group cursor-default'>
                   <div className="min-w-0 pr-2">
-                    <p className='font-medium text-sm text-zinc-200 group-hover:text-white transition-colors truncate'>
+                    <p className='font-medium text-sm text-sidebar-foreground group-hover:text-sidebar-foreground transition-colors truncate'>
                       {booking.guests?.[0]?.full_name || 'Huésped no registrado'}
                     </p>
-                    <p className='text-xs text-zinc-500 mt-1 flex items-center gap-1.5 truncate'>
+                    <p className='text-xs text-muted-foreground mt-1 flex items-center gap-1.5 truncate'>
                       <BedDouble className="size-3 shrink-0" /> {booking.rooms?.[0]?.name || 'Asignación P.'}
                     </p>
                   </div>
                   {/* 🚨 PARCHE ZERO-TRUST: Evaluación estricta de nulidad antes del split() */}
                   <div className='text-right shrink-0'>
-                    <p className='text-xs font-mono text-zinc-400 group-hover:text-indigo-400 transition-colors'>
+                    <p className='text-xs font-mono text-muted-foreground group-hover:text-brand-400 transition-colors'>
                       {booking.check_in ? booking.check_in.split('-').reverse().join('/') : 'Sin Fecha'}
                     </p>
-                    <ArrowRight className='size-3.5 text-zinc-600 inline-block mt-1 group-hover:translate-x-1 transition-transform' />
+                    <ArrowRight className='size-3.5 text-muted-foreground inline-block mt-1 group-hover:translate-x-1 transition-transform' />
                   </div>
                 </div>
               ))
@@ -259,8 +259,8 @@ export default function OverviewPanel({ hotelId }: OverviewPanelContainerProps) 
 
   if (isLoading) {
     return (
-      <div className="h-[60vh] flex flex-col items-center justify-center text-zinc-500 gap-4 bg-[#09090b]">
-        <Loader2 className="size-8 animate-spin text-zinc-400 stroke-[1.5]" />
+      <div className="h-[60vh] flex flex-col items-center justify-center text-muted-foreground gap-4 bg-background">
+        <Loader2 className="size-8 animate-spin text-muted-foreground stroke-[1.5]" />
         <p className="font-mono text-xs tracking-widest uppercase animate-pulse">Sincronizando telemetría...</p>
       </div>
     );
@@ -268,7 +268,7 @@ export default function OverviewPanel({ hotelId }: OverviewPanelContainerProps) 
 
   if (error || !stats) {
     return (
-      <div className="h-[60vh] flex flex-col items-center justify-center text-red-400/80 gap-4 bg-[#09090b]">
+      <div className="h-[60vh] flex flex-col items-center justify-center text-destructive gap-4 bg-background">
         <AlertCircle className="size-10 stroke-[1.5]" />
         <p className="font-mono text-sm uppercase tracking-wider">{error || 'Error crítico de estado'}</p>
         <button onClick={() => window.location.reload()} 

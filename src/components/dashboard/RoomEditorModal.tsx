@@ -184,37 +184,37 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
         animate={{ opacity: 1, scale: 1, y: 0 }}
         className="w-full max-w-4xl max-h-[90vh] glass-panel flex flex-col overflow-hidden"
       >
-        <div className="p-6 border-b border-white/5 flex justify-between items-center glass-card !rounded-none">
+        <div className="p-6 border-b border-border flex justify-between items-center glass-card !rounded-none">
           <div className="flex items-center gap-4">
-            <div className="size-12 rounded-[var(--radius-squircle-2xl)] bg-zinc-900 border border-white/10 flex items-center justify-center">
+            <div className="size-12 rounded-[var(--radius-squircle-2xl)] bg-card border border-border flex items-center justify-center">
               <Building2 className="size-6 text-indigo-400" />
             </div>
             <h2 className="text-2xl font-bold text-white tracking-tight">
               {initialData ? 'Afinación de Nodo' : 'Nuevo Nodo'}
             </h2>
           </div>
-          <button onClick={() => onClose(false)} className="p-3 bg-white/5 hover:bg-rose-500/20 rounded-[var(--radius-squircle-2xl)] transition-colors text-zinc-400 hover:text-rose-400">
+          <button onClick={() => onClose(false)} className="p-3 bg-muted hover:bg-rose-500/20 rounded-[var(--radius-squircle-2xl)] transition-colors text-muted-foreground hover:text-rose-400">
             <X className="size-5" />
           </button>
         </div>
 
-        <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar font-poppins text-zinc-200">
+        <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar font-poppins text-foreground">
           <form id="room-form" onSubmit={handleSubmit(onSubmitHandler)} className="space-y-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               <div className="space-y-8">
                 <div>
-                  <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4 flex items-center gap-2">
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Núcleo Operativo
                   </h3>
                   <div className="space-y-5">
-                    <input {...register('name')} className="w-full bg-transparent border-b border-white/10 text-white px-2 py-3 focus:outline-none focus:border-indigo-500 font-black text-2xl placeholder:text-zinc-700" placeholder="Nombre de Unidad" />
+                    <input {...register('name')} className="w-full bg-transparent border-b border-border text-white px-2 py-3 focus:outline-none focus:border-indigo-500 font-black text-2xl placeholder:text-muted-foreground" placeholder="Nombre de Unidad" />
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-zinc-900/50 p-4 rounded-[var(--radius-squircle-2xl)] border border-white/5">
-                        <label className="block text-[9px] font-bold text-zinc-500 mb-1 uppercase tracking-widest">Tarifa (COP)</label>
+                      <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
+                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Tarifa (COP)</label>
                         <input type="number" {...register('price', { valueAsNumber: true })} className="w-full bg-transparent text-emerald-400 focus:outline-none font-bold font-mono" />
                       </div>
-                      <div className="bg-zinc-900/50 p-4 rounded-[var(--radius-squircle-2xl)] border border-white/5">
-                        <label className="block text-[9px] font-bold text-zinc-500 mb-1 uppercase tracking-widest">Aforo</label>
+                      <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
+                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Aforo</label>
                         <input type="number" {...register('capacity', { valueAsNumber: true })} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono" />
                       </div>
                     </div>
@@ -222,10 +222,10 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                 </div>
 
                 <div>
-                  <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Comodidades</h3>
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Comodidades</h3>
                   <div className="flex flex-wrap gap-2">
                     {AVAILABLE_AMENITIES.map((amenity) => (
-                      <button type="button" key={amenity.id} onClick={() => toggleAmenity(amenity.id)} className={cn("flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-lg)] border text-[11px] font-medium transition-all", currentAmenities.includes(amenity.id) ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-white/10 bg-white/5 text-zinc-400 hover:bg-white/10 hover:text-zinc-300")}>
+                      <button type="button" key={amenity.id} onClick={() => toggleAmenity(amenity.id)} className={cn("flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-lg)] border text-[11px] font-medium transition-all", currentAmenities.includes(amenity.id) ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-border bg-muted text-muted-foreground hover:bg-accent hover:text-foreground")}>
                         <amenity.icon className="size-3.5" /> {amenity.label}
                       </button>
                     ))}
@@ -233,9 +233,9 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                 </div>
               </div>
 
-              <div className="space-y-8 border-t lg:border-t-0 lg:border-l border-white/5 pt-8 lg:pt-0 lg:pl-8">
+              <div className="space-y-8 border-t lg:border-t-0 lg:border-l border-border pt-8 lg:pt-0 lg:pl-8">
                 <div>
-                  <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Galería Visual (WebP)</h3>
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Galería Visual (WebP)</h3>
                   <div className="space-y-4">
                     <input type="file" accept="image/*" multiple className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
                     <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploadingMedia} className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 border-dashed rounded-[var(--radius-squircle-lg)] py-4 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
@@ -244,7 +244,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
 
                     <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                       {currentGallery.map((img: any, i: number) => (
-                        <div key={i} className="relative shrink-0 w-24 h-20 rounded-[var(--radius-squircle-md)] overflow-hidden border border-white/10 group">
+                        <div key={i} className="relative shrink-0 w-24 h-20 rounded-[var(--radius-squircle-md)] overflow-hidden border border-border group">
                           <img src={img.url || img} className="w-full h-full object-cover" />
                           <button type="button" onClick={() => setValue('gallery', currentGallery.filter((_, idx) => idx !== i))} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                             <Trash2 className="size-4 text-rose-400" />
@@ -259,8 +259,8 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
           </form>
         </div>
 
-        <div className="p-6 border-t border-white/5 bg-[#09090b]/80 flex justify-end gap-4">
-          <button onClick={() => onClose(false)} className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Descartar</button>
+        <div className="p-6 border-t border-border bg-card flex justify-end gap-4">
+          <button onClick={() => onClose(false)} className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Descartar</button>
           <button type="submit" form="room-form" disabled={isSaving || isUploadingMedia} className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-white bg-indigo-600 rounded-[var(--radius-squircle-lg)] shadow-cta">
             {isSaving ? 'Guardando...' : 'Compilar Mutación'}
           </button>

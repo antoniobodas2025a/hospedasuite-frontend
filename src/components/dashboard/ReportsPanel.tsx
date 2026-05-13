@@ -43,16 +43,16 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
   filteredSales, totalRevenue, avgTicket, dateRange, setDateRange, onDownloadExcel
 }) => {
   return (
-    <div className='space-y-8 pb-20 font-poppins text-zinc-100'>
+    <div className='space-y-8 pb-20 font-poppins text-foreground'>
       
       {/* HEADER ESTRATÉGICO: Liquid Glass Header */}
-      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 glass-card p-8 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl ring-1 ring-inset ring-white/10'>
+      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 glass-card p-8 rounded-[var(--radius-squircle-3xl)] border border-border shadow-2xl ring-1 ring-inset ring-border'>
         <div>
-          <h2 className='text-2xl font-bold text-zinc-50 tracking-tight flex items-center gap-3'>
+          <h2 className='text-2xl font-bold text-foreground tracking-tight flex items-center gap-3'>
             <BarChart3 className="text-indigo-400 size-6" />
             Reporte de Desempeño
           </h2>
-          <p className='text-zinc-400 text-sm mt-1 font-lora'>Auditoría de ingresos consolidados y métricas de conversión.</p>
+          <p className='text-muted-foreground text-sm mt-1 font-lora'>Auditoría de ingresos consolidados y métricas de conversión.</p>
         </div>
 
         <div className='flex flex-wrap items-center gap-4 w-full lg:w-auto'>
@@ -65,8 +65,8 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
                 className={cn(
                   "px-6 py-2 rounded-[var(--radius-squircle-lg)] text-xs font-bold uppercase tracking-widest transition-all",
                   dateRange === range 
-                    ? "bg-zinc-800 text-white shadow-lg ring-1 ring-white/10" 
-                    : "text-zinc-500 hover:text-zinc-300"
+                    ? "bg-card text-white shadow-lg ring-1 ring-border" 
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 {range === 'month' ? 'Mes' : range === 'year' ? 'Año' : 'Histórico'}
@@ -91,7 +91,7 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
           <div className="absolute -right-6 -bottom-6 size-32 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-colors" />
           <div className='relative z-10 space-y-2'>
             <p className='text-indigo-400/80 text-[10px] font-bold uppercase tracking-ultra'>Recaudación Bruta</p>
-            <h3 className='text-4xl font-bold text-zinc-50 tracking-tighter tabular-nums'>
+            <h3 className='text-4xl font-bold text-foreground tracking-tighter tabular-nums'>
               ${totalRevenue.toLocaleString()}
             </h3>
             <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-[var(--radius-squircle-md)] w-fit border border-emerald-500/20">
@@ -102,26 +102,26 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
         </div>
 
         {/* KPI: Volumen de Reservas */}
-        <div className='glass-card p-8 rounded-[var(--radius-squircle-3xl)] border border-white/5 flex items-center gap-6 shadow-inner'>
-          <div className='size-14 rounded-[var(--radius-squircle-2xl)] bg-zinc-950 flex items-center justify-center text-indigo-400 border border-white/5 shadow-2xl'>
+        <div className='glass-card p-8 rounded-[var(--radius-squircle-3xl)] border border-border flex items-center gap-6 shadow-inner'>
+          <div className='size-14 rounded-[var(--radius-squircle-2xl)] bg-background flex items-center justify-center text-indigo-400 border border-border shadow-2xl'>
             <Calendar size={28} strokeWidth={1.5} />
           </div>
           <div>
-            <p className='text-zinc-500 text-[10px] font-bold uppercase tracking-ultra'>Nodos Facturados</p>
-            <h3 className='text-3xl font-bold text-zinc-50 tracking-tight'>
-              {filteredSales.length} <span className="text-zinc-700 text-sm font-normal">Unidades</span>
+            <p className='text-muted-foreground text-[10px] font-bold uppercase tracking-ultra'>Nodos Facturados</p>
+            <h3 className='text-3xl font-bold text-foreground tracking-tight'>
+              {filteredSales.length} <span className="text-muted-foreground text-sm font-normal">Unidades</span>
             </h3>
           </div>
         </div>
 
         {/* KPI: Ticket Promedio */}
-        <div className='glass-card p-8 rounded-[var(--radius-squircle-3xl)] border border-white/5 flex items-center gap-6 shadow-inner'>
-          <div className='size-14 rounded-[var(--radius-squircle-2xl)] bg-zinc-950 flex items-center justify-center text-emerald-400 border border-white/5 shadow-2xl'>
+        <div className='glass-card p-8 rounded-[var(--radius-squircle-3xl)] border border-border flex items-center gap-6 shadow-inner'>
+          <div className='size-14 rounded-[var(--radius-squircle-2xl)] bg-background flex items-center justify-center text-emerald-400 border border-border shadow-2xl'>
             <Target size={28} strokeWidth={1.5} />
           </div>
           <div>
-            <p className='text-zinc-500 text-[10px] font-bold uppercase tracking-ultra'>Valor Promedio</p>
-            <h3 className='text-3xl font-bold text-zinc-50 tracking-tight tabular-nums'>
+            <p className='text-muted-foreground text-[10px] font-bold uppercase tracking-ultra'>Valor Promedio</p>
+            <h3 className='text-3xl font-bold text-foreground tracking-tight tabular-nums'>
               ${avgTicket.toLocaleString()}
             </h3>
           </div>
@@ -129,11 +129,11 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
       </div>
 
       {/* DATA LEDGER: Tabla de Alta Densidad */}
-      <div className='glass-card rounded-[var(--radius-squircle-3xl)] border border-white/5 overflow-hidden shadow-2xl ring-1 ring-white/5'>
+      <div className='glass-card rounded-[var(--radius-squircle-3xl)] border border-border overflow-hidden shadow-2xl ring-1 ring-border'>
         <div className='overflow-x-auto custom-scrollbar'>
           <table className='w-full text-left border-collapse'>
             <thead>
-              <tr className='bg-zinc-950/80 border-b border-white/5 text-[10px] font-bold text-zinc-500 uppercase tracking-widest'>
+              <tr className='bg-muted border-b border-border text-[10px] font-bold text-muted-foreground uppercase tracking-widest'>
                 <th className='p-6'>Vector Fecha</th>
                 <th className='p-6'>Entidad Huésped</th>
                 <th className='p-6'>Unidad Asignada</th>
@@ -149,20 +149,20 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
                     initial={{ opacity: 0 }}
                     animate={{ opacity: 1 }}
                     exit={{ opacity: 0 }}
-                    className='hover:bg-white/[0.02] transition-colors group'
+                    className='hover:bg-accent/10 transition-colors group'
                   >
-                    <td className='p-6 font-mono text-xs text-zinc-400'>{sale.date}</td>
+                    <td className='p-6 font-mono text-xs text-muted-foreground'>{sale.date}</td>
                     <td className='p-6'>
-                      <div className='font-bold text-zinc-200 group-hover:text-indigo-400 transition-colors'>{sale.guest}</div>
-                      <div className='text-[9px] text-zinc-600 font-mono mt-0.5'>HASH: {sale.id.split('-')[0]}</div>
+                      <div className='font-bold text-foreground group-hover:text-indigo-400 transition-colors'>{sale.guest}</div>
+                      <div className='text-[9px] text-muted-foreground font-mono mt-0.5'>HASH: {sale.id.split('-')[0]}</div>
                     </td>
-                    <td className='p-6 text-sm text-zinc-400'>{sale.room}</td>
+                    <td className='p-6 text-sm text-muted-foreground'>{sale.room}</td>
                     <td className='p-6'>
                       <span className='px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[var(--radius-squircle-md)] text-[9px] font-bold uppercase tracking-widest'>
                         {sale.status}
                       </span>
                     </td>
-                    <td className='p-6 font-bold text-zinc-100 text-right tabular-nums'>
+                    <td className='p-6 font-bold text-foreground text-right tabular-nums'>
                       ${sale.total.toLocaleString()}
                     </td>
                   </motion.tr>
@@ -173,7 +173,7 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
                   <td colSpan={5} className='p-20 text-center'>
                     <div className='flex flex-col items-center gap-4 opacity-30'>
                       <Search size={48} strokeWidth={1} />
-                      <p className="text-zinc-500 font-mono text-sm uppercase tracking-widest">No se detectaron transacciones en este vector temporal.</p>
+                      <p className="text-muted-foreground font-mono text-sm uppercase tracking-widest">No se detectaron transacciones en este vector temporal.</p>
                     </div>
                   </td>
                 </tr>

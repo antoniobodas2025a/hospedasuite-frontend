@@ -31,15 +31,15 @@ export default async function AdminLayout({
 
   return (
     // Océano Profundo dark theme — PMS/Dashboard
-    <div className='flex h-screen bg-sidebar text-sidebar-foreground overflow-hidden font-poppins selection:bg-brand-500/30 selection:text-brand-200'>
+    <div className='flex h-screen bg-sidebar text-sidebar-foreground overflow-hidden font-poppins selection:bg-brand-500/30 selection:text-brand-200 dark'>
       
       {/* Sidebar para Desktop */}
-      <aside className='hidden lg:block w-72 h-full border-r border-sidebar-border bg-sidebar/50 relative z-20'>
+      <div className='hidden lg:block w-72 h-full border-r border-sidebar-border bg-sidebar/50 relative z-20'>
         <Sidebar 
           user={plainUser} 
           hotelName={hotel?.name || 'HospedaSuite'} 
         />
-      </aside>
+      </div>
 
       {/* Contenido Principal */}
       <main className='flex-1 flex flex-col min-w-0 overflow-hidden relative bg-background'>

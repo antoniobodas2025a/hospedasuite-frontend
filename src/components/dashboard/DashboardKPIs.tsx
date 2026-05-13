@@ -58,7 +58,7 @@ const DashboardKPIsView: React.FC<DashboardKPIsViewProps> = ({ cards, dirtyRooms
             className='relative group cursor-default'
           >
             {/* Background Layer: Liquid Glass Deep */}
-            <div className="absolute inset-0 glass-card border border-white/5 shadow-2xl rounded-[var(--radius-squircle-3xl)] ring-1 ring-inset ring-white/10 z-0 transition-all group-hover:bg-zinc-900/60" />
+            <div className="absolute inset-0 glass-card border border-border shadow-2xl rounded-[var(--radius-squircle-3xl)] ring-1 ring-inset ring-border z-0 transition-all group-hover:bg-accent" />
             
             {/* Glow Effect Layer */}
             <div className={cn(
@@ -75,21 +75,21 @@ const DashboardKPIsView: React.FC<DashboardKPIsViewProps> = ({ cards, dirtyRooms
                 )}>
                   {card.icon}
                 </div>
-                <button className="text-zinc-600 hover:text-zinc-400 transition-colors">
+                <button className="text-muted-foreground hover:text-foreground transition-colors">
                    <ArrowUpRight size={16} />
                 </button>
               </div>
 
               <div className='space-y-1'>
-                <p className='text-[10px] font-bold text-zinc-500 uppercase tracking-ultra ml-1'>
+                <p className='text-[10px] font-bold text-muted-foreground uppercase tracking-ultra ml-1'>
                   {card.title}
                 </p>
-                <h3 className='text-4xl font-bold text-zinc-50 tracking-tighter tabular-nums'>
+                <h3 className='text-4xl font-bold text-foreground tracking-tighter tabular-nums'>
                   {card.value}
                 </h3>
-                <div className='flex items-center gap-2 mt-2 px-3 py-1.5 bg-zinc-950/50 border border-white/5 rounded-full w-fit'>
+                <div className='flex items-center gap-2 mt-2 px-3 py-1.5 bg-muted border border-border rounded-full w-fit'>
                   <div className={cn("size-1.5 rounded-full animate-pulse", card.glow.replace('bg-', 'bg-').split(' ')[0])} />
-                  <p className='text-[10px] font-bold text-zinc-400 uppercase tracking-widest'>
+                  <p className='text-[10px] font-bold text-muted-foreground uppercase tracking-widest'>
                     {card.sub}
                   </p>
                 </div>
@@ -108,7 +108,7 @@ const DashboardKPIsView: React.FC<DashboardKPIsViewProps> = ({ cards, dirtyRooms
             exit={{ opacity: 0, scale: 0.98 }}
             className='relative overflow-hidden'
           >
-            <div className="absolute inset-0 glass-card border border-rose-500/20 bg-rose-500/5 z-0 transition-all group-hover:bg-zinc-900/60" />
+            <div className="absolute inset-0 glass-card border border-rose-500/20 bg-rose-500/5 z-0 transition-all group-hover:bg-accent" />
             <div className='relative z-10 p-5 flex items-center justify-between gap-4'>
               <div className="flex items-center gap-4">
                 <div className="p-2.5 bg-rose-500/10 text-rose-400 rounded-[var(--radius-squircle-lg)] border border-rose-500/20 shadow-[0_0_15px_-5px_rgba(244,63,94,0.4)]">

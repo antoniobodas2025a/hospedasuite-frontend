@@ -87,7 +87,7 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
   };
 
   return (
-    <div className="space-y-[var(--space-pause)] pb-20 font-poppins text-zinc-100">
+    <div className="space-y-[var(--space-pause)] pb-20 font-poppins text-sidebar-foreground">
       
       {/* ========================================== */}
       {/* HEADER: CENTRO DE MANDO (Glassmorphism)    */}
@@ -95,15 +95,15 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 glass-panel p-8 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl relative overflow-hidden"
+        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 glass-panel p-8 rounded-[var(--radius-squircle-3xl)] border border-border shadow-2xl relative overflow-hidden"
       >
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
         
         <div>
-          <h1 className="text-3xl font-bold tracking-tighter text-white flex items-center gap-3">
-            {getGreeting()}, <span className="text-indigo-400">{hotelName}</span>
+          <h1 className="text-3xl font-bold tracking-tighter text-sidebar-foreground flex items-center gap-3">
+            {getGreeting()}, <span className="text-brand-400">{hotelName}</span>
           </h1>
-          <p className="text-zinc-400 font-medium text-sm mt-1 flex items-center gap-2">
+          <p className="text-muted-foreground font-medium text-sm mt-1 flex items-center gap-2">
             <Activity className="size-4 text-emerald-500 animate-pulse" />
             Sistemas operativos y sincronizados.
           </p>
@@ -112,8 +112,8 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
         <div className="glass-card px-6 py-3 flex items-center gap-4 shadow-inner">
           <Clock className="size-5 text-indigo-500 stroke-[1.5]" />
           <div className="flex flex-col">
-            <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Hora Local</span>
-            <span className="font-mono font-bold text-zinc-200 tracking-tight">
+            <span className="text-[10px] uppercase tracking-widest text-muted-foreground font-bold">Hora Local</span>
+            <span className="font-mono font-bold text-sidebar-foreground tracking-tight">
               {timeString || '--:--:--'}
             </span>
           </div>
@@ -130,7 +130,7 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
         className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"
       >
         {/* KPI 1: CAJA BRUTA */}
-        <motion.div variants={itemVariants} className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 relative overflow-hidden group">
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-border relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-100 transition-opacity">
             <TrendingUp className="size-16 text-emerald-500 -rotate-12 transform translate-x-4 -translate-y-4" />
           </div>
@@ -138,8 +138,8 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
             <div className="size-12 bg-emerald-500/10 text-emerald-400 rounded-[var(--radius-squircle-2xl)] flex items-center justify-center border border-emerald-500/20 mb-4">
               <Wallet className="size-6 stroke-[1.5]" />
             </div>
-            <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Caja Bruta (Hoy)</h3>
-            <p className="text-3xl font-bold text-white tracking-tighter">
+            <h3 className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-1">Caja Bruta (Hoy)</h3>
+            <p className="text-3xl font-bold text-sidebar-foreground tracking-tighter">
               ${metrics.grossRevenue.toLocaleString('es-CO')}
             </p>
             <div className="mt-4 flex items-center text-[10px] text-emerald-400 font-bold bg-emerald-500/10 w-max px-2 py-1 rounded-[var(--radius-squircle-md)] border border-emerald-500/20">
@@ -149,7 +149,7 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
         </motion.div>
 
         {/* KPI 2: OCUPACIÓN ACTIVA */}
-        <motion.div variants={itemVariants} className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 relative overflow-hidden group">
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-border relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-100 transition-opacity">
             <BedDouble className="size-16 text-indigo-500 transform translate-x-4 -translate-y-4" />
           </div>
@@ -157,9 +157,9 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
             <div className="size-12 bg-indigo-500/10 text-indigo-400 rounded-[var(--radius-squircle-2xl)] flex items-center justify-center border border-indigo-500/20 mb-4">
               <BedDouble className="size-6 stroke-[1.5]" />
             </div>
-            <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Ocupación Activa</h3>
-            <p className="text-3xl font-bold text-white tracking-tighter">
-              {metrics.occupiedRooms} <span className="text-lg text-zinc-500 font-medium">pax</span>
+            <h3 className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-1">Ocupación Activa</h3>
+            <p className="text-3xl font-bold text-sidebar-foreground tracking-tighter">
+              {metrics.occupiedRooms} <span className="text-lg text-muted-foreground font-medium">pax</span>
             </p>
             <div className="mt-4 flex items-center text-[10px] text-indigo-400 font-bold bg-indigo-500/10 w-max px-2 py-1 rounded-[var(--radius-squircle-md)] border border-indigo-500/20">
               En Casa
@@ -170,28 +170,28 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
         {/* KPI 3: HOUSEKEEPING ALERTS */}
         <motion.div variants={itemVariants} className={cn(
           "glass-card p-6 rounded-[var(--radius-squircle-2xl)] border relative overflow-hidden group transition-colors",
-          metrics.dirtyRooms > 0 ? "border-rose-500/30" : "border-white/5"
+          metrics.dirtyRooms > 0 ? "border-rose-500/30" : "border-border"
         )}>
           <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-100 transition-opacity">
-            <Sparkles className={cn("size-16 transform translate-x-4 -translate-y-4", metrics.dirtyRooms > 0 ? "text-rose-500" : "text-zinc-500")} />
+            <Sparkles className={cn("size-16 transform translate-x-4 -translate-y-4", metrics.dirtyRooms > 0 ? "text-rose-500" : "text-muted-foreground")} />
           </div>
           <div className="relative z-10">
             <div className={cn(
               "size-12 rounded-[var(--radius-squircle-2xl)] flex items-center justify-center border mb-4",
-              metrics.dirtyRooms > 0 ? "bg-rose-500/10 text-rose-400 border-rose-500/20 animate-pulse" : "bg-zinc-800 text-zinc-400 border-white/5"
+              metrics.dirtyRooms > 0 ? "bg-rose-500/10 text-rose-400 border-rose-500/20 animate-pulse" : "bg-muted text-muted-foreground border-border"
             )}>
               <Sparkles className="size-6 stroke-[1.5]" />
             </div>
-            <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Requieren Aseo</h3>
-            <p className="text-3xl font-bold text-white tracking-tighter">
-              {metrics.dirtyRooms} <span className="text-lg text-zinc-500 font-medium">unds</span>
+            <h3 className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-1">Requieren Aseo</h3>
+            <p className="text-3xl font-bold text-sidebar-foreground tracking-tighter">
+              {metrics.dirtyRooms} <span className="text-lg text-muted-foreground font-medium">unds</span>
             </p>
             {metrics.dirtyRooms > 0 ? (
               <div className="mt-4 flex items-center text-[10px] text-rose-400 font-bold bg-rose-500/10 w-max px-2 py-1 rounded-[var(--radius-squircle-md)] border border-rose-500/20">
                 Atención Requerida
               </div>
             ) : (
-              <div className="mt-4 flex items-center text-[10px] text-zinc-500 font-bold bg-zinc-800 w-max px-2 py-1 rounded-[var(--radius-squircle-md)] border border-white/5">
+              <div className="mt-4 flex items-center text-[10px] text-muted-foreground font-bold bg-muted w-max px-2 py-1 rounded-[var(--radius-squircle-md)] border border-border">
                 Al Día
               </div>
             )}
@@ -199,22 +199,22 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
         </motion.div>
 
         {/* KPI 4: DESGLOSE FINANCIERO */}
-        <motion.div variants={itemVariants} className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 relative overflow-hidden">
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-border relative overflow-hidden">
           <div className="relative z-10 h-full flex flex-col justify-between">
             <div className="flex items-center gap-3 mb-4">
               <div className="size-10 bg-sky-500/10 text-sky-400 rounded-[var(--radius-squircle-lg)] flex items-center justify-center border border-sky-500/20">
                 <ShoppingCart className="size-5 stroke-[1.5]" />
               </div>
-              <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Desglose POS</h3>
+              <h3 className="text-muted-foreground text-xs font-bold uppercase tracking-widest">Desglose POS</h3>
             </div>
             
             <div className="space-y-3">
               <div className="flex justify-between items-center glass-card p-3">
-                <span className="text-xs text-zinc-400 font-medium">A Habitación</span>
-                <span className="font-mono text-sm font-bold text-sky-400">${metrics.totalPosRevenue.toLocaleString('es-CO')}</span>
+                <span className="text-xs text-muted-foreground font-medium">A Habitación</span>
+                <span className="font-mono text-sm font-bold text-brand-400">${metrics.totalPosRevenue.toLocaleString('es-CO')}</span>
               </div>
               <div className="flex justify-between items-center glass-card p-3">
-                <span className="text-xs text-zinc-400 font-medium">Mostrador</span>
+                <span className="text-xs text-muted-foreground font-medium">Mostrador</span>
                 <span className="font-mono text-sm font-bold text-emerald-400">${metrics.totalWalkInRevenue.toLocaleString('es-CO')}</span>
               </div>
             </div>

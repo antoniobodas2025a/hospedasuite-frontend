@@ -46,22 +46,22 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
   onCreateOrder, onOpenProductModal, rooms
 }) => {
   return (
-    <div className='h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-6 pb-4 font-poppins text-zinc-100'>
+    <div className='h-[calc(100vh-8rem)] flex flex-col lg:flex-row gap-6 pb-4 font-poppins text-foreground'>
       
       {/* SECCIÓN IZQUIERDA: CATÁLOGO DE ACTIVOS (Liquid Glass) */}
-      <div className='flex-1 flex flex-col glass-card rounded-[var(--radius-squircle-3xl)] shadow-2xl border border-white/5 overflow-hidden ring-1 ring-inset ring-white/10'>
+      <div className='flex-1 flex flex-col glass-card rounded-[var(--radius-squircle-3xl)] shadow-2xl border border-border overflow-hidden ring-1 ring-inset ring-border'>
         
-        <div className='p-6 border-b border-white/5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-zinc-950/40'>
+        <div className='p-6 border-b border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-muted'>
           <div>
-            <h2 className='text-xl font-bold text-zinc-50 tracking-tight flex items-center gap-2'>
+            <h2 className='text-xl font-bold text-foreground tracking-tight flex items-center gap-2'>
               <Utensils className="size-5 text-indigo-400" />
               Carta Digital
             </h2>
-            <p className='text-xs text-zinc-400 font-lora mt-0.5'>Gestión de consumos y servicios de la unidad.</p>
+            <p className='text-xs text-muted-foreground font-lora mt-0.5'>Gestión de consumos y servicios de la unidad.</p>
           </div>
           <button
             onClick={onOpenProductModal}
-            className='flex items-center gap-2 px-4 py-2 bg-zinc-800/50 hover:bg-indigo-600 border border-white/5 text-zinc-300 hover:text-white rounded-[var(--radius-squircle-lg)] transition-all font-bold text-sm active:scale-95'
+            className='flex items-center gap-2 px-4 py-2 bg-muted hover:bg-indigo-600 border border-border text-foreground hover:text-white rounded-[var(--radius-squircle-lg)] transition-all font-bold text-sm active:scale-95'
           >
             <Plus size={16} strokeWidth={2} /> Nuevo Registro
           </button>
@@ -75,13 +75,13 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
               description="No se han detectado ítems operativos. Inicie la indexación de su primer producto o servicio."
               actionLabel="Inyectar Ítem"
               actionOnClick={onOpenProductModal}
-              color="zinc"
+              color="muted"
             />
           </div>
         ) : (
           <>
             {/* Navegación de Categorías (Neón Tab) */}
-            <div className='px-6 py-4 flex gap-2 overflow-x-auto border-b border-white/5 glass-card !rounded-none hide-scrollbar'>
+            <div className='px-6 py-4 flex gap-2 overflow-x-auto border-b border-border glass-card !rounded-none hide-scrollbar'>
               {CATEGORIES.map((cat) => (
                 <button
                   key={cat}
@@ -90,7 +90,7 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
                     "px-5 py-2 rounded-[var(--radius-squircle-lg)] text-xs font-bold transition-all duration-300 whitespace-nowrap border",
                     activeCategory === cat 
                       ? "bg-indigo-600 text-white border-indigo-400 shadow-lg shadow-indigo-500/20" 
-                      : "glass-card text-zinc-500 hover:text-zinc-300 hover:bg-white/10"
+                      : "glass-card text-muted-foreground hover:text-foreground hover:bg-accent"
                   )}
                 >
                   {cat}
@@ -114,7 +114,7 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
                     <div className="absolute -right-4 -top-4 size-20 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
                     <div className='text-5xl group-hover:scale-110 transition-transform duration-500 z-10'>{item.image_emoji}</div>
                     <div className="z-10">
-                      <h4 className='font-bold text-zinc-200 text-xs leading-tight mb-2'>{item.name}</h4>
+                      <h4 className='font-bold text-foreground text-xs leading-tight mb-2'>{item.name}</h4>
                       <span className='text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 py-1 px-3 rounded-full border border-emerald-500/20'>
                         ${item.price.toLocaleString()}
                       </span>
@@ -129,11 +129,11 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
 
       {/* SECCIÓN DERECHA: CARRITO DE LIQUIDACIÓN (Liquid Glass Deep) */}
       <div className='w-full lg:w-[400px] flex flex-col glass-panel overflow-hidden relative'>
-        <div className='p-6 bg-zinc-900/40 border-b border-white/5 flex items-center justify-between'>
-          <h3 className='font-bold text-zinc-100 flex items-center gap-2'>
+        <div className='p-6 bg-muted border-b border-border flex items-center justify-between'>
+          <h3 className='font-bold text-foreground flex items-center gap-2'>
             <ShoppingBag size={18} className="text-indigo-400" /> Detalle del Pedido
           </h3>
-          <span className='text-[10px] font-mono font-bold bg-zinc-800 text-zinc-400 px-2.5 py-1 rounded-[var(--radius-squircle-md)] border border-white/5 uppercase'>
+          <span className='text-[10px] font-mono font-bold bg-muted text-muted-foreground px-2.5 py-1 rounded-[var(--radius-squircle-md)] border border-border uppercase'>
             {cart.length} Nodos
           </span>
         </div>
@@ -141,8 +141,8 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
         <div className='flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar'>
           <AnimatePresence>
             {cart.length === 0 ? (
-              <div className='h-full flex flex-col items-center justify-center text-zinc-600 text-center p-10'>
-                <div className="size-16 bg-zinc-900/50 rounded-full flex items-center justify-center mb-4 border border-white/5 shadow-inner">
+              <div className='h-full flex flex-col items-center justify-center text-muted-foreground text-center p-10'>
+                <div className="size-16 bg-muted rounded-full flex items-center justify-center mb-4 border border-border shadow-inner">
                   <Coffee size={32} className="opacity-20" />
                 </div>
                 <p className='text-xs font-bold uppercase tracking-widest opacity-50'>Esperando Selección...</p>
@@ -159,14 +159,14 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
                   <div className='flex items-center gap-3'>
                     <span className='text-2xl'>{item.image_emoji}</span>
                     <div>
-                      <div className='text-xs font-bold text-zinc-200'>{item.name}</div>
+                      <div className='text-xs font-bold text-foreground'>{item.name}</div>
                       <div className='text-[10px] text-emerald-400 font-mono font-bold'>${item.price.toLocaleString()}</div>
                     </div>
                   </div>
-                  <div className='flex items-center gap-2 bg-zinc-950/80 rounded-[var(--radius-squircle-lg)] p-1 border border-white/5 shadow-inner'>
-                    <button onClick={() => onAdjustQuantity(item.id, -1)} className='p-1.5 hover:bg-zinc-800 text-zinc-500 hover:text-rose-400 transition-all'><Minus size={12} /></button>
-                    <span className='text-xs font-mono font-bold w-5 text-center text-zinc-300'>{item.quantity}</span>
-                    <button onClick={() => onAdjustQuantity(item.id, 1)} className='p-1.5 hover:bg-zinc-800 text-zinc-500 hover:text-emerald-400 transition-all'><Plus size={12} /></button>
+                  <div className='flex items-center gap-2 bg-muted rounded-[var(--radius-squircle-lg)] p-1 border border-border shadow-inner'>
+                    <button onClick={() => onAdjustQuantity(item.id, -1)} className='p-1.5 hover:bg-muted text-muted-foreground hover:text-rose-400 transition-all'><Minus size={12} /></button>
+                    <span className='text-xs font-mono font-bold w-5 text-center text-foreground'>{item.quantity}</span>
+                    <button onClick={() => onAdjustQuantity(item.id, 1)} className='p-1.5 hover:bg-muted text-muted-foreground hover:text-emerald-400 transition-all'><Plus size={12} /></button>
                   </div>
                 </motion.div>
               ))
@@ -175,32 +175,32 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
         </div>
 
         {/* Footer del Carrito: Liquidación Financiera */}
-        <div className='p-8 bg-zinc-900/80 border-t border-white/10 space-y-6'>
+        <div className='p-8 bg-card border-t border-border space-y-6'>
           <div className='space-y-3'>
-            <label className='text-[10px] font-bold uppercase tracking-ultra text-zinc-500 flex items-center gap-2'>
+            <label className='text-[10px] font-bold uppercase tracking-ultra text-muted-foreground flex items-center gap-2'>
               <BedDouble size={14} className="text-indigo-500" /> Cargar a Habitación
             </label>
             <select 
-              className='w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] text-xs font-bold text-zinc-200 outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all cursor-pointer appearance-none' 
+              className='w-full p-4 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-xs font-bold text-foreground outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all cursor-pointer appearance-none' 
               value={selectedRoomId} 
               onChange={(e) => setSelectedRoomId(e.target.value)}
             >
-              <option value='' className="bg-zinc-900 text-zinc-500">-- Seleccionar Unidad --</option>
+              <option value='' className="bg-card text-muted-foreground">-- Seleccionar Unidad --</option>
               {rooms.map((room) => (
-                <option key={room.id} value={room.id} className="bg-zinc-900 text-zinc-200">{room.name}</option>
+                <option key={room.id} value={room.id} className="bg-card text-foreground">{room.name}</option>
               ))}
             </select>
           </div>
           <div className='flex justify-between items-end'>
             <div>
-              <p className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest'>Total Liquidación</p>
+              <p className='text-[10px] font-bold text-muted-foreground uppercase tracking-widest'>Total Liquidación</p>
               <p className='text-4xl font-bold text-emerald-400 tracking-tighter'>${cartTotal.toLocaleString()}</p>
             </div>
           </div>
           <button 
             onClick={onCreateOrder} 
             disabled={cart.length === 0 || !selectedRoomId} 
-            className='w-full py-5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-bold rounded-[1.5rem] shadow-xl shadow-indigo-500/20 transition-all flex justify-center items-center gap-3 active:scale-95 border border-indigo-400/20'
+            className='w-full py-5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-muted disabled:text-muted-foreground text-white font-bold rounded-[1.5rem] shadow-xl shadow-indigo-500/20 transition-all flex justify-center items-center gap-3 active:scale-95 border border-indigo-400/20'
           >
             <CreditCard size={20} strokeWidth={2} /> 
             {cart.length === 0 ? 'Cesta Vacía' : !selectedRoomId ? 'Falta Unidad' : 'Confirmar Cargo'}
@@ -259,11 +259,11 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelConta
               initial={{ scale: 0.9, opacity: 0, y: 20 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 20 }} 
-              className='bg-[#09090b]/95 border border-white/5 w-full max-w-md rounded-[var(--radius-squircle-3xl)] p-10 shadow-2xl ring-1 ring-white/10'
+              className='bg-card border border-border w-full max-w-md rounded-[var(--radius-squircle-3xl)] p-10 shadow-2xl ring-1 ring-border'
             >
               <div className='flex justify-between items-center mb-8'>
-                <h3 className='text-2xl font-bold text-zinc-50 tracking-tight'>Inyectar Producto</h3>
-                <button onClick={() => setIsProductModalOpen(false)} className='text-zinc-500 hover:text-white transition-colors'>
+                <h3 className='text-2xl font-bold text-foreground tracking-tight'>Inyectar Producto</h3>
+                <button onClick={() => setIsProductModalOpen(false)} className='text-muted-foreground hover:text-white transition-colors'>
                   <X size={24} strokeWidth={1.5} />
                 </button>
               </div>
@@ -271,17 +271,17 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelConta
               <div className='space-y-6'>
                 <div className='flex gap-4'>
                   <div className='space-y-2'>
-                    <label className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1'>Icono</label>
+                    <label className='text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1'>Icono</label>
                     <input 
-                      className='w-20 h-14 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-center text-3xl outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner' 
+                      className='w-20 h-14 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-center text-3xl outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner' 
                       value={productForm.image_emoji} 
                       onChange={(e) => setProductForm({ ...productForm, image_emoji: e.target.value })} 
                     />
                   </div>
                   <div className='flex-1 space-y-2'>
-                    <label className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1'>Identificador</label>
+                    <label className='text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1'>Identificador</label>
                     <input 
-                      className='w-full h-14 p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] font-bold text-zinc-200 outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner' 
+                      className='w-full h-14 p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] font-bold text-foreground outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner' 
                       placeholder="Ej. Coca Cola"
                       value={productForm.name} 
                       onChange={(e) => setProductForm({ ...productForm, name: e.target.value })} 
@@ -291,21 +291,21 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelConta
 
                 <div className='grid grid-cols-2 gap-4'>
                   <div className='space-y-2'>
-                    <label className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1'>Taxonomía</label>
+                    <label className='text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1'>Taxonomía</label>
                     <select 
-                      className='w-full h-14 px-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] font-bold text-zinc-200 outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer appearance-none' 
+                      className='w-full h-14 px-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] font-bold text-foreground outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer appearance-none' 
                       value={productForm.category} 
                       onChange={(e) => setProductForm({ ...productForm, category: e.target.value })}
                     >
-                      {CATEGORIES.map((c) => <option key={c} value={c} className="bg-zinc-900">{c}</option>)}
+                      {CATEGORIES.map((c) => <option key={c} value={c} className="bg-card">{c}</option>)}
                     </select>
                   </div>
                   <div className='space-y-2'>
-                    <label className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1'>Valor (COP)</label>
+                    <label className='text-[10px] font-bold text-muted-foreground uppercase tracking-widest ml-1'>Valor (COP)</label>
                     <input 
                       type='number' 
                       min="0" 
-                      className='w-full h-14 p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] font-mono font-bold text-emerald-400 outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner' 
+                      className='w-full h-14 p-4 bg-background border border-border rounded-[var(--radius-squircle-2xl)] font-mono font-bold text-emerald-400 outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner' 
                       value={productForm.price === 0 ? '' : productForm.price} 
                       onChange={(e) => setProductForm({ ...productForm, price: Math.max(0, Number(e.target.value)) })} 
                     />
@@ -316,14 +316,14 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelConta
               <div className='flex gap-4 mt-10'>
                 <button 
                   onClick={() => setIsProductModalOpen(false)} 
-                  className='flex-1 py-4 text-zinc-500 font-bold hover:text-zinc-300 transition-colors'
+                  className='flex-1 py-4 text-muted-foreground font-bold hover:text-foreground transition-colors'
                 >
                   Cancelar
                 </button>
                 <button 
                   onClick={createProduct} 
                   disabled={!productForm.name || (productForm.price ?? 0) <= 0} 
-                  className='flex-[2] py-4 px-8 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-bold rounded-[var(--radius-squircle-2xl)] shadow-2xl transition-all flex items-center justify-center gap-2'
+                  className='flex-[2] py-4 px-8 bg-indigo-600 hover:bg-indigo-500 disabled:bg-muted disabled:text-muted-foreground text-white font-bold rounded-[var(--radius-squircle-2xl)] shadow-2xl transition-all flex items-center justify-center gap-2'
                 >
                   <Save size={18} /> Compilar Producto
                 </button>

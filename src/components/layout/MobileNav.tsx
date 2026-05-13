@@ -46,12 +46,12 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
         transition={springGentle()}
         className="fixed inset-x-4 bottom-6 z-50"
       >
-        <div className="glass-panel shadow-2xl shadow-black/50 rounded-[var(--radius-squircle-2xl)] p-2 flex items-center justify-between ring-1 ring-inset ring-white/10">
+        <div className="glass-panel shadow-2xl shadow-black/50 rounded-[var(--radius-squircle-2xl)] p-2 flex items-center justify-between ring-1 ring-inset ring-border">
           
           {/* Botón Home / Quick Access */}
           <Link href="/dashboard" className={cn(
             "p-4 rounded-[var(--radius-squircle-lg)] transition-all active:scale-90",
-            activePath === '/dashboard' ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-500 hover:text-zinc-300"
+            activePath === '/dashboard' ? "text-brand-400 bg-brand-500/10" : "text-muted-foreground hover:text-sidebar-foreground"
           )}>
             <Home className="size-6 stroke-[1.5]" />
           </Link>
@@ -59,7 +59,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
           {/* Botón Calendario */}
           <Link href="/dashboard/calendar" className={cn(
             "p-4 rounded-[var(--radius-squircle-lg)] transition-all active:scale-90",
-            activePath === '/dashboard/calendar' ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-500 hover:text-zinc-300"
+            activePath === '/dashboard/calendar' ? "text-brand-400 bg-brand-500/10" : "text-muted-foreground hover:text-sidebar-foreground"
           )}>
             <Calendar className="size-6 stroke-[1.5]" />
           </Link>
@@ -82,7 +82,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
             onClick={onToggleMenu}
             className={cn(
               "p-4 rounded-[var(--radius-squircle-lg)] transition-all active:scale-90",
-              showMenu ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-500 hover:text-zinc-300"
+              showMenu ? "text-brand-400 bg-brand-500/10" : "text-muted-foreground hover:text-sidebar-foreground"
             )}
             whileTap={{ scale: 0.9 }}
             transition={springSnappy()}
@@ -115,15 +115,15 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
             >
               <div className="grid grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-1 pb-4">
                 {menuItems.map((item) => (
-                  <Link 
+                    <Link 
                     key={item.id} 
                     href={item.href} 
                     onClick={onToggleMenu} 
                     className={cn(
                       "flex items-center gap-3 p-4 rounded-[var(--radius-squircle-lg)] border transition-all active:scale-95 group",
                       activePath === item.href 
-                        ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" 
-                        : "bg-zinc-800/20 border-white/5 text-zinc-400 hover:text-zinc-200"
+                        ? "bg-brand-500/10 border-brand-500/20 text-brand-400" 
+                        : "bg-muted border-border text-sidebar-foreground/70 hover:text-sidebar-foreground"
                     )}
                   >
                     <item.icon className={cn("size-5 stroke-[1.5]", item.color)} /> 
@@ -132,7 +132,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
                 ))}
               </div>
               
-              <div className="mt-2 pt-4 border-t border-white/5">
+              <div className="mt-2 pt-4 border-t border-border">
                 <motion.button 
                   onClick={onOpenShiftModal} 
                   className="flex items-center justify-center gap-3 w-full p-4 rounded-[var(--radius-squircle-lg)] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-sm transition-all"
