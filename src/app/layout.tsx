@@ -35,7 +35,7 @@ export default function RootLayout({
 }>) {
   return (
     // 🛡️ suppressHydrationWarning añadido preventivamente para extensiones o Theme Providers
-    <html lang='es' className={cn("font-sans", geist.variable)} suppressHydrationWarning>
+    <html lang='es' className={cn("font-sans dark", geist.variable)} suppressHydrationWarning>
       <body className={geist.className}>
         {children}
       </body>
