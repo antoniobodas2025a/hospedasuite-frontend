@@ -22,19 +22,19 @@ export default function HousekeepingClient({ initialRooms }: { initialRooms: any
     <div className="space-y-10">
       {/* 1. SECCIÓN CRÍTICA: UNIDADES SUCIAS (Prioridad 1) */}
       <section className="space-y-4">
-        <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-rose-400 flex items-center gap-2">
+        <h3 className="text-xs font-bold uppercase tracking-ultra text-rose-400 flex items-center gap-2">
           <AlertCircle size={14} /> Requerimiento de Limpieza ({dirtyRooms.length})
         </h3>
         
         {dirtyRooms.length === 0 ? (
-          <div className="p-12 border border-dashed border-white/5 rounded-[2.5rem] text-center bg-zinc-900/20">
+          <div className="p-12 border border-dashed border-white/5 rounded-[var(--radius-squircle-3xl)] text-center bg-zinc-900/20">
             <CheckCircle2 className="mx-auto size-8 text-emerald-500/30 mb-3" />
             <p className="text-zinc-500 font-medium italic">Todas las unidades se reportan en estado óptimo.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {dirtyRooms.map(room => (
-              <div key={room.id} className="p-6 bg-zinc-900/40 border border-rose-500/20 rounded-[2rem] flex justify-between items-center group hover:bg-zinc-900/60 transition-all">
+              <div key={room.id} className="p-6 bg-zinc-900/40 border border-rose-500/20 rounded-[var(--radius-squircle-2xl)] flex justify-between items-center group hover:bg-zinc-900/60 transition-all">
                 <div>
                   <h4 className="text-xl font-bold text-zinc-100">{room.name}</h4>
                   <p className="text-[10px] font-bold text-rose-400 uppercase mt-1">Estado: Sucia / Post-Checkout</p>
@@ -42,7 +42,7 @@ export default function HousekeepingClient({ initialRooms }: { initialRooms: any
                 <button
                   disabled={loadingId === room.id}
                   onClick={() => handleStatusChange(room.id, 'available')}
-                  className="p-4 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-2xl transition-all flex items-center gap-2 font-bold text-sm shadow-xl"
+                  className="p-4 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-[var(--radius-squircle-2xl)] transition-all flex items-center gap-2 font-bold text-sm shadow-xl"
                 >
                   {loadingId === room.id ? <RefreshCw className="animate-spin" size={18} /> : <Sparkles size={18} />}
                   Listo para Check-in
@@ -55,10 +55,10 @@ export default function HousekeepingClient({ initialRooms }: { initialRooms: any
 
       {/* 2. INVENTARIO GENERAL */}
       <section className="space-y-4">
-        <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-zinc-500">Estado General de Planta</h3>
+        <h3 className="text-xs font-bold uppercase tracking-ultra text-zinc-500">Estado General de Planta</h3>
         <div className="grid grid-cols-2 md:grid-cols-4 xl:grid-cols-6 gap-3">
           {otherRooms.map(room => (
-            <div key={room.id} className="p-4 bg-zinc-950 border border-white/5 rounded-2xl flex flex-col gap-3">
+            <div key={room.id} className="p-4 bg-zinc-950 border border-white/5 rounded-[var(--radius-squircle-2xl)] flex flex-col gap-3">
               <div className="flex justify-between items-start">
                 <span className="text-sm font-bold text-zinc-200">{room.name}</span>
                 <div className={cn(
@@ -70,7 +70,7 @@ export default function HousekeepingClient({ initialRooms }: { initialRooms: any
               <select 
                 value={room.status}
                 onChange={(e) => handleStatusChange(room.id, e.target.value as RoomStatus)}
-                className="bg-zinc-900 border-none text-[10px] font-bold uppercase tracking-widest text-zinc-400 rounded-lg p-1 outline-none"
+                className="bg-zinc-900 border-none text-[10px] font-bold uppercase tracking-widest text-zinc-400 rounded-[var(--radius-squircle-md)] p-1 outline-none"
               >
                 <option value="available">Disponible</option>
                 <option value="occupied">Ocupada</option>

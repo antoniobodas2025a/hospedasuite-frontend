@@ -13,6 +13,7 @@ import {
   ShoppingCart
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useRouter } from 'next/navigation';
 
 // CONTRATO ESTRICTO DE HIDRATACIÓN (RSC -> Client)
 interface DashboardMetrics {
@@ -30,6 +31,7 @@ interface DashboardPanelProps {
 
 export default function DashboardPanel({ hotelName, metrics }: DashboardPanelProps) {
   const [timeString, setTimeString] = useState<string>('');
+  const router = useRouter();
 
   // 1. SINCRONIZACIÓN DE RELOJ (Evita Hydration Mismatch en el Edge)
   useEffect(() => {
@@ -44,6 +46,24 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
     const interval = setInterval(updateTime, 1000);
     return () => clearInterval(interval);
   }, []);
+
+  // Mac 2026 — Keyboard shortcuts (Nielsen #7)
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      // Ignore if user is typing in an input
+      if (['INPUT', 'TEXTAREA', 'SELECT'].includes((e.target as HTMLElement).tagName)) return;
+      
+      switch (e.key.toLowerCase()) {
+        case 'n': router.push('/dashboard/calendar'); break; // Nueva reserva
+        case 'h': router.push('/dashboard/housekeeping'); break; // Limpieza
+        case 'r': router.push('/dashboard/reports'); break; // Reportes
+        case 'g': router.push('/dashboard/guests'); break; // Huespedes
+        case 's': router.push('/dashboard/settings'); break; // Configuracion
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [router]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -67,7 +87,7 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
   };
 
   return (
-    <div className="space-y-8 pb-20 font-poppins text-zinc-100">
+    <div className="space-y-[var(--space-pause)] pb-20 font-poppins text-zinc-100">
       
       {/* ========================================== */}
       {/* HEADER: CENTRO DE MANDO (Glassmorphism)    */}
@@ -75,7 +95,7 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
       <motion.div 
         initial={{ opacity: 0, y: -20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-zinc-900/40 backdrop-blur-3xl p-8 rounded-[2.5rem] border border-white/5 shadow-2xl relative overflow-hidden"
+        className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 glass-panel p-8 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl relative overflow-hidden"
       >
         <div className="absolute -right-20 -top-20 w-64 h-64 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none" />
         
@@ -89,7 +109,7 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
           </p>
         </div>
 
-        <div className="bg-zinc-950/80 px-6 py-3 rounded-2xl border border-white/5 flex items-center gap-4 shadow-inner">
+        <div className="bg-zinc-950/80 px-6 py-3 rounded-[var(--radius-squircle-2xl)] border border-white/5 flex items-center gap-4 shadow-inner">
           <Clock className="size-5 text-indigo-500 stroke-[1.5]" />
           <div className="flex flex-col">
             <span className="text-[10px] uppercase tracking-widest text-zinc-500 font-bold">Hora Local</span>
@@ -110,38 +130,38 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
         className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6"
       >
         {/* KPI 1: CAJA BRUTA */}
-        <motion.div variants={itemVariants} className="bg-zinc-900/40 backdrop-blur-sm p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-100 transition-opacity">
             <TrendingUp className="size-16 text-emerald-500 -rotate-12 transform translate-x-4 -translate-y-4" />
           </div>
           <div className="relative z-10">
-            <div className="size-12 bg-emerald-500/10 text-emerald-400 rounded-2xl flex items-center justify-center border border-emerald-500/20 mb-4">
+            <div className="size-12 bg-emerald-500/10 text-emerald-400 rounded-[var(--radius-squircle-2xl)] flex items-center justify-center border border-emerald-500/20 mb-4">
               <Wallet className="size-6 stroke-[1.5]" />
             </div>
             <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Caja Bruta (Hoy)</h3>
             <p className="text-3xl font-bold text-white tracking-tighter">
               ${metrics.grossRevenue.toLocaleString('es-CO')}
             </p>
-            <div className="mt-4 flex items-center text-[10px] text-emerald-400 font-bold bg-emerald-500/10 w-max px-2 py-1 rounded-lg border border-emerald-500/20">
-              <ArrowUpRight className="size-3 mr-1" /> Ledger Actualizado
+            <div className="mt-4 flex items-center text-[10px] text-emerald-400 font-bold bg-emerald-500/10 w-max px-2 py-1 rounded-[var(--radius-squircle-md)] border border-emerald-500/20">
+              <ArrowUpRight className="size-3 mr-1" /> Ingresos Actualizados
             </div>
           </div>
         </motion.div>
 
         {/* KPI 2: OCUPACIÓN ACTIVA */}
-        <motion.div variants={itemVariants} className="bg-zinc-900/40 backdrop-blur-sm p-6 rounded-[2rem] border border-white/5 relative overflow-hidden group">
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-100 transition-opacity">
             <BedDouble className="size-16 text-indigo-500 transform translate-x-4 -translate-y-4" />
           </div>
           <div className="relative z-10">
-            <div className="size-12 bg-indigo-500/10 text-indigo-400 rounded-2xl flex items-center justify-center border border-indigo-500/20 mb-4">
+            <div className="size-12 bg-indigo-500/10 text-indigo-400 rounded-[var(--radius-squircle-2xl)] flex items-center justify-center border border-indigo-500/20 mb-4">
               <BedDouble className="size-6 stroke-[1.5]" />
             </div>
             <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-widest mb-1">Ocupación Activa</h3>
             <p className="text-3xl font-bold text-white tracking-tighter">
               {metrics.occupiedRooms} <span className="text-lg text-zinc-500 font-medium">pax</span>
             </p>
-            <div className="mt-4 flex items-center text-[10px] text-indigo-400 font-bold bg-indigo-500/10 w-max px-2 py-1 rounded-lg border border-indigo-500/20">
+            <div className="mt-4 flex items-center text-[10px] text-indigo-400 font-bold bg-indigo-500/10 w-max px-2 py-1 rounded-[var(--radius-squircle-md)] border border-indigo-500/20">
               En Casa
             </div>
           </div>
@@ -149,7 +169,7 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
 
         {/* KPI 3: HOUSEKEEPING ALERTS */}
         <motion.div variants={itemVariants} className={cn(
-          "bg-zinc-900/40 backdrop-blur-sm p-6 rounded-[2rem] border relative overflow-hidden group transition-colors",
+          "glass-card p-6 rounded-[var(--radius-squircle-2xl)] border relative overflow-hidden group transition-colors",
           metrics.dirtyRooms > 0 ? "border-rose-500/30" : "border-white/5"
         )}>
           <div className="absolute top-0 right-0 p-6 opacity-20 group-hover:opacity-100 transition-opacity">
@@ -157,7 +177,7 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
           </div>
           <div className="relative z-10">
             <div className={cn(
-              "size-12 rounded-2xl flex items-center justify-center border mb-4",
+              "size-12 rounded-[var(--radius-squircle-2xl)] flex items-center justify-center border mb-4",
               metrics.dirtyRooms > 0 ? "bg-rose-500/10 text-rose-400 border-rose-500/20 animate-pulse" : "bg-zinc-800 text-zinc-400 border-white/5"
             )}>
               <Sparkles className="size-6 stroke-[1.5]" />
@@ -167,11 +187,11 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
               {metrics.dirtyRooms} <span className="text-lg text-zinc-500 font-medium">unds</span>
             </p>
             {metrics.dirtyRooms > 0 ? (
-              <div className="mt-4 flex items-center text-[10px] text-rose-400 font-bold bg-rose-500/10 w-max px-2 py-1 rounded-lg border border-rose-500/20">
+              <div className="mt-4 flex items-center text-[10px] text-rose-400 font-bold bg-rose-500/10 w-max px-2 py-1 rounded-[var(--radius-squircle-md)] border border-rose-500/20">
                 Atención Requerida
               </div>
             ) : (
-              <div className="mt-4 flex items-center text-[10px] text-zinc-500 font-bold bg-zinc-800 w-max px-2 py-1 rounded-lg border border-white/5">
+              <div className="mt-4 flex items-center text-[10px] text-zinc-500 font-bold bg-zinc-800 w-max px-2 py-1 rounded-[var(--radius-squircle-md)] border border-white/5">
                 Al Día
               </div>
             )}
@@ -179,21 +199,21 @@ export default function DashboardPanel({ hotelName, metrics }: DashboardPanelPro
         </motion.div>
 
         {/* KPI 4: DESGLOSE FINANCIERO */}
-        <motion.div variants={itemVariants} className="bg-zinc-900/40 backdrop-blur-sm p-6 rounded-[2rem] border border-white/5 relative overflow-hidden">
+        <motion.div variants={itemVariants} className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 relative overflow-hidden">
           <div className="relative z-10 h-full flex flex-col justify-between">
             <div className="flex items-center gap-3 mb-4">
-              <div className="size-10 bg-sky-500/10 text-sky-400 rounded-xl flex items-center justify-center border border-sky-500/20">
+              <div className="size-10 bg-sky-500/10 text-sky-400 rounded-[var(--radius-squircle-lg)] flex items-center justify-center border border-sky-500/20">
                 <ShoppingCart className="size-5 stroke-[1.5]" />
               </div>
               <h3 className="text-zinc-400 text-xs font-bold uppercase tracking-widest">Desglose POS</h3>
             </div>
             
             <div className="space-y-3">
-              <div className="flex justify-between items-center bg-zinc-950/50 p-3 rounded-xl border border-white/5">
+              <div className="flex justify-between items-center bg-zinc-950/50 p-3 rounded-[var(--radius-squircle-lg)] border border-white/5">
                 <span className="text-xs text-zinc-400 font-medium">A Habitación</span>
                 <span className="font-mono text-sm font-bold text-sky-400">${metrics.totalPosRevenue.toLocaleString('es-CO')}</span>
               </div>
-              <div className="flex justify-between items-center bg-zinc-950/50 p-3 rounded-xl border border-white/5">
+              <div className="flex justify-between items-center bg-zinc-950/50 p-3 rounded-[var(--radius-squircle-lg)] border border-white/5">
                 <span className="text-xs text-zinc-400 font-medium">Mostrador</span>
                 <span className="font-mono text-sm font-bold text-emerald-400">${metrics.totalWalkInRevenue.toLocaleString('es-CO')}</span>
               </div>

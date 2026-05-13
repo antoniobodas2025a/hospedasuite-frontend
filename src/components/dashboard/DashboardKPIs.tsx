@@ -58,7 +58,7 @@ const DashboardKPIsView: React.FC<DashboardKPIsViewProps> = ({ cards, dirtyRooms
             className='relative group cursor-default'
           >
             {/* Background Layer: Liquid Glass Deep */}
-            <div className="absolute inset-0 bg-zinc-900/40 backdrop-blur-2xl border border-white/5 shadow-2xl rounded-[2.5rem] ring-1 ring-inset ring-white/10 z-0 transition-all group-hover:bg-zinc-900/60" />
+            <div className="absolute inset-0 glass-card border border-white/5 shadow-2xl rounded-[var(--radius-squircle-3xl)] ring-1 ring-inset ring-white/10 z-0 transition-all group-hover:bg-zinc-900/60" />
             
             {/* Glow Effect Layer */}
             <div className={cn(
@@ -70,7 +70,7 @@ const DashboardKPIsView: React.FC<DashboardKPIsViewProps> = ({ cards, dirtyRooms
             <div className='relative z-10 p-7 overflow-hidden'>
               <div className='flex justify-between items-start mb-6'>
                 <div className={cn(
-                  'p-3 rounded-2xl border transition-all duration-500 shadow-inner',
+                  'p-3 rounded-[var(--radius-squircle-2xl)] border transition-all duration-500 shadow-inner',
                   card.accent
                 )}>
                   {card.icon}
@@ -81,7 +81,7 @@ const DashboardKPIsView: React.FC<DashboardKPIsViewProps> = ({ cards, dirtyRooms
               </div>
 
               <div className='space-y-1'>
-                <p className='text-[10px] font-bold text-zinc-500 uppercase tracking-[0.2em] ml-1'>
+                <p className='text-[10px] font-bold text-zinc-500 uppercase tracking-ultra ml-1'>
                   {card.title}
                 </p>
                 <h3 className='text-4xl font-bold text-zinc-50 tracking-tighter tabular-nums'>
@@ -108,10 +108,10 @@ const DashboardKPIsView: React.FC<DashboardKPIsViewProps> = ({ cards, dirtyRooms
             exit={{ opacity: 0, scale: 0.98 }}
             className='relative overflow-hidden'
           >
-            <div className="absolute inset-0 bg-rose-500/5 backdrop-blur-xl border border-rose-500/20 rounded-3xl z-0" />
+            <div className="absolute inset-0 glass-card border border-rose-500/20 bg-rose-500/5 z-0 transition-all group-hover:bg-zinc-900/60" />
             <div className='relative z-10 p-5 flex items-center justify-between gap-4'>
               <div className="flex items-center gap-4">
-                <div className="p-2.5 bg-rose-500/10 text-rose-400 rounded-xl border border-rose-500/20 shadow-[0_0_15px_-5px_rgba(244,63,94,0.4)]">
+                <div className="p-2.5 bg-rose-500/10 text-rose-400 rounded-[var(--radius-squircle-lg)] border border-rose-500/20 shadow-[0_0_15px_-5px_rgba(244,63,94,0.4)]">
                   <AlertCircle size={20} />
                 </div>
                 <div className="space-y-0.5">
@@ -121,7 +121,7 @@ const DashboardKPIsView: React.FC<DashboardKPIsViewProps> = ({ cards, dirtyRooms
                   </p>
                 </div>
               </div>
-              <button className="px-5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold uppercase tracking-widest rounded-xl border border-rose-500/20 transition-all active:scale-95">
+              <button className="px-5 py-2 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 text-[10px] font-bold uppercase tracking-widest rounded-[var(--radius-squircle-lg)] border border-rose-500/20 transition-all active:scale-95">
                 Despachar Equipo
               </button>
             </div>

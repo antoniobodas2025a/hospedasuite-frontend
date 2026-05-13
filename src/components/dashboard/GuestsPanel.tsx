@@ -37,7 +37,7 @@ const GuestsPanelView: React.FC<GuestsPanelViewProps> = ({
     <div className='space-y-6 pb-20 font-poppins text-zinc-100'>
       
       {/* HEADER Y BUSCADOR (Liquid Glass) */}
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-900/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/5 shadow-2xl shadow-black/50'>
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-card p-6 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl shadow-black/50'>
         <div>
           <h2 className='text-2xl font-bold tracking-tight text-zinc-50 flex items-center gap-3'>
             <User className="size-6 text-indigo-400" />
@@ -54,14 +54,14 @@ const GuestsPanelView: React.FC<GuestsPanelViewProps> = ({
             <input
               type='text'
               placeholder='Buscar identidad...'
-              className='w-full pl-11 pr-4 py-2.5 bg-zinc-950/50 border border-white/10 rounded-xl text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
+              className='w-full pl-11 pr-4 py-2.5 bg-zinc-950/50 border border-white/10 rounded-[var(--radius-squircle-lg)] text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
               value={searchTerm}
               onChange={(e) => onSearch(e.target.value)}
             />
           </div>
           <button
             onClick={onOpenNewModal}
-            className='flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all active:scale-95'
+            className='flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[var(--radius-squircle-lg)] font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all active:scale-95'
           >
             <Plus className="size-4 stroke-[2]" /> <span className='hidden md:inline'>Registrar</span>
           </button>
@@ -79,7 +79,7 @@ const GuestsPanelView: React.FC<GuestsPanelViewProps> = ({
               animate={{ opacity: 1, scale: 1 }}
               exit={{ opacity: 0, scale: 0.95 }}
               whileHover={{ y: -4 }}
-              className='bg-zinc-900/40 backdrop-blur-sm rounded-[2rem] p-6 border border-white/5 shadow-xl relative overflow-hidden group'
+              className='glass-card rounded-[var(--radius-squircle-2xl)] p-6 border border-white/5 shadow-xl relative overflow-hidden group'
             >
               {/* Resplandor Dinámico */}
               <div className="absolute -right-10 -top-10 w-32 h-32 bg-white/5 rounded-full blur-3xl group-hover:bg-indigo-500/10 transition-colors duration-500 z-0"></div>
@@ -87,7 +87,7 @@ const GuestsPanelView: React.FC<GuestsPanelViewProps> = ({
               <div className="relative z-10">
                 <div className='flex items-start justify-between mb-5'>
                   <div className='flex items-center gap-3'>
-                    <div className='size-11 bg-zinc-800/80 rounded-2xl border border-white/5 shadow-inner flex items-center justify-center text-zinc-300 font-display font-bold text-lg group-hover:text-indigo-400 group-hover:bg-indigo-500/10 transition-colors'>
+                    <div className='size-11 bg-zinc-800/80 rounded-[var(--radius-squircle-2xl)] border border-white/5 shadow-inner flex items-center justify-center text-zinc-300 font-display font-bold text-lg group-hover:text-indigo-400 group-hover:bg-indigo-500/10 transition-colors'>
                       {guest.full_name.charAt(0).toUpperCase()}
                     </div>
                     <div>
@@ -102,11 +102,11 @@ const GuestsPanelView: React.FC<GuestsPanelViewProps> = ({
                   </div>
 
                   {/* Acciones Rápidas */}
-                  <div className='flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-950/80 p-1 rounded-xl border border-white/5'>
-                    <button onClick={() => onOpenEditModal(guest)} className='p-1.5 hover:bg-zinc-800 text-zinc-500 hover:text-indigo-400 rounded-lg transition-colors'>
+                  <div className='flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity bg-zinc-950/80 p-1 rounded-[var(--radius-squircle-lg)] border border-white/5'>
+                    <button onClick={() => onOpenEditModal(guest)} className='p-1.5 hover:bg-zinc-800 text-zinc-500 hover:text-indigo-400 rounded-[var(--radius-squircle-md)] transition-colors'>
                       <Edit size={14} strokeWidth={2} />
                     </button>
-                    <button onClick={() => onDeleteGuest(guest.id)} className='p-1.5 hover:bg-rose-500/10 text-zinc-500 hover:text-rose-400 rounded-lg transition-colors'>
+                    <button onClick={() => onDeleteGuest(guest.id)} className='p-1.5 hover:bg-rose-500/10 text-zinc-500 hover:text-rose-400 rounded-[var(--radius-squircle-md)] transition-colors'>
                       <Trash2 size={14} strokeWidth={2} />
                     </button>
                   </div>
@@ -139,7 +139,7 @@ const GuestsPanelView: React.FC<GuestsPanelViewProps> = ({
 
         {/* Estado Vacío */}
         {guests.length === 0 && (
-          <div className='col-span-full flex flex-col items-center justify-center py-20 text-zinc-500 bg-zinc-900/20 rounded-[2.5rem] border border-dashed border-white/5'>
+          <div className='col-span-full flex flex-col items-center justify-center py-20 text-zinc-500 bg-zinc-900/20 rounded-[var(--radius-squircle-3xl)] border border-dashed border-white/5'>
             <User size={48} className='mb-4 stroke-[1] text-zinc-700' />
             <p className="font-mono text-sm uppercase tracking-widest">No se detectaron perfiles en la base de datos.</p>
           </div>
@@ -183,10 +183,10 @@ export default function GuestsPanel({ initialGuests, hotelId }: GuestsPanelConta
               initial={{ opacity: 0, scale: 0.95, y: 10 }}
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: 10 }}
-              className='bg-[#09090b]/95 border border-white/5 rounded-[2rem] w-full max-w-2xl shadow-2xl shadow-black/50 relative max-h-[90vh] overflow-hidden flex flex-col ring-1 ring-white/10'
+              className='bg-[#09090b]/95 border border-white/5 rounded-[var(--radius-squircle-2xl)] w-full max-w-2xl shadow-2xl shadow-black/50 relative max-h-[90vh] overflow-hidden flex flex-col ring-1 ring-white/10'
             >
               {/* Header Modal */}
-              <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#09090b]/80 backdrop-blur-xl z-20">
+              <div className="p-6 border-b border-white/5 flex justify-between items-center glass-card !rounded-none z-20">
                 <div>
                   <h3 className='text-xl sm:text-2xl font-bold text-zinc-50 tracking-tight'>
                     {selectedGuest ? 'Auditar Perfil de Huésped' : 'Indexar Nuevo Huésped'}
@@ -206,7 +206,7 @@ export default function GuestsPanel({ initialGuests, hotelId }: GuestsPanelConta
                   <div className='md:col-span-2'>
                     <label className='text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block'>Nombre Completo / Razón Social</label>
                     <input
-                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-xl text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
+                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-100 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
                       placeholder='Ej: Juan Pérez'
                       value={guestForm.full_name}
                       onChange={(e) => setGuestForm({ ...guestForm, full_name: e.target.value })}
@@ -216,7 +216,7 @@ export default function GuestsPanel({ initialGuests, hotelId }: GuestsPanelConta
                   <div>
                     <label className='text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block'>Tipo Documento</label>
                     <select
-                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-xl text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none cursor-pointer shadow-inner'
+                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all appearance-none cursor-pointer shadow-inner'
                       value={guestForm.doc_type}
                       onChange={(e) => setGuestForm({ ...guestForm, doc_type: e.target.value })}
                     >
@@ -231,7 +231,7 @@ export default function GuestsPanel({ initialGuests, hotelId }: GuestsPanelConta
                     <label className='text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block'>Número Documento</label>
                     <input
                       type='text'
-                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-xl text-zinc-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
+                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
                       value={guestForm.doc_number}
                       onChange={(e) => setGuestForm({ ...guestForm, doc_number: e.target.value })}
                     />
@@ -241,7 +241,7 @@ export default function GuestsPanel({ initialGuests, hotelId }: GuestsPanelConta
                     <label className='text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block'>Teléfono / Comms</label>
                     <input
                       type='tel'
-                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-xl text-zinc-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
+                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-100 font-mono text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
                       value={guestForm.phone}
                       onChange={(e) => setGuestForm({ ...guestForm, phone: e.target.value })}
                     />
@@ -251,7 +251,7 @@ export default function GuestsPanel({ initialGuests, hotelId }: GuestsPanelConta
                     <label className='text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block'>Vector Email (Opcional)</label>
                     <input
                       type='email'
-                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-xl text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
+                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
                       value={guestForm.email}
                       onChange={(e) => setGuestForm({ ...guestForm, email: e.target.value })}
                     />
@@ -260,7 +260,7 @@ export default function GuestsPanel({ initialGuests, hotelId }: GuestsPanelConta
                   <div>
                     <label className='text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block'>Origen / Jurisdicción</label>
                     <input
-                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-xl text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
+                      className='w-full p-3.5 bg-zinc-950/50 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-100 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner'
                       value={guestForm.country}
                       onChange={(e) => setGuestForm({ ...guestForm, country: e.target.value })}
                     />
@@ -269,7 +269,7 @@ export default function GuestsPanel({ initialGuests, hotelId }: GuestsPanelConta
                   <div className='md:col-span-2'>
                     <label className='text-xs font-bold text-zinc-500 uppercase tracking-wide mb-1.5 block'>Auditoría Forense (Alergias, VIP, Notas)</label>
                     <textarea
-                      className='w-full p-4 bg-zinc-950/50 border border-white/10 rounded-xl text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner resize-none h-24'
+                      className='w-full p-4 bg-zinc-950/50 border border-white/10 rounded-[var(--radius-squircle-lg)] text-zinc-200 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all shadow-inner resize-none h-24'
                       value={guestForm.notes}
                       onChange={(e) => setGuestForm({ ...guestForm, notes: e.target.value })}
                     />
@@ -278,16 +278,16 @@ export default function GuestsPanel({ initialGuests, hotelId }: GuestsPanelConta
               </div>
 
               {/* Footer Modal */}
-              <div className='p-6 border-t border-white/5 bg-zinc-950/80 flex gap-3 z-20 backdrop-blur-xl'>
+              <div className='p-6 border-t border-white/5 glass-card flex gap-3 z-20 !rounded-none'>
                 <button
                   onClick={() => setIsEditing(false)}
-                  className='px-6 py-2.5 text-sm font-bold text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-xl transition-all ml-auto'
+                  className='px-6 py-2.5 text-sm font-bold text-zinc-400 hover:text-zinc-200 hover:bg-white/5 rounded-[var(--radius-squircle-lg)] transition-all ml-auto'
                 >
                   Cancelar
                 </button>
                 <button
                   onClick={() => selectedGuest ? updateGuest() : createGuest()}
-                  className='px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-xl hover:bg-indigo-500 shadow-lg shadow-indigo-500/25 transition-all active:scale-95 text-sm flex items-center gap-2'
+                  className='px-8 py-2.5 bg-indigo-600 text-white font-bold rounded-[var(--radius-squircle-lg)] hover:bg-indigo-500 shadow-lg shadow-indigo-500/25 transition-all active:scale-95 text-sm flex items-center gap-2'
                 >
                   <Save className="size-4 stroke-[2]" />
                   {selectedGuest ? 'Compilar Cambios' : 'Indexar Huésped'}

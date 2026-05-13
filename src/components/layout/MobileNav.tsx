@@ -6,26 +6,15 @@ import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Calendar, ScanBarcode, Menu, X, Calculator, Home, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { springGentle, springSnappy } from '@/lib/mac2026/spring';
 import ShiftReportModal from '@/components/modals/ShiftReportModal';
-import { MENU_ITEMS } from '@/config/menuItems';
+import { MENU_ITEMS, type MenuItem as MenuItemType } from '@/config/menuItems';
 
-// ==========================================
-// BLOQUE 1: INTERFACES ESTRICTAS
-// ==========================================
-
-interface MenuItem {
-  id: string;
-  label: string;
-  href: string;
-  icon: LucideIcon;
-  color: string;
-}
-
-export interface MobileNavViewProps {
+interface MobileNavViewProps {
   isVisible: boolean;
   showMenu: boolean;
   activePath: string;
-  menuItems: MenuItem[];
+  menuItems: MenuItemType[];
   onToggleMenu: () => void;
   onOpenShiftModal: () => void;
   onOpenScanner?: () => void;
@@ -36,7 +25,7 @@ interface MobileNavProps {
 }
 
 // ==========================================
-// BLOQUE 2: COMPONENTE PRESENTACIONAL (UI Claude 2026)
+// BLOQUE 2: COMPONENTE PRESENTACIONAL
 // ==========================================
 
 const MobileNavView: React.FC<MobileNavViewProps> = ({
@@ -50,18 +39,18 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
 }) => {
   return (
     <nav className="md:hidden">
-      {/* Dock Inferior - Liquid Glass 2.0 */}
+      {/* Dock Inferior — Liquid Glass 2.0 + Spring Physics */}
       <motion.div
         initial={false}
         animate={{ y: isVisible ? 0 : 100, opacity: isVisible ? 1 : 0 }}
-        transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
+        transition={springGentle()}
         className="fixed inset-x-4 bottom-6 z-50"
       >
-        <div className="bg-zinc-900/40 backdrop-blur-3xl border border-white/5 shadow-2xl shadow-black/50 rounded-3xl p-2 flex items-center justify-between ring-1 ring-inset ring-white/10">
+        <div className="glass-panel shadow-2xl shadow-black/50 rounded-[var(--radius-squircle-2xl)] p-2 flex items-center justify-between ring-1 ring-inset ring-white/10">
           
           {/* Botón Home / Quick Access */}
           <Link href="/dashboard" className={cn(
-            "p-4 rounded-2xl transition-all active:scale-90",
+            "p-4 rounded-[var(--radius-squircle-lg)] transition-all active:scale-90",
             activePath === '/dashboard' ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-500 hover:text-zinc-300"
           )}>
             <Home className="size-6 stroke-[1.5]" />
@@ -69,41 +58,45 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
 
           {/* Botón Calendario */}
           <Link href="/dashboard/calendar" className={cn(
-            "p-4 rounded-2xl transition-all active:scale-90",
+            "p-4 rounded-[var(--radius-squircle-lg)] transition-all active:scale-90",
             activePath === '/dashboard/calendar' ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-500 hover:text-zinc-300"
           )}>
             <Calendar className="size-6 stroke-[1.5]" />
           </Link>
 
           {/* Botón Scanner - Centro de Acción */}
-          <button 
+          <motion.button 
             onClick={() => {
               if (showMenu) onToggleMenu();
               onOpenScanner?.();
             }}
-            className="p-4 rounded-2xl bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 active:scale-95 transition-transform"
+            className="p-4 rounded-[var(--radius-squircle-lg)] bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-transform"
+            whileTap={{ scale: 0.95 }}
+            transition={springSnappy()}
           >
             <ScanBarcode className="size-6 stroke-[1.5]" />
-          </button>
+          </motion.button>
 
           {/* Botón Trigger de Menú Expansivo */}
-          <button
+          <motion.button
             onClick={onToggleMenu}
             className={cn(
-              "p-4 rounded-2xl transition-all active:scale-90",
+              "p-4 rounded-[var(--radius-squircle-lg)] transition-all active:scale-90",
               showMenu ? "text-indigo-400 bg-indigo-500/10" : "text-zinc-500 hover:text-zinc-300"
             )}
+            whileTap={{ scale: 0.9 }}
+            transition={springSnappy()}
           >
             {showMenu ? <X className="size-6 stroke-[1.5]" /> : <Menu className="size-6 stroke-[1.5]" />}
-          </button>
+          </motion.button>
         </div>
       </motion.div>
 
-      {/* Menú Expansivo Anti-Grid */}
+      {/* Menú Expansivo — Spring Physics */}
       <AnimatePresence>
         {showMenu && (
           <>
-            {/* Overlay de Bloqueo Ciber-blindaje */}
+            {/* Overlay */}
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
@@ -117,8 +110,8 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
               initial={{ y: '100%', opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="fixed inset-x-4 bottom-28 z-50 bg-[#09090b]/90 backdrop-blur-3xl rounded-[2.5rem] border border-white/5 p-6 shadow-2xl overflow-hidden flex flex-col max-h-[70vh]"
+              transition={springGentle({ stiffness: 200, damping: 25, mass: 1.2 })}
+              className="fixed inset-x-4 bottom-28 z-50 glass-panel shadow-2xl overflow-hidden flex flex-col max-h-[70vh]"
             >
               <div className="grid grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-1 pb-4">
                 {menuItems.map((item) => (
@@ -127,26 +120,28 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
                     href={item.href} 
                     onClick={onToggleMenu} 
                     className={cn(
-                      "flex items-center gap-3 p-4 rounded-2xl border transition-all active:scale-95 group",
+                      "flex items-center gap-3 p-4 rounded-[var(--radius-squircle-lg)] border transition-all active:scale-95 group",
                       activePath === item.href 
                         ? "bg-indigo-500/10 border-indigo-500/20 text-indigo-400" 
                         : "bg-zinc-800/20 border-white/5 text-zinc-400 hover:text-zinc-200"
                     )}
                   >
                     <item.icon className={cn("size-5 stroke-[1.5]", item.color)} /> 
-                    <span className="text-xs font-semibold tracking-wide truncate font-poppins">{item.label}</span>
+                    <span className="text-xs font-semibold tracking-wide truncate">{item.label}</span>
                   </Link>
                 ))}
               </div>
               
               <div className="mt-2 pt-4 border-t border-white/5">
-                <button 
+                <motion.button 
                   onClick={onOpenShiftModal} 
-                  className="flex items-center justify-center gap-3 w-full p-4 rounded-2xl bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold font-poppins text-sm transition-all active:scale-[0.98]"
+                  className="flex items-center justify-center gap-3 w-full p-4 rounded-[var(--radius-squircle-lg)] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-sm transition-all"
+                  whileTap={{ scale: 0.98 }}
+                  transition={springSnappy()}
                 >
                   <Calculator className="size-5 stroke-[1.5]" />
                   Cierre de Turno Operativo
-                </button>
+                </motion.button>
               </div>
             </motion.div>
           </>
@@ -157,7 +152,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
 };
 
 // ==========================================
-// BLOQUE 3: COMPONENTE CONTENEDOR (Máquina de Estados)
+// BLOQUE 3: COMPONENTE CONTENEDOR
 // ==========================================
 
 export default function MobileNav({ onOpenScanner }: MobileNavProps) {
@@ -167,7 +162,7 @@ export default function MobileNav({ onOpenScanner }: MobileNavProps) {
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
   const pathname = usePathname();
 
-  // Lógica forense: Detección de Scroll para ocultar/mostrar Dock
+  // Detección de Scroll para ocultar/mostrar Dock
   useEffect(() => {
     const handleScroll = () => {
       if (showMenu) return; 
@@ -184,7 +179,7 @@ export default function MobileNav({ onOpenScanner }: MobileNavProps) {
     return () => window.removeEventListener('scroll', handleScroll);
   }, [lastScrollY, showMenu]);
 
-  // 🚨 CORRECCIÓN DE REGRESIÓN: Bloqueo de Scroll del body en Mobile-First
+  // Bloqueo de Scroll del body en Mobile-First
   useEffect(() => {
     if (showMenu) {
       document.body.style.overflow = 'hidden';
@@ -192,7 +187,6 @@ export default function MobileNav({ onOpenScanner }: MobileNavProps) {
       document.body.style.overflow = 'unset';
     }
     
-    // Función de limpieza en el desmontaje (previene memory/UI leaks)
     return () => { 
       document.body.style.overflow = 'unset'; 
     };

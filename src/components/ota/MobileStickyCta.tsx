@@ -53,7 +53,7 @@ export default function MobileStickyCta({
         isVisible ? 'translate-y-0' : 'translate-y-full',
       )}
     >
-      <div className="bg-card/95 backdrop-blur-xl border-t border-border/60 shadow-2xl shadow-black/10 px-4 py-3 safe-area-bottom">
+      <div className="glass-panel border-t border-border/60 shadow-2xl shadow-black/10 px-4 py-3 safe-area-bottom !rounded-none">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1">
             <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Desde</p>
@@ -72,9 +72,9 @@ export default function MobileStickyCta({
           <button
             onClick={handleReserve}
             className={cn(
-              'px-6 py-3.5 rounded-xl font-bold text-sm flex items-center gap-2 transition-all active:scale-95 shadow-lg',
+              'px-6 py-3.5 rounded-[var(--radius-squircle-lg)] font-bold text-sm flex items-center gap-2 transition-all active:scale-95 shadow-lg',
               checkIn && checkOut
-                ? 'bg-primary hover:bg-brand-700 text-primary-foreground shadow-brand-500/25'
+                ? 'bg-primary hover:bg-brand-700 text-primary-foreground shadow-cta'
                 : 'bg-foreground hover:bg-primary text-background shadow-foreground/20',
             )}
           >

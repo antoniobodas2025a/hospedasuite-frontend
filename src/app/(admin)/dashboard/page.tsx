@@ -60,7 +60,7 @@ export default async function DashboardPage() {
     <div className="h-full">
       {/* ALERTA VISUAL (Se ocultará si no hay errores) */}
       {(posRes.error || walkInRes.error) && (
-        <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-2xl text-rose-400 text-xs font-mono">
+        <div className="mb-6 p-4 bg-rose-500/10 border border-rose-500/20 rounded-[var(--radius-squircle-2xl)] text-rose-400 text-xs font-mono">
           ⚠️ ERROR DB: {posRes.error?.message || walkInRes.error?.message}
         </div>
       )}

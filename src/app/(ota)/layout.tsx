@@ -1,10 +1,9 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import AttributionTracker from '@/components/public/AttributionTracker';
-import { Inter, Calistoga } from 'next/font/google';
+import { Calistoga } from 'next/font/google';
 import '../globals.css';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const calistoga = Calistoga({
   weight: '400',
   subsets: ['latin'],
@@ -23,7 +22,7 @@ export const metadata: Metadata = {
 export default function OTALayout({ children }: { children: React.ReactNode }) {
   return (
     // data-theme="ota" activates Tierra & Sal palette via CSS cascade
-    <div data-theme="ota" className={`${inter.variable} ${calistoga.variable} font-sans bg-background text-foreground min-h-screen`}>
+    <div data-theme="ota" className={`${calistoga.variable} font-sans bg-background text-foreground min-h-screen`}>
       <AttributionTracker />
       {children}
     </div>

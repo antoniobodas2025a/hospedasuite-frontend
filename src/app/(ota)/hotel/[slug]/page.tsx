@@ -2,7 +2,7 @@ import { getHotelDetailsBySlugAction, getReviewStatsAction } from '@/app/actions
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, ShieldCheck, Star, CheckCircle2 } from 'lucide-react';
+import { MapPin, ShieldCheck, Star, CheckCircle2, Calendar, X, Flame } from 'lucide-react';
 import { getAmenityById } from '@/lib/amenity-registry';
 import type { Metadata } from 'next';
 import { RoomShowcaseModal } from '@/components/ota/RoomShowcaseModal'; 
@@ -21,7 +21,12 @@ import RoomCardSkeleton from '@/components/ota/RoomCardSkeleton';
 import ReviewSkeleton from '@/components/ota/ReviewSkeleton';
 import MapSkeleton from '@/components/ota/MapSkeleton';
 import StickySubNav from '@/components/ota/StickySubNav';
+import { SectionHeader } from '@/components/ui/glass';
 import { Suspense } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { springSnappy, springGentle } from '@/lib/mac2026/spring';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 // Mandato de renderizado dinámico para control de inventario en tiempo real
 export const dynamic = 'force-dynamic';
@@ -105,7 +110,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
   // Ver src/lib/amenity-registry.ts para el catalogo completo
 
   return (
-    <main className="min-h-screen bg-background text-foreground pb-24 font-poppins selection:bg-brand-500/30">
+    <main className="min-h-screen bg-background text-foreground pb-24 font-sans selection:bg-brand-500/30">
       
       {/* SEO Structured Data */}
       <HotelJsonLd hotel={hotel} reviewStats={reviewStats ?? undefined} />
@@ -141,11 +146,11 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
           <div className="flex items-start gap-4">
             {/* Logo del hotel */}
             {hotel.logo_url ? (
-              <div className="size-16 md:size-20 rounded-2xl overflow-hidden border border-border bg-card shadow-sm shrink-0">
+              <div className="size-16 md:size-20 rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border bg-card shadow-sm shrink-0">
                 <Image src={hotel.logo_url} alt={`${hotel.name} logo`} width={80} height={80} className="w-full h-full object-cover" />
               </div>
             ) : (
-              <div className="size-16 md:size-20 rounded-2xl bg-gradient-to-br from-brand-500 to-warm-600 flex items-center justify-center text-primary-foreground font-black text-2xl shadow-sm shrink-0">
+              <div className="size-16 md:size-20 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-500 to-warm-600 flex items-center justify-center text-primary-foreground font-black text-2xl shadow-sm shrink-0">
                 {hotel.name.charAt(0).toUpperCase()}
               </div>
             )}
@@ -161,14 +166,14 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
           </div>
           <div className="flex items-center gap-3">
             {reviewStats && reviewStats.total > 0 && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-emerald-50 border border-emerald-200 text-emerald-700 text-xs font-bold">
-                <Star size={12} className="fill-emerald-500 text-emerald-500" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success-muted border border-success-border text-success text-xs font-bold">
+                <Star size={12} className="fill-success text-success" />
                 {reviewStats.overall} ({reviewStats.total})
               </span>
             )}
             {hotel.category_badge && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-50 border border-amber-200 text-amber-700 text-xs font-bold">
-                <Star size={12} className="fill-amber-500" />
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warning-muted border border-warning-border text-warning text-xs font-bold">
+                <Star size={12} className="fill-warning" />
                 {hotel.category_badge}
               </span>
             )}
@@ -192,26 +197,53 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
       <div className="max-w-6xl mx-auto px-6 mt-8">
         
         {/* BARRA DE BÚSQUEDA INTERACTIVA */}
-        <div id="search-bar" className="mb-12">
+        <div id="search-bar" className={`transition-all duration-500 ${isSearchingDates ? 'mb-6' : 'mb-12'}`}>
           <AvailabilitySearchBar />
         </div>
+
+        {/* MAC 2026 — Predictive UI: Dates Chip morph
+            When dates are selected, a compact chip appears showing the range.
+            This creates visual continuity between search and results. */}
+        <AnimatePresence>
+          {isSearchingDates && checkin && checkout && (
+            <motion.div
+              initial={{ opacity: 0, y: -10, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -10, scale: 0.95 }}
+              transition={springSnappy()}
+              className="flex items-center gap-3 mb-6"
+            >
+              <div className="glass-pill px-4 py-2 flex items-center gap-3">
+                <Calendar size={14} className="text-brand-500" />
+                <span className="text-sm font-bold text-foreground">
+                  {format(parseISO(checkin), "dd MMM", { locale: es })} — {format(parseISO(checkout), "dd MMM", { locale: es })}
+                </span>
+                <span className="text-xs text-muted-foreground">
+                  · {Math.ceil((parseISO(checkout).getTime() - parseISO(checkin).getTime()) / (1000 * 60 * 60 * 24))} noche{Math.ceil((parseISO(checkout).getTime() - parseISO(checkin).getTime()) / (1000 * 60 * 60 * 24)) !== 1 ? 's' : ''}
+                </span>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        {/* MAC 2026 — Contextual Awareness: 
+            When dates are selected, Amenities/Story move below rooms.
+            Rooms section becomes the primary focus. */}
+        <div className={`grid gap-[var(--space-pause)] transition-all duration-500 ${isSearchingDates ? 'grid-cols-1 lg:grid-cols-3' : 'grid-cols-1 lg:grid-cols-2'}`}>
           
-          <div className="lg:col-span-2 space-y-10">
+          {/* LEFT: Main content */}
+          <div className={`space-y-[var(--space-pause)] ${isSearchingDates ? 'lg:col-span-2' : ''}`}>
             
             {/* AMENIDADES DEL HOTEL — Lo que ofrece la propiedad */}
-            {hotel.hotel_amenities && hotel.hotel_amenities.length > 0 && (
-              <div id="amenities" className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40">
-                <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-                  <span className="size-1.5 rounded-full bg-brand-400" />
-                  Lo que ofrece {hotel.name}
-                </h2>
+            {/* Moves below rooms when searching dates */}
+            {hotel.hotel_amenities && hotel.hotel_amenities.length > 0 && !isSearchingDates && (
+              <div id="amenities" className="glass-card p-6 md:p-8">
+                <SectionHeader title={`Lo que ofrece ${hotel.name}`} className="mb-4" />
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
                   {hotel.hotel_amenities.map((amenity: string) => {
                     const { icon: Icon, label } = getAmenityById(amenity);
                     return (
-                      <div key={amenity} className="flex items-center gap-2.5 p-3 rounded-xl bg-muted border border-border">
+                      <div key={amenity} className="flex items-center gap-2.5 p-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border">
                         <Icon size={16} className="text-brand-500 shrink-0" />
                         <span className="text-xs font-medium text-foreground/80">{label}</span>
                       </div>
@@ -233,7 +265,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                 {isSearchingDates ? 'Inventario Disponible' : 'Nuestras Unidades'}
               </h2>
               {isSearchingDates && (
-                <span className="text-xs font-bold text-emerald-700 bg-emerald-50 border border-emerald-200 px-4 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
+                <span className="text-xs font-bold text-success bg-success-muted border border-success-border px-4 py-1.5 rounded-full uppercase tracking-widest flex items-center gap-1.5 shadow-sm">
                   <CheckCircle2 className="size-4" /> Fechas Confirmadas
                 </span>
               )}
@@ -242,6 +274,31 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             {/* ACTIVIDAD RECIENTE — Urgencia social (configurable desde dashboard) */}
             {isSearchingDates && hotel.show_recent_activity !== false && (
               <RecentActivity messages={hotel.recent_activity_messages} />
+            )}
+
+            {/* MAC 2026 — Contextual Urgency Banner
+                When availability is critically low, show a prominent banner */}
+            {isSearchingDates && availableRooms.length > 0 && availableRooms.length <= 2 && (
+              <motion.div
+                initial={{ opacity: 0, y: -10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 0.3, ...springSnappy() }}
+                className="glass-card p-4 border-destructive/20 bg-destructive/5"
+              >
+                <div className="flex items-center gap-3">
+                  <div className="size-8 rounded-full bg-destructive/10 flex items-center justify-center shrink-0">
+                    <Flame size={16} className="text-destructive" />
+                  </div>
+                  <div>
+                    <p className="text-sm font-bold text-destructive">
+                      {availableRooms.length === 1 ? 'Solo queda 1 unidad disponible' : `Solo quedan ${availableRooms.length} unidades disponibles`}
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Estas fechas tienen alta demanda. Te recomendamos reservar ahora.
+                    </p>
+                  </div>
+                </div>
+              </motion.div>
             )}
 
             {/* FILTROS DE HABITACIONES + LISTADO */}
@@ -258,12 +315,27 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
               />
             </Suspense>
 
+            {/* AMENIDADES DEL HOTEL — Moves here when searching dates */}
+            {hotel.hotel_amenities && hotel.hotel_amenities.length > 0 && isSearchingDates && (
+              <div id="amenities" className="glass-card p-6 md:p-8">
+                <SectionHeader title={`Lo que ofrece ${hotel.name}`} className="mb-4" />
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  {hotel.hotel_amenities.map((amenity: string) => {
+                    const { icon: Icon, label } = getAmenityById(amenity);
+                    return (
+                      <div key={amenity} className="flex items-center gap-2.5 p-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border">
+                        <Icon size={16} className="text-brand-500 shrink-0" />
+                        <span className="text-xs font-medium text-foreground/80">{label}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
             {/* LA HISTORIA — Narrativa emocional (despues del producto) */}
-            <div id="story" className="bg-card/80 backdrop-blur-xl p-8 md:p-10 rounded-[2.5rem] shadow-sm border border-border/40">
-              <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-                <span className="size-1.5 rounded-full bg-warm-400" />
-                {hotel.story_section_title || 'La Historia'}
-              </h2>
+            <div id="story" className="glass-card p-8 md:p-10">
+              <SectionHeader title={hotel.story_section_title || 'La Historia'} className="mb-4" />
               <p className="text-muted-foreground leading-relaxed text-base font-lora italic mb-6">
                 {hotel.description || `Bienvenido a ${hotel.name}. Una joya en el corazon de ${hotel.location}.`}
               </p>
@@ -271,8 +343,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
               {hotel.show_trust_badges !== false && (
                 <div className="flex flex-wrap gap-6 pt-6 border-t border-border/50">
                   <div className="flex items-center gap-2">
-                    <div className="size-8 rounded-lg bg-emerald-500/10 border border-emerald-500/15 flex items-center justify-center">
-                      <CheckCircle2 size={14} className="text-emerald-600" />
+                    <div className="size-8 rounded-[var(--radius-squircle-md)] bg-success/10 border border-success/15 flex items-center justify-center">
+                      <CheckCircle2 size={14} className="text-success" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-foreground">{hotel.trust_badge_1_title || 'Reserva Directa'}</p>
@@ -280,8 +352,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                     </div>
                   </div>
                   <div className="flex items-center gap-2">
-                    <div className="size-8 rounded-lg bg-indigo-500/10 border border-indigo-500/15 flex items-center justify-center">
-                      <ShieldCheck size={14} className="text-indigo-600" />
+                    <div className="size-8 rounded-[var(--radius-squircle-md)] bg-trust-muted border border-trust-border flex items-center justify-center">
+                      <ShieldCheck size={14} className="text-trust" />
                     </div>
                     <div>
                       <p className="text-xs font-bold text-foreground">{hotel.trust_badge_2_title || 'Confirmacion Inmediata'}</p>
@@ -293,14 +365,11 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             </div>
 
             {/* REVIEWS — Opiniones de huespedes + Formulario */}
-            <div id="reviews" className="space-y-6">
+            <div id="reviews" className="space-y-[var(--space-breath)]">
               {/* Review summary — Social proof cuantificable arriba de las reviews */}
               {reviewStats && reviewStats.total > 0 && (
-                <div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40">
-                  <h2 className="text-sm font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <span className="size-1.5 rounded-full bg-emerald-400" />
-                    Opiniones de Huespedes
-                  </h2>
+                <div className="glass-card p-6 md:p-8">
+                  <SectionHeader title="Opiniones de Huespedes" className="mb-4" />
                   <div className="flex items-center gap-6">
                     <div className="text-center">
                       <div className="text-5xl font-black text-foreground tracking-tight">{reviewStats.overall}</div>
@@ -338,7 +407,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                 </div>
               )}
 
-              <Suspense fallback={<div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40 space-y-6"><ReviewSkeleton /><ReviewSkeleton /><ReviewSkeleton /></div>}>
+              <Suspense fallback={<div className="glass-card p-6 md:p-8 space-y-6"><ReviewSkeleton /><ReviewSkeleton /><ReviewSkeleton /></div>}>
                 <ReviewsSection hotelId={hotel.id} hotelName={hotel.name} />
               </Suspense>
             </div>

@@ -85,7 +85,7 @@ export default function HotelGallery({ images, hotelName, location }: HotelGalle
 
         {/* Imagen principal — ocupa 2 columnas en desktop */}
         {images[0] && (
-          <div className="md:col-span-2 relative h-[320px] md:h-[420px] rounded-[2rem] overflow-hidden group">
+          <div className="md:col-span-2 relative h-[320px] md:h-[420px] rounded-[var(--radius-squircle-2xl)] overflow-hidden group">
             <Image
               src={images[0].url}
               alt={images[0].alt ?? hotelName}
@@ -98,7 +98,7 @@ export default function HotelGallery({ images, hotelName, location }: HotelGalle
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-6 md:p-8">
               <div className="flex items-start gap-3">
-                <div className="shrink-0 size-10 rounded-xl bg-white/15 backdrop-blur-xl border border-white/20 flex items-center justify-center">
+                <div className="shrink-0 size-10 glass-pill flex items-center justify-center">
                   {(() => { const Icon = captions[0].icon; return <Icon size={18} className="text-white" strokeWidth={1.5} />; })()}
                 </div>
                 <div>
@@ -112,7 +112,7 @@ export default function HotelGallery({ images, hotelName, location }: HotelGalle
 
         {/* Imagen secundaria — columna derecha */}
         {images[1] && (
-          <div className="relative h-[320px] md:h-[420px] rounded-[2rem] overflow-hidden group">
+          <div className="relative h-[320px] md:h-[420px] rounded-[var(--radius-squircle-2xl)] overflow-hidden group">
             <Image
               src={images[1].url}
               alt={images[1].alt ?? `${hotelName} detalle`}
@@ -124,7 +124,7 @@ export default function HotelGallery({ images, hotelName, location }: HotelGalle
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-5">
               <div className="flex items-start gap-3">
-                <div className="shrink-0 size-9 rounded-lg bg-white/15 backdrop-blur-xl border border-white/20 flex items-center justify-center">
+                <div className="shrink-0 size-9 glass-pill flex items-center justify-center">
                   {(() => { const Icon = captions[1].icon; return <Icon size={16} className="text-white" strokeWidth={1.5} />; })()}
                 </div>
                 <div>

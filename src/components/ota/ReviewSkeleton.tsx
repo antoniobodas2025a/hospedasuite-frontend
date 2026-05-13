@@ -6,11 +6,11 @@ export default function ReviewSkeleton() {
         <div className="flex items-center gap-3">
           <div className="size-10 rounded-full bg-muted animate-pulse" />
           <div className="space-y-1.5">
-            <div className="h-4 w-24 bg-muted rounded-lg animate-pulse" />
-            <div className="h-3 w-32 bg-muted/60 rounded-lg animate-pulse" />
+            <div className="h-4 w-24 bg-muted rounded-[var(--radius-squircle-md)] animate-pulse" />
+            <div className="h-3 w-32 bg-muted/60 rounded-[var(--radius-squircle-md)] animate-pulse" />
           </div>
         </div>
-        <div className="h-3 w-20 bg-muted/50 rounded-lg animate-pulse" />
+        <div className="h-3 w-20 bg-muted/50 rounded-[var(--radius-squircle-md)] animate-pulse" />
       </div>
 
       {/* Star rating placeholder */}
@@ -22,13 +22,13 @@ export default function ReviewSkeleton() {
 
       {/* Comment lines */}
       <div className="space-y-2 pl-4">
-        <div className="h-3 w-full bg-muted/60 rounded-lg animate-pulse" />
-        <div className="h-3 w-full bg-muted/60 rounded-lg animate-pulse" />
-        <div className="h-3 w-2/3 bg-muted/60 rounded-lg animate-pulse" />
+        <div className="h-3 w-full bg-muted/60 rounded-[var(--radius-squircle-md)] animate-pulse" />
+        <div className="h-3 w-full bg-muted/60 rounded-[var(--radius-squircle-md)] animate-pulse" />
+        <div className="h-3 w-2/3 bg-muted/60 rounded-[var(--radius-squircle-md)] animate-pulse" />
       </div>
 
       {/* Helpful button placeholder */}
-      <div className="h-3 w-16 bg-muted/40 rounded-lg animate-pulse mt-3" />
+      <div className="h-3 w-16 bg-muted/40 rounded-[var(--radius-squircle-md)] animate-pulse mt-3" />
     </div>
   );
 }

@@ -1,59 +1,69 @@
-import { Clock, TrendingUp } from 'lucide-react';
+'use client'
+
+import { Clock, TrendingUp } from 'lucide-react'
+import { motion } from 'framer-motion'
+import { springGentle } from '@/lib/mac2026/spring'
+import { GlassPill } from '@/components/ui/glass'
 
 // ============================================================================
 // RECENT ACTIVITY — Indicador de actividad reciente para generar urgencia social
 //
 // Lee mensajes configurables desde el dashboard. Si no hay config, usa defaults.
 // Se oculta completamente cuando show_recent_activity es false.
+// Usa tokens semanticos del Mac 2026 Design System (success, warning, trust, urgent).
+// Animaciones con spring physics via framer-motion.
 // ============================================================================
 
 interface ActivityMessage {
-  icon: string;
-  text: string;
-  color: string;
+  icon: string
+  text: string
+  color: string // semantic token: text-success | text-warning | text-trust | text-urgent
 }
 
 const ICON_MAP: Record<string, React.ElementType> = {
   TrendingUp,
   Clock,
-};
+}
 
 const DEFAULT_MESSAGES: ActivityMessage[] = [
-  { icon: 'TrendingUp', text: '3 reservas en las ultimas 24 horas', color: 'text-emerald-600' },
-  { icon: 'Clock', text: '2 personas estan viendo esta propiedad ahora', color: 'text-amber-600' },
-];
+  { icon: 'TrendingUp', text: '3 reservas en las ultimas 24 horas', color: 'text-success' },
+  { icon: 'Clock', text: '2 personas estan viendo esta propiedad ahora', color: 'text-warning' },
+]
 
-const COLOR_BG_MAP: Record<string, { bg: string; border: string }> = {
-  'text-emerald-600': { bg: 'bg-emerald-50', border: 'border-emerald-200' },
-  'text-amber-600': { bg: 'bg-amber-50', border: 'border-amber-200' },
-  'text-blue-600': { bg: 'bg-blue-50', border: 'border-blue-200' },
-  'text-rose-600': { bg: 'bg-rose-50', border: 'border-rose-200' },
-  'text-purple-600': { bg: 'bg-purple-50', border: 'border-purple-200' },
-};
+// Derives container bg + border from the semantic text color token
+const MUTED_MAP: Record<string, string> = {
+  'text-success': 'bg-success-muted border-success-border',
+  'text-warning': 'bg-warning-muted border-warning-border',
+  'text-trust': 'bg-trust-muted border-trust-border',
+  'text-urgent': 'bg-urgent-muted border-urgent-border',
+}
 
 interface RecentActivityProps {
-  messages?: ActivityMessage[] | null;
+  messages?: ActivityMessage[] | null
 }
 
 export default function RecentActivity({ messages }: RecentActivityProps) {
-  const activityMessages = (messages && messages.length > 0) ? messages : DEFAULT_MESSAGES;
+  const activityMessages = messages && messages.length > 0 ? messages : DEFAULT_MESSAGES
 
   return (
     <div className="flex flex-wrap gap-3 mb-6">
       {activityMessages.map((item, i) => {
-        const Icon = ICON_MAP[item.icon] || TrendingUp;
-        const colors = COLOR_BG_MAP[item.color] || { bg: 'bg-zinc-50', border: 'border-zinc-200' };
+        const Icon = ICON_MAP[item.icon] || TrendingUp
+        const mutedClasses = MUTED_MAP[item.color] || 'bg-muted border-border'
         return (
-          <div
+          <motion.div
             key={i}
-            className={`flex items-center gap-2 px-4 py-2 rounded-full ${colors.bg} border ${colors.border} animate-in fade-in slide-in-from-bottom-2 duration-500`}
-            style={{ animationDelay: `${i * 200}ms` }}
+            initial={{ opacity: 0, y: 8 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ ...springGentle(), delay: i * 0.15 }}
           >
-            <Icon size={14} className={item.color} />
-            <span className={`text-xs font-bold ${item.color}`}>{item.text}</span>
-          </div>
-        );
+            <GlassPill className={`flex items-center gap-2 px-4 py-2 ${mutedClasses}`}>
+              <Icon size={14} className={item.color} />
+              <span className={`text-xs font-bold ${item.color}`}>{item.text}</span>
+            </GlassPill>
+          </motion.div>
+        )
       })}
     </div>
-  );
+  )
 }

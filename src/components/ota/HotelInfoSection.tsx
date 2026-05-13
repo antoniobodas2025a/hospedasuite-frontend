@@ -31,7 +31,7 @@ export default function HotelInfoSection({
   receptionHours,
 }: HotelInfoSectionProps) {
   return (
-    <div className="bg-card/60 backdrop-blur-xl rounded-[2rem] shadow-sm border border-border/40 overflow-hidden">
+    <div className="glass-card overflow-hidden">
       {/* Header */}
       <div className="p-6 md:p-8 border-b border-border/40">
         <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
@@ -45,7 +45,7 @@ export default function HotelInfoSection({
         <div className="p-6 md:p-8 space-y-6">
           {/* Mapa embebido */}
           {googleMapsUrl ? (
-            <div className="rounded-2xl overflow-hidden border border-border h-48">
+            <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48">
               <iframe
                 src={googleMapsUrl.replace('/view?usp=sharing', '/embed?pb=').includes('embed') ? googleMapsUrl : `https://www.google.com/maps?q=${encodeURIComponent(location || '')}&output=embed`}
                 width="100%"
@@ -59,7 +59,7 @@ export default function HotelInfoSection({
               />
             </div>
           ) : location ? (
-            <div className="rounded-2xl overflow-hidden border border-border h-48 bg-muted flex items-center justify-center">
+            <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48 bg-muted flex items-center justify-center">
               <div className="text-center p-4">
                 <MapPin size={32} className="text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground font-medium">{location}</p>
@@ -71,7 +71,7 @@ export default function HotelInfoSection({
           {/* Direccion */}
           {address && (
             <div className="flex items-start gap-3">
-              <div className="size-9 rounded-xl bg-brand-50 flex items-center justify-center shrink-0 border border-brand-100">
+              <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-brand-50 flex items-center justify-center shrink-0 border border-brand-100">
                 <Navigation size={16} className="text-brand-500" />
               </div>
               <div>
@@ -84,7 +84,7 @@ export default function HotelInfoSection({
           {/* Telefono */}
           {phone && (
             <div className="flex items-start gap-3">
-              <div className="size-9 rounded-xl bg-secondary/10 flex items-center justify-center shrink-0 border border-secondary/20">
+              <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-secondary/10 flex items-center justify-center shrink-0 border border-secondary/20">
                 <Phone size={16} className="text-secondary" />
               </div>
               <div>
@@ -104,15 +104,15 @@ export default function HotelInfoSection({
               Horarios
             </h3>
             <div className="space-y-2">
-              <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-xl">
+              <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-[var(--radius-squircle-lg)]">
                 <span className="text-sm text-muted-foreground">Check-in</span>
                 <span className="text-sm font-bold text-foreground">{checkInTime || '15:00'}</span>
               </div>
-              <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-xl">
+              <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-[var(--radius-squircle-lg)]">
                 <span className="text-sm text-muted-foreground">Check-out</span>
                 <span className="text-sm font-bold text-foreground">{checkOutTime || '13:00'}</span>
               </div>
-              <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-xl">
+              <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-[var(--radius-squircle-lg)]">
                 <span className="text-sm text-muted-foreground">Recepcion</span>
                 <span className="text-sm font-bold text-foreground">{receptionHours || '24/7'}</span>
               </div>
@@ -126,7 +126,7 @@ export default function HotelInfoSection({
                 <ShieldAlert size={14} className="text-warm-500" />
                 Politica de Cancelacion
               </h3>
-              <div className="p-4 bg-warm-50/50 rounded-xl border border-warm-100">
+              <div className="p-4 bg-warm-50/50 rounded-[var(--radius-squircle-lg)] border border-warm-100">
                 <p className="text-sm text-muted-foreground leading-relaxed">{cancellationPolicy}</p>
               </div>
             </div>
@@ -139,7 +139,7 @@ export default function HotelInfoSection({
                 <ShieldAlert size={14} className="text-warm-500" />
                 Politica de Cancelacion
               </h3>
-              <div className="p-4 bg-secondary/10 rounded-xl border border-secondary/20">
+              <div className="p-4 bg-secondary/10 rounded-[var(--radius-squircle-lg)] border border-secondary/20">
                 <p className="text-sm text-muted-foreground leading-relaxed">
                   Cancelacion gratuita hasta 48 horas antes del check-in. Despues de ese plazo se cobra la primera noche.
                 </p>

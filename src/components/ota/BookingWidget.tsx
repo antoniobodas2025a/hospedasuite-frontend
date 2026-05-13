@@ -3,7 +3,10 @@
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, CheckCircle2, Clock, Users, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { springSnappy } from '@/lib/mac2026/spring';
+import { GlassCard } from '@/components/ui/glass';
 
 // ============================================================================
 // BOOKING WIDGET — Sidebar de conversion para pagina OTA
@@ -71,7 +74,8 @@ export default function BookingWidget({
 
   return (
     <div className="sticky top-8">
-      <div className="bg-card rounded-[2rem] shadow-xl shadow-muted/50 border border-border/60 overflow-hidden">
+      {/* Mac 2026 Glassmorphism: GlassCard with squircle radii + depth-aware blur */}
+      <GlassCard className="overflow-hidden">
         {/* Header con precio */}
         <div className="bg-gradient-to-br from-primary to-brand-700 p-6 text-primary-foreground">
           <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">Desde</p>
@@ -92,7 +96,7 @@ export default function BookingWidget({
         <div className="p-6 space-y-5">
           {/* Fechas seleccionadas */}
           {checkIn && checkOut ? (
-            <div className="flex items-start gap-3 p-4 bg-secondary/10 rounded-2xl border border-secondary/30">
+            <div className="flex items-start gap-3 p-4 bg-secondary/10 rounded-[var(--radius-squircle-2xl)] border border-secondary/30">
               <CheckCircle2 size={18} className="text-secondary shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-foreground">Fechas confirmadas</p>
@@ -108,7 +112,7 @@ export default function BookingWidget({
               </div>
             </div>
           ) : (
-            <div className="flex items-start gap-3 p-4 bg-warm-100/50 rounded-2xl border border-warm-200/60">
+            <div className="flex items-start gap-3 p-4 bg-warm-100/50 rounded-[var(--radius-squircle-2xl)] border border-warm-200/60">
               <Clock size={18} className="text-warm-600 shrink-0 mt-0.5" />
               <div>
                 <p className="text-sm font-bold text-foreground">Selecciona tus fechas</p>
@@ -152,36 +156,38 @@ export default function BookingWidget({
             </div>
           )}
 
-          {/* CTA principal */}
-          <button
+          {/* CTA principal — Mac 2026 Spring Physics: whileTap + springSnappy */}
+          <motion.button
             onClick={handleReserve}
             disabled={availableCount === 0}
+            whileTap={availableCount > 0 ? { scale: 0.96 } : undefined}
+            transition={springSnappy()}
             className={cn(
-              'w-full py-4 rounded-2xl font-bold text-sm flex items-center justify-center gap-2 transition-all active:scale-[0.98] shadow-lg',
+              'w-full py-4 rounded-[var(--radius-squircle-2xl)] font-bold text-sm flex items-center justify-center gap-2 shadow-lg',
               availableCount === 0
                 ? 'bg-muted text-muted-foreground/40 cursor-not-allowed shadow-none'
                 : checkIn && checkOut
-                  ? 'bg-primary hover:bg-brand-700 text-primary-foreground shadow-brand-500/25 hover:shadow-brand-500/40'
+                  ? 'bg-primary hover:bg-brand-700 text-primary-foreground shadow-cta hover:shadow-cta'
                   : 'bg-foreground hover:bg-primary text-background shadow-foreground/20',
             )}
           >
             {checkIn && checkOut ? 'Reservar Ahora' : 'Ver Disponibilidad'}
             <ArrowRight size={16} strokeWidth={2.5} />
-          </button>
+          </motion.button>
 
           {/* Divider */}
           <div className="h-px bg-border/40" />
 
           {/* Mejor precio garantizado — Badge destacado para canal directo */}
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-brand-50 to-warm-50 border border-brand-200/60 p-4">
+          <div className="relative overflow-hidden rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-50 to-warm-50 border border-brand-200/60 p-4">
             <div className="absolute top-0 right-0 size-16 bg-brand-500/5 rounded-full -translate-y-8 translate-x-8" />
             <div className="relative flex items-start gap-3">
-              <div className="size-9 rounded-xl bg-brand-500/10 border border-brand-500/15 flex items-center justify-center shrink-0 mt-0.5">
+              <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-brand-500/10 border border-brand-500/15 flex items-center justify-center shrink-0 mt-0.5">
                 <ShieldCheck size={16} className="text-brand-600" />
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground">Mejor precio garantizado</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Reserva directo sin comisiones de intermediarios. El precio que ves aqui es el mejor disponible.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Reserva directo sin comisiones de intermediarios. El precio que ves aqui es el mejor disponible.</p>
               </div>
             </div>
           </div>
@@ -192,7 +198,7 @@ export default function BookingWidget({
               <CheckCircle2 size={16} className="text-secondary shrink-0 mt-0.5" />
               <div>
                 <p className="text-xs font-bold text-foreground">Confirmacion inmediata</p>
-                <p className="text-[11px] text-muted-foreground mt-0.5">Tu habitacion se bloquea al instante.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Tu habitacion se bloquea al instante.</p>
               </div>
             </div>
           </div>
@@ -208,12 +214,12 @@ export default function BookingWidget({
                 {showPolicy ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
               </button>
               {showPolicy && (
-                <p className="text-[11px] text-muted-foreground mt-2 leading-relaxed">{cancellationPolicy}</p>
+                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{cancellationPolicy}</p>
               )}
             </div>
           )}
         </div>
-      </div>
+      </GlassCard>
     </div>
   );
 }

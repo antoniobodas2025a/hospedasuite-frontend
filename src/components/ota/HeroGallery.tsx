@@ -2,19 +2,20 @@
 
 import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
+import { motion } from 'framer-motion';
+import { springSnappy } from '@/lib/mac2026/spring';
 import { X, ChevronLeft, ChevronRight, Grid } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { cn, optimizeSupabaseUrl } from '@/lib/utils';
 
 // ============================================================================
 // HERO GALLERY — Grid estilo Airbnb para pagina de hotel OTA
 //
-// Mejoras vs version anterior:
-// - Sin hydration mismatch: CSS responsive en vez de window.innerWidth
-// - preload en vez de priority (Next.js 16 compatible)
-// - decoding="async" en todas las imagenes
-// - Thumbnails con loading="lazy" + quality bajo
-// - onError fallback por imagen
-// - Soporta 1-9 fotos con layout adaptativo
+// Mac 2026 Design System:
+// - Squircle radii via CSS custom properties
+// - Z-index scale tokens (--z-lightbox, --z-overlay)
+// - Spring physics for thumbnail transitions
+// - Glass-pill primitives for overlays
+// - Semantic overlay tokens instead of hardcoded colors
 // ============================================================================
 
 interface HeroGalleryProps {
@@ -45,7 +46,7 @@ function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
   return { onTouchStart, onTouchEnd };
 }
 
-// Imagen con fallback por error de carga
+// Imagen con estado de carga y fallback por error
 function GalleryImage({
   src,
   alt,
@@ -65,6 +66,7 @@ function GalleryImage({
   priority?: boolean;
   loading?: 'lazy' | 'eager';
 }) {
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
 
   if (error) {
@@ -75,19 +77,40 @@ function GalleryImage({
     );
   }
 
+  const isSupabase = src.includes('supabase.co');
+
   return (
-    <Image
-      src={src}
-      alt={alt}
-      fill={fill}
-      className={className}
-      sizes={sizes}
-      quality={quality ?? 75}
-      preload={priority}
-      loading={loading ?? 'eager'}
-      decoding="async"
-      onError={() => setError(true)}
-    />
+    <>
+      {/* Skeleton placeholder mientras carga */}
+      {isLoading && fill && (
+        <div className={cn('absolute inset-0 bg-muted animate-pulse', className)} />
+      )}
+      {isSupabase ? (
+        <img
+          src={src}
+          alt={alt}
+          loading={loading ?? 'eager'}
+          decoding="async"
+          className={cn(isLoading ? 'opacity-0' : 'opacity-100', 'transition-opacity duration-500', className)}
+          onLoad={() => setIsLoading(false)}
+          onError={() => { setError(true); setIsLoading(false); }}
+        />
+      ) : (
+        <Image
+          src={src}
+          alt={alt}
+          fill={fill}
+          className={cn(isLoading && fill ? 'opacity-0' : 'opacity-100', 'transition-opacity duration-300', className)}
+          sizes={sizes}
+          quality={quality ?? 75}
+          preload={priority}
+          loading={loading ?? 'eager'}
+          decoding="async"
+          onLoadingComplete={() => setIsLoading(false)}
+          onError={() => { setError(true); setIsLoading(false); }}
+        />
+      )}
+    </>
   );
 }
 
@@ -254,7 +277,8 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
             sizes={totalDisplay >= 6 ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 100vw, 50vw'}
             priority
           />
-          <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
+          {/* Semantic overlay token: uses foreground opacity for hover feedback */}
+          <div className="absolute inset-0 bg-foreground/0 hover:bg-foreground/[0.05] transition-colors" />
         </button>
 
         {displayImages.slice(1, 1 + thumbCount).map((img, i) => (
@@ -273,7 +297,8 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
               quality={80}
               loading="lazy"
             />
-            <div className="absolute inset-0 bg-black/0 hover:bg-black/10 transition-colors" />
+            {/* Semantic overlay token: uses foreground opacity for hover feedback */}
+            <div className="absolute inset-0 bg-foreground/0 hover:bg-foreground/[0.05] transition-colors" />
           </button>
         ))}
 
@@ -304,7 +329,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
   return (
     <>
       {/* ─── HERO CONTAINER ─────────────────────────────────────────────── */}
-      <div className="relative w-full h-[45vh] min-h-[300px] md:h-[500px] lg:h-[550px] rounded-b-3xl overflow-hidden group bg-foreground">
+      <div className="relative w-full h-[45vh] min-h-[300px] md:h-[500px] lg:h-[550px] rounded-b-[var(--radius-squircle-3xl)] overflow-hidden group bg-muted">
         {getDesktopGrid()}
 
         {/* ─── Mobile: Carrusel (visible solo en pantallas pequenas) ────── */}
@@ -364,7 +389,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
         {images.length > (totalDisplay >= 6 ? 6 : 4) && (
           <button
             onClick={() => setLightboxOpen(true)}
-            className="hidden md:flex absolute bottom-6 right-6 items-center gap-2 bg-white/95 backdrop-blur-sm px-5 py-3 rounded-xl text-sm font-bold text-foreground shadow-xl hover:bg-white hover:shadow-2xl transition-all active:scale-95 z-10"
+            className="hidden md:flex absolute bottom-6 right-6 items-center gap-2 glass-pill px-5 py-3 text-sm font-bold text-foreground shadow-xl hover:shadow-2xl transition-all active:scale-95 z-10"
             aria-label={`Ver las ${images.length} fotos de ${hotelName}`}
           >
             <Grid size={16} />
@@ -375,7 +400,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
         {/* Mobile photo count */}
         <button
           onClick={() => setLightboxOpen(true)}
-          className="absolute bottom-4 right-4 md:hidden flex items-center gap-1.5 bg-white/90 backdrop-blur-sm px-3 py-1.5 rounded-lg text-xs font-bold text-foreground shadow-lg hover:bg-white transition-colors z-10"
+          className="absolute bottom-4 right-4 md:hidden flex items-center gap-1.5 glass-pill px-3 py-1.5 text-xs font-bold text-foreground shadow-lg transition-colors z-10"
           aria-label={`Ver las ${images.length} fotos de ${hotelName}`}
         >
           <Grid size={14} />
@@ -386,7 +411,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
       {/* ─── Lightbox ───────────────────────────────────────────────────── */}
       {lightboxOpen && (
         <div
-          className="fixed inset-0 z-[200] bg-black/95 backdrop-blur-xl flex items-center justify-center"
+          className="fixed inset-0 z-[var(--z-lightbox)] bg-black/95 backdrop-blur-xl flex items-center justify-center"
           role="dialog"
           aria-modal="true"
           aria-label="Galeria de fotos"
@@ -408,21 +433,8 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
           </button>
           <button
             onClick={nextLightbox}
-            className="absolute right-6 top-1/2 -translate-y/1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
-            aria-label="Siguiente foto"
-          >
-            <ChevronRight size={28} />
-          </button>
-
-          <button
-            onClick={prevLightbox}
-            className="absolute left-6 top-1/2 -translate-y-1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
-          >
-            <ChevronLeft size={28} />
-          </button>
-          <button
-            onClick={nextLightbox}
             className="absolute right-6 top-1/2 -translate-y-1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
+            aria-label="Siguiente foto"
           >
             <ChevronRight size={28} />
           </button>
@@ -438,15 +450,18 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
             />
           </div>
 
-          {/* Thumbnails */}
+          {/* Thumbnails con spring animations */}
           {images.length > 1 && (
             <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 max-w-2xl overflow-x-auto px-4 pb-2">
               {images.slice(0, 10).map((img, i) => (
-                <button
+                <motion.button
                   key={i}
                   onClick={() => setActiveIndex(i)}
+                  whileHover={{ scale: 1.08 }}
+                  whileTap={{ scale: 0.95 }}
+                  transition={springSnappy()}
                   className={cn(
-                    'relative size-16 rounded-lg overflow-hidden border-2 transition-all shrink-0',
+                    'relative size-16 rounded-[var(--radius-squircle-md)] overflow-hidden border-2 transition-all shrink-0',
                     i === activeIndex ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100',
                   )}
                   aria-label={`Ir a foto ${i + 1}`}
@@ -460,12 +475,13 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
                     quality={50}
                     loading="lazy"
                   />
-                </button>
+                </motion.button>
               ))}
             </div>
           )}
 
-          <div className="absolute top-6 left-6 text-white text-sm font-medium bg-black/40 px-3 py-1.5 rounded-lg backdrop-blur-sm">
+          {/* Photo counter — glass-pill overlay */}
+          <div className="absolute top-6 left-6 text-white text-sm font-medium glass-pill px-3 py-1.5">
             {activeIndex + 1} / {images.length}
           </div>
         </div>

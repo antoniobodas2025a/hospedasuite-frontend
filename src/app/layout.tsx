@@ -1,11 +1,13 @@
 import type { Metadata, Viewport } from 'next';
-import { Inter, Geist } from 'next/font/google';
+import { Geist } from 'next/font/google';
 import './globals.css';
 import { cn } from "@/lib/utils";
 
-// Optimización de fuentes en el servidor (Zero Layout Shift)
-const geist = Geist({ subsets: ['latin'], variable: '--font-sans' });
-const inter = Inter({ subsets: ['latin'] });
+// Geist Variable: una sola fuente para todo el sistema (zero layout shift)
+const geist = Geist({
+  subsets: ['latin'],
+  variable: '--font-sans',
+});
 
 // 🛡️ CONTRATO DE VIEWPORT ESTRICTO (MOBILE FIRST ZERO-TRUST)
 export const viewport: Viewport = {
@@ -34,7 +36,7 @@ export default function RootLayout({
   return (
     // 🛡️ suppressHydrationWarning añadido preventivamente para extensiones o Theme Providers
     <html lang='es' className={cn("font-sans", geist.variable)} suppressHydrationWarning>
-      <body className={inter.className}>
+      <body className={geist.className}>
         {children}
       </body>
     </html>

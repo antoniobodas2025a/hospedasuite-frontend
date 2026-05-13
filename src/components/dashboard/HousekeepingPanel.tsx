@@ -40,20 +40,20 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
       {/* 1. SECCIÓN CRÍTICA: PRIORIDAD DE ASEO */}
       <section className="space-y-4">
         <div className="flex items-center justify-between">
-          <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-rose-400 flex items-center gap-2">
+          <h3 className="text-[10px] font-black uppercase tracking-extreme text-rose-400 flex items-center gap-2">
             <AlertCircle size={14} /> Requerimiento Inmediato ({dirtyRooms.length})
           </h3>
         </div>
         
         {dirtyRooms.length === 0 ? (
-          <div className="p-12 border border-dashed border-white/5 rounded-[2.5rem] text-center bg-zinc-900/20 backdrop-blur-md">
+          <div className="glass-card p-12 text-center">
             <CheckCircle2 className="mx-auto size-8 text-emerald-500/30 mb-3" />
             <p className="text-zinc-500 font-medium italic text-sm">Planta física en estado óptimo.</p>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
             {dirtyRooms.map(room => (
-              <div key={room.id} className="group relative overflow-hidden p-6 bg-zinc-900/40 border border-rose-500/20 rounded-[2.5rem] flex justify-between items-center transition-all hover:bg-zinc-900/60 shadow-2xl shadow-rose-500/5">
+              <div key={room.id} className="group relative overflow-hidden p-6 bg-zinc-900/40 border border-rose-500/20 rounded-[var(--radius-squircle-3xl)] flex justify-between items-center transition-all hover:bg-zinc-900/60 shadow-2xl shadow-rose-500/5">
                 <div>
                   <h4 className="text-2xl font-bold text-zinc-100 tracking-tighter">{room.name}</h4>
                   <div className="flex items-center gap-2 mt-1">
@@ -64,7 +64,7 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
                 <button
                   disabled={loadingId === room.id}
                   onClick={() => handleStatusChange(room.id, 'available')}
-                  className="relative size-14 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-2xl transition-all flex items-center justify-center shadow-xl group-active:scale-90"
+                  className="relative size-14 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-500 hover:text-white rounded-[var(--radius-squircle-2xl)] transition-all flex items-center justify-center shadow-xl group-active:scale-90"
                 >
                   {loadingId === room.id ? (
                     <RefreshCw className="animate-spin" size={24} />
@@ -80,7 +80,7 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
 
       {/* 2. GRID DE DISPONIBILIDAD (Estado de Planta) */}
       <section className="space-y-6">
-        <h3 className="text-[10px] font-black uppercase tracking-[0.3em] text-zinc-500 ml-2">
+        <h3 className="text-[10px] font-black uppercase tracking-extreme text-zinc-500 ml-2">
           Inventario de Unidades ({rooms.length})
         </h3>
         
@@ -112,7 +112,7 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
                 <select 
                   value={room.status}
                   onChange={(e) => handleStatusChange(room.id, e.target.value as RoomStatus)}
-                  className="bg-zinc-950/50 border-none text-[9px] font-black uppercase tracking-[0.1em] text-zinc-400 rounded-xl p-2 outline-none cursor-pointer appearance-none text-center"
+                  className="bg-zinc-950/50 border-none text-[9px] font-black uppercase tracking-widest text-zinc-400 rounded-[var(--radius-squircle-lg)] p-2 outline-none cursor-pointer appearance-none text-center"
                 >
                   <option value="available">✓ Disponible</option>
                   <option value="dirty">⚠ Sucia</option>

@@ -98,7 +98,7 @@ export default function App() {
           
           {/* Logo */}
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({top: 0, behavior: 'smooth'})}>
-            <img src="logo.jpg" alt="HospedaSuite Logo" className="w-7 h-7 rounded-lg object-cover shadow-sm" />
+            <img src="logo.jpg" alt="HospedaSuite Logo" className="w-7 h-7 rounded-[var(--radius-squircle-md)] object-cover shadow-sm" />
             <span className="font-semibold text-[17px] tracking-tight hidden sm:block">HospedaSuite</span>
           </div>
 
@@ -223,11 +223,11 @@ export default function App() {
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             
             {/* Link Directo Card */}
-            <div className="group bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-500 border border-black/5 relative overflow-hidden">
+            <div className="group bg-white rounded-[var(--radius-squircle-3xl)] p-8 shadow-sm hover:shadow-xl transition-all duration-500 border border-black/5 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-br from-transparent to-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"/>
               
               <div className="relative z-10">
-                <div className="w-12 h-12 rounded-2xl bg-[#f5f5f7] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 rounded-[var(--radius-squircle-2xl)] bg-[#f5f5f7] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Smartphone size={22} className="text-[#1d1d1f]" strokeWidth={1.5} />
                 </div>
                 
@@ -245,7 +245,7 @@ export default function App() {
             </div>
 
             {/* PMS Central Card - Featured */}
-            <div className="group bg-[#007dfa] rounded-3xl p-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 relative overflow-hidden md:col-span-1">
+            <div className="group bg-[#007dfa] rounded-[var(--radius-squircle-3xl)] p-8 shadow-lg hover:shadow-2xl hover:-translate-y-1 transition-all duration-500 relative overflow-hidden md:col-span-1">
               
               <div className="absolute inset-0 opacity-20" style={{
                 backgroundImage: 'radial-gradient(circle at 2px 2px, white 1px, transparent 0)',
@@ -256,7 +256,7 @@ export default function App() {
               
               <div className="relative z-10 h-full flex flex-col justify-between">
                 <div>
-                  <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-md flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-inner">
+                  <div className="w-12 h-12 rounded-[var(--radius-squircle-2xl)] bg-white/20 backdrop-blur-md flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-inner">
                     <LayoutGrid size={22} className="text-white" strokeWidth={1.5} />
                   </div>
                   
@@ -275,11 +275,11 @@ export default function App() {
             </div>
 
             {/* HospedaSuite.com Card */}
-            <div className="group bg-white rounded-3xl p-8 shadow-sm hover:shadow-xl transition-all duration-500 border border-black/5 relative overflow-hidden">
+            <div className="group bg-white rounded-[var(--radius-squircle-3xl)] p-8 shadow-sm hover:shadow-xl transition-all duration-500 border border-black/5 relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-bl from-transparent to-black/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"/>
               
               <div className="relative z-10">
-                <div className="w-12 h-12 rounded-2xl bg-[#f5f5f7] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                <div className="w-12 h-12 rounded-[var(--radius-squircle-2xl)] bg-[#f5f5f7] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
                   <Globe size={22} className="text-[#1d1d1f]" strokeWidth={1.5} />
                 </div>
                 
@@ -338,7 +338,7 @@ export default function App() {
             </div>
 
             {/* Pricing Card */}
-            <div className={`bg-[#f5f5f7] rounded-[2.5rem] p-8 sm:p-12 md:p-16 shadow-inner border border-white/50 relative overflow-hidden transition-all duration-500 ${selectedTier === 'standard' ? 'ring-2 ring-[#007dfa]' : ''}`}>
+            <div className={`bg-[#f5f5f7] rounded-[var(--radius-squircle-3xl)] p-8 sm:p-12 md:p-16 shadow-inner border border-white/50 relative overflow-hidden transition-all duration-500 ${selectedTier === 'standard' ? 'ring-2 ring-[#007dfa]' : ''}`}>
               
               <div className="absolute top-0 right-0 p-32 bg-white/40 blur-3xl rounded-full pointer-events-none" />
 
@@ -404,7 +404,7 @@ export default function App() {
           </div>
           
           {/* 🚀 NUEVO: BLOQUE DE TRANSPARENCIA TRANSACCIONAL */}
-          <div className="mt-12 bg-[#007dfa]/5 border border-[#007dfa]/10 rounded-3xl p-8 max-w-4xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm">
+          <div className="mt-12 bg-[#007dfa]/5 border border-[#007dfa]/10 rounded-[var(--radius-squircle-3xl)] p-8 max-w-4xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm">
             <div className="bg-white p-4 rounded-full shadow-sm shrink-0 border border-black/5">
               <Info className="w-6 h-6 text-[#007dfa]" />
             </div>
@@ -421,14 +421,14 @@ export default function App() {
             <h3 className="text-2xl font-semibold tracking-tight mb-8 text-center text-[#1d1d1f]">Preguntas Frecuentes</h3>
             
             <div className="space-y-4">
-              <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm">
+              <div className="bg-white p-6 rounded-[var(--radius-squircle-2xl)] border border-black/5 shadow-sm">
                 <h4 className="font-semibold text-[#1d1d1f] mb-2">¿Cómo funciona el pago de las suscripciones y comisiones?</h4>
                 <p className="text-[14px] text-[#1d1d1f]/60 leading-relaxed">
                   Tu hotel recibe el 100% del dinero de las reservas directamente en tu cuenta de Wompi. Al finalizar cada mes, HospedaSuite generará una factura consolidando el costo de tu plan (ej. Pro) más las comisiones aplicables (10% OTA / 3% Upsell).
                 </p>
               </div>
               
-              <div className="bg-white p-6 rounded-2xl border border-black/5 shadow-sm">
+              <div className="bg-white p-6 rounded-[var(--radius-squircle-2xl)] border border-black/5 shadow-sm">
                 <h4 className="font-semibold text-[#1d1d1f] mb-2">¿Qué significa Channel Manager Automatizado (iCal)?</h4>
                 <p className="text-[14px] text-[#1d1d1f]/60 leading-relaxed">
                   Es un seguro anti-sobreventa. Nuestro sistema se conecta con el calendario de Booking.com y Airbnb. Si vendes una habitación en HospedaSuite, se bloquea automáticamente en Booking, y viceversa. Cero cruces, cero dolores de cabeza.
@@ -439,7 +439,7 @@ export default function App() {
           
           {/* Fine Print / Garantía Hormozi */}
           <div id="garantia" className="mt-20 max-w-2xl mx-auto text-center">
-            <div className="bg-gradient-to-r from-[#007dfa]/10 to-[#0051d5]/10 rounded-2xl p-6 border border-[#007dfa]/20">
+            <div className="bg-gradient-to-r from-[#007dfa]/10 to-[#0051d5]/10 rounded-[var(--radius-squircle-2xl)] p-6 border border-[#007dfa]/20">
               <p className="text-[#1d1d1f]/80 text-[14px] leading-relaxed font-medium">
                 <strong className="text-[#007dfa] block mb-2 text-base">Garantía de Extensión</strong>
                 Prueba HospedaSuite Gratis por 3 Meses. Y si durante estos 90 días no logramos generarte al menos 1 reserva a través de nuestro motor o OTA, <strong>te regalamos 3 meses adicionales gratis</strong> hasta que lo logremos.

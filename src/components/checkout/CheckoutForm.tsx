@@ -1,9 +1,11 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Wine, Coffee, HeartHandshake, ShieldCheck, ArrowRight, User, Mail, Phone, CreditCard, Loader2 } from 'lucide-react';
+import { Wine, Coffee, HeartHandshake, ShieldCheck, ArrowRight, ArrowLeft, User, Mail, Phone, CreditCard, Loader2, Check } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { createPendingBookingAction } from '@/app/actions/bookings';
 import { Hotel, Room } from '@/types';
+import { shakeHaptic, desaturateFeedback, springSnappy, springGentle } from '@/lib/mac2026/spring';
 
 interface CheckoutFormProps {
   hotel: Hotel;
@@ -21,10 +23,19 @@ const UPSELL_OPTIONS = [
   { id: 'romantic', title: 'Decoracion Romantica', description: 'Petalos, velas y fresas.', price: 120000, icon: HeartHandshake },
 ];
 
+/**
+ * Mac 2026 — Ley de Hick: 1 decision por pantalla.
+ * Step 1: Extras (una decision: que agregar)
+ * Step 2: Datos personales (una decision: quien reserva)
+ * Step 3: Pago (una decision: confirmar y pagar)
+ */
+
 export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, basePrice, isOta }: CheckoutFormProps) {
+  const [step, setStep] = useState<1 | 2 | 3>(1);
   const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', document: '' });
+  const [formError, setFormError] = useState<string | null>(null);
 
   const upsellsTotal = UPSELL_OPTIONS
     .filter(opt => selectedUpsells.includes(opt.id))
@@ -36,12 +47,30 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     setSelectedUpsells(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
   };
 
+  const handleNext = () => {
+    if (step === 1) {
+      setStep(2);
+    } else if (step === 2) {
+      if (!formData.fullName || !formData.email || !formData.document || !formData.phone) {
+        setFormError("Por favor, completa todos tus datos personales.");
+        shakeHaptic();
+        return;
+      }
+      setFormError(null);
+      setStep(3);
+    }
+  };
+
+  const handleBack = () => {
+    if (step > 1) {
+      setFormError(null);
+      setStep((step - 1) as 1 | 2 | 3);
+    }
+  };
+
   const handlePayment = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!formData.fullName || !formData.email || !formData.document || !formData.phone) {
-      return alert("Por favor, completa todos tus datos personales.");
-    }
-
+    setFormError(null);
     setIsSubmitting(true);
 
     const payload = {
@@ -57,7 +86,8 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     const result = await createPendingBookingAction(payload);
 
     if (!result?.success || !result?.bookingId) {
-      alert(`Ocurrio un error al procesar tu solicitud: ${result?.error || 'Desconocido'}`);
+      setFormError(`Ocurrio un error al procesar tu solicitud: ${result?.error || 'Desconocido'}`);
+      shakeHaptic();
       setIsSubmitting(false);
       return;
     }
@@ -67,7 +97,8 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     const cleanPublicKey = rawKey.replace(/['"\s\r\n]+/g, '');
 
     if (!cleanPublicKey) {
-      alert("Error del sistema: Pasarela de pago no configurada.");
+      setFormError("Error del sistema: Pasarela de pago no configurada.");
+      shakeHaptic();
       setIsSubmitting(false);
       return;
     }
@@ -85,98 +116,291 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
   };
 
   return (
-    <form id="checkout-form" onSubmit={handlePayment} className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-      <div className="lg:col-span-7 space-y-8">
-        <section className="bg-card p-6 sm:p-8 rounded-[2rem] shadow-sm border border-border">
-          <h2 className="text-xl font-bold text-foreground mb-2">Mejora tu Experiencia</h2>
-          <p className="text-muted-foreground text-sm mb-6">Anade estos extras para hacer tu estadia inolvidable.</p>
-          <div className="space-y-4">
-            {UPSELL_OPTIONS.map(opt => {
-              const isSelected = selectedUpsells.includes(opt.id);
-              const Icon = opt.icon;
-              return (
-                <div key={opt.id} onClick={() => toggleUpsell(opt.id)} className={`flex items-center justify-between p-4 rounded-2xl border-2 cursor-pointer transition-all ${isSelected ? 'border-brand-500 bg-brand-50' : 'border-border hover:border-border/80'}`}>
-                  <div className="flex items-center gap-4">
-                    <div className={`p-3 rounded-xl ${isSelected ? 'bg-brand-100 text-brand-600' : 'bg-muted text-muted-foreground/40'}`}>
-                      <Icon size={24} strokeWidth={1.5} />
+    <motion.div
+      animate={formError ? desaturateFeedback.animate : desaturateFeedback.initial}
+      transition={desaturateFeedback.transition}
+    >
+      {/* Step Indicator — spring layout pill */}
+      <div className="flex items-center justify-center mb-[var(--space-breath)]">
+        <div className="flex items-center gap-3">
+          {/* Step 1: Extras */}
+          <div className="flex items-center gap-2">
+            <div className={`size-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+              step === 1 ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30' : step > 1 ? 'bg-brand-100 text-brand-600' : 'bg-muted text-muted-foreground'
+            }`}>
+              {step > 1 ? <Check size={14} /> : '1'}
+            </div>
+            <span className={`text-sm font-bold hidden sm:inline ${step === 1 ? 'text-foreground' : 'text-muted-foreground'}`}>
+              Extras
+            </span>
+          </div>
+
+          <div className={`w-10 h-0.5 transition-all ${step > 1 ? 'bg-brand-500' : 'bg-border'}`} />
+
+          {/* Step 2: Datos */}
+          <div className="flex items-center gap-2">
+            <div className={`size-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+              step === 2 ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30' : step > 2 ? 'bg-brand-100 text-brand-600' : 'bg-muted text-muted-foreground'
+            }`}>
+              {step > 2 ? <Check size={14} /> : '2'}
+            </div>
+            <span className={`text-sm font-bold hidden sm:inline ${step === 2 ? 'text-foreground' : 'text-muted-foreground'}`}>
+              Datos
+            </span>
+          </div>
+
+          <div className={`w-10 h-0.5 transition-all ${step > 2 ? 'bg-brand-500' : 'bg-border'}`} />
+
+          {/* Step 3: Pago */}
+          <div className="flex items-center gap-2">
+            <div className={`size-8 rounded-full flex items-center justify-center text-sm font-bold transition-all ${
+              step === 3 ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30' : 'bg-muted text-muted-foreground'
+            }`}>
+              3
+            </div>
+            <span className={`text-sm font-bold hidden sm:inline ${step === 3 ? 'text-foreground' : 'text-muted-foreground'}`}>
+              Pago
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <form id="checkout-form" onSubmit={handlePayment} className="grid grid-cols-1 lg:grid-cols-12 gap-[var(--space-breath)] items-start">
+        <div className="lg:col-span-7">
+          <AnimatePresence mode="wait">
+            {step === 1 ? (
+              /* STEP 1: Upsells — 1 decision: que extras agregar */
+              <motion.section
+                key="step1"
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={springGentle()}
+                className="bg-card p-6 sm:p-8 rounded-[var(--radius-squircle-3xl)] shadow-sm border border-border"
+              >
+                <h2 className="text-xl font-bold text-foreground mb-2">Mejora tu Experiencia</h2>
+                <p className="text-muted-foreground text-sm mb-6">Selecciona los extras que quieras agregar. Puedes saltar este paso si no necesitas nada.</p>
+                <div className="space-y-[var(--space-focus)]">
+                  {UPSELL_OPTIONS.map(opt => {
+                    const isSelected = selectedUpsells.includes(opt.id);
+                    const Icon = opt.icon;
+                    return (
+                      <div key={opt.id} onClick={() => toggleUpsell(opt.id)} className={`flex items-center justify-between p-4 rounded-[var(--radius-squircle-xl)] border-2 cursor-pointer transition-all ${isSelected ? 'border-brand-500 bg-brand-50' : 'border-border hover:border-border/80'}`}>
+                        <div className="flex items-center gap-4">
+                          <div className={`p-3 rounded-[var(--radius-squircle-lg)] ${isSelected ? 'bg-brand-100 text-brand-600' : 'bg-muted text-muted-foreground/40'}`}>
+                            <Icon size={24} strokeWidth={1.5} />
+                          </div>
+                          <div>
+                            <h4 className={`font-bold ${isSelected ? 'text-brand-900' : 'text-foreground/80'}`}>{opt.title}</h4>
+                            <p className="text-xs text-muted-foreground">{opt.description}</p>
+                          </div>
+                        </div>
+                        <div className="text-right">
+                          <p className={`font-black ${isSelected ? 'text-brand-600' : 'text-foreground'}`}>+${opt.price.toLocaleString()}</p>
+                          <div className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isSelected ? 'text-brand-500' : 'text-muted-foreground/30'}`}>{isSelected ? 'Agregado' : 'Agregar'}</div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                {/* Navigation */}
+                <div className="flex justify-end mt-8 pt-6 border-t border-border">
+                  <motion.button
+                    type="button"
+                    onClick={handleNext}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springSnappy()}
+                    className="px-8 py-4 bg-foreground text-background rounded-[var(--radius-squircle-xl)] font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-cta"
+                  >
+                    Continuar <ArrowRight size={18} />
+                  </motion.button>
+                </div>
+              </motion.section>
+            ) : step === 2 ? (
+              /* STEP 2: Personal data — 1 decision: quien reserva */
+              <motion.section
+                key="step2"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={springGentle()}
+                className="bg-card p-6 sm:p-8 rounded-[var(--radius-squircle-3xl)] shadow-sm border border-border"
+              >
+                <h2 className="text-xl font-bold text-foreground mb-2">Tus Datos</h2>
+                <p className="text-muted-foreground text-sm mb-6">Necesitamos tus datos para confirmar la reserva. Tu informacion esta segura.</p>
+                <div className="space-y-[var(--space-focus)]">
+                  <div className="relative">
+                    <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+                    <input required type="text" placeholder="Nombre Completo" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-[var(--radius-squircle-xl)] text-foreground font-bold outline-none focus:ring-2 focus:ring-brand-400 transition-all" />
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-[var(--space-focus)]">
+                    <div className="relative">
+                      <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+                      <input required type="text" placeholder="Documento (CC/Pasaporte)" value={formData.document} onChange={e => setFormData({...formData, document: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-[var(--radius-squircle-xl)] text-foreground font-bold outline-none focus:ring-2 focus:ring-brand-400 transition-all" />
                     </div>
-                    <div>
-                      <h4 className={`font-bold ${isSelected ? 'text-brand-900' : 'text-foreground/80'}`}>{opt.title}</h4>
-                      <p className="text-xs text-muted-foreground">{opt.description}</p>
+                    <div className="relative">
+                      <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+                      <input required type="tel" placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-[var(--radius-squircle-xl)] text-foreground font-bold outline-none focus:ring-2 focus:ring-brand-400 transition-all" />
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className={`font-black ${isSelected ? 'text-brand-600' : 'text-foreground'}`}>+${opt.price.toLocaleString()}</p>
-                    <div className={`text-[10px] font-bold uppercase tracking-wider mt-1 ${isSelected ? 'text-brand-500' : 'text-muted-foreground/30'}`}>{isSelected ? 'Agregado' : 'Agregar'}</div>
+                  <div className="relative">
+                    <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
+                    <input required type="email" placeholder="Correo Electronico" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-[var(--radius-squircle-xl)] text-foreground font-bold outline-none focus:ring-2 focus:ring-brand-400 transition-all" />
                   </div>
                 </div>
-              );
-            })}
-          </div>
-        </section>
 
-        <section className="bg-card p-6 sm:p-8 rounded-[2rem] shadow-sm border border-border">
-          <h2 className="text-xl font-bold text-foreground mb-6">Tus Datos</h2>
-          <div className="space-y-4">
-            <div className="relative">
-              <User className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-              <input required type="text" placeholder="Nombre Completo" value={formData.fullName} onChange={e => setFormData({...formData, fullName: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-xl text-foreground font-bold outline-none focus:ring-2 focus:ring-brand-400 transition-all" />
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              <div className="relative">
-                <CreditCard className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-                <input required type="text" placeholder="Documento (CC/Pasaporte)" value={formData.document} onChange={e => setFormData({...formData, document: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-xl text-foreground font-bold outline-none focus:ring-2 focus:ring-brand-400 transition-all" />
-              </div>
-              <div className="relative">
-                <Phone className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-                <input required type="tel" placeholder="WhatsApp" value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-xl text-foreground font-bold outline-none focus:ring-2 focus:ring-brand-400 transition-all" />
-              </div>
-            </div>
-            <div className="relative">
-              <Mail className="absolute left-4 top-1/2 -translate-y-1/2 text-muted-foreground" size={20} />
-              <input required type="email" placeholder="Correo Electronico" value={formData.email} onChange={e => setFormData({...formData, email: e.target.value})} className="w-full pl-12 pr-4 py-4 bg-muted/50 border border-border rounded-xl text-foreground font-bold outline-none focus:ring-2 focus:ring-brand-400 transition-all" />
-            </div>
-          </div>
-        </section>
-      </div>
+                {/* Error feedback */}
+                <AnimatePresence>
+                  {formError && (
+                    <motion.div
+                      initial={{ opacity: 0, y: -8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: -8 }}
+                      className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-[var(--radius-squircle-xl)] text-sm text-red-400 text-center"
+                    >
+                      {formError}
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-      <div className="lg:col-span-5 sticky top-8">
-        <section className="bg-foreground p-8 rounded-[2rem] shadow-2xl text-background">
-          <h2 className="text-xl font-bold mb-6">Resumen de Reserva</h2>
-          <div className="space-y-4 mb-6 border-b border-background/20 pb-6">
-            <div className="flex justify-between items-start">
-              <div>
-                <p className="text-background/60 text-sm">{room.name}</p>
-                <p className="font-bold">{nights} {nights === 1 ? 'Noche' : 'Noches'}</p>
-                <p className="text-xs text-background/40 mt-1">{checkIn} al {checkOut}</p>
+                {/* Navigation */}
+                <div className="flex justify-between mt-8 pt-6 border-t border-border">
+                  <motion.button
+                    type="button"
+                    onClick={handleBack}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springSnappy()}
+                    className="px-6 py-4 text-muted-foreground hover:text-foreground rounded-[var(--radius-squircle-xl)] font-bold flex items-center gap-2 transition-all"
+                  >
+                    <ArrowLeft size={18} /> Volver
+                  </motion.button>
+                  <motion.button
+                    type="button"
+                    onClick={handleNext}
+                    whileTap={{ scale: 0.97 }}
+                    transition={springSnappy()}
+                    className="px-8 py-4 bg-foreground text-background rounded-[var(--radius-squircle-xl)] font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-cta"
+                  >
+                    Continuar <ArrowRight size={18} />
+                  </motion.button>
+                </div>
+              </motion.section>
+            ) : (
+              /* STEP 3: Payment confirmation — 1 decision: pagar */
+              <motion.section
+                key="step3"
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: 20 }}
+                transition={springGentle()}
+                className="bg-card p-6 sm:p-8 rounded-[var(--radius-squircle-3xl)] shadow-sm border border-border"
+              >
+                <h2 className="text-xl font-bold text-foreground mb-2">Confirmar y Pagar</h2>
+                <p className="text-muted-foreground text-sm mb-6">Revisa los datos y confirma. Seras redirigido a Wompi para completar el pago seguro.</p>
+
+                {/* Guest summary */}
+                <div className="bg-muted/30 p-5 rounded-[var(--radius-squircle-xl)] border border-border mb-6">
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">Huesped</p>
+                  <p className="font-bold text-foreground">{formData.fullName}</p>
+                  <p className="text-sm text-muted-foreground">{formData.document} · {formData.phone}</p>
+                  <p className="text-sm text-muted-foreground">{formData.email}</p>
+                </div>
+
+                <form id="checkout-form" onSubmit={handlePayment}>
+                  {/* Error feedback */}
+                  <AnimatePresence>
+                    {formError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -8 }}
+                        className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-[var(--radius-squircle-xl)] text-sm text-red-400 text-center"
+                      >
+                        {formError}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+
+                  {/* Navigation */}
+                  <div className="flex justify-between">
+                    <motion.button
+                      type="button"
+                      onClick={handleBack}
+                      whileTap={{ scale: 0.97 }}
+                      transition={springSnappy()}
+                      className="px-6 py-4 text-muted-foreground hover:text-foreground rounded-[var(--radius-squircle-xl)] font-bold flex items-center gap-2 transition-all"
+                    >
+                      <ArrowLeft size={18} /> Volver
+                    </motion.button>
+                    <motion.button
+                      type="submit"
+                      disabled={isSubmitting}
+                      whileTap={{ scale: 0.97 }}
+                      transition={springSnappy()}
+                      style={{ backgroundColor: hotel.primary_color || '#0ea5e9' }}
+                      className="px-8 py-4 text-background rounded-[var(--radius-squircle-xl)] font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-cta disabled:opacity-50 disabled:scale-100"
+                    >
+                      {isSubmitting ? <><Loader2 className="animate-spin" size={20}/> Procesando...</> : <>Pagar Seguro <ArrowRight size={18}/></>}
+                    </motion.button>
+                  </div>
+                </form>
+              </motion.section>
+            )}
+          </AnimatePresence>
+        </div>
+
+        {/* Summary Panel — always visible */}
+        <div className="lg:col-span-5 sticky top-8">
+          <section className="bg-foreground p-8 rounded-[var(--radius-squircle-3xl)] shadow-2xl text-background">
+            <h2 className="text-xl font-bold mb-6">Resumen de Reserva</h2>
+            <div className="space-y-[var(--space-focus)] mb-[var(--space-breath)] border-b border-background/20 pb-[var(--space-breath)]">
+              <div className="flex justify-between items-start">
+                <div>
+                  <p className="text-background/60 text-sm">{room.name}</p>
+                  <p className="font-bold">{nights} {nights === 1 ? 'Noche' : 'Noches'}</p>
+                  <p className="text-xs text-background/40 mt-1">{checkIn} al {checkOut}</p>
+                </div>
+                <p className="font-bold">${basePrice.toLocaleString()}</p>
               </div>
-              <p className="font-bold">${basePrice.toLocaleString()}</p>
+              {selectedUpsells.length > 0 && (
+                <div className="flex justify-between items-start animate-in fade-in duration-300 text-brand-400">
+                  <p className="text-sm font-bold">Extras ({selectedUpsells.length})</p>
+                  <p className="font-bold">${upsellsTotal.toLocaleString()}</p>
+                </div>
+              )}
             </div>
-            {selectedUpsells.length > 0 && (
-              <div className="flex justify-between items-start animate-in fade-in duration-300 text-brand-400">
-                <p className="text-sm font-bold">Extras ({selectedUpsells.length})</p>
-                <p className="font-bold">${upsellsTotal.toLocaleString()}</p>
+            <div className="flex justify-between items-end mb-8">
+              <p className="text-background/60">Total a Pagar</p>
+              <p className="text-3xl font-black">${grandTotal.toLocaleString()} <span className="text-sm text-background/40 font-medium">COP</span></p>
+            </div>
+
+            {/* Error feedback — Mac 2026: organic haptic response */}
+            <AnimatePresence>
+              {formError && (
+                <motion.div
+                  initial={{ opacity: 0, y: -8 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, y: -8 }}
+                  className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-[var(--radius-squircle-xl)] text-sm text-red-400 text-center"
+                >
+                  {formError}
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            <div className="mt-6 flex items-center justify-center gap-2 text-xs text-background/60 font-medium">
+              <ShieldCheck size={16} className="text-secondary" /> Transaccion 100% segura
+            </div>
+            {hotel.cancellation_policy && (
+              <div className="mt-4 p-4 bg-background/10 rounded-[var(--radius-squircle-xl)] text-xs text-background/60 leading-relaxed border border-background/20">
+                <span className="font-bold text-background/80 block mb-1">Politica de Cancelacion:</span>
+                {hotel.cancellation_policy}
               </div>
             )}
-          </div>
-          <div className="flex justify-between items-end mb-8">
-            <p className="text-background/60">Total a Pagar</p>
-            <p className="text-3xl font-black">${grandTotal.toLocaleString()} <span className="text-sm text-background/40 font-medium">COP</span></p>
-          </div>
-          <button form="checkout-form" type="submit" disabled={isSubmitting} style={{ backgroundColor: hotel.primary_color || '#0ea5e9' }} className="w-full py-4 rounded-xl text-background font-bold flex items-center justify-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-lg shadow-black/50 disabled:opacity-50 disabled:scale-100">
-            {isSubmitting ? <><Loader2 className="animate-spin" size={20}/> Procesando...</> : <>Pagar Seguro <ArrowRight size={20}/></>}
-          </button>
-          <div className="mt-6 flex items-center justify-center gap-2 text-xs text-background/60 font-medium">
-            <ShieldCheck size={16} className="text-secondary" /> Transaccion 100% segura
-          </div>
-          {hotel.cancellation_policy && (
-            <div className="mt-4 p-4 bg-background/10 rounded-xl text-xs text-background/60 leading-relaxed border border-background/20">
-              <span className="font-bold text-background/80 block mb-1">Politica de Cancelacion:</span>
-              {hotel.cancellation_policy}
-            </div>
-          )}
-        </section>
-      </div>
-    </form>
+          </section>
+        </div>
+      </form>
+    </motion.div>
   );
 }

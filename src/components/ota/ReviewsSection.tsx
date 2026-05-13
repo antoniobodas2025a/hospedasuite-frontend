@@ -1,5 +1,6 @@
 import { Star, Quote, ThumbsUp } from 'lucide-react';
 import { getApprovedReviewsAction, getReviewStatsAction } from '@/app/actions/ota';
+import { SectionHeader } from '@/components/ui/glass';
 
 // ============================================================================
 // REVIEWS SECTION — Real guest reviews from database
@@ -55,7 +56,7 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
   // No reviews yet
   if (reviews.length === 0) {
     return (
-      <div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40 text-center">
+      <div className="glass-card p-6 md:p-8 text-center">
         <Star size={48} className="text-muted-foreground/30 mx-auto mb-4" strokeWidth={1} />
         <h2 className="text-xl font-bold text-foreground mb-2">Aun no hay opiniones</h2>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
@@ -66,18 +67,14 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
   }
 
   return (
-    <div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40">
-      {/* Header */}
+    <div className="glass-card p-6 md:p-8">
+      {/* Header — rating summary row */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
-        <div>
-          <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
-            <Star size={20} className="fill-warm-400 text-warm-400" />
-            Opiniones de Huespedes
-          </h2>
-          <p className="text-sm text-muted-foreground mt-1">
-            {stats.total} resenas verificadas
-          </p>
-        </div>
+        <SectionHeader
+          title="Opiniones de Huespedes"
+          subtitle={`${stats.total} resenas verificadas`}
+          className="mb-0"
+        />
         <div className="flex items-center gap-3">
           <span className="text-4xl font-black text-foreground">{stats.overall}</span>
           <div>
@@ -96,7 +93,7 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
           { label: 'Malo', count: stats.breakdown[2] },
           { label: 'Pesimo', count: stats.breakdown[1] },
         ].map((item) => (
-          <div key={item.label} className="bg-muted/50 rounded-xl p-3 text-center border border-border/40">
+          <div key={item.label} className="bg-muted/50 rounded-[var(--radius-squircle-lg)] p-3 text-center border border-border/40">
             <p className="text-lg font-bold text-foreground">{item.count}</p>
             <p className="text-[10px] text-muted-foreground font-medium uppercase tracking-wide">{item.label}</p>
           </div>

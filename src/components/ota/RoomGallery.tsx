@@ -208,7 +208,7 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           <div className="absolute bottom-3 left-3">
-            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/15 backdrop-blur-xl text-white text-xs font-semibold border border-white/20 shadow-lg">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1.5 glass-pill text-white text-xs font-semibold shadow-lg">
               <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="size-3.5">
                 <rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
                 <circle cx="9" cy="9" r="2" />
@@ -228,7 +228,7 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
                   key={realIndex}
                   type="button"
                   onClick={() => handleThumbnailClick(realIndex)}
-                  className="relative shrink-0 w-20 h-14 rounded-xl overflow-hidden transition-all duration-300 group"
+                  className="relative shrink-0 w-20 h-14 rounded-[var(--radius-squircle-lg)] overflow-hidden transition-all duration-300 group"
                   aria-label={`Ver imagen ${realIndex + 1}`}
                 >
                   <Image
@@ -238,8 +238,8 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
                     className="object-cover"
                     sizes="80px"
                   />
-                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors rounded-xl" />
-                  <div className="absolute inset-0 rounded-xl ring-1 ring-white/20" />
+                  <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors rounded-[var(--radius-squircle-lg)]" />
+                  <div className="absolute inset-0 rounded-[var(--radius-squircle-lg)] ring-1 ring-white/20" />
                 </button>
               );
             })}

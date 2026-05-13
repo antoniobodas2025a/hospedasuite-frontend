@@ -39,7 +39,7 @@ function GlassCard({ children, className }: { children: React.ReactNode; classNa
   return (
     <div className={cn(
       'rounded-[1.25rem] border',
-      'bg-white/40 backdrop-blur-xl',
+      'glass-card',
       'border-white/30 shadow-sm shadow-muted/40',
       className,
     )}>
@@ -53,8 +53,8 @@ function GlassCard({ children, className }: { children: React.ReactNode; classNa
 // ============================================================================
 function AmenityGlass({ icon: Icon, title, story }: { icon: React.ElementType; title: string; story: string }) {
   return (
-    <div className="group flex gap-3 p-3 rounded-xl transition-all duration-300 hover:bg-white/40 hover:shadow-md hover:shadow-brand-500/5">
-      <div className="shrink-0 size-10 rounded-xl bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center transition-all group-hover:from-brand-500/20 group-hover:to-warm-400/20 group-hover:scale-105">
+    <div className="group flex gap-3 p-3 rounded-[var(--radius-squircle-lg)] transition-all duration-300 hover:bg-white/40 hover:shadow-md hover:shadow-brand-500/5">
+      <div className="shrink-0 size-10 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center transition-all group-hover:from-brand-500/20 group-hover:to-warm-400/20 group-hover:scale-105">
         <Icon size={18} className="text-brand-500" strokeWidth={1.5} />
       </div>
       <div>
@@ -94,14 +94,14 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
     return (
       <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-foreground/40 backdrop-blur-xl" onClick={closeModal} />
-        <div className="relative z-10 bg-white/70 backdrop-blur-3xl rounded-[2rem] p-10 w-full max-w-md text-center shadow-2xl shadow-black/10 border border-white/40 animate-in zoom-in-95 duration-200">
-          <div className="size-16 rounded-2xl bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center mx-auto mb-6">
+        <div className="relative z-10 glass-panel p-10 w-full max-w-md text-center shadow-2xl shadow-black/10 animate-in zoom-in-95 duration-200">
+          <div className="size-16 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center mx-auto mb-6">
             <Calendar size={28} className="text-brand-500" strokeWidth={1.5} />
           </div>
           <h2 className="text-2xl font-black text-foreground mb-2">Defina su Estadia</h2>
           <p className="text-muted-foreground mb-8 text-sm">Para garantizar la tarifa exacta, necesitamos saber cuando nos visitara.</p>
           <button onClick={() => { closeModal(); window.scrollTo({ top: 0, behavior: 'smooth' }); }} 
-            className="w-full bg-foreground/90 backdrop-blur-sm text-background font-semibold py-4 rounded-2xl hover:bg-brand-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-[0.98]">
+            className="w-full glass-card text-background font-semibold py-4 hover:bg-brand-600 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-[0.98]">
             Seleccionar Fechas <ArrowRight size={18} />
           </button>
         </div>
@@ -143,10 +143,10 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
       <div className="absolute inset-0 bg-foreground/50 backdrop-blur-2xl" onClick={closeModal} />
       
       {/* MODAL CONTAINER — Liquid Glass */}
-      <div className="relative w-full max-w-7xl h-[96vh] sm:h-[92vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-300 sm:rounded-[2rem] rounded-t-[2rem] shadow-2xl shadow-black/20 border border-white/20 bg-white/60 backdrop-blur-3xl">
+      <div className="relative w-full max-w-7xl h-[96vh] sm:h-[92vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-300 sm:rounded-[var(--radius-squircle-2xl)] rounded-t-[2rem] glass-panel">
         
         {/* Boton cerrar glass */}
-        <button onClick={closeModal} className="absolute top-4 right-4 z-30 size-10 flex items-center justify-center rounded-full bg-white/15 backdrop-blur-xl border border-white/25 text-foreground/70 hover:bg-white/25 hover:scale-110 hover:text-foreground transition-all shadow-lg shadow-black/5 active:scale-95">
+        <button onClick={closeModal} className="absolute top-4 right-4 z-30 size-10 flex items-center justify-center rounded-full glass-pill text-foreground/70 hover:bg-white/25 hover:scale-110 hover:text-foreground transition-all shadow-lg shadow-black/5 active:scale-95">
           <X size={18} strokeWidth={2.5} />
         </button>
 
@@ -227,7 +227,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                           {format(dateFrom, "dd MMM", { locale: es })} — {format(dateTo, "dd MMM", { locale: es })}
                         </p>
                       </div>
-                      <div className="px-3 py-1.5 rounded-xl bg-white/60 backdrop-blur-sm border border-white/30 shadow-sm">
+                      <div className="px-3 py-1.5 glass-card !rounded-[var(--radius-squircle-lg)]">
                         <span className="text-xs font-bold text-foreground/80">{nights} Noche{nights > 1 ? 's' : ''}</span>
                       </div>
                     </div>
@@ -245,7 +245,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 
                     {/* Alerta de capacidad */}
                     {isOverCapacity && (
-                      <div className="flex gap-2 p-3 bg-destructive/10 backdrop-blur-sm border border-destructive/20 text-destructive">
+                      <div className="flex gap-2 p-3 glass-card border-destructive/20 text-destructive">
                         <Info size={14} className="shrink-0 mt-0.5" />
                         <div>
                           <p className="text-xs font-bold mb-1">Aforo Excedido</p>
@@ -275,19 +275,19 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 
             {/* Dock de cierre — barra flotante glass */}
             <div className="shrink-0 p-4">
-              <div className="flex items-center justify-between px-5 py-4 rounded-[1.25rem] bg-white/50 backdrop-blur-2xl border border-white/30 shadow-lg shadow-muted/30">
+              <div className="flex items-center justify-between px-5 py-4 glass-card">
                 <div>
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-0.5">Total</p>
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-ultra mb-0.5">Total</p>
                   <p className="text-xl font-black text-foreground">${totalPrice.toLocaleString()} <span className="text-xs font-medium text-muted-foreground">COP</span></p>
                 </div>
                 <button 
                   disabled={isOverCapacity}
                   onClick={handleCheckout}
                   className={cn(
-                    "px-7 py-3.5 rounded-xl font-semibold text-background transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
+                    "px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-background transition-all flex items-center justify-center gap-2 active:scale-[0.97] shadow-cta",
                     isOverCapacity 
                       ? "bg-muted/60 text-muted-foreground cursor-not-allowed" 
-                      : "bg-foreground/90 hover:bg-brand-600 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40"
+                      : "bg-foreground/90 hover:bg-brand-600 shadow-cta hover:shadow-cta"
                   )}
                 >
                   {isOverCapacity ? 'Ajuste la Busqueda' : 'Reservar'} <ArrowRight size={16} strokeWidth={2.5} />
@@ -368,7 +368,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                         {format(dateFrom, "dd MMM", { locale: es })} — {format(dateTo, "dd MMM", { locale: es })}
                       </p>
                     </div>
-                    <div className="px-3 py-1.5 rounded-xl bg-white/60 backdrop-blur-sm border border-white/30">
+                    <div className="px-3 py-1.5 glass-card !rounded-[var(--radius-squircle-lg)]">
                       <span className="text-xs font-bold text-foreground/80">{nights} Noche{nights > 1 ? 's' : ''}</span>
                     </div>
                   </div>
@@ -382,7 +382,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                     <Users size={16} className="text-muted-foreground/40" />
                   </div>
                   {isOverCapacity && (
-                    <div className="flex gap-2 p-3 bg-destructive/10 backdrop-blur-sm border border-destructive/20 text-destructive">
+                    <div className="flex gap-2 p-3 glass-card border-destructive/20 text-destructive">
                       <Info size={14} className="shrink-0 mt-0.5" />
                       <div>
                         <p className="text-xs font-bold mb-1">Aforo Excedido</p>
@@ -408,19 +408,19 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 
           {/* Dock de cierre mobile — glass flotante */}
           <div className="absolute bottom-0 left-0 right-0 p-3 z-20">
-            <div className="flex items-center justify-between px-5 py-4 rounded-[1.25rem] bg-white/50 backdrop-blur-2xl border border-white/30 shadow-xl shadow-black/10">
+            <div className="flex items-center justify-between px-5 py-4 glass-card">
               <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-[0.2em] mb-0.5">Total</p>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-ultra mb-0.5">Total</p>
                 <p className="text-xl font-black text-foreground">${totalPrice.toLocaleString()} <span className="text-xs font-medium text-muted-foreground">COP</span></p>
               </div>
               <button 
                 disabled={isOverCapacity}
                 onClick={handleCheckout}
                 className={cn(
-                  "px-7 py-3.5 rounded-xl font-semibold text-background transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
+                  "px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-background transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
                   isOverCapacity 
                     ? "bg-muted/60 text-muted-foreground cursor-not-allowed" 
-                    : "bg-foreground/90 hover:bg-brand-600 shadow-lg shadow-brand-500/25 hover:shadow-brand-500/40"
+                    : "bg-foreground/90 hover:bg-brand-600 shadow-cta hover:shadow-cta"
                 )}
               >
                 {isOverCapacity ? 'Ajuste' : 'Reservar'} <ArrowRight size={16} strokeWidth={2.5} />

@@ -61,12 +61,12 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
     <div className='space-y-6 pb-20 font-poppins text-zinc-100'>
       
       {/* HEADER: Liquid Glass 2.0 */}
-      <div className='flex justify-between items-center bg-zinc-900/40 backdrop-blur-2xl p-6 rounded-2xl border border-white/5 shadow-2xl shadow-black/50 ring-1 ring-inset ring-white/10'>
+      <div className='flex justify-between items-center glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 shadow-2xl shadow-black/50 ring-1 ring-inset ring-white/10'>
         <div>
-          <h2 className='text-2xl font-bold tracking-tight text-zinc-50'>Panel de Telemetría</h2>
+          <h2 className='text-2xl font-bold tracking-tight text-zinc-50'>Estado del Hotel</h2>
           <p className='text-zinc-400 font-lora text-sm mt-1'>Rendimiento operativo y flujo financiero en tiempo real.</p>
         </div>
-        <div className='px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-lg font-medium text-xs flex items-center gap-2 border border-emerald-500/20 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]'>
+        <div className='px-4 py-2 bg-emerald-500/10 text-emerald-400 rounded-[var(--radius-squircle-md)] font-medium text-xs flex items-center gap-2 border border-emerald-500/20 shadow-[0_0_15px_-3px_rgba(16,185,129,0.2)]'>
           <TrendingUp className="size-4 stroke-[1.5]" /> Enlace Supabase Activo
         </div>
       </div>
@@ -76,11 +76,11 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
         
         {/* Card: Ingresos */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1, ease: [0.23, 1, 0.32, 1] }} 
-          className='bg-zinc-900/80 rounded-2xl p-6 border border-zinc-800/60 shadow-xl relative overflow-hidden group'>
+          className='bg-zinc-900/80 rounded-[var(--radius-squircle-2xl)] p-6 border border-zinc-800/60 shadow-xl relative overflow-hidden group'>
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-3xl group-hover:bg-indigo-500/20 transition-colors duration-500"></div>
           <div className="relative z-10">
             <div className='flex items-center gap-3 mb-4'>
-              <div className='size-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-indigo-400'>
+              <div className='size-10 rounded-[var(--radius-squircle-lg)] bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-indigo-400'>
                 <DollarSign className="size-5 stroke-[1.5]" />
               </div>
               <h3 className='font-semibold text-zinc-400 text-xs tracking-widest uppercase'>Flujo del Mes</h3>
@@ -94,11 +94,11 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
 
         {/* Card: Ocupación */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15, ease: [0.23, 1, 0.32, 1] }} 
-          className='bg-zinc-900/80 rounded-2xl p-6 border border-zinc-800/60 shadow-xl relative overflow-hidden group'>
+          className='bg-zinc-900/80 rounded-[var(--radius-squircle-2xl)] p-6 border border-zinc-800/60 shadow-xl relative overflow-hidden group'>
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/10 rounded-full blur-3xl group-hover:bg-emerald-500/20 transition-colors duration-500"></div>
           <div className="relative z-10">
             <div className='flex items-center gap-3 mb-4'>
-              <div className='size-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-emerald-400'>
+              <div className='size-10 rounded-[var(--radius-squircle-lg)] bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-emerald-400'>
                 <Users className="size-5 stroke-[1.5]" />
               </div>
               <h3 className='font-semibold text-zinc-400 text-xs tracking-widest uppercase'>Densidad Actual</h3>
@@ -114,11 +114,11 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
 
         {/* Card: Reservas */}
         <motion.div initial={{ opacity: 0, y: 15 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2, ease: [0.23, 1, 0.32, 1] }} 
-          className='bg-zinc-900/80 rounded-2xl p-6 border border-zinc-800/60 shadow-xl relative overflow-hidden group'>
+          className='bg-zinc-900/80 rounded-[var(--radius-squircle-2xl)] p-6 border border-zinc-800/60 shadow-xl relative overflow-hidden group'>
           <div className="absolute -right-10 -top-10 w-32 h-32 bg-sky-500/10 rounded-full blur-3xl group-hover:bg-sky-500/20 transition-colors duration-500"></div>
           <div className="relative z-10">
             <div className='flex items-center gap-3 mb-4'>
-              <div className='size-10 rounded-xl bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-sky-400'>
+              <div className='size-10 rounded-[var(--radius-squircle-lg)] bg-zinc-800/80 border border-zinc-700/50 flex items-center justify-center text-sky-400'>
                 <CalendarDays className="size-5 stroke-[1.5]" />
               </div>
               <h3 className='font-semibold text-zinc-400 text-xs tracking-widest uppercase'>Contratos Activos</h3>
@@ -134,7 +134,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
         
         {/* Gráfico de Ingresos */}
         <motion.div initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} 
-          className='lg:col-span-2 bg-zinc-900/50 rounded-2xl p-8 border border-zinc-800/60 shadow-xl backdrop-blur-sm'>
+          className='lg:col-span-2 glass-card p-8'>
           <h3 className='text-sm font-semibold text-zinc-400 mb-6 uppercase tracking-wider'>Evolución de Ingresos (Mes en Curso)</h3>
           <div className='h-[300px] w-full'>
             <ResponsiveContainer width="100%" height="100%">
@@ -155,7 +155,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
 
         {/* Próximas Llegadas */}
         <motion.div initial={{ opacity: 0, x: 15 }} animate={{ opacity: 1, x: 0 }} transition={{ delay: 0.4 }} 
-          className='bg-[#0F0F0F] rounded-2xl p-8 border border-zinc-800/80 shadow-2xl relative overflow-hidden flex flex-col'>
+          className='bg-[#0F0F0F] rounded-[var(--radius-squircle-2xl)] p-8 border border-zinc-800/80 shadow-2xl relative overflow-hidden flex flex-col'>
           <div className="absolute top-0 right-0 w-40 h-40 bg-zinc-800/20 rounded-full blur-3xl z-0"></div>
           
           <h3 className='text-sm font-semibold text-zinc-400 mb-6 relative z-10 flex items-center justify-between uppercase tracking-wider'>
@@ -172,7 +172,7 @@ const OverviewPanelView: React.FC<OverviewPanelViewProps> = ({ stats, isComplete
             ) : (
               stats.upcomingArrivals.map((booking) => (
                 <div key={booking.id} 
-                  className='bg-zinc-900/50 border border-zinc-800/50 rounded-xl p-3.5 hover:bg-zinc-800/80 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between group cursor-default'>
+                  className='bg-zinc-900/50 border border-zinc-800/50 rounded-[var(--radius-squircle-lg)] p-3.5 hover:bg-zinc-800/80 hover:border-zinc-700 transition-all duration-300 flex items-center justify-between group cursor-default'>
                   <div className="min-w-0 pr-2">
                     <p className='font-medium text-sm text-zinc-200 group-hover:text-white transition-colors truncate'>
                       {booking.guests?.[0]?.full_name || 'Huésped no registrado'}

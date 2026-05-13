@@ -182,18 +182,18 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
       <motion.div 
         initial={{ opacity: 0, scale: 0.95, y: 20 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
-        className="w-full max-w-4xl max-h-[90vh] bg-[#09090b]/90 backdrop-blur-3xl border border-white/10 rounded-[2.5rem] flex flex-col overflow-hidden"
+        className="w-full max-w-4xl max-h-[90vh] glass-panel flex flex-col overflow-hidden"
       >
-        <div className="p-6 border-b border-white/5 flex justify-between items-center bg-[#09090b]/60 backdrop-blur-2xl">
+        <div className="p-6 border-b border-white/5 flex justify-between items-center glass-card !rounded-none">
           <div className="flex items-center gap-4">
-            <div className="size-12 rounded-2xl bg-zinc-900 border border-white/10 flex items-center justify-center">
+            <div className="size-12 rounded-[var(--radius-squircle-2xl)] bg-zinc-900 border border-white/10 flex items-center justify-center">
               <Building2 className="size-6 text-indigo-400" />
             </div>
             <h2 className="text-2xl font-bold text-white tracking-tight">
               {initialData ? 'Afinación de Nodo' : 'Nuevo Nodo'}
             </h2>
           </div>
-          <button onClick={() => onClose(false)} className="p-3 bg-white/5 hover:bg-rose-500/20 rounded-2xl transition-colors text-zinc-400 hover:text-rose-400">
+          <button onClick={() => onClose(false)} className="p-3 bg-white/5 hover:bg-rose-500/20 rounded-[var(--radius-squircle-2xl)] transition-colors text-zinc-400 hover:text-rose-400">
             <X className="size-5" />
           </button>
         </div>
@@ -209,11 +209,11 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                   <div className="space-y-5">
                     <input {...register('name')} className="w-full bg-transparent border-b border-white/10 text-white px-2 py-3 focus:outline-none focus:border-indigo-500 font-black text-2xl placeholder:text-zinc-700" placeholder="Nombre de Unidad" />
                     <div className="grid grid-cols-2 gap-4">
-                      <div className="bg-zinc-900/50 p-4 rounded-2xl border border-white/5">
+                      <div className="bg-zinc-900/50 p-4 rounded-[var(--radius-squircle-2xl)] border border-white/5">
                         <label className="block text-[9px] font-bold text-zinc-500 mb-1 uppercase tracking-widest">Tarifa (COP)</label>
                         <input type="number" {...register('price', { valueAsNumber: true })} className="w-full bg-transparent text-emerald-400 focus:outline-none font-bold font-mono" />
                       </div>
-                      <div className="bg-zinc-900/50 p-4 rounded-2xl border border-white/5">
+                      <div className="bg-zinc-900/50 p-4 rounded-[var(--radius-squircle-2xl)] border border-white/5">
                         <label className="block text-[9px] font-bold text-zinc-500 mb-1 uppercase tracking-widest">Aforo</label>
                         <input type="number" {...register('capacity', { valueAsNumber: true })} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono" />
                       </div>
@@ -225,7 +225,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                   <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Comodidades</h3>
                   <div className="flex flex-wrap gap-2">
                     {AVAILABLE_AMENITIES.map((amenity) => (
-                      <button type="button" key={amenity.id} onClick={() => toggleAmenity(amenity.id)} className={cn("flex items-center gap-2 px-3 py-2 rounded-xl border text-[11px] font-medium transition-all", currentAmenities.includes(amenity.id) ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-white/5 bg-zinc-900/30 text-zinc-500")}>
+                      <button type="button" key={amenity.id} onClick={() => toggleAmenity(amenity.id)} className={cn("flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-lg)] border text-[11px] font-medium transition-all", currentAmenities.includes(amenity.id) ? "border-emerald-500/40 bg-emerald-500/10 text-emerald-400" : "border-white/5 bg-zinc-900/30 text-zinc-500")}>
                         <amenity.icon className="size-3.5" /> {amenity.label}
                       </button>
                     ))}
@@ -238,13 +238,13 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                   <h3 className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-4">Galería Visual (WebP)</h3>
                   <div className="space-y-4">
                     <input type="file" accept="image/*" multiple className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploadingMedia} className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 border-dashed rounded-xl py-4 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
+                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploadingMedia} className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 border-dashed rounded-[var(--radius-squircle-lg)] py-4 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
                       {isUploadingMedia ? <><Loader2 className="size-4 animate-spin" /> Procesando...</> : <><UploadCloud className="size-4" /> Subir desde el Equipo</>}
                     </button>
 
                     <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                       {currentGallery.map((img: any, i: number) => (
-                        <div key={i} className="relative shrink-0 w-24 h-20 rounded-lg overflow-hidden border border-white/10 group">
+                        <div key={i} className="relative shrink-0 w-24 h-20 rounded-[var(--radius-squircle-md)] overflow-hidden border border-white/10 group">
                           <img src={img.url || img} className="w-full h-full object-cover" />
                           <button type="button" onClick={() => setValue('gallery', currentGallery.filter((_, idx) => idx !== i))} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
                             <Trash2 className="size-4 text-rose-400" />
@@ -261,7 +261,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
 
         <div className="p-6 border-t border-white/5 bg-[#09090b]/80 flex justify-end gap-4">
           <button onClick={() => onClose(false)} className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-zinc-500">Descartar</button>
-          <button type="submit" form="room-form" disabled={isSaving || isUploadingMedia} className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-white bg-indigo-600 rounded-xl shadow-lg shadow-indigo-500/20">
+          <button type="submit" form="room-form" disabled={isSaving || isUploadingMedia} className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-white bg-indigo-600 rounded-[var(--radius-squircle-lg)] shadow-cta">
             {isSaving ? 'Guardando...' : 'Compilar Mutación'}
           </button>
         </div>

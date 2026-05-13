@@ -58,16 +58,16 @@ export default function AdminLoginPage() {
       />
 
       {/* Main Card */}
-      <div className='bg-white/80 backdrop-blur-xl border border-white/50 rounded-[2rem] p-10 max-w-[420px] w-full shadow-[0_20px_60px_-15px_rgba(0,0,0,0.1)] relative z-10 animate-in fade-in zoom-in-95 duration-500'>
+      <div className='glass-card p-10 max-w-[420px] w-full relative z-10 animate-in fade-in zoom-in-95 duration-500'>
         {/* Header: Logo & Title */}
         <div className='flex flex-col items-center mb-10'>
           <Link
             href='/'
             className='mb-6 hover:scale-105 transition-transform duration-300'
           >
-            <div className='w-16 h-16 rounded-2xl bg-gradient-to-br from-[#0065B3] to-[#004E8A] flex items-center justify-center shadow-lg shadow-blue-900/20 text-white'>
+            <div className='w-16 h-16 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-[#0065B3] to-[#004E8A] flex items-center justify-center shadow-lg shadow-blue-900/20 text-white'>
               {/* Intentamos cargar el logo, si falla mostramos la H */}
-              <div className='relative w-full h-full flex items-center justify-center overflow-hidden rounded-2xl'>
+              <div className='relative w-full h-full flex items-center justify-center overflow-hidden rounded-[var(--radius-squircle-2xl)]'>
                 <Image
                   src='/logo.png'
                   alt='Logo'
@@ -112,7 +112,7 @@ export default function AdminLoginPage() {
                 type='email'
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className='w-full pl-11 pr-4 py-3.5 bg-[#F5F5F7] border-transparent rounded-xl text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/20 outline-none focus:bg-white focus:ring-4 focus:ring-[#0065B3]/10 focus:border-[#0065B3]/20 transition-all duration-200 shadow-inner'
+                className='w-full pl-11 pr-4 py-3.5 bg-[#F5F5F7] border-transparent rounded-[var(--radius-squircle-lg)] text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/20 outline-none focus:bg-white focus:ring-4 focus:ring-[#0065B3]/10 focus:border-[#0065B3]/20 transition-all duration-200 shadow-inner'
                 placeholder='admin@hospedasuite.com'
                 required
               />
@@ -133,7 +133,7 @@ export default function AdminLoginPage() {
                 type='password'
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className='w-full pl-11 pr-4 py-3.5 bg-[#F5F5F7] border-transparent rounded-xl text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/20 outline-none focus:bg-white focus:ring-4 focus:ring-[#0065B3]/10 focus:border-[#0065B3]/20 transition-all duration-200 shadow-inner'
+                className='w-full pl-11 pr-4 py-3.5 bg-[#F5F5F7] border-transparent rounded-[var(--radius-squircle-lg)] text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/20 outline-none focus:bg-white focus:ring-4 focus:ring-[#0065B3]/10 focus:border-[#0065B3]/20 transition-all duration-200 shadow-inner'
                 placeholder='••••••••'
                 required
               />
@@ -144,7 +144,7 @@ export default function AdminLoginPage() {
           <button
             type='submit'
             disabled={loading}
-            className='w-full py-4 mt-4 bg-[#1d1d1f] hover:bg-black text-white font-semibold rounded-xl transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2'
+            className='w-full py-4 mt-4 bg-[#1d1d1f] hover:bg-black text-white font-semibold rounded-[var(--radius-squircle-lg)] transition-all duration-300 shadow-lg hover:shadow-xl hover:-translate-y-0.5 active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2'
           >
             {loading ? (
               <>

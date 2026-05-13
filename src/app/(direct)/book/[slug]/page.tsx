@@ -91,7 +91,7 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
         {/* SECCION 2: Detalles del Hotel & Amenities */}
         <div className="lg:col-span-8 space-y-10">
 
-          <section className="bg-card p-8 rounded-3xl shadow-sm border border-border">
+          <section className="bg-card p-8 rounded-[var(--radius-squircle-3xl)] shadow-sm border border-border">
             <h2 className="text-2xl font-bold text-foreground mb-5">Sobre el Hotel</h2>
             <p className="text-muted-foreground leading-relaxed text-sm whitespace-pre-line">
               {hotel.description || `Bienvenido a ${hotel.name}, donde la comodidad y el servicio excepcional te esperan.`}
@@ -102,7 +102,7 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
                 <h3 className="text-sm font-bold text-muted-foreground uppercase tracking-wider mb-5">Amenidades Destacadas</h3>
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {hotel.hotel_amenities.map((amenity: string, index: number) => (
-                    <div key={index} className="flex items-center gap-3 bg-muted/50 p-4 rounded-xl text-foreground/80 text-sm border border-border">
+                    <div key={index} className="flex items-center gap-3 bg-muted/50 p-4 rounded-[var(--radius-squircle-lg)] text-foreground/80 text-sm border border-border">
                       <ShieldCheck size={18} className="text-secondary shrink-0" />
                       <span className="font-medium">{amenity}</span>
                     </div>
@@ -125,10 +125,10 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
                   const pricePerNight = Number(room.price || room.price_per_night || 0);
 
                   return (
-                    <div key={room.id} className="bg-card rounded-3xl p-5 shadow-sm border border-border flex flex-col md:flex-row gap-6 group hover:border-brand-500/30 hover:shadow-lg transition-all duration-300">
+                    <div key={room.id} className="bg-card rounded-[var(--radius-squircle-3xl)] p-5 shadow-sm border border-border flex flex-col md:flex-row gap-6 group hover:border-brand-500/30 hover:shadow-lg transition-all duration-300">
 
                       {/* Imagen de la Habitacion */}
-                      <div className="relative w-full md:w-64 h-48 rounded-2xl overflow-hidden shrink-0 bg-muted">
+                      <div className="relative w-full md:w-64 h-48 rounded-[var(--radius-squircle-2xl)] overflow-hidden shrink-0 bg-muted">
                         {room.gallery && room.gallery.length > 0 ? (
                           <Image
                             src={room.gallery[0].url || room.gallery[0]}
@@ -166,7 +166,7 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
                           <Link
                             href={`/book/${slug}/checkout?room=${room.id}&checkin=${checkin || todayISO}&checkout=${checkout || tomorrowISO}`}
                             style={{ backgroundColor: hotel.primary_color || '#0ea5e9' }}
-                            className="px-8 py-4 rounded-xl text-white font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-md shadow-black/10 text-sm"
+                            className="px-8 py-4 rounded-[var(--radius-squircle-lg)] text-white font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-cta text-sm"
                           >
                              Reservar <CalendarDays size={18} />
                           </Link>
@@ -176,7 +176,7 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
                   );
                 })
               ) : (
-                <div className="bg-card rounded-3xl p-16 text-center shadow-sm border border-border flex flex-col items-center">
+                <div className="bg-card rounded-[var(--radius-squircle-3xl)] p-16 text-center shadow-sm border border-border flex flex-col items-center">
                    <KeyRound size={56} className="text-muted-foreground/40 mb-6" strokeWidth={1}/>
                    <h3 className="text-xl font-bold text-foreground/80">No hay habitaciones disponibles</h3>
                    <p className="text-muted-foreground mt-2 text-sm max-w-sm">Lo sentimos, no encontramos inventario para este hotel en este momento.</p>

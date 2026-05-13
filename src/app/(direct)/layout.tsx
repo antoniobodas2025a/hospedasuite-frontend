@@ -1,9 +1,8 @@
 import React from 'react';
 import type { Metadata } from 'next';
-import { Inter, Calistoga } from 'next/font/google';
+import { Calistoga } from 'next/font/google';
 import '../globals.css';
 
-const inter = Inter({ subsets: ['latin'], variable: '--font-inter' });
 const calistoga = Calistoga({
   weight: '400',
   subsets: ['latin'],
@@ -25,7 +24,7 @@ export default function DirectLayout({
 }) {
   return (
     // data-theme="ota" activates Tierra & Sal palette for direct booking channel
-    <div data-theme="ota" className={`${inter.variable} ${calistoga.variable} font-sans bg-background text-foreground min-h-screen flex flex-col`}>
+    <div data-theme="ota" className={`${calistoga.variable} font-sans bg-background text-foreground min-h-screen flex flex-col`}>
       {children}
       {/* Footer Minimalista */}
       <div className='py-6 text-center border-t border-border mt-auto'>

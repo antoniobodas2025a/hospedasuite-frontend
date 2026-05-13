@@ -46,7 +46,7 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
     <div className='space-y-8 pb-20 font-poppins text-zinc-100'>
       
       {/* HEADER ESTRATÉGICO: Liquid Glass Header */}
-      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-zinc-900/40 backdrop-blur-2xl p-8 rounded-[2.5rem] border border-white/5 shadow-2xl ring-1 ring-inset ring-white/10'>
+      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 glass-card p-8 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl ring-1 ring-inset ring-white/10'>
         <div>
           <h2 className='text-2xl font-bold text-zinc-50 tracking-tight flex items-center gap-3'>
             <BarChart3 className="text-indigo-400 size-6" />
@@ -57,13 +57,13 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
 
         <div className='flex flex-wrap items-center gap-4 w-full lg:w-auto'>
           {/* Selector de Rango Temporal (Liquid Tabs) */}
-          <div className='flex bg-zinc-950/60 p-1.5 rounded-2xl border border-white/5'>
+          <div className='flex bg-zinc-950/60 p-1.5 rounded-[var(--radius-squircle-2xl)] border border-white/5'>
             {['month', 'year', 'all'].map((range) => (
               <button
                 key={range}
                 onClick={() => setDateRange(range)}
                 className={cn(
-                  "px-6 py-2 rounded-xl text-xs font-bold uppercase tracking-widest transition-all",
+                  "px-6 py-2 rounded-[var(--radius-squircle-lg)] text-xs font-bold uppercase tracking-widest transition-all",
                   dateRange === range 
                     ? "bg-zinc-800 text-white shadow-lg ring-1 ring-white/10" 
                     : "text-zinc-500 hover:text-zinc-300"
@@ -76,10 +76,10 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
 
           <button
             onClick={onDownloadExcel}
-            className='flex items-center gap-2 px-6 py-3 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all active:scale-95 border border-emerald-400/20'
+            className='flex items-center gap-2 px-6 py-3 bg-emerald-600/90 hover:bg-emerald-500 text-white rounded-[var(--radius-squircle-lg)] font-bold text-sm shadow-lg shadow-emerald-500/20 transition-all active:scale-95 border border-emerald-400/20'
           >
             <Download size={18} strokeWidth={2.5} /> 
-            <span className='hidden sm:inline'>Exportar Ledger</span>
+            <span className='hidden sm:inline'>Exportar Reporte</span>
           </button>
         </div>
       </div>
@@ -87,14 +87,14 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
       {/* MATRIZ DE KPIs (Liquid Strategic Cards) */}
       <div className='grid grid-cols-1 md:grid-cols-3 gap-6'>
         {/* KPI: Ingresos Totales */}
-        <div className='bg-indigo-600/10 backdrop-blur-xl p-8 rounded-[2.5rem] border border-indigo-500/20 relative overflow-hidden group'>
+        <div className='glass-card p-8 relative overflow-hidden group border-indigo-500/20 bg-indigo-600/10'>
           <div className="absolute -right-6 -bottom-6 size-32 bg-indigo-500/20 rounded-full blur-3xl group-hover:bg-indigo-500/30 transition-colors" />
           <div className='relative z-10 space-y-2'>
-            <p className='text-indigo-400/80 text-[10px] font-bold uppercase tracking-[0.2em]'>Recaudación Bruta</p>
+            <p className='text-indigo-400/80 text-[10px] font-bold uppercase tracking-ultra'>Recaudación Bruta</p>
             <h3 className='text-4xl font-bold text-zinc-50 tracking-tighter tabular-nums'>
               ${totalRevenue.toLocaleString()}
             </h3>
-            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-lg w-fit border border-emerald-500/20">
+            <div className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold bg-emerald-500/10 px-2 py-0.5 rounded-[var(--radius-squircle-md)] w-fit border border-emerald-500/20">
               <TrendingUp size={12} /> +4.2%
             </div>
           </div>
@@ -102,12 +102,12 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
         </div>
 
         {/* KPI: Volumen de Reservas */}
-        <div className='bg-zinc-900/40 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/5 flex items-center gap-6 shadow-inner'>
-          <div className='size-14 rounded-2xl bg-zinc-950 flex items-center justify-center text-indigo-400 border border-white/5 shadow-2xl'>
+        <div className='glass-card p-8 rounded-[var(--radius-squircle-3xl)] border border-white/5 flex items-center gap-6 shadow-inner'>
+          <div className='size-14 rounded-[var(--radius-squircle-2xl)] bg-zinc-950 flex items-center justify-center text-indigo-400 border border-white/5 shadow-2xl'>
             <Calendar size={28} strokeWidth={1.5} />
           </div>
           <div>
-            <p className='text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em]'>Nodos Facturados</p>
+            <p className='text-zinc-500 text-[10px] font-bold uppercase tracking-ultra'>Nodos Facturados</p>
             <h3 className='text-3xl font-bold text-zinc-50 tracking-tight'>
               {filteredSales.length} <span className="text-zinc-700 text-sm font-normal">Unidades</span>
             </h3>
@@ -115,12 +115,12 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
         </div>
 
         {/* KPI: Ticket Promedio */}
-        <div className='bg-zinc-900/40 backdrop-blur-xl p-8 rounded-[2.5rem] border border-white/5 flex items-center gap-6 shadow-inner'>
-          <div className='size-14 rounded-2xl bg-zinc-950 flex items-center justify-center text-emerald-400 border border-white/5 shadow-2xl'>
+        <div className='glass-card p-8 rounded-[var(--radius-squircle-3xl)] border border-white/5 flex items-center gap-6 shadow-inner'>
+          <div className='size-14 rounded-[var(--radius-squircle-2xl)] bg-zinc-950 flex items-center justify-center text-emerald-400 border border-white/5 shadow-2xl'>
             <Target size={28} strokeWidth={1.5} />
           </div>
           <div>
-            <p className='text-zinc-500 text-[10px] font-bold uppercase tracking-[0.2em]'>Valor Promedio</p>
+            <p className='text-zinc-500 text-[10px] font-bold uppercase tracking-ultra'>Valor Promedio</p>
             <h3 className='text-3xl font-bold text-zinc-50 tracking-tight tabular-nums'>
               ${avgTicket.toLocaleString()}
             </h3>
@@ -129,7 +129,7 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
       </div>
 
       {/* DATA LEDGER: Tabla de Alta Densidad */}
-      <div className='bg-zinc-900/40 backdrop-blur-xl rounded-[2.5rem] border border-white/5 overflow-hidden shadow-2xl ring-1 ring-white/5'>
+      <div className='glass-card rounded-[var(--radius-squircle-3xl)] border border-white/5 overflow-hidden shadow-2xl ring-1 ring-white/5'>
         <div className='overflow-x-auto custom-scrollbar'>
           <table className='w-full text-left border-collapse'>
             <thead>
@@ -158,7 +158,7 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
                     </td>
                     <td className='p-6 text-sm text-zinc-400'>{sale.room}</td>
                     <td className='p-6'>
-                      <span className='px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-lg text-[9px] font-bold uppercase tracking-widest'>
+                      <span className='px-3 py-1 bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 rounded-[var(--radius-squircle-md)] text-[9px] font-bold uppercase tracking-widest'>
                         {sale.status}
                       </span>
                     </td>

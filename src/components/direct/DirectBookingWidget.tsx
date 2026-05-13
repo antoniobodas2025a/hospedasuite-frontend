@@ -4,11 +4,22 @@ import React, { useState, useRef, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { CalendarDays, CheckCircle2, Clock, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { springGentle, springSnappy, progressiveReveal } from '@/lib/mac2026/spring';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import 'react-day-picker/dist/style.css';
+
+// ============================================================================
+// DIRECT BOOKING WIDGET — Mac 2026 Design System
+//
+// Pilares aplicados:
+// - Squircle radii via CSS custom properties (--radius-squircle-2xl)
+// - Spring physics: springGentle() para progressive reveal, springSnappy() para taps
+// - progressiveReveal variants para accordion sections
+// - whileTap spring feedback en elementos interactivos
+// ============================================================================
 
 interface DirectBookingWidgetProps {
   hotelName: string;
@@ -104,7 +115,7 @@ export default function DirectBookingWidget({
 
   return (
     <div className="sticky top-10" ref={popoverRef}>
-      <div className="bg-card rounded-[2rem] shadow-lg shadow-muted/50 border border-border overflow-hidden">
+      <div className="bg-card rounded-[var(--radius-squircle-2xl)] shadow-lg shadow-muted/50 border border-border overflow-hidden">
         {/* Header */}
         <div className="p-6 pb-4">
           <div className="flex items-center gap-3 mb-4">
@@ -112,11 +123,13 @@ export default function DirectBookingWidget({
             <h3 className="text-lg font-bold text-foreground">Selecciona tus Fechas</h3>
           </div>
 
-          {/* Date selector button */}
-          <button
+          {/* Date selector button con spring press feedback */}
+          <motion.button
             onClick={() => setShowPicker(!showPicker)}
+            whileTap={{ scale: 0.97 }}
+            transition={springSnappy()}
             className={cn(
-              'w-full flex items-center gap-3 p-4 rounded-2xl border transition-all text-left',
+              'w-full flex items-center gap-3 p-4 rounded-[var(--radius-squircle-2xl)] border transition-all text-left',
               checkIn && checkOut
                 ? 'bg-secondary/10 border-secondary/30'
                 : 'bg-muted/50 border-border hover:border-brand-300',
@@ -145,17 +158,18 @@ export default function DirectBookingWidget({
             ) : (
               <ChevronDown size={16} className="text-muted-foreground shrink-0" />
             )}
-          </button>
+          </motion.button>
         </div>
 
-        {/* DayPicker popover */}
+        {/* DayPicker popover con progressiveReveal + springGentle */}
         <AnimatePresence>
           {showPicker && (
             <motion.div
-              initial={{ opacity: 0, height: 0 }}
-              animate={{ opacity: 1, height: 'auto' }}
-              exit={{ opacity: 0, height: 0 }}
-              transition={{ duration: 0.2 }}
+              variants={progressiveReveal}
+              initial="hidden"
+              animate="visible"
+              exit="exit"
+              transition={springGentle()}
               className="overflow-hidden"
             >
               <div className="px-6 pb-4">
@@ -168,7 +182,7 @@ export default function DirectBookingWidget({
                   disabled={{ before: today }}
                   className="text-foreground font-sans"
                   modifiersClassNames={{
-                    selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md rounded-xl',
+                    selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]',
                     range_middle: 'bg-brand-50 text-brand-900 rounded-none',
                     range_start: 'rounded-l-xl rounded-r-none',
                     range_end: 'rounded-r-xl rounded-l-none',
@@ -182,7 +196,7 @@ export default function DirectBookingWidget({
         {/* Price summary */}
         {minPrice > 0 && (
           <div className="px-6 pb-4">
-            <div className="bg-gradient-to-br from-brand-500 to-warm-600 rounded-2xl p-4 text-primary-foreground">
+            <div className="bg-gradient-to-br from-brand-500 to-warm-600 rounded-[var(--radius-squircle-2xl)] p-4 text-primary-foreground">
               <p className="text-primary-foreground/70 text-[10px] font-bold uppercase tracking-widest mb-1">Desde</p>
               <div className="flex items-baseline gap-1">
                 <p className="text-2xl font-black tracking-tight">${minPrice.toLocaleString('es-CO')}</p>
@@ -212,22 +226,26 @@ export default function DirectBookingWidget({
           </div>
         )}
 
-        {/* Cancellation policy */}
+        {/* Cancellation policy — accordion con progressiveReveal + springGentle */}
         {cancellationPolicy && (
           <div className="px-6 pb-4 border-t border-border/40 pt-4">
-            <button
+            <motion.button
               onClick={() => setShowPolicy(!showPolicy)}
+              whileTap={{ scale: 0.97 }}
+              transition={springSnappy()}
               className="flex items-center justify-between w-full text-left"
             >
               <p className="text-xs font-bold text-foreground">Politica de cancelacion</p>
               {showPolicy ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-            </button>
+            </motion.button>
             <AnimatePresence>
               {showPolicy && (
                 <motion.p
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
+                  variants={progressiveReveal}
+                  initial="hidden"
+                  animate="visible"
+                  exit="exit"
+                  transition={springGentle()}
                   className="text-[11px] text-muted-foreground mt-2 leading-relaxed"
                 >
                   {cancellationPolicy}

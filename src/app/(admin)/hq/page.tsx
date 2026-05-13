@@ -48,7 +48,7 @@ export default function SuperAdminHQ() {
   if (error) {
     return (
       <div className="min-h-screen bg-[#f5f5f7] flex items-center justify-center p-6">
-        <div className="bg-white p-8 rounded-[2rem] shadow-2xl max-w-md w-full border border-red-100 text-center">
+        <div className="bg-white p-8 rounded-[var(--radius-squircle-2xl)] shadow-2xl max-w-md w-full border border-red-100 text-center">
           <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-6">
             <ShieldCheck size={32} className="text-red-500" />
           </div>
@@ -63,10 +63,10 @@ export default function SuperAdminHQ() {
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans selection:bg-emerald-200">
       
       {/* HEADER HQ */}
-      <header className="bg-white/80 backdrop-blur-2xl border-b border-black/5 sticky top-0 z-50">
+      <header className="glass-panel border-b border-black/5 sticky top-0 z-50 !rounded-none">
         <div className="max-w-7xl mx-auto px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 bg-slate-900 rounded-lg flex items-center justify-center shadow-inner">
+            <div className="w-8 h-8 bg-slate-900 rounded-[var(--radius-squircle-md)] flex items-center justify-center shadow-inner">
               <Server size={16} className="text-emerald-400" />
             </div>
             <h1 className="text-lg font-bold tracking-tight">HospedaSuite Central</h1>
@@ -82,34 +82,34 @@ export default function SuperAdminHQ() {
         
         {/* KPI DASHBOARD */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-12">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-6 rounded-[2rem] shadow-sm border border-black/5 hover:shadow-md transition-shadow">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white p-6 rounded-[var(--radius-squircle-2xl)] shadow-sm border border-black/5 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-blue-50 text-blue-600 rounded-2xl"><Building2 size={20} /></div>
+              <div className="p-3 bg-blue-50 text-blue-600 rounded-[var(--radius-squircle-2xl)]"><Building2 size={20} /></div>
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Tenants (Hoteles)</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Propiedades (Hoteles)</p>
             <h3 className="text-3xl font-display font-bold tracking-tight">{kpis?.totalHotels}</h3>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 rounded-[2rem] shadow-sm border border-black/5 hover:shadow-md transition-shadow">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }} className="bg-white p-6 rounded-[var(--radius-squircle-2xl)] shadow-sm border border-black/5 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-2xl"><Zap size={20} /></div>
+              <div className="p-3 bg-indigo-50 text-indigo-600 rounded-[var(--radius-squircle-2xl)]"><Zap size={20} /></div>
             </div>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">MRR (Planes Base)</p>
             <h3 className="text-3xl font-display font-bold tracking-tight tabular-nums">${kpis?.globalSaaS.toLocaleString()}</h3>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-6 rounded-[2rem] shadow-sm border border-black/5 hover:shadow-md transition-shadow">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.2 }} className="bg-white p-6 rounded-[var(--radius-squircle-2xl)] shadow-sm border border-black/5 hover:shadow-md transition-shadow">
             <div className="flex justify-between items-start mb-4">
-              <div className="p-3 bg-amber-50 text-amber-600 rounded-2xl"><TrendingUp size={20} /></div>
+              <div className="p-3 bg-amber-50 text-amber-600 rounded-[var(--radius-squircle-2xl)]"><TrendingUp size={20} /></div>
             </div>
             <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Comisiones (OTA+IA)</p>
             <h3 className="text-3xl font-display font-bold tracking-tight tabular-nums">${kpis?.globalCommissions.toLocaleString()}</h3>
           </motion.div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-slate-900 text-white p-6 rounded-[2rem] shadow-xl border border-slate-800 relative overflow-hidden">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.3 }} className="bg-slate-900 text-white p-6 rounded-[var(--radius-squircle-2xl)] shadow-xl border border-slate-800 relative overflow-hidden">
             <div className="absolute top-0 right-0 p-16 bg-emerald-500/20 blur-3xl rounded-full pointer-events-none" />
             <div className="flex justify-between items-start mb-4 relative z-10">
-              <div className="p-3 bg-white/10 text-emerald-400 rounded-2xl border border-white/5"><DollarSign size={20} /></div>
+              <div className="p-3 bg-white/10 text-emerald-400 rounded-[var(--radius-squircle-2xl)] border border-white/5"><DollarSign size={20} /></div>
             </div>
             <p className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1 relative z-10">A Facturar (Mes Actual)</p>
             <h3 className="text-4xl font-display font-bold text-emerald-400 tracking-tight tabular-nums relative z-10">${kpis?.grandTotalExpected.toLocaleString()}</h3>
@@ -117,7 +117,7 @@ export default function SuperAdminHQ() {
         </div>
 
         {/* LEDGER DE CLIENTES (Tabla de Cobro) */}
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="bg-white rounded-[2rem] shadow-sm border border-black/5 overflow-hidden">
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.4 }} className="bg-white rounded-[var(--radius-squircle-2xl)] shadow-sm border border-black/5 overflow-hidden">
           <div className="p-8 border-b border-black/5 flex flex-col md:flex-row md:justify-between items-start md:items-center gap-4 bg-slate-50/50">
             <div>
               <h2 className="text-xl font-bold text-slate-900 tracking-tight">Estado de Cuentas (Por Cobrar)</h2>
@@ -132,7 +132,7 @@ export default function SuperAdminHQ() {
             <table className="w-full text-left border-collapse min-w-[800px]">
               <thead>
                 <tr className="bg-white">
-                  <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Tenant (Propiedad)</th>
+                  <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Propiedad</th>
                   <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Plan Suscripción</th>
                   <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100">Comisiones (Variables)</th>
                   <th className="px-8 py-5 text-[10px] font-bold text-slate-400 uppercase tracking-widest border-b border-slate-100 text-right">Total a Cobrar</th>

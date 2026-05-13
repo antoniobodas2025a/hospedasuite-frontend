@@ -34,8 +34,8 @@ export default async function CheckoutPage({ searchParams }: Props) {
 
   if (fetchError) {
     return (
-      <div className='p-20 text-center font-mono text-xs text-rose-500 bg-rose-500/5 border border-rose-500/10 rounded-3xl'>
-        CRITICAL_DATABASE_SYNC_ERROR: Fallo de conexión con el Ledger.
+      <div className='p-20 text-center font-mono text-xs text-rose-500 bg-rose-500/5 border border-rose-500/10 rounded-[var(--radius-squircle-3xl)]'>
+        CRITICAL_DATABASE_SYNC_ERROR: Fallo de conexión con el sistema financiero.
       </div>
     );
   }
@@ -59,7 +59,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
               <h2 className='text-rose-400 font-bold text-xl uppercase tracking-tighter'>Violación de Acceso</h2>
             </div>
             <p className='text-zinc-500 text-sm mt-2 font-medium'>
-              El nodo financiero solicitado no pertenece a este Tenant.
+              El nodo financiero solicitado no pertenece a esta propiedad.
             </p>
           </div>
         );
@@ -79,7 +79,7 @@ export default async function CheckoutPage({ searchParams }: Props) {
              </div>
              <a 
                 href="/dashboard/calendar" 
-                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold transition-all cursor-pointer"
+                className="px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[var(--radius-squircle-lg)] font-bold transition-all cursor-pointer"
               >
                 Volver a la Agenda
              </a>

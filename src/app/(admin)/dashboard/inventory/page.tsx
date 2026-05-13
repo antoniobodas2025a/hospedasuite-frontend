@@ -21,7 +21,7 @@ export default async function InventoryPage() {
   if (error) {
     return (
       <div className="h-full flex items-center justify-center p-10">
-        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-6 rounded-3xl font-mono text-sm shadow-2xl">
+        <div className="bg-rose-500/10 border border-rose-500/20 text-rose-400 p-6 rounded-[var(--radius-squircle-3xl)] font-mono text-sm shadow-2xl">
           CRITICAL_ERROR: Falla de conexión con la matriz de inventario principal.
         </div>
       </div>

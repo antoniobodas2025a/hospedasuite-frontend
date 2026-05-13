@@ -2,7 +2,10 @@
 
 import React, { useState, useTransition } from 'react';
 import { Star, Send, CheckCircle2, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 import { submitReviewAction } from '@/app/actions/ota';
+import { GlassCard, SectionHeader } from '@/components/ui/glass';
+import { springSnappy, shakeHaptic, desaturateFeedback } from '@/lib/mac2026/spring';
 
 interface ReviewFormProps {
   hotelId: string;
@@ -57,27 +60,29 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
 
   if (submitted) {
     return (
-      <div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40 text-center">
+      <GlassCard className="p-6 md:p-8 text-center">
         <CheckCircle2 size={48} className="text-secondary mx-auto mb-4" />
         <h3 className="text-xl font-bold text-foreground mb-2">Gracias por tu opinion!</h3>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
           Tu resena sobre {hotelName} sera publicada despues de verificacion. Esto nos ayuda a mantener la calidad de las opiniones.
         </p>
-      </div>
+      </GlassCard>
     );
   }
 
   return (
-    <div className="bg-card/60 backdrop-blur-xl p-6 md:p-8 rounded-[2rem] shadow-sm border border-border/40">
-      <h3 className="text-lg font-bold text-foreground mb-1 flex items-center gap-2">
-        <Star size={18} className="fill-warm-400 text-warm-400" />
-        Comparte tu experiencia
-      </h3>
-      <p className="text-xs text-muted-foreground mb-6">
-        Tu opinion ayuda a otros viajeros a elegir. Sera publicada despues de verificacion.
-      </p>
+    <GlassCard className="p-6 md:p-8">
+      <SectionHeader
+        title="Comparte tu experiencia"
+        subtitle="Tu opinion ayuda a otros viajeros a elegir. Sera publicada despues de verificacion."
+      />
 
-      <form onSubmit={handleSubmit} className="space-y-5">
+      <motion.form
+        onSubmit={handleSubmit}
+        className="space-y-5"
+        animate={error ? desaturateFeedback.animate : desaturateFeedback.initial}
+        transition={desaturateFeedback.transition}
+      >
         {/* Rating stars */}
         <div>
           <label className="text-sm font-bold text-foreground mb-2 block">Tu calificacion</label>
@@ -121,7 +126,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
               placeholder="Como te llamas?"
-              className="w-full px-4 py-3 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
+              className="w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
               required
             />
           </div>
@@ -135,7 +140,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
               value={guestEmail}
               onChange={(e) => setGuestEmail(e.target.value)}
               placeholder="tu@email.com"
-              className="w-full px-4 py-3 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
+              className="w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
               required
             />
           </div>
@@ -152,7 +157,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
             value={guestLocation}
             onChange={(e) => setGuestLocation(e.target.value)}
             placeholder="Bogota, Colombia"
-            className="w-full px-4 py-3 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
+            className="w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
           />
         </div>
 
@@ -166,7 +171,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
             type="date"
             value={stayDate}
             onChange={(e) => setStayDate(e.target.value)}
-            className="w-full px-4 py-3 rounded-xl bg-muted border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
+            className="w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border text-foreground text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
           />
         </div>
 
@@ -182,7 +187,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
             placeholder="Que te parecio el hotel? Que destacarias?"
             rows={4}
             maxLength={2000}
-            className="w-full px-4 py-3 rounded-xl bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all resize-none"
+            className="w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all resize-none"
             required
           />
           <p className="text-[10px] text-muted-foreground/50 mt-1 text-right">
@@ -190,16 +195,23 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
           </p>
         </div>
 
-        {/* Error message */}
+        {/* Error message with shake haptic */}
         {error && (
-          <p className="text-sm text-destructive font-medium">{error}</p>
+          <motion.div
+            key={error}
+            animate={shakeHaptic()}
+          >
+            <p className="text-sm text-destructive font-medium">{error}</p>
+          </motion.div>
         )}
 
-        {/* Submit button */}
-        <button
+        {/* Submit button with spring physics */}
+        <motion.button
           type="submit"
           disabled={isPending}
-          className="w-full bg-primary hover:bg-brand-700 text-primary-foreground font-bold py-4 rounded-2xl transition-all flex items-center justify-center gap-2 active:scale-[0.98] shadow-md shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
+          whileTap={{ scale: 0.97 }}
+          transition={springSnappy()}
+          className="w-full bg-primary hover:bg-brand-700 text-primary-foreground font-bold py-4 rounded-[var(--radius-squircle-md)] transition-all flex items-center justify-center gap-2 shadow-md shadow-brand-500/20 disabled:opacity-50 disabled:cursor-not-allowed disabled:shadow-none"
         >
           {isPending ? (
             <>
@@ -210,8 +222,8 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
               Enviar Opinion <Send size={16} strokeWidth={2.5} />
             </>
           )}
-        </button>
-      </form>
-    </div>
+        </motion.button>
+      </motion.form>
+    </GlassCard>
   );
 }

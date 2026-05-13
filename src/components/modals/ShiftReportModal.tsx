@@ -42,7 +42,7 @@ export default function ShiftReportModal({ isOpen, onClose }: ShiftReportModalPr
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 backdrop-blur-sm p-4 print:p-0 print:bg-white print:block">
       
       {/* 🖥️ INTERFAZ DE PANTALLA (Se oculta al imprimir) */}
-      <div className="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden print:hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
+      <div className="bg-white w-full max-w-md rounded-[var(--radius-squircle-3xl)] shadow-2xl overflow-hidden print:hidden flex flex-col max-h-[90vh] animate-in fade-in zoom-in duration-200">
         <div className="p-6 bg-slate-50 border-b border-slate-100 flex justify-between items-center">
           <h2 className="text-xl font-bold flex items-center gap-2 text-slate-800">
             <Calculator className="text-indigo-600" /> Arqueo de Caja
@@ -54,30 +54,30 @@ export default function ShiftReportModal({ isOpen, onClose }: ShiftReportModalPr
 
         <div className="p-6 overflow-y-auto">
           {loading ? (
-            <div className="text-center text-slate-400 py-10 animate-pulse font-bold">Consolidando Ledger financiero...</div>
+            <div className="text-center text-slate-400 py-10 animate-pulse font-bold">Consolidando cierre de turno...</div>
           ) : report ? (
             <div className="space-y-6">
               <div className="text-center">
-                <p className="text-[10px] text-slate-400 uppercase font-black tracking-[0.2em] mb-1">Responsable de Turno</p>
+                <p className="text-[10px] text-slate-400 uppercase font-black tracking-ultra mb-1">Responsable de Turno</p>
                 <p className="text-2xl font-bold text-slate-800 tracking-tight">{report.staffName}</p>
               </div>
 
               <div className="space-y-3">
-                <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-2xl border border-emerald-100/50">
+                <div className="flex justify-between items-center p-4 bg-emerald-50 rounded-[var(--radius-squircle-2xl)] border border-emerald-100/50">
                   <div className="flex items-center gap-3 text-emerald-700 font-bold">
                     <Wallet size={20} /> Efectivo
                   </div>
                   <span className="text-xl font-bold text-emerald-700">${report.cash.toLocaleString()}</span>
                 </div>
 
-                <div className="flex justify-between items-center p-4 bg-blue-50 rounded-2xl border border-blue-100/50">
+                <div className="flex justify-between items-center p-4 bg-blue-50 rounded-[var(--radius-squircle-2xl)] border border-blue-100/50">
                   <div className="flex items-center gap-3 text-blue-700 font-bold">
                     <Building size={20} /> Transferencias
                   </div>
                   <span className="text-lg font-bold text-blue-700">${report.transfer.toLocaleString()}</span>
                 </div>
 
-                <div className="flex justify-between items-center p-4 bg-purple-50 rounded-2xl border border-purple-100/50">
+                <div className="flex justify-between items-center p-4 bg-purple-50 rounded-[var(--radius-squircle-2xl)] border border-purple-100/50">
                   <div className="flex items-center gap-3 text-purple-700 font-bold">
                     <CreditCard size={20} /> Wompi / Tarjetas
                   </div>
@@ -99,7 +99,7 @@ export default function ShiftReportModal({ isOpen, onClose }: ShiftReportModalPr
           <button 
             onClick={() => window.print()} 
             disabled={loading || !report} 
-            className="flex-1 py-4 bg-zinc-900 text-white shadow-xl font-bold rounded-2xl hover:bg-black active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
+            className="flex-1 py-4 bg-zinc-900 text-white shadow-xl font-bold rounded-[var(--radius-squircle-2xl)] hover:bg-black active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
           >
             <Printer size={18} /> Imprimir Reporte Z
           </button>

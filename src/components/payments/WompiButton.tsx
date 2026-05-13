@@ -99,7 +99,7 @@ const WompiButton = ({
       <button
         onClick={handlePayment}
         disabled={loading}
-        className={`w-full py-4 text-white font-bold rounded-xl shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed ${
+        className={`w-full py-4 text-white font-bold rounded-[var(--radius-squircle-lg)] shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed ${
           isSubscription 
             ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20' 
             : 'bg-indigo-600 hover:bg-indigo-700 shadow-indigo-600/20'

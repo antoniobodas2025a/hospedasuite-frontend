@@ -55,6 +55,103 @@
   --radius-3xl: calc(var(--radius) * 2.2);
   --radius-4xl: calc(var(--radius) * 2.6);
 
+  /* ====================================================
+     MAC 2026 DESIGN SYSTEM — Material Tokens
+     ==================================================== */
+
+  /* Squircle radii (superellipse-based continuous curvature) */
+  --radius-squircle-sm: 0.75rem;
+  --radius-squircle-md: 1rem;
+  --radius-squircle-lg: 1.25rem;
+  --radius-squircle-xl: 1.5rem;
+  --radius-squircle-2xl: 2rem;
+  --radius-squircle-3xl: 2.5rem;
+
+  /* Shadow tokens — perceptual depth scale */
+  --shadow-elev-1: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+  --shadow-elev-2: 0 4px 12px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+  --shadow-elev-3: 0 8px 30px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+  --shadow-elev-4: 0 16px 50px rgba(0,0,0,0.12), 0 8px 20px rgba(0,0,0,0.06);
+  --shadow-elev-5: 0 24px 60px rgba(0,0,0,0.16), 0 12px 24px rgba(0,0,0,0.08);
+  --shadow-cta: 0 4px 20px var(--shadow-cta-color);
+  --shadow-inset: inset 0 1px 0 rgba(255,255,255,0.1);
+
+  /* Glassmorphism 2.0 — material stack levels */
+  /* Glassmorphism 2.0 — Dark mode variants */
+  --glass-light-surface-dark: rgba(24,24,27,0.40);
+  --glass-light-border-dark: rgba(255,255,255,0.05);
+  --glass-heavy-surface-dark: rgba(9,9,11,0.80);
+  --glass-heavy-border-dark: rgba(255,255,255,0.10);
+  --glass-pill-surface-dark: rgba(24,24,27,0.60);
+  --glass-pill-border-dark: rgba(255,255,255,0.08);
+
+  /* Glassmorphism 2.0 — Light mode (default) */
+  --glass-light-surface: rgba(255,255,255,0.40);
+  --glass-light-border: rgba(255,255,255,0.30);
+  --glass-light-blur: 24px;
+  --glass-heavy-surface: rgba(255,255,255,0.08);
+  --glass-heavy-border: rgba(255,255,255,0.12);
+  --glass-heavy-blur: 40px;
+  --glass-pill-surface: rgba(255,255,255,0.60);
+  --glass-pill-border: rgba(255,255,255,0.40);
+  --glass-pill-blur: 20px;
+
+  /* Z-index scale — no more wars */
+  --z-dropdown: 100;
+  --z-sticky: 200;
+  --z-overlay: 300;
+  --z-modal: 400;
+  --z-popover: 500;
+  --z-lightbox: 600;
+  --z-toast: 700;
+
+  /* Semantic status colors (map emerald/amber/rose/indigo) */
+  --color-success: var(--success);
+  --color-success-muted: var(--success-muted);
+  --color-success-border: var(--success-border);
+  --color-warning: var(--warning);
+  --color-warning-muted: var(--warning-muted);
+  --color-warning-border: var(--warning-border);
+  --color-urgent: var(--urgent);
+  --color-urgent-muted: var(--urgent-muted);
+  --color-urgent-border: var(--urgent-border);
+  --color-trust: var(--trust);
+  --color-trust-muted: var(--trust-muted);
+  --color-trust-border: var(--trust-border);
+
+  /* Typography: tracking & leading scale
+     Tracking roles: micro/tight = headings, normal = body,
+     wide/wider = section labels, widest/ultra = uppercase micro-labels */
+  --tracking-micro: -0.01em;
+  --tracking-tight: -0.02em;
+  --tracking-normal: 0em;
+  --tracking-wide: 0.025em;
+  --tracking-wider: 0.05em;
+  --tracking-widest: 0.1em;
+  --tracking-ultra: 0.2em;
+  --tracking-extreme: 0.3em;
+  --leading-tight: 1.15;
+  --leading-snug: 1.3;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.75;
+  --leading-loose: 2;
+
+  /* Active Negative Space — Mac 2026 spacing system
+     Whitespace as a visual conductor, not empty void */
+  --space-intimate: 0.5rem;    /* 8px — within components */
+  --space-focus: 1rem;         /* 16px — related elements */
+  --space-breath: 2rem;        /* 32px — between sections */
+  --space-pause: 3rem;         /* 48px — major section breaks */
+  --space-silence: 4rem;       /* 64px — page-level breathing room */
+
+  /* Spring physics presets (stored as CSS custom props for reference) */
+  --spring-snappy: cubic-bezier(0.2, 0, 0, 1);
+  --spring-gentle: cubic-bezier(0.4, 0, 0.2, 1);
+  --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+  /* Visual Salience — CTA glow color (theme-aware) */
+  --shadow-cta-color: oklch(from var(--brand-500) l c h / 0.35);
+
   /* Brand palette scales (available in both themes) */
   --color-brand-50: var(--brand-50);
   --color-brand-100: var(--brand-100);
@@ -79,11 +176,11 @@
   --color-warm-900: var(--warm-900);
   --color-warm-950: var(--warm-950);
 
-  /* Typography */
-  --font-display: var(--font-cinzel);
-  --font-serif: var(--font-playfair);
-  --font-sans: var(--font-inter);
+  /* Typography — Geist Variable (single font family for entire system) */
+  --font-sans: var(--font-sans);
   --font-heading: var(--font-sans);
+  --font-display: var(--font-sans);
+  --font-serif: var(--font-sans);
 }
 
 /* ====================================================
@@ -120,6 +217,20 @@
   --warm-800: oklch(0.38 0.10 55);
   --warm-900: oklch(0.32 0.08 50);
   --warm-950: oklch(0.22 0.05 45);
+
+  /* Status colors: success, warning, urgent, trust */
+  --success: oklch(0.72 0.14 145);
+  --success-muted: oklch(0.94 0.04 145);
+  --success-border: oklch(0.82 0.08 145);
+  --warning: oklch(0.75 0.14 75);
+  --warning-muted: oklch(0.94 0.06 75);
+  --warning-border: oklch(0.86 0.10 75);
+  --urgent: oklch(0.60 0.20 25);
+  --urgent-muted: oklch(0.94 0.04 25);
+  --urgent-border: oklch(0.82 0.08 25);
+  --trust: oklch(0.60 0.12 250);
+  --trust-muted: oklch(0.92 0.03 250);
+  --trust-border: oklch(0.82 0.06 250);
 
   /* Dark mode (default for PMS — Océano Profundo) */
   --background: oklch(0.18 0.04 258);
@@ -223,6 +334,20 @@
   --warm-800: oklch(0.40 0.06 55);
   --warm-900: oklch(0.34 0.05 50);
   --warm-950: oklch(0.24 0.03 45);
+
+  /* Status colors: success, warning, urgent, trust (OTA theme) */
+  --success: oklch(0.72 0.14 145);
+  --success-muted: oklch(0.94 0.04 145);
+  --success-border: oklch(0.82 0.08 145);
+  --warning: oklch(0.75 0.14 75);
+  --warning-muted: oklch(0.94 0.06 75);
+  --warning-border: oklch(0.86 0.10 75);
+  --urgent: oklch(0.60 0.20 25);
+  --urgent-muted: oklch(0.94 0.04 25);
+  --urgent-border: oklch(0.82 0.08 25);
+  --trust: oklch(0.60 0.12 250);
+  --trust-muted: oklch(0.92 0.03 250);
+  --trust-border: oklch(0.82 0.06 250);
 
   /* Light mode — warm linen background */
   --background: oklch(0.96 0.02 75);
@@ -337,17 +462,56 @@
 }
 
 @layer components {
-  /* UI Minimalista Premium */
+  /* ====================================================
+     MAC 2026 — Glassmorphism 2.0 Primitives
+     Material stack with depth-aware blur + specular borders
+     ==================================================== */
+
+  /* Level 1: Light glass — cards, panels */
   .glass-card {
-    @apply bg-white/5 backdrop-blur-xl border border-white/10 shadow-2xl rounded-2xl;
+    background: var(--glass-light-surface);
+    backdrop-filter: blur(var(--glass-light-blur)) saturate(160%);
+    -webkit-backdrop-filter: blur(var(--glass-light-blur)) saturate(160%);
+    border: 1px solid var(--glass-light-border);
+    box-shadow: var(--shadow-elev-2), var(--shadow-inset);
+    border-radius: var(--radius-squircle-2xl);
+  }
+  .dark .glass-card {
+    background: var(--glass-light-surface-dark);
+    border-color: var(--glass-light-border-dark);
   }
 
+  /* Level 2: Heavy glass — modals, overlays */
   .glass-panel {
-    @apply bg-brand-950/40 backdrop-blur-md border border-brand-800/30;
+    background: var(--glass-heavy-surface);
+    backdrop-filter: blur(var(--glass-heavy-blur)) saturate(180%);
+    -webkit-backdrop-filter: blur(var(--glass-heavy-blur)) saturate(180%);
+    border: 1px solid var(--glass-heavy-border);
+    box-shadow: var(--shadow-elev-4), var(--shadow-inset);
+    border-radius: var(--radius-squircle-3xl);
+  }
+  .dark .glass-panel {
+    background: var(--glass-heavy-surface-dark);
+    border-color: var(--glass-heavy-border-dark);
   }
 
+  /* Level 3: Pill glass — nav bars, floating elements */
+  .glass-pill {
+    background: var(--glass-pill-surface);
+    backdrop-filter: blur(var(--glass-pill-blur)) saturate(140%);
+    -webkit-backdrop-filter: blur(var(--glass-pill-blur)) saturate(140%);
+    border: 1px solid var(--glass-pill-border);
+    box-shadow: var(--shadow-elev-1), var(--shadow-inset);
+    border-radius: var(--radius-squircle-xl);
+  }
+  .dark .glass-pill {
+    background: var(--glass-pill-surface-dark);
+    border-color: var(--glass-pill-border-dark);
+  }
+
+  /* Text gradient — brand to warm */
   .text-gradient {
-    @apply bg-clip-text text-transparent bg-gradient-to-r from-white to-brand-300;
+    @apply bg-clip-text text-transparent bg-gradient-to-r from-brand-400 to-warm-400;
   }
 }
 

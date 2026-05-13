@@ -89,11 +89,11 @@ export default function OTADashboard({
   return (
     <div className='min-h-screen bg-background flex flex-col font-sans text-foreground'>
       {/* HEADER */}
-      <header className='sticky top-0 z-50 bg-card/80 backdrop-blur-xl border-b border-border'>
+      <header className='sticky top-0 z-50 glass-panel border-b border-border !rounded-none'>
         <div className='max-w-7xl mx-auto px-4 h-20 flex items-center justify-between'>
           <div className='flex items-center gap-3'>
             <div className='relative w-10 h-10'>
-              <div className='w-full h-full bg-brand-600 rounded-lg flex items-center justify-center text-white font-bold'>
+              <div className='w-full h-full bg-brand-600 rounded-[var(--radius-squircle-md)] flex items-center justify-center text-white font-bold'>
                 H
               </div>
             </div>

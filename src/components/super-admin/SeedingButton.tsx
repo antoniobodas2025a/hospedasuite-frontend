@@ -25,7 +25,7 @@ export default function SeedingButton({ hotelId, hotelName }: { hotelId: string,
     <button 
       onClick={handleSeed}
       disabled={isPending}
-      className="flex items-center gap-2 text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1.5 rounded-lg hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-50"
+      className="flex items-center gap-2 text-[10px] font-bold bg-indigo-500/10 text-indigo-400 border border-indigo-500/20 px-3 py-1.5 rounded-[var(--radius-squircle-md)] hover:bg-indigo-500 hover:text-white transition-all disabled:opacity-50"
     >
       {isPending ? <Loader2 className="animate-spin size-3" /> : <Rocket size={12} />}
       Demo Seed

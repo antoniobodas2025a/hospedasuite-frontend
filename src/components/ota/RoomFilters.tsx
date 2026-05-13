@@ -79,7 +79,7 @@ export default function RoomFilters({ rooms, onFilterChange }: RoomFiltersProps)
       <button
         onClick={() => setIsOpen(!isOpen)}
         className={cn(
-          'flex items-center gap-2 px-4 py-2.5 rounded-xl text-sm font-bold transition-all',
+          'flex items-center gap-2 px-4 py-2.5 rounded-[var(--radius-squircle-lg)] text-sm font-bold transition-all',
           hasActiveFilters
             ? 'bg-primary text-primary-foreground shadow-md shadow-brand-500/20'
             : 'bg-card text-muted-foreground border border-border hover:border-border/80',
@@ -95,7 +95,7 @@ export default function RoomFilters({ rooms, onFilterChange }: RoomFiltersProps)
       </button>
 
       {isOpen && (
-        <div className="mt-3 bg-card rounded-2xl border border-border shadow-xl p-6 space-y-5 animate-in slide-in-from-top-2 fade-in duration-200">
+        <div className="mt-3 bg-card rounded-[var(--radius-squircle-2xl)] border border-border shadow-xl p-6 space-y-5 animate-in slide-in-from-top-2 fade-in duration-200">
           <div className="flex items-center justify-between">
             <h4 className="text-sm font-bold text-foreground">Filtrar habitaciones</h4>
             {hasActiveFilters && (
@@ -134,7 +134,7 @@ export default function RoomFilters({ rooms, onFilterChange }: RoomFiltersProps)
                   key={cap}
                   onClick={() => setMinCapacity(minCapacity === cap ? null : cap)}
                   className={cn(
-                    'size-10 rounded-xl text-sm font-bold transition-all',
+                    'size-10 rounded-[var(--radius-squircle-lg)] text-sm font-bold transition-all',
                     minCapacity === cap
                       ? 'bg-primary text-primary-foreground shadow-md'
                       : 'bg-muted text-muted-foreground border border-border hover:border-brand-300',
@@ -156,7 +156,7 @@ export default function RoomFilters({ rooms, onFilterChange }: RoomFiltersProps)
                   key={amenity.id}
                   onClick={() => toggleAmenity(amenity.id)}
                   className={cn(
-                    'px-3 py-1.5 rounded-lg text-xs font-medium transition-all',
+                    'px-3 py-1.5 rounded-[var(--radius-squircle-md)] text-xs font-medium transition-all',
                     selectedAmenities.includes(amenity.id)
                       ? 'bg-brand-50 text-brand-700 border border-brand-200'
                       : 'bg-muted text-muted-foreground border border-border hover:border-border/80',
@@ -174,7 +174,7 @@ export default function RoomFilters({ rooms, onFilterChange }: RoomFiltersProps)
 
           <button
             onClick={applyFilters}
-            className="w-full bg-primary hover:bg-brand-700 text-primary-foreground font-bold py-3 rounded-xl transition-all text-sm active:scale-[0.98]"
+            className="w-full bg-primary hover:bg-brand-700 text-primary-foreground font-bold py-3 rounded-[var(--radius-squircle-lg)] transition-all text-sm active:scale-[0.98]"
           >
             Aplicar filtros
           </button>

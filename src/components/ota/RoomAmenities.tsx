@@ -52,7 +52,7 @@ export function RoomAmenities({ amenities = [] }: { amenities: AmenityData[] }) 
       {safeAmenities.length > 4 && (
         <button
           onClick={() => setIsModalOpen(true)}
-          className="mt-4 text-sm font-semibold text-foreground border border-foreground rounded-lg px-4 py-2 hover:bg-muted/50 transition-colors w-full sm:w-auto"
+          className="mt-4 text-sm font-semibold text-foreground border border-foreground rounded-[var(--radius-squircle-md)] px-4 py-2 hover:bg-muted/50 transition-colors w-full sm:w-auto"
         >
           Mostrar las {safeAmenities.length} amenidades
         </button>
@@ -60,7 +60,7 @@ export function RoomAmenities({ amenities = [] }: { amenities: AmenityData[] }) 
 
       {isModalOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
-          <div className="bg-card rounded-2xl w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
+          <div className="bg-card rounded-[var(--radius-squircle-2xl)] w-full max-w-2xl max-h-[80vh] flex flex-col shadow-2xl animate-in fade-in zoom-in-95 duration-200">
             <div className="p-6 border-b border-border flex justify-between items-center sticky top-0 bg-card rounded-t-2xl z-10">
               <h2 className="text-2xl font-bold text-foreground">Que ofrece este lugar?</h2>
               <button onClick={() => setIsModalOpen(false)} className="p-2 hover:bg-muted/50 rounded-full transition-colors">

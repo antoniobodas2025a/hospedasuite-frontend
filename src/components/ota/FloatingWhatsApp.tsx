@@ -35,7 +35,7 @@ export default function FloatingWhatsApp({ phoneNumber, message, hotelName }: Fl
     <>
       {/* Tooltip */}
       {isOpen && (
-        <div className="fixed bottom-24 right-6 z-50 bg-card rounded-2xl shadow-2xl border border-border p-4 w-72 animate-in slide-in-from-bottom-2 fade-in duration-200">
+        <div className="fixed bottom-24 right-6 z-50 bg-card rounded-[var(--radius-squircle-2xl)] shadow-2xl border border-border p-4 w-72 animate-in slide-in-from-bottom-2 fade-in duration-200">
           <button
             onClick={() => setIsOpen(false)}
             className="absolute top-2 right-2 size-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
@@ -51,7 +51,7 @@ export default function FloatingWhatsApp({ phoneNumber, message, hotelName }: Fl
               <p className="text-xs text-muted-foreground">En linea</p>
             </div>
           </div>
-          <div className="bg-muted/50 rounded-xl p-3 mb-3">
+          <div className="bg-muted/50 rounded-[var(--radius-squircle-lg)] p-3 mb-3">
             <p className="text-sm text-muted-foreground">
               Hola! Necesitas ayuda para reservar? Escribinos por WhatsApp y te respondemos al instante.
             </p>
@@ -60,7 +60,7 @@ export default function FloatingWhatsApp({ phoneNumber, message, hotelName }: Fl
             href={waUrl}
             target="_blank"
             rel="noopener noreferrer"
-            className="block w-full bg-emerald-500 hover:bg-emerald-600 text-white text-center text-sm font-bold py-3 rounded-xl transition-colors"
+            className="block w-full bg-emerald-500 hover:bg-emerald-600 text-white text-center text-sm font-bold py-3 rounded-[var(--radius-squircle-lg)] transition-colors"
           >
             Iniciar Chat
           </a>

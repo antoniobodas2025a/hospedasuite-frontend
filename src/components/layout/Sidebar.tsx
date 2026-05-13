@@ -6,13 +6,9 @@ import { usePathname } from 'next/navigation';
 import { LogOut, Calculator, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NavButton from '../ui/NavButton';
-import { MENU_ITEMS } from '@/config/menuItems';
+import { MENU_GROUPS } from '@/config/menuItems';
 import { logout } from '@/app/actions/auth';
 import ShiftReportModal from '@/components/modals/ShiftReportModal';
-
-// ==========================================
-// BLOQUE 1: INTERFACES ESTRICTAS
-// ==========================================
 
 interface MenuItem {
   id: string;
@@ -28,7 +24,6 @@ export interface SidebarViewProps {
     id: string;
     email?: string;
   };
-  menuItems: MenuItem[];
   currentPath: string;
   onLogout: () => void;
   onOpenShiftModal: () => void;
@@ -42,54 +37,65 @@ interface SidebarProps {
   };
 }
 
-// ==========================================
-// BLOQUE 2: COMPONENTE PRESENTACIONAL
-// ==========================================
-
 const SidebarView: React.FC<SidebarViewProps> = ({
   hotelName,
   user,
-  menuItems,
   currentPath,
   onLogout,
   onOpenShiftModal
 }) => {
   return (
-    <aside className="hidden md:flex w-72 bg-[#09090b]/80 backdrop-blur-xl text-zinc-300 flex-col shadow-2xl z-20 rounded-r-3xl my-4 ml-4 h-[calc(100vh-2rem)] border border-white/5 sticky top-4">
+    <aside className="hidden md:flex w-72 glass-panel text-zinc-300 flex-col shadow-2xl z-20 rounded-r-[var(--radius-squircle-3xl)] my-4 ml-4 h-[calc(100vh-2rem)] sticky top-4">
       {/* Hotel Brand Context */}
       <div className="p-8 border-b border-white/5 flex items-center gap-4">
-        <div className="size-10 rounded-xl bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20">
+        <div className="size-10 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20">
           {hotelName?.[0] || 'H'}
         </div>
         <div className="flex flex-col min-w-0">
           <h1 className="font-bold text-zinc-100 truncate text-sm tracking-tight">{hotelName}</h1>
-          <p className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">Admin Terminal</p>
+          <p className="text-[10px] text-zinc-500 font-mono tracking-widest uppercase">Panel Principal</p>
         </div>
       </div>
 
-      {/* Navegación de Telemetría */}
-      <nav className="flex-1 p-6 space-y-1.5 overflow-y-auto custom-scrollbar">
-        {menuItems.map((item) => {
-          const isActive = currentPath === item.href || (currentPath.startsWith(item.href) && item.href !== '/dashboard');
-          
-          // 🛡️ REPARACIÓN FORENSE: Indicador visual para módulos críticos (Housekeeping)
-          const showBadge = item.id === 'housekeeping'; 
+      {/* Navegación agrupada — Ley de Miller: 4 chunks */}
+      <nav className="flex-1 p-6 overflow-y-auto custom-scrollbar space-y-6">
+        {MENU_GROUPS.map((group) => {
+          const hasActive = group.items.some(item =>
+            currentPath === item.href || (currentPath.startsWith(item.href) && item.href !== '/dashboard')
+          );
 
           return (
-            <Link key={item.id} href={item.href} className="block group relative">
-              <NavButton 
-                icon={<item.icon className={cn("size-4.5 stroke-[1.5]", isActive ? "text-indigo-400" : "text-zinc-500 group-hover:text-zinc-300")} />} 
-                label={item.label} 
-                active={isActive} 
-              />
-              {/* Badge de Alerta Operativa */}
-              {showBadge && (
-                <span 
-                  className="absolute right-4 top-1/2 -translate-y-1/2 size-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse" 
-                  aria-hidden="true"
-                />
-              )}
-            </Link>
+            <div key={group.id}>
+              {/* Section header — only visible when group has active item or on hover */}
+              <h2 className={cn(
+                "text-[10px] font-bold uppercase tracking-widest mb-2 px-4 transition-colors duration-200",
+                hasActive ? "text-brand-400" : "text-zinc-600"
+              )}>
+                {group.label}
+              </h2>
+              <div className="space-y-1">
+                {group.items.map((item) => {
+                  const isActive = currentPath === item.href || (currentPath.startsWith(item.href) && item.href !== '/dashboard');
+                  const showBadge = item.id === 'housekeeping';
+
+                  return (
+                    <Link key={item.id} href={item.href} className="block group relative">
+                      <NavButton
+                        icon={<item.icon className={cn("size-4.5 stroke-[1.5]", isActive ? "text-brand-400" : "text-zinc-500 group-hover:text-zinc-300")} />}
+                        label={item.label}
+                        active={isActive}
+                      />
+                      {showBadge && (
+                        <span
+                          className="absolute right-4 top-1/2 -translate-y-1/2 size-1.5 rounded-full bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.6)] animate-pulse"
+                          aria-hidden="true"
+                        />
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            </div>
           );
         })}
       </nav>
@@ -98,22 +104,22 @@ const SidebarView: React.FC<SidebarViewProps> = ({
       <div className="p-6 border-t border-white/5 space-y-1">
         <button
           onClick={onOpenShiftModal}
-          className="flex items-center gap-3 text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-all text-xs font-semibold w-full px-4 py-3 rounded-xl group"
+          className="flex items-center gap-3 text-zinc-400 hover:text-zinc-100 hover:bg-white/5 transition-all text-xs font-semibold w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] group"
         >
-          <Calculator className="size-4.5 stroke-[1.5] text-emerald-500/70 group-hover:text-emerald-400" /> 
+          <Calculator className="size-4.5 stroke-[1.5] text-emerald-500/70 group-hover:text-emerald-400" />
           Cierre de Turno
         </button>
 
         <button
           onClick={onLogout}
-          className="flex items-center gap-3 text-zinc-400 hover:text-red-400 hover:bg-red-500/5 transition-all text-xs font-semibold w-full px-4 py-3 rounded-xl group"
+          className="flex items-center gap-3 text-zinc-400 hover:text-red-400 hover:bg-red-500/5 transition-all text-xs font-semibold w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] group"
         >
-          <LogOut className="size-4.5 stroke-[1.5] group-hover:translate-x-1 transition-transform" /> 
+          <LogOut className="size-4.5 stroke-[1.5] group-hover:translate-x-1 transition-transform" />
           Finalizar Sesión
         </button>
 
         {/* User Identity Chip */}
-        <div className="mt-4 px-4 py-3 rounded-2xl bg-zinc-800/30 border border-white/5 flex items-center gap-3">
+        <div className="mt-4 px-4 py-3 rounded-[var(--radius-squircle-xl)] bg-zinc-800/30 border border-white/5 flex items-center gap-3">
           <div className="size-7 rounded-full bg-zinc-700 flex items-center justify-center text-[10px] font-bold text-zinc-400 border border-white/10">
             {user?.email?.[0].toUpperCase() || 'U'}
           </div>
@@ -126,10 +132,6 @@ const SidebarView: React.FC<SidebarViewProps> = ({
     </aside>
   );
 };
-
-// ==========================================
-// BLOQUE 3: COMPONENTE CONTENEDOR
-// ==========================================
 
 export default function Sidebar({ hotelName = 'HospedaSuite', user }: SidebarProps) {
   const pathname = usePathname();
@@ -145,18 +147,17 @@ export default function Sidebar({ hotelName = 'HospedaSuite', user }: SidebarPro
 
   return (
     <>
-      <SidebarView 
+      <SidebarView
         hotelName={hotelName}
         user={user}
-        menuItems={MENU_ITEMS}
         currentPath={pathname}
         onLogout={handleLogout}
         onOpenShiftModal={() => setIsShiftModalOpen(true)}
       />
 
-      <ShiftReportModal 
-        isOpen={isShiftModalOpen} 
-        onClose={() => setIsShiftModalOpen(false)} 
+      <ShiftReportModal
+        isOpen={isShiftModalOpen}
+        onClose={() => setIsShiftModalOpen(false)}
       />
     </>
   );

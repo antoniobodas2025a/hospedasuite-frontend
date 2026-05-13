@@ -41,7 +41,7 @@ export default async function AdminReviewsPage() {
       </div>
 
       {reviews.length === 0 ? (
-        <div className="bg-card rounded-2xl p-12 text-center border border-border">
+        <div className="bg-card rounded-[var(--radius-squircle-2xl)] p-12 text-center border border-border">
           <Clock size={48} className="text-muted-foreground/30 mx-auto mb-4" strokeWidth={1} />
           <h3 className="text-lg font-bold text-foreground mb-2">No hay resenas pendientes</h3>
           <p className="text-sm text-muted-foreground">
@@ -57,7 +57,7 @@ export default async function AdminReviewsPage() {
               : hotelsData?.name;
 
             return (
-            <div key={review.id} className="bg-card rounded-2xl p-6 border border-border shadow-sm">
+            <div key={review.id} className="bg-card rounded-[var(--radius-squircle-2xl)] p-6 border border-border shadow-sm">
               {/* Header */}
               <div className="flex items-start justify-between mb-4">
                 <div className="flex items-center gap-3">
@@ -89,7 +89,7 @@ export default async function AdminReviewsPage() {
 
               {/* Hotel name */}
               <div className="mb-3">
-                <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded-lg">
+                <span className="text-xs font-bold text-brand-600 bg-brand-50 px-2 py-1 rounded-[var(--radius-squircle-md)]">
                   {hotelName || 'Hotel desconocido'}
                 </span>
                 {review.stay_date && (
@@ -100,7 +100,7 @@ export default async function AdminReviewsPage() {
               </div>
 
               {/* Comment */}
-              <p className="text-sm text-muted-foreground leading-relaxed mb-4 p-3 bg-muted/30 rounded-xl">
+              <p className="text-sm text-muted-foreground leading-relaxed mb-4 p-3 bg-muted/30 rounded-[var(--radius-squircle-lg)]">
                 {review.comment}
               </p>
 
@@ -112,7 +112,7 @@ export default async function AdminReviewsPage() {
                 }}>
                   <button
                     type="submit"
-                    className="flex items-center gap-2 px-4 py-2.5 bg-secondary/10 hover:bg-secondary/20 text-secondary font-bold text-sm rounded-xl transition-all border border-secondary/20"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-secondary/10 hover:bg-secondary/20 text-secondary font-bold text-sm rounded-[var(--radius-squircle-lg)] transition-all border border-secondary/20"
                   >
                     <Check size={16} /> Aprobar
                   </button>
@@ -123,7 +123,7 @@ export default async function AdminReviewsPage() {
                 }}>
                   <button
                     type="submit"
-                    className="flex items-center gap-2 px-4 py-2.5 bg-destructive/10 hover:bg-destructive/20 text-destructive font-bold text-sm rounded-xl transition-all border border-destructive/20"
+                    className="flex items-center gap-2 px-4 py-2.5 bg-destructive/10 hover:bg-destructive/20 text-destructive font-bold text-sm rounded-[var(--radius-squircle-lg)] transition-all border border-destructive/20"
                   >
                     <X size={16} /> Rechazar
                   </button>

@@ -22,7 +22,7 @@ export default async function HousekeepingPage() {
 
   if (error) {
     return (
-      <div className="p-10 text-rose-500 font-mono bg-rose-500/10 border border-rose-500/20 rounded-3xl text-center">
+      <div className="p-10 text-rose-500 font-mono bg-rose-500/10 border border-rose-500/20 rounded-[var(--radius-squircle-3xl)] text-center">
         CRITICAL_FETCH_ERROR: Fallo en el sensor de inventario de habitaciones.
       </div>
     );

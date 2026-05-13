@@ -2,16 +2,17 @@
 
 import { useEffect, useState, useRef } from 'react';
 import { motion } from 'framer-motion';
+import { springLayout, springSnappy } from '@/lib/mac2026/spring';
 
 // ============================================================================
 // STICKY SUB-NAV — Mac 2026 Design System
 //
 // Pilares aplicados:
-// - Glassmorphism 2.0: backdrop-blur-xl + border white/40 specular
-// - Squircles: rounded-2xl (curvatura continua)
-// - Spring physics: layoutId indicator con stiffness/damping
+// - Glassmorphism 2.0: glass-pill con backdrop-blur-xl + border specular
+// - Squircles: glass-pill usa var(--radius-squircle-xl)
+// - Spring physics: layoutId indicator con springLayout()
 // - Reduccionismo cognitivo: max 5 chunks (Miller's Law)
-// - Affordance organico: hover scale + active tap feedback
+// - Affordance organico: whileTap spring feedback en cada boton
 // ============================================================================
 
 interface Section {
@@ -22,13 +23,6 @@ interface Section {
 interface StickySubNavProps {
   sections: Section[];
 }
-
-const springTransition = {
-  type: 'spring' as const,
-  stiffness: 300,
-  damping: 24,
-  mass: 0.8,
-};
 
 export default function StickySubNav({ sections }: StickySubNavProps) {
   const [activeId, setActiveId] = useState(sections[0]?.id ?? '');
@@ -71,21 +65,23 @@ export default function StickySubNav({ sections }: StickySubNavProps) {
   return (
     <nav
       ref={navRef}
-      className={`sticky top-0 z-30 transition-all duration-300 ${
+      className={`sticky top-0 z-[var(--z-sticky)] transition-all duration-300 ${
         scrolled
-          ? 'shadow-lg shadow-black/5 bg-background/80 backdrop-blur-xl'
+          ? 'shadow-lg shadow-black/5 glass-panel !rounded-none'
           : 'bg-transparent'
       }`}
     >
       <div className="mx-auto max-w-6xl px-6 py-2">
-        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide rounded-2xl bg-white/70 backdrop-blur-xl border border-white/40 px-1.5 py-1 shadow-sm">
+        <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide glass-pill px-1.5 py-1">
           {sections.map((section) => {
             const isActive = section.id === activeId;
             return (
-              <button
+              <motion.button
                 key={section.id}
                 onClick={() => scrollTo(section.id)}
-                className={`relative shrink-0 px-4 py-2 text-sm font-medium rounded-xl transition-colors duration-200 ${
+                whileTap={{ scale: 0.95 }}
+                transition={springSnappy()}
+                className={`relative shrink-0 px-4 py-2 text-sm font-medium rounded-[var(--radius-squircle-lg)] transition-colors duration-200 ${
                   isActive
                     ? 'text-foreground'
                     : 'text-muted-foreground hover:text-foreground'
@@ -96,12 +92,12 @@ export default function StickySubNav({ sections }: StickySubNavProps) {
                   <motion.div
                     layoutId="subnav-active-bg"
                     className="absolute inset-0 bg-foreground/8"
-                    transition={springTransition}
+                    transition={springLayout()}
                     style={{ borderRadius: 12 }}
                   />
                 )}
                 <span className="relative z-10">{section.label}</span>
-              </button>
+              </motion.button>
             );
           })}
         </div>

@@ -6,13 +6,14 @@ const config: Config = {
     './src/pages/**/*.{js,ts,jsx,tsx,mdx}',
     './src/components/**/*.{js,ts,jsx,tsx,mdx}',
     './src/app/**/*.{js,ts,jsx,tsx,mdx}',
+    '!./design-system-implementation-plan.md',
   ],
   theme: {
     extend: {
       fontFamily: {
-        sans: ['var(--font-inter)'],
-        serif: ['var(--font-playfair)'],
-        display: ['var(--font-cinzel)'],
+        sans: ['var(--font-sans)'],
+        serif: ['var(--font-sans)'],
+        display: ['var(--font-sans)'],
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',

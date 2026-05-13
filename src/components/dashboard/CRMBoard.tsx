@@ -46,7 +46,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
     <div className='h-[calc(100vh-8rem)] flex flex-col font-poppins text-zinc-100'>
       
       {/* HEADER: Liquid Glass Header */}
-      <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-900/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/5 shadow-2xl shadow-black/50 mb-6 ring-1 ring-inset ring-white/10'>
+      <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-card p-6 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl shadow-black/50 mb-6 ring-1 ring-inset ring-white/10'>
         <div>
           <h2 className='text-2xl font-bold text-zinc-50 tracking-tight flex items-center gap-3'>
             <TrendingUp className="size-6 text-indigo-400" />
@@ -56,7 +56,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
         </div>
         <button
           onClick={onOpenModal}
-          className='flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all active:scale-95'
+          className='flex items-center gap-2 px-6 py-3 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[var(--radius-squircle-lg)] font-bold text-sm shadow-lg shadow-indigo-500/25 transition-all active:scale-95'
         >
           <Plus className="size-4 stroke-[2]" /> Nuevo Prospecto
         </button>
@@ -68,14 +68,14 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
           {COLUMNS.map((col) => (
             <div
               key={col.id}
-              className='flex-1 min-w-[300px] flex flex-col bg-zinc-900/20 backdrop-blur-sm rounded-[2.5rem] border border-white/5 p-5 shadow-inner'
+              className='flex-1 min-w-[300px] flex flex-col glass-card p-5'
             >
               {/* Header Columna */}
               <div className={cn('flex justify-between items-center mb-6 pb-3 border-b-2', col.accent)}>
-                <h3 className='font-bold uppercase text-[10px] tracking-[0.2em]'>
+                <h3 className='font-bold uppercase text-[10px] tracking-ultra'>
                   {col.label}
                 </h3>
-                <span className='bg-zinc-950/50 px-2.5 py-1 rounded-lg text-[10px] font-mono font-bold text-zinc-400 border border-white/5'>
+                <span className='bg-zinc-950/50 px-2.5 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-mono font-bold text-zinc-400 border border-white/5'>
                   {leads.filter((l) => l.status === col.id).length}
                 </span>
               </div>
@@ -92,7 +92,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, scale: 0.95 }}
                         key={lead.id}
-                        className='bg-zinc-900/60 backdrop-blur-md p-5 rounded-[1.5rem] shadow-xl border border-white/10 group hover:border-indigo-500/30 transition-all relative overflow-hidden'
+                        className='glass-card p-5 shadow-xl group hover:border-indigo-500/30 transition-all relative overflow-hidden'
                       >
                         <div className="absolute -right-4 -top-4 size-16 bg-white/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
                         
@@ -112,7 +112,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                         )}
 
                         {lead.notes && (
-                          <p className='text-[10px] leading-relaxed text-zinc-500 bg-zinc-950/50 p-3 rounded-xl mb-4 line-clamp-2 italic'>
+                          <p className='text-[10px] leading-relaxed text-zinc-500 bg-zinc-950/50 p-3 rounded-[var(--radius-squircle-lg)] mb-4 line-clamp-2 italic'>
                             "{lead.notes}"
                           </p>
                         )}
@@ -122,7 +122,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                           {col.id !== 'won' && (
                             <button
                               onClick={() => onMoveLead(lead.id, 'won')}
-                              className='flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white text-[10px] font-bold rounded-lg border border-emerald-500/20 transition-all'
+                              className='flex-1 py-1.5 bg-emerald-500/10 hover:bg-emerald-500 text-emerald-400 hover:text-white text-[10px] font-bold rounded-[var(--radius-squircle-md)] border border-emerald-500/20 transition-all'
                             >
                               Ganar
                             </button>
@@ -130,7 +130,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                           {col.id !== 'contacted' && col.id !== 'won' && (
                             <button
                               onClick={() => onMoveLead(lead.id, 'contacted')}
-                              className='flex-1 py-1.5 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-300 hover:text-white text-[10px] font-bold rounded-lg border border-indigo-500/20 transition-all'
+                              className='flex-1 py-1.5 bg-indigo-500/10 hover:bg-indigo-500 text-indigo-300 hover:text-white text-[10px] font-bold rounded-[var(--radius-squircle-md)] border border-indigo-500/20 transition-all'
                             >
                               Contactar
                             </button>
@@ -158,7 +158,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
               initial={{ scale: 0.9, opacity: 0, y: 20 }} 
               animate={{ scale: 1, opacity: 1, y: 0 }} 
               exit={{ scale: 0.9, opacity: 0, y: 20 }}
-              className='bg-[#09090b]/95 border border-white/5 w-full max-w-md rounded-[2.5rem] p-10 shadow-2xl ring-1 ring-white/10'
+              className='bg-[#09090b]/95 border border-white/5 w-full max-w-md rounded-[var(--radius-squircle-3xl)] p-10 shadow-2xl ring-1 ring-white/10'
             >
               <div className='flex justify-between items-center mb-8'>
                 <h3 className='text-2xl font-bold text-zinc-50 tracking-tight'>Nuevo Prospecto</h3>
@@ -172,7 +172,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                   <label className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1'>Identificador / Empresa</label>
                   <input
                     placeholder='Ej: Agencia de Viajes Boyacá'
-                    className='w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl font-bold text-zinc-200 outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner'
+                    className='w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] font-bold text-zinc-200 outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner'
                     value={newLeadForm.business_name}
                     onChange={(e) => setNewLeadForm({ ...newLeadForm, business_name: e.target.value })}
                   />
@@ -182,7 +182,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                   <label className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1'>Canal de Contacto</label>
                   <input
                     placeholder='Teléfono o WhatsApp'
-                    className='w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl font-mono text-zinc-300 outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner'
+                    className='w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] font-mono text-zinc-300 outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner'
                     value={newLeadForm.phone}
                     onChange={(e) => setNewLeadForm({ ...newLeadForm, phone: e.target.value })}
                   />
@@ -192,7 +192,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                   <label className='text-[10px] font-bold text-zinc-500 uppercase tracking-widest ml-1'>Contexto / Notas Forenses</label>
                   <textarea
                     placeholder='Notas iniciales del prospecto...'
-                    className='w-full p-4 bg-zinc-950 border border-white/10 rounded-2xl text-zinc-300 h-24 resize-none outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner'
+                    className='w-full p-4 bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-2xl)] text-zinc-300 h-24 resize-none outline-none focus:ring-2 focus:ring-indigo-500/50 shadow-inner'
                     value={newLeadForm.notes}
                     onChange={(e) => setNewLeadForm({ ...newLeadForm, notes: e.target.value })}
                   />
@@ -209,7 +209,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                 <button
                   onClick={onCreateLead}
                   disabled={!newLeadForm.business_name}
-                  className='flex-[2] py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-bold rounded-2xl shadow-xl transition-all flex items-center justify-center gap-2'
+                  className='flex-[2] py-4 bg-indigo-600 hover:bg-indigo-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-bold rounded-[var(--radius-squircle-2xl)] shadow-xl transition-all flex items-center justify-center gap-2'
                 >
                   <Save size={18} /> Compilar Lead
                 </button>

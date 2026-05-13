@@ -81,7 +81,7 @@ const DraggableBooking = ({
         onEdit(booking);
       }}
       className={cn(
-        "absolute top-1 bottom-1 rounded-lg text-[10px] font-bold p-2 shadow-lg cursor-pointer active:cursor-grabbing z-10 select-none touch-none overflow-hidden flex items-center gap-1.5 border backdrop-blur-md transition-all",
+        "absolute top-1 bottom-1 rounded-[var(--radius-squircle-md)] text-[10px] font-bold p-2 shadow-lg cursor-pointer active:cursor-grabbing z-10 select-none touch-none overflow-hidden flex items-center gap-1.5 glass-card transition-all",
         currentStyle,
         isDragging ? (isAltPressed ? 'opacity-80 border-dashed border-2 ring-2 ring-emerald-400' : 'opacity-40 border-dashed border-2 pointer-events-none') : 'animate-in fade-in zoom-in-95 duration-200 hover:ring-2 hover:ring-white/50'
       )}
@@ -151,7 +151,7 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
   return (
     <>
       <div className='space-y-6 pb-20 font-poppins text-zinc-100'>
-        <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-zinc-900/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/5 shadow-2xl'>
+        <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-card p-6 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-2xl'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight text-zinc-50 flex items-center gap-3'>
               <CalendarIcon className="size-6 text-indigo-400" /> Matriz de Ocupación
@@ -160,17 +160,17 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
           </div>
           
           <div className='flex flex-wrap items-center gap-4'>
-            <button onClick={openNewBookingModal} className='flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl font-bold text-sm transition-all active:scale-95'>
+            <button onClick={openNewBookingModal} className='flex items-center gap-2 px-5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-[var(--radius-squircle-lg)] font-bold text-sm transition-all active:scale-95'>
               <Plus className="size-4 stroke-[2]" /> Nueva Reserva
             </button>
-            <div className='flex bg-zinc-950 border border-white/10 rounded-xl p-1'>
-              <button onClick={() => moveDate(-7)} className='p-2 text-zinc-400 hover:text-zinc-50 hover:bg-white/5 rounded-lg transition-colors'>
+            <div className='flex bg-zinc-950 border border-white/10 rounded-[var(--radius-squircle-lg)] p-1'>
+              <button onClick={() => moveDate(-7)} className='p-2 text-zinc-400 hover:text-zinc-50 hover:bg-white/5 rounded-[var(--radius-squircle-md)] transition-colors'>
                 <ChevronLeft className="size-5" />
               </button>
               <span className='px-4 py-2 text-sm font-bold text-zinc-200 min-w-[120px] text-center capitalize'>
                 {currentDate.toLocaleDateString('es-ES', { month: 'short', year: 'numeric' })}
               </span>
-              <button onClick={() => moveDate(7)} className='p-2 text-zinc-400 hover:text-zinc-50 hover:bg-white/5 rounded-lg transition-colors'>
+              <button onClick={() => moveDate(7)} className='p-2 text-zinc-400 hover:text-zinc-50 hover:bg-white/5 rounded-[var(--radius-squircle-md)] transition-colors'>
                 <ChevronRight className="size-5" />
               </button>
             </div>
@@ -178,10 +178,10 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
         </div>
 
         <DndContext sensors={sensors} onDragStart={(e) => setActiveDragBooking(e.active.data.current?.booking as Booking)} onDragEnd={onDragEnd}>
-          <div className='bg-zinc-900/40 backdrop-blur-3xl border border-white/5 shadow-2xl rounded-3xl overflow-hidden flex flex-col'>
+          <div className='glass-panel border border-white/5 shadow-2xl rounded-[var(--radius-squircle-3xl)] overflow-hidden flex flex-col'>
             <div className='flex-1 overflow-auto custom-scrollbar relative'>
               <div className='min-w-[1200px]'>
-                <div className='flex sticky top-0 z-20 bg-zinc-950/90 backdrop-blur-md border-b border-white/10 shadow-sm'>
+                <div className='flex sticky top-0 z-20 glass-panel border-b border-white/10 !rounded-none'>
                   <div className='w-48 shrink-0 p-4 border-r border-white/10 flex items-center justify-center sticky left-0 z-30 bg-zinc-950'>
                     <span className='text-xs font-bold text-zinc-500 uppercase tracking-widest'>Unidad</span>
                   </div>
@@ -237,7 +237,7 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
           <DragOverlay dropAnimation={null}>
             {activeDragBooking && (
               <div className={cn(
-                "h-14 rounded-lg text-[10px] font-bold p-2 text-white shadow-2xl cursor-grabbing border border-white/50 opacity-90 scale-105 flex items-center gap-1.5",
+                "h-14 rounded-[var(--radius-squircle-md)] text-[10px] font-bold p-2 text-white shadow-2xl cursor-grabbing border border-white/50 opacity-90 scale-105 flex items-center gap-1.5",
                 activeDragBooking.status === 'checked_out' ? "bg-zinc-800" :
                 activeDragBooking.status === 'checked_in' ? 'bg-emerald-500' : 
                 activeDragBooking.status === 'maintenance' ? 'bg-amber-500' : 'bg-indigo-500',

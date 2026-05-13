@@ -64,7 +64,7 @@ const ForensicBookPanelView: React.FC<ForensicBookPanelViewProps> = ({
     <div className='space-y-6 pb-20 font-poppins text-zinc-100'>
       
       {/* HEADER: Liquid Glass */}
-      <div className='bg-zinc-900/40 backdrop-blur-2xl p-6 rounded-3xl border border-white/5 shadow-2xl shadow-black/50 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 ring-1 ring-inset ring-white/10'>
+    <div className='glass-card p-6 flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6'>
         <div>
           <h2 className='text-2xl font-bold tracking-tight text-zinc-50 flex items-center gap-3'>
             <FileText className='text-indigo-400 size-6' /> Libro de Registro
@@ -75,7 +75,7 @@ const ForensicBookPanelView: React.FC<ForensicBookPanelViewProps> = ({
         </div>
 
         {/* TARJETA DE INGRESOS (Metrics Node) */}
-        <div className='bg-zinc-950/80 border border-white/5 px-6 py-3.5 rounded-2xl shadow-inner flex flex-col items-end min-w-[200px]'>
+        <div className='bg-zinc-950/80 border border-white/5 px-6 py-3.5 rounded-[var(--radius-squircle-2xl)] shadow-inner flex flex-col items-end min-w-[200px]'>
           <span className='text-[10px] font-bold uppercase tracking-widest text-zinc-500'>
             Ingresos Vista
           </span>
@@ -93,7 +93,7 @@ const ForensicBookPanelView: React.FC<ForensicBookPanelViewProps> = ({
           <input
             type='text'
             placeholder='Buscar identidad, documento o vector de habitación...'
-            className='w-full pl-11 pr-4 py-3 bg-zinc-900/40 backdrop-blur-md rounded-2xl border border-white/5 font-medium text-zinc-200 placeholder:text-zinc-600 shadow-inner outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all'
+            className='w-full pl-11 pr-4 py-3 bg-zinc-900/40 backdrop-blur-md rounded-[var(--radius-squircle-2xl)] border border-white/5 font-medium text-zinc-200 placeholder:text-zinc-600 shadow-inner outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all'
             value={searchTerm}
             onChange={(e) => onFilter(e.target.value, statusFilter)}
           />
@@ -106,7 +106,7 @@ const ForensicBookPanelView: React.FC<ForensicBookPanelViewProps> = ({
               key={status}
               onClick={() => onFilter(searchTerm, status)}
               className={cn(
-                "px-4 py-3 rounded-xl text-sm font-bold whitespace-nowrap transition-all duration-300",
+                "px-4 py-3 rounded-[var(--radius-squircle-lg)] text-sm font-bold whitespace-nowrap transition-all duration-300",
                 statusFilter === status
                   ? "bg-indigo-600 text-white shadow-lg shadow-indigo-500/25 ring-1 ring-indigo-400/50"
                   : "bg-zinc-900/40 border border-white/5 text-zinc-400 hover:bg-zinc-800/50 hover:text-zinc-200"
@@ -118,14 +118,14 @@ const ForensicBookPanelView: React.FC<ForensicBookPanelViewProps> = ({
         </div>
 
         {/* Botón Exportar */}
-        <button className='px-5 py-3 bg-zinc-800/50 border border-white/5 text-zinc-300 hover:text-white hover:border-indigo-500/50 rounded-2xl font-bold shadow-lg transition-all flex items-center gap-2 active:scale-95 group'>
+        <button className='px-5 py-3 bg-zinc-800/50 border border-white/5 text-zinc-300 hover:text-white hover:border-indigo-500/50 rounded-[var(--radius-squircle-2xl)] font-bold shadow-lg transition-all flex items-center gap-2 active:scale-95 group'>
           <Download className="size-4 stroke-[2] group-hover:translate-y-0.5 transition-transform" /> 
           <span className='hidden md:inline'>Exportar CSV</span>
         </button>
       </div>
 
       {/* TABLA DE DATOS (High Density B2B) */}
-      <div className='bg-zinc-900/40 backdrop-blur-xl rounded-[2.5rem] shadow-2xl border border-white/5 overflow-hidden ring-1 ring-inset ring-white/5'>
+      <div className='glass-card rounded-[var(--radius-squircle-3xl)] shadow-2xl border border-white/5 overflow-hidden ring-1 ring-inset ring-white/5'>
         <div className='overflow-x-auto custom-scrollbar'>
           <table className='w-full text-left border-collapse'>
             <thead>
@@ -147,7 +147,7 @@ const ForensicBookPanelView: React.FC<ForensicBookPanelViewProps> = ({
                 >
                   <td className='p-6'>
                     <div className='flex items-center gap-3.5'>
-                      <div className='size-10 rounded-2xl bg-zinc-800/50 border border-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-indigo-500/10 group-hover:text-indigo-400 group-hover:border-indigo-500/20 transition-all'>
+                      <div className='size-10 rounded-[var(--radius-squircle-2xl)] bg-zinc-800/50 border border-white/5 flex items-center justify-center text-zinc-500 group-hover:bg-indigo-500/10 group-hover:text-indigo-400 group-hover:border-indigo-500/20 transition-all'>
                         <User className="size-4 stroke-[2]" />
                       </div>
                       <div>
@@ -182,7 +182,7 @@ const ForensicBookPanelView: React.FC<ForensicBookPanelViewProps> = ({
                   </td>
 
                   <td className='p-6'>
-                    <span className={cn("px-3 py-1 rounded-lg text-[10px] font-bold uppercase tracking-widest border", getStatusStyle(entry.status))}>
+                    <span className={cn("px-3 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-bold uppercase tracking-widest border", getStatusStyle(entry.status))}>
                       {getStatusLabel(entry.status)}
                     </span>
                   </td>

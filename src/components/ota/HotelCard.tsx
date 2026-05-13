@@ -21,25 +21,35 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
     hotel.main_image_url ||
     'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=2049';
 
+  const isSupabase = bgImage.includes('supabase.co');
+
   return (
     <motion.div
       layout
       initial={{ opacity: 0, scale: 0.9 }}
       animate={{ opacity: 1, scale: 1 }}
       whileHover={{ y: -5 }}
-      className='group relative aspect-[4/5] md:aspect-[3/4] rounded-[2rem] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 bg-brand-900'
+      className='group relative aspect-[4/5] md:aspect-[3/4] rounded-[var(--radius-squircle-2xl)] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-all duration-500 bg-brand-900'
       onClick={() => {
         if (!hotel.city_slug) return;
         router.push(`/hotel/${hotel.city_slug}`);
       }}
     >
-      <Image
-        src={bgImage}
-        alt={hotel.name}
-        fill
-        className='object-cover transition-transform duration-700 group-hover:scale-110'
-        sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
-      />
+      {isSupabase ? (
+        <img
+          src={bgImage}
+          alt={hotel.name}
+          className='object-cover w-full h-full transition-transform duration-700 group-hover:scale-110'
+        />
+      ) : (
+        <Image
+          src={bgImage}
+          alt={hotel.name}
+          fill
+          className='object-cover transition-transform duration-700 group-hover:scale-110'
+          sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+        />
+      )}
 
       <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity' />
 
@@ -60,7 +70,7 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
             </div>
           </div>
 
-          <div className='flex items-center gap-1 bg-warm-500/20 backdrop-blur-md px-2 py-1 rounded-lg border border-warm-500/30'>
+          <div className='flex items-center gap-1 bg-warm-500/20 backdrop-blur-md px-2 py-1 rounded-[var(--radius-squircle-md)] border border-warm-500/30'>
             <Star
               size={12}
               className='text-warm-400 fill-warm-400'

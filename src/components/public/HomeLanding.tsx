@@ -44,7 +44,7 @@ const HomeLanding = ({ hotel, rooms }: { hotel: HotelInfo; rooms: Room[] }) => {
       {/* 1. NAVBAR TRANSPARENTE */}
       <nav className='absolute top-0 left-0 right-0 z-50 p-6 flex justify-between items-center max-w-7xl mx-auto'>
         <div className='flex items-center gap-3'>
-          <div className='w-10 h-10 relative bg-white/20 backdrop-blur-md rounded-xl overflow-hidden shadow-lg'>
+          <div className='w-10 h-10 relative glass-card overflow-hidden shadow-lg'>
             <Image
               src='/logo.png'
               alt='Logo'
@@ -59,7 +59,7 @@ const HomeLanding = ({ hotel, rooms }: { hotel: HotelInfo; rooms: Room[] }) => {
         </div>
         <Link
           href='/dashboard'
-          className='px-6 py-2 bg-white/10 backdrop-blur-md text-white font-bold rounded-full text-sm border border-white/20 hover:bg-white hover:text-foreground transition-all'
+          className='px-6 py-2 glass-card text-white font-bold hover:bg-white hover:text-foreground transition-all'
         >
           Soy Propietario
         </Link>
@@ -113,7 +113,7 @@ const HomeLanding = ({ hotel, rooms }: { hotel: HotelInfo; rooms: Room[] }) => {
           transition={{ delay: 0.4 }}
           className='absolute -bottom-16 left-0 right-0 z-20 px-4'
         >
-          <div className='max-w-5xl mx-auto bg-card rounded-[2.5rem] p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center border border-border'>
+          <div className='max-w-5xl mx-auto bg-card rounded-[var(--radius-squircle-3xl)] p-4 shadow-2xl flex flex-col md:flex-row gap-4 items-center border border-border'>
             <div className='flex-1 w-full flex items-center gap-4 px-6 py-2 border-b md:border-b-0 md:border-r border-border'>
               <div className='p-3 bg-brand-50 text-brand-600 rounded-full'>
                 <Calendar size={20} />
@@ -173,7 +173,7 @@ const HomeLanding = ({ hotel, rooms }: { hotel: HotelInfo; rooms: Room[] }) => {
 
             <button
               style={{ backgroundColor: hotel.primary_color || '#000' }}
-              className='w-full md:w-auto px-8 py-5 rounded-[2rem] text-white font-bold text-lg shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2'
+              className='w-full md:w-auto px-8 py-5 rounded-[var(--radius-squircle-2xl)] text-white font-bold text-lg shadow-lg hover:brightness-110 transition-all flex items-center justify-center gap-2'
             >
               Buscar <ArrowRight size={20} />
             </button>
@@ -196,7 +196,7 @@ const HomeLanding = ({ hotel, rooms }: { hotel: HotelInfo; rooms: Room[] }) => {
           {rooms.map((room) => (
             <div
               key={room.id}
-              className='group bg-card rounded-[2.5rem] border border-border overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full'
+              className='group bg-card rounded-[var(--radius-squircle-3xl)] border border-border overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col h-full'
             >
               <div className='h-64 relative overflow-hidden bg-muted'>
                 <Image
@@ -209,7 +209,7 @@ const HomeLanding = ({ hotel, rooms }: { hotel: HotelInfo; rooms: Room[] }) => {
                   className='object-cover group-hover:scale-110 transition-transform duration-500'
                   sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
                 />
-                <div className='absolute top-4 right-4 bg-card/90 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold text-foreground flex items-center gap-1 shadow-sm'>
+                <div className='absolute top-4 right-4 glass-card px-3 py-1 text-xs font-bold text-foreground flex items-center gap-1 shadow-sm'>
                   <Star
                     size={12}
                     className='text-warm-400 fill-warm-400'
@@ -228,10 +228,10 @@ const HomeLanding = ({ hotel, rooms }: { hotel: HotelInfo; rooms: Room[] }) => {
                 </p>
 
                 <div className='flex gap-4 mb-6 text-muted-foreground'>
-                  <div className='flex items-center gap-1 text-xs font-bold bg-muted/50 px-2 py-1 rounded-lg'>
+                  <div className='flex items-center gap-1 text-xs font-bold bg-muted/50 px-2 py-1 rounded-[var(--radius-squircle-md)]'>
                     <Wifi size={14} /> WiFi
                   </div>
-                  <div className='flex items-center gap-1 text-xs font-bold bg-muted/50 px-2 py-1 rounded-lg'>
+                  <div className='flex items-center gap-1 text-xs font-bold bg-muted/50 px-2 py-1 rounded-[var(--radius-squircle-md)]'>
                     <Coffee size={14} /> Cafe
                   </div>
                 </div>

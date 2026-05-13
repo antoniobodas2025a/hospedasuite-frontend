@@ -55,13 +55,13 @@ const getStatusConfig = (status: string) => {
 const InventorySkeleton = () => (
   <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
     {[1, 2, 3, 4, 5, 6].map((i) => (
-      <div key={i} className='bg-zinc-900/20 backdrop-blur-3xl rounded-[2.5rem] p-6 border border-white/5 shadow-2xl animate-pulse min-h-[320px]'>
-        <div className='w-14 h-14 bg-zinc-800/50 rounded-2xl mb-6'></div>
+      <div key={i} className='glass-card p-6 animate-pulse min-h-[320px]'>
+        <div className='w-14 h-14 bg-zinc-800/50 rounded-[var(--radius-squircle-2xl)] mb-6'></div>
         <div className='h-6 bg-zinc-800/50 rounded-full w-2/3 mb-4'></div>
         <div className='h-4 bg-zinc-800/50 rounded-full w-1/2 mb-8'></div>
         <div className='flex gap-3'>
-          <div className='h-10 bg-zinc-800/50 rounded-xl w-1/2'></div>
-          <div className='h-10 bg-zinc-800/50 rounded-xl w-1/2'></div>
+          <div className='h-10 bg-zinc-800/50 rounded-[var(--radius-squircle-lg)] w-1/2'></div>
+          <div className='h-10 bg-zinc-800/50 rounded-[var(--radius-squircle-lg)] w-1/2'></div>
         </div>
       </div>
     ))}
@@ -80,7 +80,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
     <div className='space-y-8 pb-20 font-poppins text-zinc-100'>
       
       {/* HEADER TIPO DYNAMIC ISLAND */}
-      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 bg-[#09090b]/80 backdrop-blur-3xl p-6 rounded-[2.5rem] border border-white/10 shadow-2xl sticky top-4 z-20'>
+      <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 glass-panel p-6 sticky top-4 z-20'>
         <div>
           <h2 className='text-2xl font-bold tracking-tight text-white flex items-center gap-3'>
             Matriz de Inventario
@@ -89,7 +89,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
           <p className='text-zinc-400 font-medium text-sm mt-1'>Control topológico de la propiedad y sincronización OTA.</p>
         </div>
         
-        <div className='flex flex-wrap items-center gap-3 w-full lg:w-auto bg-zinc-950 p-2 rounded-3xl border border-white/5 shadow-inner'>
+        <div className='flex flex-wrap items-center gap-3 w-full lg:w-auto bg-zinc-950 p-2 rounded-[var(--radius-squircle-3xl)] border border-white/5 shadow-inner'>
           <div className='relative flex-1 lg:w-48'>
             <Search className='absolute left-4 top-1/2 -translate-y-1/2 size-4 text-zinc-500 stroke-[2]' />
             <input
@@ -97,7 +97,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
               placeholder='Buscar unidad...'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className='w-full pl-11 pr-4 py-3 bg-zinc-900/50 hover:bg-zinc-900 border border-transparent hover:border-white/10 rounded-2xl text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all'
+              className='w-full pl-11 pr-4 py-3 bg-zinc-900/50 hover:bg-zinc-900 border border-transparent hover:border-white/10 rounded-[var(--radius-squircle-2xl)] text-sm text-zinc-200 placeholder:text-zinc-600 focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all'
             />
           </div>
           <div className='relative'>
@@ -105,7 +105,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className='pl-11 pr-10 py-3 bg-zinc-900/50 hover:bg-zinc-900 border border-transparent hover:border-white/10 rounded-2xl text-sm text-zinc-200 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer transition-all font-medium'
+              className='pl-11 pr-10 py-3 bg-zinc-900/50 hover:bg-zinc-900 border border-transparent hover:border-white/10 rounded-[var(--radius-squircle-2xl)] text-sm text-zinc-200 appearance-none focus:outline-none focus:ring-2 focus:ring-indigo-500/50 cursor-pointer transition-all font-medium'
             >
               <option value='all'>Todos los Estados</option>
               <option value='available'>Disponibles</option>
@@ -115,10 +115,10 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
             </select>
           </div>
           <div className="w-px h-8 bg-white/10 mx-1 hidden sm:block"></div>
-          <button onClick={onSync} disabled={isSyncing} className='p-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-2xl transition-all disabled:opacity-50 active:scale-95' title="Sincronizar Channel Manager">
+          <button onClick={onSync} disabled={isSyncing} className='p-3 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-[var(--radius-squircle-2xl)] transition-all disabled:opacity-50 active:scale-95' title="Sincronizar Channel Manager">
             <RefreshCw className={cn("size-5 stroke-[2]", isSyncing && "animate-spin")} />
           </button>
-          <button onClick={() => onOpenEditor()} className='flex items-center gap-2 px-6 py-3 bg-white hover:bg-zinc-200 text-black rounded-2xl font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all active:scale-95'>
+          <button onClick={() => onOpenEditor()} className='flex items-center gap-2 px-6 py-3 bg-white hover:bg-zinc-200 text-black rounded-[var(--radius-squircle-2xl)] font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all active:scale-95'>
             <Plus className="size-5 stroke-[2]" /> Nueva
           </button>
         </div>
@@ -144,7 +144,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
               return (
                 <motion.div 
                   key={room.id} layout initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} whileHover={{ y: -5 }}
-                  className='bg-zinc-900/40 backdrop-blur-2xl rounded-[2.5rem] p-6 border border-white/5 shadow-2xl relative overflow-hidden group flex flex-col justify-between min-h-[340px]'
+                  className='glass-card rounded-[var(--radius-squircle-3xl)] p-6 border border-white/5 shadow-2xl relative overflow-hidden group flex flex-col justify-between min-h-[340px]'
                 >
                   {/* BACKGROUND LAYER (Deep Glass) */}
                   {coverImage ? (
@@ -158,12 +158,12 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                   
                   <div className="relative z-10 flex-1 flex flex-col">
                     <div className='flex justify-between items-start mb-auto'>
-                      <div className='size-14 rounded-[1.2rem] bg-zinc-950/80 backdrop-blur-md border border-white/10 flex items-center justify-center text-zinc-400 group-hover:text-indigo-400 shadow-inner transition-colors'>
+                      <div className='size-14 glass-card flex items-center justify-center text-zinc-400 group-hover:text-indigo-400 shadow-inner transition-colors'>
                         {coverImage ? <ImageIcon className="size-6 stroke-[1.5] opacity-50" /> : <BedDouble className="size-6 stroke-[1.5]" />}
                       </div>
                       <div className='flex items-center gap-2'>
                         <span className={cn("size-2 rounded-full", statusConfig.dot)}></span>
-                        <span className={cn(`px-3 py-1 rounded-xl text-[9px] font-bold uppercase tracking-[0.2em] border backdrop-blur-md`, statusConfig.badge)}>
+                        <span className={cn(`px-3 py-1 rounded-[var(--radius-squircle-lg)] text-[9px] font-bold uppercase tracking-ultra border backdrop-blur-sm`, statusConfig.badge)}>
                           {statusConfig.label}
                         </span>
                       </div>
@@ -174,23 +174,23 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                       <p className='text-[10px] text-zinc-400 uppercase tracking-widest font-bold mb-4 drop-shadow-md'>{(room.type || 'ESTÁNDAR')}</p>
 
                       <div className='space-y-2 mb-6'>
-                        <div className='flex justify-between items-center text-zinc-200 text-sm bg-zinc-950/60 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/5 shadow-inner'>
+                        <div className='flex justify-between items-center text-zinc-200 text-sm glass-card px-4 py-3 shadow-inner'>
                           <span className='flex items-center font-medium text-zinc-400 text-xs uppercase tracking-wider'><Users className='size-4 mr-2' /> Aforo</span>
                           <span className='font-bold'>{room.capacity} Pax</span>
                         </div>
-                        <div className='flex justify-between items-center text-zinc-200 text-sm bg-zinc-950/60 backdrop-blur-md px-4 py-3 rounded-2xl border border-white/5 shadow-inner'>
+                        <div className='flex justify-between items-center text-zinc-200 text-sm glass-card px-4 py-3 shadow-inner'>
                           <span className='flex items-center font-medium text-zinc-400 text-xs uppercase tracking-wider'><DollarSign className='size-4 mr-2 text-emerald-500/70' /> Tarifa Base</span>
                           <span className='font-mono font-bold text-emerald-400'>${(room.price || 0).toLocaleString()}</span>
                         </div>
                         {room.ical_import_url && (
-                          <div className='mt-3 flex items-center justify-center text-[9px] font-bold text-sky-400 uppercase tracking-widest bg-sky-500/10 py-2 rounded-xl border border-sky-500/20 backdrop-blur-md'>
+                          <div className='mt-3 flex items-center justify-center text-[9px] font-bold text-sky-400 uppercase tracking-widest glass-card py-2 border-sky-500/20 bg-sky-500/10'>
                             <Link2 className='size-3 mr-2' /> OTA Sync Activa
                           </div>
                         )}
                         
                         {/* ─── iCal Export URL ────────────────────────── */}
                         {room.ical_export_token ? (
-                          <div className='mt-3 flex items-center gap-2 text-[9px] font-bold text-emerald-400 uppercase tracking-widest bg-emerald-500/10 py-2 px-3 rounded-xl border border-emerald-500/20 backdrop-blur-md'>
+                          <div className='mt-3 flex items-center gap-2 text-[9px] font-bold text-emerald-400 uppercase tracking-widest glass-card py-2 px-3 border-emerald-500/20 bg-emerald-500/10'>
                             <Link2 className='size-3 flex-shrink-0' />
                             <span className='truncate flex-1 text-[8px] tracking-normal font-mono lowercase'>
                               iCal: .../{room.ical_export_token.substring(0, 8)}...
@@ -201,7 +201,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                                 const url = `${window.location.origin}/api/webhooks/tenant/ical/${room.ical_export_token}`;
                                 onCopyUrl(room.id, url);
                               }}
-                              className='flex items-center gap-1 px-2 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-all text-[8px] font-sans uppercase tracking-widest'
+                              className='flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-all text-[8px] font-sans uppercase tracking-widest'
                               title='Copiar URL iCal'
                             >
                               {copiedId === room.id ? (
@@ -219,7 +219,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                                 onRegenerateToken(room.id);
                               }}
                               disabled={regeneratingId === room.id}
-                              className='flex items-center gap-2 text-[9px] font-bold text-amber-400 uppercase tracking-widest bg-amber-500/10 hover:bg-amber-500/20 px-4 py-2 rounded-xl border border-amber-500/20 backdrop-blur-md transition-all disabled:opacity-50 disabled:cursor-not-allowed'
+                              className='flex items-center gap-2 text-[9px] font-bold text-amber-400 uppercase tracking-widest glass-card px-4 py-2 border-amber-500/20 bg-amber-500/10 hover:bg-amber-500/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed'
                             >
                               {regeneratingId === room.id ? (
                                 <><RefreshCw className='size-3 animate-spin' /> Generando...</>
@@ -233,7 +233,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                     </div>
                   </div>
 
-                  <button onClick={() => onOpenEditor(room)} className='relative z-10 w-full py-4 bg-zinc-950/80 backdrop-blur-xl hover:bg-white border border-white/10 hover:border-white text-zinc-300 hover:text-black rounded-2xl font-bold text-sm transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]'>
+                  <button onClick={() => onOpenEditor(room)} className='relative z-10 w-full py-4 glass-card hover:bg-white hover:text-black text-zinc-300 font-bold text-sm transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]'>
                     <Edit className='size-4 stroke-[2]' /> Editar Unidad
                   </button>
                 </motion.div>

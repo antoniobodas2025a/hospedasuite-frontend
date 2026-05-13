@@ -24,9 +24,9 @@ export default function SuperAdminLayout({
 
       <div className='relative z-10 flex flex-col md:flex-row h-screen'>
         {/* Sidebar estático para Super Admin */}
-        <aside className='w-full md:w-20 lg:w-72 border-r border-white/10 bg-white/5 backdrop-blur-xl p-6 flex flex-col'>
+        <aside className='w-full md:w-20 lg:w-72 border-r border-white/10 glass-panel p-6 flex flex-col'>
           <div className='flex items-center gap-3 mb-10'>
-            <div className='w-10 h-10 rounded-xl bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-900/20'>
+            <div className='w-10 h-10 rounded-[var(--radius-squircle-lg)] bg-gradient-to-tr from-blue-600 to-cyan-400 flex items-center justify-center shadow-lg shadow-blue-900/20'>
               <ShieldCheck
                 size={20}
                 className='text-white'

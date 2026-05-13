@@ -56,7 +56,7 @@ export default function EmptyState({
     },
     zinc: {
       bg: 'bg-zinc-800/50', text: 'text-zinc-400', btn: 'bg-zinc-100 hover:bg-white text-zinc-900',
-      container: 'bg-zinc-900/40 backdrop-blur-2xl border-white/5 shadow-2xl ring-1 ring-inset ring-white/10',
+      container: 'glass-card shadow-2xl ring-1 ring-inset ring-white/10',
       title: 'text-zinc-50', desc: 'text-zinc-400'
     }
   };
@@ -67,7 +67,7 @@ export default function EmptyState({
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
-      className={`w-full min-h-[400px] flex flex-col items-center justify-center p-8 text-center rounded-[2.5rem] border ${theme.container}`}
+      className={`w-full min-h-[400px] flex flex-col items-center justify-center p-8 text-center rounded-[var(--radius-squircle-3xl)] border ${theme.container}`}
     >
       <div className={`w-24 h-24 rounded-full flex items-center justify-center mb-6 shadow-inner ${theme.bg} ${theme.text}`}>
         <ResolvedIcon size={40} strokeWidth={1.5} />
@@ -85,14 +85,14 @@ export default function EmptyState({
         actionHref ? (
           <Link
             href={actionHref}
-            className={`px-8 py-3 rounded-xl font-bold transition-all active:scale-95 ${theme.btn}`}
+            className={`px-8 py-3 rounded-[var(--radius-squircle-lg)] font-bold transition-all active:scale-95 ${theme.btn}`}
           >
             {actionLabel}
           </Link>
         ) : (
           <button
             onClick={actionOnClick}
-            className={`px-8 py-3 rounded-xl font-bold transition-all active:scale-95 ${theme.btn}`}
+            className={`px-8 py-3 rounded-[var(--radius-squircle-lg)] font-bold transition-all active:scale-95 ${theme.btn}`}
           >
             {actionLabel}
           </button>

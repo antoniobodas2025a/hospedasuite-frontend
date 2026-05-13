@@ -45,10 +45,10 @@ export default function LoginKeypad() {
       <div className='absolute top-[-20%] left-[-10%] w-96 h-96 bg-brand-600/30 rounded-full blur-[100px] animate-pulse' />
       <div className='absolute bottom-[-20%] right-[-10%] w-96 h-96 bg-brand-400/20 rounded-full blur-[100px]' />
 
-      <div className='glass-card w-full max-w-md p-8 rounded-3xl flex flex-col items-center relative z-10 backdrop-blur-xl bg-black/40 border-white/10'>
+      <div className='glass-card w-full max-w-md p-8 rounded-[var(--radius-squircle-3xl)] flex flex-col items-center relative z-10 backdrop-blur-xl bg-black/40 border-white/10'>
         {/* Identidad Corporativa */}
         <div className='mb-8 flex flex-col items-center'>
-          <div className='w-24 h-24 relative mb-4 rounded-2xl overflow-hidden shadow-2xl border border-white/20 p-2 bg-white/5'>
+          <div className='w-24 h-24 relative mb-4 rounded-[var(--radius-squircle-2xl)] overflow-hidden shadow-2xl border border-white/20 p-2 bg-white/5'>
             <Image
               src='/logo.png'
               alt='HospedaSuite Logo'
@@ -61,7 +61,7 @@ export default function LoginKeypad() {
           <h1 className='text-2xl font-display text-white tracking-widest uppercase text-center'>
             Hospeda<span className='text-brand-400 font-bold'>Suite</span>
           </h1>
-          <p className='text-[10px] text-brand-300 tracking-[0.3em] mt-1 uppercase'>
+          <p className='text-[10px] text-brand-300 tracking-extreme mt-1 uppercase'>
             Sistema Forense V27.0
           </p>
         </div>
@@ -82,7 +82,7 @@ export default function LoginKeypad() {
 
         {/* Mensaje de Error */}
         {error && (
-          <div className='mb-6 text-destructive text-xs font-mono bg-destructive/10 px-4 py-2 rounded-lg border border-destructive/20 animate-bounce'>
+          <div className='mb-6 text-destructive text-xs font-mono bg-destructive/10 px-4 py-2 rounded-[var(--radius-squircle-md)] border border-destructive/20 animate-bounce'>
             {error}
           </div>
         )}
@@ -93,7 +93,7 @@ export default function LoginKeypad() {
             <button
               key={num}
               onClick={() => handleNumberClick(num.toString())}
-              className='h-16 w-16 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all flex items-center justify-center text-xl font-light text-white border border-white/5 mx-auto shadow-lg'
+              className='h-16 w-16 rounded-[var(--radius-squircle-2xl)] bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all flex items-center justify-center text-xl font-light text-white border border-white/5 mx-auto shadow-lg'
             >
               {num}
             </button>
@@ -106,14 +106,14 @@ export default function LoginKeypad() {
           </button>
           <button
             onClick={() => handleNumberClick('0')}
-            className='h-16 w-16 rounded-2xl bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all flex items-center justify-center text-xl font-light text-white border border-white/5 mx-auto shadow-lg'
+            className='h-16 w-16 rounded-[var(--radius-squircle-2xl)] bg-white/5 hover:bg-white/10 active:bg-white/20 transition-all flex items-center justify-center text-xl font-light text-white border border-white/5 mx-auto shadow-lg'
           >
             0
           </button>
           <button
             onClick={handleSubmit}
             disabled={loading || pin.length !== 4}
-            className='h-16 w-16 rounded-2xl bg-brand-600/20 hover:bg-brand-500/40 border border-brand-500/30 flex items-center justify-center text-brand-400 hover:text-white transition-all mx-auto disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(14,165,233,0.1)]'
+            className='h-16 w-16 rounded-[var(--radius-squircle-2xl)] bg-brand-600/20 hover:bg-brand-500/40 border border-brand-500/30 flex items-center justify-center text-brand-400 hover:text-white transition-all mx-auto disabled:opacity-30 disabled:cursor-not-allowed shadow-[0_0_20px_rgba(14,165,233,0.1)]'
           >
             {loading ? (
               <Loader2 className='animate-spin' />
