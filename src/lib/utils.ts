@@ -12,6 +12,14 @@ export function cn(...inputs: ClassValue[]) {
  * Next.js tiene un límite hardcodeado de 1MB para optimización de imágenes.
  * Las fotos de Supabase pueden pesar 5MB+. Usamos /storage/v1/render/image/public/
  * para que Supabase redimensione antes de que Next.js la procese.
+ *
+ * Tiers de calidad recomendados:
+ * - Hero/Full: width=1200, quality=80
+ * - Card:      width=640,  quality=75
+ * - Thumb:     width=128,  quality=50
+ *
+ * TODO: Al migrar a PostgreSQL + VPS, esta función se reemplaza por
+ * un custom loader que apunte al storage local o Cloudflare R2.
  */
 export function optimizeSupabaseUrl(
   url: string,

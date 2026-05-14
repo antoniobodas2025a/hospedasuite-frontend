@@ -2,6 +2,7 @@ import { createClient } from '@/utils/supabase/server';
 import POSPanel from '@/components/dashboard/POSPanel';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import EmptyState from '@/components/ui/EmptyState';
+import PlanGuard from '@/components/auth/PlanGuard';
 
 export const dynamic = 'force-dynamic';
 
@@ -16,17 +17,29 @@ export default async function POSPage() {
     );
   }
 
+  return (
+    <PlanGuard
+      currentPlan={hotel.subscription_plan}
+      subscriptionStatus={hotel.subscription_status}
+      requiredPlan="pro"
+      featureName="Carta Digital (POS)"
+      featureDescription="Punto de venta para cargar consumos a habitaciones. Disponible desde el Plan Pro."
+    >
+      <POSPageContent hotel={hotel} />
+    </PlanGuard>
+  );
+}
+
+async function POSPageContent({ hotel }: { hotel: { id: string } }) {
   const supabase = await createClient();
 
-  // 1. Obtener Habitaciones Activas (Para poder cargar las ventas a una cuenta)
+  // 1. Obtener Habitaciones Activas
   const { data: rooms } = await supabase
     .from('rooms')
     .select('id, name, status')
     .eq('hotel_id', hotel.id)
     .order('name');
 
-  // 🚨 SSR GUARD: Si el hotel no tiene habitaciones creadas, el POS no puede operar
-  // porque el botón de Confirmar Venta exige una habitación.
   if (!rooms || rooms.length === 0) {
     return (
       <div className='h-[calc(100vh-8rem)] flex items-center justify-center p-4'>
@@ -42,8 +55,7 @@ export default async function POSPage() {
     );
   }
 
-  // 2. Obtener los Productos del Menú (Catálogo Inicial)
-  // Nota: Si tu tabla en Supabase se llama diferente (ej: 'pos_products'), cámbialo aquí.
+  // 2. Obtener Productos del Menú
   const { data: initialItems } = await supabase
     .from('menu_items') 
     .select('*')

@@ -1,72 +1,260 @@
-'use client';
+import { getCurrentHotel } from '@/lib/hotel-context';
+import PlanUpgradeSection from '@/components/billing/PlanUpgradeSection';
+import { SAAS_PLANS, normalizePlan, PLAN_LABELS } from '@/config/saas-plans';
+import { isTrialActive, getTrialEndDateDisplay, daysRemainingInTrial, type TrialHotel } from '@/lib/trial-check';
+import Link from 'next/link';
+import {
+  Shield,
+  CreditCard,
+  Calendar,
+  Check,
+  ExternalLink,
+  FileText,
+} from 'lucide-react';
 
-import React from 'react';
-import { CreditCard, ShieldCheck, Activity, ArrowUpRight, Zap } from 'lucide-react';
+export const dynamic = 'force-dynamic';
 
-/**
- * 🛡️ COMPONENTE DE FACTURACIÓN (TIER-1 ARCHITECTURE)
- * Certificado para cumplimiento de contrato de Next.js 16.
- * Resuelve el fallo de prerenderizado en Vercel.
- */
-export default function BillingPage() {
+// ——— Helpers ———
+
+const STATUS_LABEL: Record<string, string> = {
+  trialing: 'En Prueba',
+  active: 'Activo',
+  past_due: 'Pago Pendiente',
+  cancelled: 'Cancelado',
+};
+
+const STATUS_COLOR: Record<string, string> = {
+  trialing: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/20',
+  active: 'text-brand-400 bg-brand-500/10 border-brand-500/20',
+  past_due: 'text-amber-400 bg-amber-500/10 border-amber-500/20',
+  cancelled: 'text-muted-foreground bg-muted border-border',
+};
+
+// ——— Component ———
+
+export default async function BillingPage() {
+  const hotel = await getCurrentHotel();
+
+  if (!hotel) {
+    return (
+      <div className="flex items-center justify-center h-[80vh] text-muted-foreground font-medium">
+        No se encontró información del hotel.
+      </div>
+    );
+  }
+
+  const planKey = normalizePlan(hotel.subscription_plan);
+  const plan = SAAS_PLANS[planKey];
+  const status = (hotel.subscription_status as string) || 'trialing';
+  const billingCycleStart = hotel.billing_cycle_start as string | null;
+  const datePaid = hotel.date_paid as string | null;
+
+  // 🧪 Trial helpers
+  const trialHotel: TrialHotel = {
+    subscription_status: hotel.subscription_status,
+    subscription_plan: hotel.subscription_plan,
+    trial_ends_at: hotel.trial_ends_at,
+  };
+  const trialActive = isTrialActive(trialHotel);
+  const trialEndDate = getTrialEndDateDisplay(trialHotel);
+  const trialDaysLeft = daysRemainingInTrial(trialHotel);
+
+  // Próxima fecha de facturación (estimada: inicio del ciclo + 1 mes)
+  const nextBillingDate = billingCycleStart
+    ? new Date(billingCycleStart).toLocaleDateString('es-CO', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+      })
+    : null;
+
   return (
-    <div className="p-4 md:p-8 space-y-8 font-poppins text-zinc-100 min-h-screen">
-      {/* HEADER DE CENTRO DE MANDO */}
-      <div className="glass-panel p-10 relative overflow-hidden">
-        <div className="absolute top-0 right-0 p-8 opacity-5">
-          <Zap size={120} />
+    <div className="h-full space-y-[var(--space-breath)]">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight text-sidebar-foreground">
+            Facturación y Plan
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Gestioná tu suscripción y revisá tus cargos mensuales.
+          </p>
         </div>
-        
-        <div className="flex flex-col md:flex-row items-start md:items-center gap-6 relative z-10">
-          <div className="p-4 bg-indigo-500/10 rounded-[var(--radius-squircle-2xl)] text-indigo-400 border border-indigo-500/20 shadow-inner">
-            <CreditCard size={40} />
-          </div>
-          <div className="space-y-1">
-            <h2 className="text-4xl font-bold tracking-tighter uppercase text-white">Centro de Facturación</h2>
-            <p className="text-zinc-500 text-sm italic font-lora">Análisis forense de ingresos y gestión de suscripciones.</p>
-          </div>
-        </div>
-
-        {/* MOCK DE ESTADO FINANCIERO */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-12">
-          <div className="bg-black/40 p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 space-y-2">
-            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Plan Actual</p>
-            <div className="flex items-center justify-between">
-              <p className="text-white font-bold text-xl uppercase">Pionero</p>
-              <span className="bg-emerald-500/10 text-emerald-400 text-[10px] px-3 py-1 rounded-full font-bold border border-emerald-500/20">ACTIVO</span>
-            </div>
-          </div>
-          <div className="bg-black/40 p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 space-y-2">
-            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Próximo Cobro</p>
-            <p className="text-white font-bold text-xl">$0.00 <span className="text-zinc-500 text-xs font-normal">COP</span></p>
-          </div>
-          <div className="bg-black/40 p-6 rounded-[var(--radius-squircle-2xl)] border border-white/5 space-y-2">
-            <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">Días Restantes</p>
-            <p className="text-indigo-400 font-bold text-xl italic font-mono">~90 Días</p>
-          </div>
-        </div>
-
-        {/* CONTENEDOR DE PROTECCIÓN */}
-        <div className="mt-12 bg-zinc-950/60 p-12 rounded-[var(--radius-squircle-3xl)] border border-white/5 flex flex-col items-center justify-center text-center space-y-6 relative overflow-hidden group hover:border-emerald-500/20 transition-all duration-700">
-          <div className="absolute inset-0 bg-emerald-500/5 opacity-0 group-hover:opacity-100 transition-opacity blur-3xl pointer-events-none" />
-          
-          <div className="w-20 h-20 bg-emerald-500/10 rounded-full flex items-center justify-center border border-emerald-500/20 shadow-2xl animate-pulse">
-            <ShieldCheck className="text-emerald-500" size={42} />
-          </div>
-          
-          <div className="space-y-3 max-w-md relative z-10">
-            <h3 className="text-white font-bold text-lg uppercase tracking-widest">Blindaje Comercial Activo</h3>
-            <p className="text-zinc-500 text-sm leading-relaxed font-lora italic">
-              Antonio, tu acceso ha sido validado bajo el protocolo de <span className="text-emerald-400 font-bold">Lanzamiento Pionero</span>. 
-              El despliegue de las métricas de transacciones en tiempo real comenzará tras el primer check-in operativo.
-            </p>
-          </div>
-          
-          <button className="flex items-center gap-2 text-[10px] font-bold text-zinc-600 uppercase tracking-extreme hover:text-white transition-colors">
-            Ver términos de cortesía <ArrowUpRight size={14} />
-          </button>
+        <div className="flex items-center gap-4">
+          <Link
+            href="/dashboard/billing/invoices"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-sidebar-foreground transition-colors font-medium"
+          >
+            <FileText size={14} />
+            Historial de Facturas
+            <ExternalLink size={12} />
+          </Link>
+          <Link
+            href="/software/terms"
+            className="flex items-center gap-2 text-xs text-muted-foreground hover:text-sidebar-foreground transition-colors font-medium"
+            target="_blank"
+          >
+            <Shield size={14} />
+            Términos del Servicio
+            <ExternalLink size={12} />
+          </Link>
         </div>
       </div>
+
+      {/* Status Card */}
+      <div className="glass-card p-[var(--space-breath)] rounded-[var(--radius-squircle-3xl)] border border-border shadow-2xl ring-1 ring-inset ring-border">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+          {/* Plan + Status */}
+          <div className="flex items-center gap-4">
+            <div className="size-14 rounded-[var(--radius-squircle-xl)] bg-brand-500/10 border border-brand-500/20 flex items-center justify-center">
+              <CreditCard size={24} className="text-brand-400 stroke-[1.5]" />
+            </div>
+            <div>
+              <div className="flex items-center gap-3 mb-1">
+                <span className="text-xl font-bold tracking-tight text-sidebar-foreground">
+                  Plan {PLAN_LABELS[planKey]}
+                </span>
+                <span
+                  className={`text-[10px] font-bold uppercase tracking-widest px-2.5 py-0.5 rounded-full border ${STATUS_COLOR[status] || STATUS_COLOR.trialing}`}
+                >
+                  {STATUS_LABEL[status] || 'Desconocido'}
+                </span>
+              </div>
+              <p className="text-sm text-muted-foreground">
+                {trialActive
+                  ? 'Período de prueba gratis'
+                  : `$${plan.priceCOP.toLocaleString('es-CO')} COP / mes`}
+                {status === 'trialing' && trialDaysLeft !== null &&
+                  ` — Quedan ${trialDaysLeft} días`}
+                {status === 'trialing' && trialDaysLeft === null &&
+                  ' — Facturación inicia al terminar los 3 meses gratis'}
+              </p>
+            </div>
+          </div>
+
+          {/* Timeline */}
+          <div className="flex flex-wrap items-center gap-4 text-sm">
+            {status === 'trialing' && trialEndDate && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar size={15} className="text-emerald-400" />
+                <span>
+                  Prueba gratuita hasta{' '}
+                  <strong className="text-sidebar-foreground">{trialEndDate}</strong>
+                </span>
+              </div>
+            )}
+
+            {status === 'active' && nextBillingDate && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Calendar size={15} className="text-brand-400" />
+                <span>
+                  Próxima facturación:{' '}
+                  <strong className="text-sidebar-foreground">{nextBillingDate}</strong>
+                </span>
+              </div>
+            )}
+
+            {datePaid && (
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Check size={15} className="text-emerald-400" />
+                <span>
+                  Último pago:{' '}
+                  <strong className="text-sidebar-foreground">
+                    {new Date(datePaid).toLocaleDateString('es-CO', {
+                      year: 'numeric',
+                      month: 'short',
+                      day: 'numeric',
+                    })}
+                  </strong>
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      </div>
+
+      {/* Charges Summary */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-[var(--space-focus)]">
+        <div className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-border shadow-xl">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+            Plan Mensual
+          </p>
+          <p className="text-3xl font-semibold tracking-tight text-sidebar-foreground">
+            {trialActive ? '$0' : `$${plan.priceCOP.toLocaleString('es-CO')}`}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            {trialActive ? 'Trial activo — sin cargo' : 'COP / mes'}
+          </p>
+        </div>
+
+        <div className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-border shadow-xl">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+            Comisiones Estimadas
+          </p>
+          <p className="text-3xl font-semibold tracking-tight text-sidebar-foreground">
+            Variable
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            10% OTA · 3% Upsell · Facturado a fin de mes
+          </p>
+        </div>
+
+        <div className="glass-card p-6 rounded-[var(--radius-squircle-2xl)] border border-border shadow-xl">
+          <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">
+            Total Estimado
+          </p>
+          <p className="text-3xl font-semibold tracking-tight text-sidebar-foreground">
+            {trialActive ? '$0' : `$${plan.priceCOP.toLocaleString('es-CO')}`}
+          </p>
+          <p className="text-xs text-muted-foreground mt-1">
+            + comisiones del período (se calculan al cierre)
+          </p>
+        </div>
+      </div>
+
+      {/* Payment CTA — Solo visible si no está en trial activo */}
+      {status !== 'trialing' && (
+        <div className="glass-panel p-[var(--space-breath)] rounded-[var(--radius-squircle-3xl)] border border-border shadow-2xl ring-1 ring-inset ring-border">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+            <div>
+              <h2 className="text-lg font-semibold tracking-tight text-sidebar-foreground mb-1">
+                ¿Listo para pagar?
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                La facturación es manual vía Wompi. Más abajo podés elegir tu plan
+                y pagar directamente con Wompi.
+              </p>
+            </div>
+            <Link
+              href="#cambiar-plan"
+              className="flex items-center gap-2 px-6 py-3 rounded-full bg-brand-500 text-white font-semibold text-sm hover:bg-brand-600 transition-all shadow-lg shadow-brand-500/20 active:scale-95 flex-shrink-0"
+            >
+              Ver Planes
+              <ExternalLink size={16} />
+            </Link>
+          </div>
+        </div>
+      )}
+
+      {/* Sección de Cambio de Plan */}
+      <div id="cambiar-plan" className="mt-8">
+        <PlanUpgradeSection
+          hotelId={hotel.id}
+          currentPlan={planKey}
+          hotelName={hotel.name || 'Hotel'}
+        />
+      </div>
+
+      {/* Footer Note */}
+      <p className="text-[11px] text-muted-foreground/50 text-center pt-4">
+        ¿Necesitás ayuda con la facturación? Escribinos a{' '}
+        <a
+          href="mailto:soporte@hospedasuite.com"
+          className="text-brand-400 hover:underline"
+        >
+          soporte@hospedasuite.com
+        </a>
+      </p>
     </div>
   );
 }

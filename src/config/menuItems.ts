@@ -9,6 +9,7 @@ import {
   Sparkles,
   BookOpenCheck,
   Megaphone,
+  CreditCard,
   type LucideIcon
 } from 'lucide-react';
 
@@ -24,6 +25,8 @@ export interface MenuItem {
   icon: LucideIcon;
   color?: string;
   bg?: string;
+  /** Plan mínimo requerido para ver este ítem. Si no se cumple, se muestra bloqueado. */
+  minPlan?: 'starter' | 'pro' | 'enterprise';
 }
 
 export interface MenuGroup {
@@ -112,6 +115,7 @@ export const MENU_GROUPS: MenuGroup[] = [
         icon: Megaphone,
         color: 'text-green-500',
         bg: 'bg-green-500/10',
+        minPlan: 'enterprise',
       },
       {
         id: 'reports',
@@ -119,7 +123,8 @@ export const MENU_GROUPS: MenuGroup[] = [
         href: '/dashboard/reports',
         icon: BarChart3,
         color: 'text-emerald-500',
-        bg: 'bg-emerald-500/10'
+        bg: 'bg-emerald-500/10',
+        minPlan: 'enterprise',
       },
     ]
   },
@@ -127,6 +132,15 @@ export const MENU_GROUPS: MenuGroup[] = [
     id: 'system',
     label: 'Sistema',
     items: [
+      {
+        id: 'billing',
+        label: 'Facturación',
+        href: '/dashboard/billing',
+        icon: CreditCard,
+        color: 'text-emerald-400',
+        bg: 'bg-emerald-400/10',
+        minPlan: 'starter',
+      },
       {
         id: 'settings',
         label: 'Configuración',

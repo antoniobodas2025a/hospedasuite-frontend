@@ -5,7 +5,8 @@ import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { X, ChevronLeft, ChevronRight, Grid } from 'lucide-react';
-import { cn, optimizeSupabaseUrl } from '@/lib/utils';
+import { cn } from '@/lib/utils';
+import { shouldUseNativeImg } from '@/lib/image-config';
 import { useIsMobile } from '@/hooks/useIsMediaQuery';
 
 // ============================================================================
@@ -78,7 +79,7 @@ function GalleryImage({
     );
   }
 
-  const isSupabase = src.includes('supabase.co');
+  const useNative = shouldUseNativeImg(src);
 
   return (
     <>
@@ -86,7 +87,8 @@ function GalleryImage({
       {isLoading && fill && (
         <div className={cn('absolute inset-0 bg-muted animate-pulse', className)} />
       )}
-      {isSupabase ? (
+      {useNative ? (
+        /* CDN externo (Supabase, R2, S3) — ya optimizan, usar <img> */
         <img
           src={src}
           alt={alt}
@@ -97,6 +99,7 @@ function GalleryImage({
           onError={() => { setError(true); setIsLoading(false); }}
         />
       ) : (
+        /* Imágenes locales o sin CDN → Next.js optimiza a AVIF/WebP */
         <Image
           src={src}
           alt={alt}

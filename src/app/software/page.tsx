@@ -16,11 +16,11 @@ import {
 const TIERS = {
   micro: {
     id: 'micro',
-    label: 'Starter (Gratis)',
+    label: 'Starter',
     shortLabel: 'Starter',
     title: 'Starter',
-    price: '0',
-    description: 'Perfecto para empezar a digitalizar tu propiedad.',
+    price: '49.000',
+    description: 'Ideal para arrancar con lo esencial y escalar cuando quieras.',
     features: ['Motor de Reservas Básico', 'Calendario Interactivo', 'Gestión de Huéspedes', 'Channel Manager (Manual)']
   },
   standard: {
@@ -28,7 +28,7 @@ const TIERS = {
     label: 'Pro (Recomendado)',
     shortLabel: 'Pro',
     title: 'Pro',
-    price: '89.900',
+    price: '99.000',
     description: 'El estándar de la industria para evitar sobreventas.',
     features: ['Todo lo del Plan Starter', 'Channel Manager Automatizado (iCal)', 'Sincronización con Booking/Airbnb', 'POS (Punto de Venta)']
   },
@@ -37,7 +37,7 @@ const TIERS = {
     label: 'Enterprise',
     shortLabel: 'Enterprise',
     title: 'Enterprise',
-    price: '149.900',
+    price: '169.000',
     description: 'Automatización total e inteligencia financiera.',
     features: ['Todo lo del Plan Pro', 'Motor de Upselling Inteligente (IA)', 'Reportes Financieros Avanzados', 'Facturación Automática']
   }
@@ -130,7 +130,7 @@ export default function App() {
               onClick={() => scrollTo('precios')} 
               className="bg-[#007dfa] text-white px-4 py-1.5 rounded-full text-[13px] font-medium hover:bg-[#0051d5] transition-all duration-200 shadow-sm hover:shadow-md active:scale-95"
             >
-              Iniciar Gratis
+              Iniciar 3 Meses Gratis
             </button>
 
             {/* Mobile Menu Toggle */}
@@ -382,7 +382,7 @@ export default function App() {
                   </div>
                   
                   <p className="text-[13px] text-[#1d1d1f]/40 mb-10 font-medium">
-                    {TIERS[selectedTier as keyof typeof TIERS].price === '0' ? 'Gratis para siempre' : 'COP / mes (después de 3 meses)'}
+                    {TIERS[selectedTier as keyof typeof TIERS].price === '0' ? 'Gratis para siempre' : 'COP / mes (después de los 3 meses gratis)'}
                   </p>
                   
                   <button 

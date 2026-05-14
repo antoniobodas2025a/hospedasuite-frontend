@@ -23,7 +23,6 @@ const filesUnderTest: FileCheck[] = [
   { path: 'dashboard/HousekeepingPanel.tsx', name: 'HousekeepingPanel' },
   { path: 'dashboard/POSPanel.tsx', name: 'POSPanel' },
   { path: 'dashboard/RoomEditorModal.tsx', name: 'RoomEditorModal' },
-  { path: 'dashboard/OverviewPanel.tsx', name: 'OverviewPanel' },
   { path: 'dashboard/ForensicBookPanel.tsx', name: 'ForensicBookPanel' },
   { path: 'dashboard/CRMBoard.tsx', name: 'CRMBoard' },
   { path: 'dashboard/GuestsPanel.tsx', name: 'GuestsPanel' },

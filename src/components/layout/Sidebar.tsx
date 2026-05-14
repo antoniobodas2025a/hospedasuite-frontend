@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, Calculator, LucideIcon } from 'lucide-react';
+import { LogOut, Calculator, Lock, LucideIcon } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NavButton from '../ui/NavButton';
 import { MENU_GROUPS } from '@/config/menuItems';
@@ -25,6 +25,8 @@ export interface SidebarViewProps {
     email?: string;
   };
   currentPath: string;
+  /** Plan de suscripción actual del hotel. Se usa para gating de menú y badge visual. */
+  subscriptionPlan?: 'starter' | 'pro' | 'enterprise';
   onLogout: () => void;
   onOpenShiftModal: () => void;
 }
@@ -35,12 +37,14 @@ interface SidebarProps {
     id: string;
     email?: string;
   };
+  subscriptionPlan?: 'starter' | 'pro' | 'enterprise';
 }
 
 const SidebarView: React.FC<SidebarViewProps> = ({
   hotelName,
   user,
   currentPath,
+  subscriptionPlan = 'starter',
   onLogout,
   onOpenShiftModal
 }) => {
@@ -53,7 +57,14 @@ const SidebarView: React.FC<SidebarViewProps> = ({
         </div>
         <div className="flex flex-col min-w-0">
           <h1 className="font-bold text-sidebar-foreground truncate text-sm tracking-tight">{hotelName}</h1>
-          <p className="text-[10px] text-muted-foreground font-mono tracking-widest uppercase">Panel Principal</p>
+          <p className="text-[10px] text-muted-foreground font-mono tracking-widest uppercase">
+            {subscriptionPlan === 'enterprise' 
+              ? <span className="text-amber-400">Enterprise</span>
+              : subscriptionPlan === 'pro'
+                ? <span className="text-indigo-400">Pro</span>
+                : <span className="text-muted-foreground">Starter</span>
+            }
+          </p>
         </div>
       </div>
 
@@ -63,6 +74,15 @@ const SidebarView: React.FC<SidebarViewProps> = ({
           const hasActive = group.items.some(item =>
             currentPath === item.href || (currentPath.startsWith(item.href) && item.href !== '/dashboard')
           );
+
+          // Determina si al menos un ítem del grupo es visible (no bloqueado)
+          const planLevel = { starter: 0, pro: 1, enterprise: 2 } as const;
+          const currentLevel = planLevel[subscriptionPlan];
+          const hasVisible = group.items.some(item =>
+            !item.minPlan || currentLevel >= (planLevel[item.minPlan] ?? 0)
+          );
+
+          if (!hasVisible) return null;
 
           return (
             <div key={group.id}>
@@ -77,6 +97,22 @@ const SidebarView: React.FC<SidebarViewProps> = ({
                 {group.items.map((item) => {
                   const isActive = currentPath === item.href || (currentPath.startsWith(item.href) && item.href !== '/dashboard');
                   const showBadge = item.id === 'housekeeping';
+                  const isLocked = item.minPlan && currentLevel < (planLevel[item.minPlan] ?? 0);
+
+                  if (isLocked) {
+                    return (
+                      <div key={item.id} className="block group relative" title="Disponible en Enterprise">
+                        <NavButton
+                          icon={<Lock className="size-4 stroke-[1.5] text-muted-foreground/40" />}
+                          label={item.label}
+                          active={false}
+                        />
+                        <span className="absolute right-3 top-1/2 -translate-y-1/2 text-[9px] text-muted-foreground/30 font-mono tracking-wider">
+                          PRO
+                        </span>
+                      </div>
+                    );
+                  }
 
                   return (
                     <Link key={item.id} href={item.href} className="block group relative">
@@ -117,23 +153,12 @@ const SidebarView: React.FC<SidebarViewProps> = ({
           <LogOut className="size-4.5 stroke-[1.5] group-hover:translate-x-1 transition-transform" />
           Finalizar Sesión
         </button>
-
-        {/* User Identity Chip */}
-        <div className="mt-4 px-4 py-3 rounded-[var(--radius-squircle-xl)] bg-muted border border-border flex items-center gap-3">
-          <div className="size-7 rounded-full bg-sidebar-accent flex items-center justify-center text-[10px] font-bold text-sidebar-accent-foreground border border-border">
-            {user?.email?.[0].toUpperCase() || 'U'}
-          </div>
-          <div className="flex flex-col min-w-0">
-            <span className="text-[10px] text-sidebar-foreground/70 font-medium truncate">{user?.email}</span>
-            <span className="text-[9px] text-muted-foreground uppercase font-bold tracking-tighter">Plan Pro</span>
-          </div>
-        </div>
       </div>
     </aside>
   );
 };
 
-export default function Sidebar({ hotelName = 'HospedaSuite', user }: SidebarProps) {
+export default function Sidebar({ hotelName = 'HospedaSuite', user, subscriptionPlan = 'starter' }: SidebarProps) {
   const pathname = usePathname();
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
 
@@ -151,6 +176,7 @@ export default function Sidebar({ hotelName = 'HospedaSuite', user }: SidebarPro
         hotelName={hotelName}
         user={user}
         currentPath={pathname}
+        subscriptionPlan={subscriptionPlan}
         onLogout={handleLogout}
         onOpenShiftModal={() => setIsShiftModalOpen(true)}
       />

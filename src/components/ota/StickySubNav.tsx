@@ -131,11 +131,9 @@ export default function StickySubNav({ sections }: StickySubNavProps) {
   return (
     <nav
       ref={navRef}
-      className="relative z-10"
+      className="w-full"
     >
-      <div className={`mx-auto max-w-6xl px-6 py-2 transition-all duration-300 ${
-        scrolled ? 'glass-panel !rounded-none shadow-lg shadow-elev-1' : 'bg-transparent'
-      }`}>
+      <div className="mx-auto max-w-6xl px-6 py-2">
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide glass-pill px-1.5 py-1">
           {sections.map((section) => {
             const isActive = section.id === activeId;

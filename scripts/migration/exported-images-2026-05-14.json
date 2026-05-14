@@ -1,0 +1,218 @@
+{
+  "exported_at": "2026-05-14T15:25:32.632Z",
+  "bucket": "hotel-media",
+  "total_db_references": 19,
+  "total_bucket_files": 3,
+  "db_images": [
+    {
+      "id": "hotel-2d65355d-0b22-400a-bad2-68d488cddb15-main",
+      "path": "hero/2d65355d-0b22-400a-bad2-68d488cddb15_1778508060737.jpg",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/hero/2d65355d-0b22-400a-bad2-68d488cddb15_1778508060737.jpg",
+      "r2_url": "",
+      "table": "hotels",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15"
+    },
+    {
+      "id": "hotel-2d65355d-0b22-400a-bad2-68d488cddb15-cover",
+      "path": "covers/2d65355d-0b22-400a-bad2-68d488cddb15_1778508071318.png",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/covers/2d65355d-0b22-400a-bad2-68d488cddb15_1778508071318.png",
+      "r2_url": "",
+      "table": "hotels",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15"
+    },
+    {
+      "id": "hotel-2d65355d-0b22-400a-bad2-68d488cddb15-gallery-0",
+      "path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508095920_9s1gw.png",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508095920_9s1gw.png",
+      "r2_url": "",
+      "table": "hotels",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15"
+    },
+    {
+      "id": "hotel-2d65355d-0b22-400a-bad2-68d488cddb15-gallery-1",
+      "path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508098308_qgqmgq.jpg",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508098308_qgqmgq.jpg",
+      "r2_url": "",
+      "table": "hotels",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15"
+    },
+    {
+      "id": "hotel-2d65355d-0b22-400a-bad2-68d488cddb15-gallery-2",
+      "path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508099509_7fahn8.png",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508099509_7fahn8.png",
+      "r2_url": "",
+      "table": "hotels",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15"
+    },
+    {
+      "id": "hotel-2d65355d-0b22-400a-bad2-68d488cddb15-gallery-3",
+      "path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508103572_u1knqv.png",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508103572_u1knqv.png",
+      "r2_url": "",
+      "table": "hotels",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15"
+    },
+    {
+      "id": "hotel-2d65355d-0b22-400a-bad2-68d488cddb15-gallery-4",
+      "path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508108451_1aeasm.png",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508108451_1aeasm.png",
+      "r2_url": "",
+      "table": "hotels",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15"
+    },
+    {
+      "id": "room-c0c79072-fc63-48ee-9731-3dfae964e85a-gallery-0",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1778299108467-h9e6cp.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1778299108467-h9e6cp.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "c0c79072-fc63-48ee-9731-3dfae964e85a"
+    },
+    {
+      "id": "room-c0c79072-fc63-48ee-9731-3dfae964e85a-gallery-1",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1778299117457-potooa.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1778299117457-potooa.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "c0c79072-fc63-48ee-9731-3dfae964e85a"
+    },
+    {
+      "id": "room-c0c79072-fc63-48ee-9731-3dfae964e85a-gallery-2",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1778299129429-xyynj.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1778299129429-xyynj.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "c0c79072-fc63-48ee-9731-3dfae964e85a"
+    },
+    {
+      "id": "room-4f27246c-6ea7-449b-a575-eb367c5e16c2-gallery-0",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1777435103440-n4ocl.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1777435103440-n4ocl.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "4f27246c-6ea7-449b-a575-eb367c5e16c2"
+    },
+    {
+      "id": "room-4f27246c-6ea7-449b-a575-eb367c5e16c2-gallery-1",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436258098-19ilua.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436258098-19ilua.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "4f27246c-6ea7-449b-a575-eb367c5e16c2"
+    },
+    {
+      "id": "room-4f27246c-6ea7-449b-a575-eb367c5e16c2-gallery-2",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436259472-z70i0s.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436259472-z70i0s.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "4f27246c-6ea7-449b-a575-eb367c5e16c2"
+    },
+    {
+      "id": "room-2d8f769c-2952-41ed-9139-28fe72a09f4b-gallery-0",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436111904-2ygcld.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436111904-2ygcld.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "2d8f769c-2952-41ed-9139-28fe72a09f4b"
+    },
+    {
+      "id": "room-2d8f769c-2952-41ed-9139-28fe72a09f4b-gallery-1",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436113645-0u5at.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436113645-0u5at.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "2d8f769c-2952-41ed-9139-28fe72a09f4b"
+    },
+    {
+      "id": "room-2d8f769c-2952-41ed-9139-28fe72a09f4b-gallery-2",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436124618-ni3kbc.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436124618-ni3kbc.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "2d8f769c-2952-41ed-9139-28fe72a09f4b"
+    },
+    {
+      "id": "room-2d8f769c-2952-41ed-9139-28fe72a09f4b-gallery-3",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436145540-m48ixa.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436145540-m48ixa.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "2d8f769c-2952-41ed-9139-28fe72a09f4b"
+    },
+    {
+      "id": "room-2d8f769c-2952-41ed-9139-28fe72a09f4b-gallery-4",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436147200-qbl0g.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1777436147200-qbl0g.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "2d8f769c-2952-41ed-9139-28fe72a09f4b"
+    },
+    {
+      "id": "room-2d8f769c-2952-41ed-9139-28fe72a09f4b-gallery-5",
+      "path": "2d65355d-0b22-400a-bad2-68d488cddb15/room-1778298529145-88r5ab.webp",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/gallery/2d65355d-0b22-400a-bad2-68d488cddb15/room-1778298529145-88r5ab.webp",
+      "r2_url": "",
+      "table": "rooms",
+      "hotel_id": "2d65355d-0b22-400a-bad2-68d488cddb15",
+      "room_id": "2d8f769c-2952-41ed-9139-28fe72a09f4b"
+    }
+  ],
+  "bucket_files": [
+    {
+      "id": "covers",
+      "path": "covers",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/covers",
+      "r2_url": "",
+      "table": "hotel_media"
+    },
+    {
+      "id": "gallery",
+      "path": "gallery",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/gallery",
+      "r2_url": "",
+      "table": "hotel_media"
+    },
+    {
+      "id": "hero",
+      "path": "hero",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/hero",
+      "r2_url": "",
+      "table": "hotel_media"
+    }
+  ],
+  "orphaned_files": [
+    {
+      "id": "covers",
+      "path": "covers",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/covers",
+      "r2_url": "",
+      "table": "hotel_media"
+    },
+    {
+      "id": "gallery",
+      "path": "gallery",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/gallery",
+      "r2_url": "",
+      "table": "hotel_media"
+    },
+    {
+      "id": "hero",
+      "path": "hero",
+      "url": "https://auaqpomuivfhomlkvhju.supabase.co/storage/v1/object/public/hotel-media/hero",
+      "r2_url": "",
+      "table": "hotel_media"
+    }
+  ]
+}

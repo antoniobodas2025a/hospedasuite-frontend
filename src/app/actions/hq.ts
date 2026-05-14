@@ -1,23 +1,13 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
+import { SAAS_PLANS, normalizePlan, PLAN_LABELS, type PlanKey } from '@/config/saas-plans';
+import { isTrialActive, getEffectivePlanCost, type TrialHotel } from '@/lib/trial-check';
 
 // 🛑 BARRERA ZERO-TRUST: Lista blanca de Super Administradores
-const SUPER_ADMIN_EMAILS = ['suitehospeda@gmail.com']; 
-
-// 💰 DICCIONARIO DE PRECIOS SAAS BUNDLING
-const SAAS_PLANS: Record<string, number> = {
-  micro: 59900,
-  standard: 99900,
-  pro: 189900,
-};
+const SUPER_ADMIN_EMAILS = ['suitehospeda@gmail.com'];
 
 // 🛡️ VERIFICACIÓN CRIPTOGRÁFICA TIER-0 (Vía Supabase SSR)
 async function verifySuperAdmin() {
@@ -90,13 +80,20 @@ export async function getHQFinancialReportAction() {
       
       const accumulatedFees = hotelBookings.reduce((sum, b) => sum + Number(b.platform_fee || 0), 0);
       
-      const planKey = hotel.subscription_plan?.toLowerCase() || 'none';
-      const subscriptionFee = SAAS_PLANS[planKey] || 0;
+      // 🧪 Si está en trial, el plan cuesta $0
+      const trialHotel: TrialHotel = {
+        subscription_status: hotel.subscription_plan ? 'trialing' : null,
+        subscription_plan: hotel.subscription_plan,
+        trial_ends_at: null,
+      };
+      const subscriptionFee = getEffectivePlanCost(trialHotel);
       
       const totalDebt = accumulatedFees + subscriptionFee;
 
       globalSaaS += subscriptionFee;
       globalCommissions += accumulatedFees;
+
+      const planKey = normalizePlan(hotel.subscription_plan);
 
       return {
         hotel_id: hotel.id,

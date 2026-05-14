@@ -163,18 +163,22 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
         </div>
       </div>
 
-      {/* Sticky Sub-Nav */}
-      <div className="max-w-6xl mx-auto px-6 pt-4">
-        <StickySubNav sections={navSections} />
+      {/* Sticky Search Bar */}
+      <div className="sticky top-0 z-[var(--z-sticky)] bg-background/80 backdrop-blur-sm border-b border-border/30">
+        <div className="max-w-6xl mx-auto px-6 py-2">
+          <AvailabilitySearchBar sticky />
+        </div>
+      </div>
+
+      {/* Sticky Sub-Nav (stacks below search bar) */}
+      <div className="sticky top-[64px] z-[calc(var(--z-sticky)-1)] bg-background/80 backdrop-blur-sm border-b border-border/30">
+        <div className="max-w-6xl mx-auto px-6 py-2">
+          <StickySubNav sections={navSections} />
+        </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 pt-8">
-
-        {/* Availability Search Bar */}
-        <div id="search-bar" className="mb-8">
-          <AvailabilitySearchBar />
-        </div>
 
         {/* Recent Activity */}
         <RecentActivity messages={hotel.recent_activity_messages ?? null} />

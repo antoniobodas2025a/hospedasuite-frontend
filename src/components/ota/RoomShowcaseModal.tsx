@@ -67,7 +67,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   // ESCUDO UX: Fechas Faltantes
   if (!checkIn || !checkOut) {
     return (
-      <div className="fixed inset-0 z-[150] flex items-center justify-center p-4">
+      <div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
         <div className="absolute inset-0 bg-foreground/40 backdrop-blur-xl" onClick={closeModal} />
         <div className="relative z-10 glass-panel p-10 w-full max-w-md text-center shadow-2xl shadow-elev-2 animate-in zoom-in-95 duration-200">
           <div className="size-16 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center mx-auto mb-6">
@@ -113,7 +113,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   }
 
   return (
-    <div className="fixed inset-0 z-[150] flex items-end sm:items-center justify-center sm:p-3 lg:p-5 animate-in fade-in duration-200">
+    <div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-3 lg:p-5 animate-in fade-in duration-200">
       {/* Backdrop con blur pesado */}
       <div className="absolute inset-0 bg-foreground/50 backdrop-blur-2xl" onClick={closeModal} />
       
@@ -283,7 +283,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                     "px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97] shadow-cta",
                     isOverCapacity 
                       ? "bg-muted/60 text-muted-foreground cursor-not-allowed" 
-                      : "bg-foreground/90 hover:bg-primary/90 shadow-cta hover:shadow-cta"
+      : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta hover:shadow-cta"
                   )}
                 >
                   {isOverCapacity ? 'Ajuste la Busqueda' : 'Reservar'} <ArrowRight size={16} strokeWidth={2.5} />
@@ -437,7 +437,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                   "px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
                   isOverCapacity 
                     ? "bg-muted/60 text-muted-foreground cursor-not-allowed" 
-                    : "bg-foreground/90 hover:bg-primary/90 shadow-cta hover:shadow-cta"
+                    : "bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta hover:shadow-cta"
                 )}
               >
                 {isOverCapacity ? 'Ajuste' : 'Reservar'} <ArrowRight size={16} strokeWidth={2.5} />

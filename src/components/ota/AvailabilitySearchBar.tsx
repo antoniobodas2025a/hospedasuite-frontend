@@ -12,14 +12,21 @@ import { mac2026Default as springPopover, springSnappy } from '@/lib/mac2026/spr
 import { GlassPanel } from '@/components/ui/glass';
 import 'react-day-picker/dist/style.css'; 
 
-export default function AvailabilitySearchBar() {
+interface AvailabilitySearchBarProps {
+  /** When true, renders in compact sticky mode (smaller padding, optimized popover) */
+  sticky?: boolean;
+}
+
+export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const popoverRef = useRef<HTMLDivElement>(null);
+  const triggerRef = useRef<HTMLDivElement>(null);
 
   // Máquina de Estados Globales
   const [activePopover, setActivePopover] = useState<'dates' | 'guests' | null>(null);
   const [isPending, startTransition] = useTransition();
+  const [popoverPosition, setPopoverPosition] = useState<'below' | 'above'>('below');
   
   // Hidratación Segura: Fechas
   const [date, setDate] = useState<DateRange | undefined>(() => {
@@ -51,6 +58,22 @@ export default function AvailabilitySearchBar() {
     }
     if (activePopover) document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, [activePopover]);
+
+  // Detectar posición del viewport para posicionar popover arriba o abajo
+  useEffect(() => {
+    if (!activePopover || !triggerRef.current) return;
+
+    const rect = triggerRef.current.getBoundingClientRect();
+    const spaceBelow = window.innerHeight - rect.bottom;
+    const spaceAbove = rect.top;
+    const popoverHeight = activePopover === 'dates' ? 360 : 400; // Aproximado
+
+    if (spaceBelow < popoverHeight && spaceAbove > spaceBelow) {
+      setPopoverPosition('above');
+    } else {
+      setPopoverPosition('below');
+    }
   }, [activePopover]);
 
   // 🚀 MOTOR DE INYECCIÓN ASÍNCRONA (A LA URL)
@@ -130,8 +153,10 @@ export default function AvailabilitySearchBar() {
       
       {/* 🔮 SMART PILL INTERACTIVO MULTI-ZONA */}
       <div 
+        ref={triggerRef}
         className={cn(
-          "flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[var(--radius-squircle-2xl)] sm:rounded-full p-2 transition-all duration-300",
+          "flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[var(--radius-squircle-2xl)] sm:rounded-full transition-all duration-300",
+          sticky ? "p-1.5 sm:p-1" : "p-2",
           activePopover ? "ring-2 ring-ring shadow-xl" : "hover:border-border hover:shadow-md",
           isPending && "opacity-70 pointer-events-none grayscale-[0.2]"
         )}
@@ -140,36 +165,71 @@ export default function AvailabilitySearchBar() {
         {/* ZONA 1: FECHAS */}
         <div 
           onClick={() => !isPending && setActivePopover(activePopover === 'dates' ? null : 'dates')}
-          className="flex-1 flex items-center gap-4 px-4 py-3 sm:py-2 cursor-pointer hover:bg-muted rounded-t-[var(--radius-squircle-xl)] sm:rounded-l-full sm:rounded-r-none transition-colors"
+          className={cn(
+            "flex-1 flex items-center gap-4 cursor-pointer hover:bg-muted transition-colors",
+            sticky
+              ? "px-3 py-2 sm:py-1.5 rounded-t-[var(--radius-squircle-xl)] sm:rounded-l-full sm:rounded-r-none"
+              : "px-4 py-3 sm:py-2 rounded-t-[var(--radius-squircle-xl)] sm:rounded-l-full sm:rounded-r-none"
+          )}
         >
-          <div className="size-10 rounded-full bg-brand-50 flex items-center justify-center shrink-0">
-            {isPending ? <Loader2 size={18} className="text-brand-600 animate-spin" /> : 
-             (date?.from && date?.to ? <CheckCircle2 size={18} className="text-secondary" /> : <CalendarIcon size={18} className="text-brand-600" />)}
+          <div className={cn(
+            "rounded-full bg-brand-50 flex items-center justify-center shrink-0",
+            sticky ? "size-8" : "size-10"
+          )}>
+            {isPending ? <Loader2 size={sticky ? 14 : 18} className="text-brand-600 animate-spin" /> : 
+             (date?.from && date?.to ? <CheckCircle2 size={sticky ? 14 : 18} className="text-secondary" /> : <CalendarIcon size={sticky ? 14 : 18} className="text-brand-600" />)}
           </div>
           <div className="flex flex-col">
-            <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Estadía</span>
-            <span className={cn("text-base tracking-tight", date?.from ? "text-foreground font-bold" : "text-muted-foreground font-medium")}>
+            <span className={cn(
+              "font-bold text-muted-foreground uppercase tracking-widest",
+              sticky ? "text-[10px]" : "text-xs"
+            )}>Estadía</span>
+            <span className={cn(
+              "tracking-tight",
+              sticky ? "text-sm" : "text-base",
+              date?.from ? "text-foreground font-bold" : "text-muted-foreground font-medium"
+            )}>
               {displayRange()}
             </span>
           </div>
         </div>
 
         {/* DIVISOR */}
-        <div className="h-px w-full sm:w-px sm:h-10 bg-border mx-0 sm:mx-2 hidden sm:block"></div>
-        <div className="h-px w-full sm:w-px sm:h-10 bg-muted mx-0 sm:mx-2 block sm:hidden my-1"></div>
+        <div className={cn(
+          "bg-border mx-0 sm:mx-2 hidden sm:block",
+          sticky ? "h-px w-full sm:w-px sm:h-8" : "h-px w-full sm:w-px sm:h-10"
+        )}></div>
+        <div className={cn(
+          "bg-muted mx-0 sm:mx-2 block sm:hidden my-1",
+          sticky ? "h-px w-full sm:h-6" : "h-px w-full sm:h-8"
+        )}></div>
 
         {/* ZONA 2: HUÉSPEDES */}
         <div 
           onClick={() => !isPending && setActivePopover(activePopover === 'guests' ? null : 'guests')}
-          className="flex-1 flex items-center justify-between px-4 py-3 sm:py-2 cursor-pointer hover:bg-muted rounded-b-[var(--radius-squircle-xl)] sm:rounded-r-full sm:rounded-l-none transition-colors"
+          className={cn(
+            "flex-1 flex items-center justify-between cursor-pointer hover:bg-muted transition-colors",
+            sticky
+              ? "px-3 py-2 sm:py-1.5 rounded-b-[var(--radius-squircle-xl)] sm:rounded-r-full sm:rounded-l-none"
+              : "px-4 py-3 sm:py-2 rounded-b-[var(--radius-squircle-xl)] sm:rounded-r-full sm:rounded-l-none"
+          )}
         >
           <div className="flex items-center gap-4">
-            <div className="size-10 rounded-full bg-brand-50 flex items-center justify-center shrink-0">
-              <Users size={18} className="text-brand-600" />
+            <div className={cn(
+              "rounded-full bg-brand-50 flex items-center justify-center shrink-0",
+              sticky ? "size-8" : "size-10"
+            )}>
+              <Users size={sticky ? 14 : 18} className="text-brand-600" />
             </div>
             <div className="flex flex-col">
-              <span className="text-xs font-bold text-muted-foreground uppercase tracking-widest">Ocupación</span>
-              <span className="text-base tracking-tight text-foreground font-bold">
+              <span className={cn(
+                "font-bold text-muted-foreground uppercase tracking-widest",
+                sticky ? "text-[10px]" : "text-xs"
+              )}>Ocupación</span>
+              <span className={cn(
+                "tracking-tight text-foreground font-bold",
+                sticky ? "text-sm" : "text-base"
+              )}>
                 {totalGuests} Huésped{totalGuests > 1 ? 'es' : ''}
               </span>
             </div>
@@ -179,10 +239,13 @@ export default function AvailabilitySearchBar() {
           {(date?.from || adults > 2 || children > 0) && !isPending && (
             <button 
               onClick={clearAll}
-              className="p-2 ml-2 hover:bg-destructive/10 rounded-full transition-colors text-muted-foreground hover:text-destructive shadow-inner bg-card border border-border"
+              className={cn(
+                "rounded-full transition-colors text-muted-foreground hover:text-destructive shadow-inner bg-card border border-border",
+                sticky ? "p-1.5 ml-1.5 hover:bg-destructive/10" : "p-2 ml-2 hover:bg-destructive/10"
+              )}
               title="Borrar filtros"
             >
-              <X size={16} strokeWidth={2.5} />
+              <X size={sticky ? 14 : 16} strokeWidth={2.5} />
             </button>
           )}
         </div>
@@ -194,13 +257,18 @@ export default function AvailabilitySearchBar() {
         {/* POPOVER DE FECHAS — Mac 2026: GlassPanel + spring physics */}
         {activePopover === 'dates' && (
           <motion.div 
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            initial={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            exit={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
             transition={springPopover}
-            className="absolute top-[110%] left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2 z-[var(--z-popover)] date-picker-b2c"
+            className={cn(
+              "absolute z-[var(--z-popover)] date-picker-b2c",
+              popoverPosition === 'above'
+                ? "bottom-full mb-2 left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2"
+                : "top-full mt-2 left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2"
+            )}
           >
-            <GlassPanel className="p-6 ring-1 ring-foreground/5">
+            <GlassPanel className="p-4 sm:p-6 ring-1 ring-foreground/5 bg-background/95 backdrop-blur-xl">
               <DayPicker
                 mode="range"
                 selected={date}
@@ -223,13 +291,18 @@ export default function AvailabilitySearchBar() {
         {/* POPOVER DE HUÉSPEDES — Mac 2026: GlassPanel + spring physics */}
         {activePopover === 'guests' && (
           <motion.div 
-            initial={{ opacity: 0, y: -10, scale: 0.95 }}
+            initial={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: -10, scale: 0.95 }}
+            exit={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
             transition={springPopover}
-            className="absolute top-[110%] right-0 w-full sm:w-[340px] z-[var(--z-popover)]"
+            className={cn(
+              "absolute z-[var(--z-popover)]",
+              popoverPosition === 'above'
+                ? "bottom-full mb-2 right-0 w-full sm:w-[340px]"
+                : "top-full mt-2 right-0 w-full sm:w-[340px]"
+            )}
           >
-            <GlassPanel className="p-6 ring-1 ring-foreground/5">
+            <GlassPanel className="p-6 ring-1 ring-foreground/5 bg-background/95 backdrop-blur-xl">
               <div className="space-y-6">
                 <h3 className="font-black text-foreground tracking-tight mb-2 text-lg">Detalles del Grupo</h3>
                 

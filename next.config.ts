@@ -4,6 +4,10 @@ import { withSentryConfig } from '@sentry/nextjs';
 const nextConfig = {
   // 📸 CONFIGURACIÓN DE MOTOR DE IMÁGENES (SUPABASE + CDN)
   images: {
+    formats: ['image/avif', 'image/webp'],  // AVIF primero, fallback WebP
+    minimumCacheTTL: 31536000,              // 1 año — imágenes no cambian
+    deviceSizes: [320, 480, 640, 768, 1024, 1280, 1536],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
     remotePatterns: [
       {
         protocol: 'https',

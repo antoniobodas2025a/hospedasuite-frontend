@@ -1,13 +1,10 @@
 import { createClient } from '@/utils/supabase/server';
 import ReportsPanel from '@/components/dashboard/ReportsPanel';
 import { getCurrentHotel } from '@/lib/hotel-context';
+import PlanGuard from '@/components/auth/PlanGuard';
 
 export const dynamic = 'force-dynamic';
 
-/**
- * Forma que Supabase devuelve para belongs_to embebidos.
- * El cliente JS envuelve las relaciones en array incluso para has_one.
- */
 interface BookingSupabaseRow {
   id: string;
   created_at: string;
@@ -21,6 +18,20 @@ export default async function ReportsPage() {
   const hotel = await getCurrentHotel();
   if (!hotel) return <div className='p-10 text-center font-bold text-slate-500'>No se encontró propiedad asociada.</div>;
 
+  return (
+    <PlanGuard
+      currentPlan={hotel.subscription_plan}
+      subscriptionStatus={hotel.subscription_status}
+      requiredPlan="enterprise"
+      featureName="Reportes Financieros"
+      featureDescription="Métricas avanzadas de revenue, exportación Excel y análisis de tendencias. Disponible en Plan Enterprise."
+    >
+      <ReportsContent hotel={hotel} />
+    </PlanGuard>
+  );
+}
+
+async function ReportsContent({ hotel }: { hotel: { id: string } }) {
   const supabase = await createClient();
 
   const { data: bookings } = await supabase

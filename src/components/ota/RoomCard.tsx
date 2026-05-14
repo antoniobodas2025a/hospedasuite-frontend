@@ -6,6 +6,7 @@ import Link from 'next/link';
 import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { shouldUseNativeImg } from '@/lib/image-config';
 import { getRoomAmenityById } from '@/lib/amenity-registry';
 
 interface RoomCardProps {
@@ -64,12 +65,27 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
 
         {/* ZONA VISUAL (Atraccion) */}
         <div className="w-full md:w-72 h-64 md:h-full min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner">
-          <Image
-            src={coverImage}
-            alt={room.name}
-            fill
-            className="object-cover transition-transform duration-700 group-hover/card:scale-110"
-          />
+          {coverImage.includes('supabase.co') ? (
+            /* Supabase ya usa Cloudflare CDN — <img> directo */
+            <img
+              src={coverImage}
+              alt={room.name}
+              className="object-cover w-full h-full transition-transform duration-700 group-hover/card:scale-110"
+              loading="lazy"
+              decoding="async"
+            />
+          ) : (
+            /* Unsplash y otras fuentes → Next.js optimiza a AVIF/WebP */
+            <Image
+              src={coverImage}
+              alt={room.name}
+              fill
+              className="object-cover transition-transform duration-700 group-hover/card:scale-110"
+              sizes="(max-width: 768px) 100vw, 288px"
+              quality={75}
+              loading="lazy"
+            />
+          )}
 
           {/* Badges superpuestos — Semantic status colors */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">

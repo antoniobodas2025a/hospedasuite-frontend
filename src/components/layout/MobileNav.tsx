@@ -22,6 +22,7 @@ interface MobileNavViewProps {
 
 interface MobileNavProps {
   onOpenScanner?: () => void;
+  subscriptionPlan?: 'starter' | 'pro' | 'enterprise';
 }
 
 // ==========================================
@@ -155,7 +156,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
 // BLOQUE 3: COMPONENTE CONTENEDOR
 // ==========================================
 
-export default function MobileNav({ onOpenScanner }: MobileNavProps) {
+export default function MobileNav({ onOpenScanner, subscriptionPlan = 'starter' }: MobileNavProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -192,13 +193,20 @@ export default function MobileNav({ onOpenScanner }: MobileNavProps) {
     };
   }, [showMenu]);
 
+  // Filtra ítems de menú según el plan (gating por suscripción)
+  const planLevel = { starter: 0, pro: 1, enterprise: 2 } as const;
+  const currentLevel = planLevel[subscriptionPlan];
+  const visibleMenuItems = MENU_ITEMS.filter(item =>
+    !item.minPlan || currentLevel >= (planLevel[item.minPlan] ?? 0)
+  );
+
   return (
     <>
       <MobileNavView 
         isVisible={isVisible}
         showMenu={showMenu}
         activePath={pathname}
-        menuItems={MENU_ITEMS}
+        menuItems={visibleMenuItems}
         onToggleMenu={() => setShowMenu(!showMenu)}
         onOpenShiftModal={() => {
           setShowMenu(false);

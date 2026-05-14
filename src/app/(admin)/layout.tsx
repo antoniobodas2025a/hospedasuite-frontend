@@ -2,7 +2,9 @@ import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNav from '@/components/layout/MobileNav';
+import SubscriptionBanner from '@/components/layout/SubscriptionBanner';
 import { getCurrentHotel } from '@/lib/hotel-context';
+import type { TrialHotel } from '@/lib/trial-check';
 
 export default async function AdminLayout({
   children,
@@ -37,14 +39,27 @@ export default async function AdminLayout({
       <div className='hidden lg:block w-72 h-full border-r border-sidebar-border bg-sidebar/50 relative z-20'>
         <Sidebar 
           user={plainUser} 
-          hotelName={hotel?.name || 'HospedaSuite'} 
+          hotelName={hotel?.name || 'HospedaSuite'}
+          subscriptionPlan={hotel?.subscription_plan || 'starter'}
         />
       </div>
 
       {/* Contenido Principal */}
       <main className='flex-1 flex flex-col min-w-0 overflow-hidden relative bg-background'>
         {/* Nav para Móvil */}
-        <MobileNav />
+        <MobileNav subscriptionPlan={hotel?.subscription_plan || 'starter'} />
+        
+        {/* ⚠️ Banner de suscripción (si aplica) */}
+        <div className="px-4 lg:px-8 pt-4 z-20">
+          <SubscriptionBanner
+            subscriptionStatus={hotel?.subscription_status}
+            trialHotel={hotel ? {
+              subscription_status: hotel.subscription_status,
+              subscription_plan: hotel.subscription_plan,
+              trial_ends_at: hotel.trial_ends_at,
+            } as TrialHotel : undefined}
+          />
+        </div>
         
         {/* Área de Renderizado de Hijos (Paneles) */}
         <div className='flex-1 overflow-y-auto p-4 lg:p-8 custom-scrollbar relative z-10'>
