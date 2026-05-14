@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ShieldCheck, CheckCircle2, Clock, Users, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Clock, Users, ArrowRight, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { springSnappy } from '@/lib/mac2026/spring';
@@ -43,6 +43,7 @@ export default function BookingWidget({
   const searchParams = useSearchParams();
 
   const [showPolicy, setShowPolicy] = useState(false);
+  const [showDateError, setShowDateError] = useState(false);
 
   const activeRooms = rooms.filter((r) => r.status === 'active');
   const minPrice = activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price)) : 0;
@@ -59,9 +60,11 @@ export default function BookingWidget({
 
   const handleReserve = () => {
     if (!checkIn || !checkOut) {
+      setShowDateError(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
+    setShowDateError(false);
 
     const params = new URLSearchParams();
     params.set('showRoom', activeRooms[0]?.id || '');
@@ -117,6 +120,17 @@ export default function BookingWidget({
               <div>
                 <p className="text-sm font-bold text-foreground">Selecciona tus fechas</p>
                 <p className="text-xs text-muted-foreground mt-0.5">Usa la barra de busqueda para ver disponibilidad y precios exactos.</p>
+              </div>
+            </div>
+          )}
+
+          {/* Error feedback — CTA clicked without dates */}
+          {showDateError && (
+            <div className="flex items-start gap-3 p-4 bg-destructive/10 rounded-[var(--radius-squircle-2xl)] border border-destructive/20 animate-in fade-in slide-in-from-top-2 duration-200">
+              <Info size={18} className="text-destructive shrink-0 mt-0.5" />
+              <div>
+                <p className="text-sm font-bold text-destructive">Selecciona tus fechas primero</p>
+                <p className="text-xs text-destructive/80 mt-0.5">Usa la barra de busqueda de arriba para elegir cuando llegas y cuando te vas.</p>
               </div>
             </div>
           )}

@@ -6,6 +6,14 @@
 // ============================================================================
 
 // --------------------------------------------------------------------------
+// REVIEW STATS (Calificaciones)
+// --------------------------------------------------------------------------
+export interface ReviewStats {
+  averageRating: number;
+  totalReviews: number;
+}
+
+// --------------------------------------------------------------------------
 // HOTEL (Tenant)
 // --------------------------------------------------------------------------
 export interface Hotel {
@@ -30,6 +38,7 @@ export interface Hotel {
   subscription_plan?: string;
   wompi_integrity_secret?: string;
   wompi_events_secret?: string;
+  reviewStats?: ReviewStats;
 }
 
 // --------------------------------------------------------------------------

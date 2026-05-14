@@ -28,6 +28,7 @@ interface RoomsListWithFiltersProps {
   adults?: string | null;
   children?: string | null;
   isSearchingDates: boolean;
+  hotel?: { cancellation_policy?: string | null };
 }
 
 export default function RoomsListWithFilters({
@@ -39,6 +40,7 @@ export default function RoomsListWithFilters({
   adults,
   children,
   isSearchingDates,
+  hotel,
 }: RoomsListWithFiltersProps) {
   const [filteredRooms, setFilteredRooms] = useState<RoomItem[]>(availableRooms);
 
@@ -105,6 +107,7 @@ export default function RoomsListWithFilters({
                   allRooms={filteredRooms}
                   totalRooms={rooms.length}
                   availableCount={availableRooms.length}
+                  hotel={hotel}
                 />
               </div>
             ))}

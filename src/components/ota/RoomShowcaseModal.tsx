@@ -219,13 +219,35 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 
                     {/* Alerta de capacidad */}
                     {isOverCapacity && (
-                      <div className="flex gap-2 p-3 glass-card border-destructive/20 text-destructive">
-                        <Info size={14} className="shrink-0 mt-0.5" />
-                        <div>
-                          <p className="text-xs font-bold mb-1">Aforo Excedido</p>
-                          <p className="text-[10px] leading-tight">
-                            Esta unidad permite maximo {room.capacity} personas.
-                          </p>
+                      <div className="flex flex-col gap-2 p-3 glass-card border-destructive/20 text-destructive">
+                        <div className="flex gap-2">
+                          <Info size={14} className="shrink-0 mt-0.5" />
+                          <div>
+                            <p className="text-xs font-bold mb-1">Aforo Excedido</p>
+                            <p className="text-[10px] leading-tight">
+                              Esta unidad permite maximo {room.capacity} personas.
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex gap-2 mt-1 ml-6">
+                          <button
+                            onClick={() => { closeModal(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                            className="text-[10px] font-bold underline underline-offset-2 hover:text-destructive/70 transition-colors"
+                          >
+                            Ajustar huespedes
+                          </button>
+                          {hotel.rooms && hotel.rooms.some((r) => Number(r.capacity ?? 0) > Number(room.capacity ?? 0)) && (
+                            <button
+                              onClick={() => {
+                                closeModal();
+                                const section = document.getElementById('rooms-section');
+                                if (section) section.scrollIntoView({ behavior: 'smooth' });
+                              }}
+                              className="text-[10px] font-bold text-brand-600 underline underline-offset-2 hover:text-brand-500 transition-colors"
+                            >
+                              Ver habitaciones mas grandes
+                            </button>
+                          )}
                         </div>
                       </div>
                     )}
@@ -355,11 +377,33 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                     <Users size={16} className="text-muted-foreground/40" />
                   </div>
                   {isOverCapacity && (
-                    <div className="flex gap-2 p-3 glass-card border-destructive/20 text-destructive">
-                      <Info size={14} className="shrink-0 mt-0.5" />
-                      <div>
-                        <p className="text-xs font-bold mb-1">Aforo Excedido</p>
-                        <p className="text-[10px] leading-tight">Maximo {room.capacity} personas.</p>
+                    <div className="flex flex-col gap-2 p-3 glass-card border-destructive/20 text-destructive">
+                      <div className="flex gap-2">
+                        <Info size={14} className="shrink-0 mt-0.5" />
+                        <div>
+                          <p className="text-xs font-bold mb-1">Aforo Excedido</p>
+                          <p className="text-[10px] leading-tight">Maximo {room.capacity} personas.</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 mt-1 ml-6">
+                        <button
+                          onClick={() => { closeModal(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
+                          className="text-[10px] font-bold underline underline-offset-2 hover:text-destructive/70 transition-colors"
+                        >
+                          Ajustar huespedes
+                        </button>
+                        {hotel.rooms && hotel.rooms.some((r) => Number(r.capacity ?? 0) > Number(room.capacity ?? 0)) && (
+                          <button
+                            onClick={() => {
+                              closeModal();
+                              const section = document.getElementById('rooms-section');
+                              if (section) section.scrollIntoView({ behavior: 'smooth' });
+                            }}
+                            className="text-[10px] font-bold text-brand-600 underline underline-offset-2 hover:text-brand-500 transition-colors"
+                          >
+                            Ver habitaciones mas grandes
+                          </button>
+                        )}
                       </div>
                     </div>
                   )}

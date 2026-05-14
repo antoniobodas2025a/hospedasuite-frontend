@@ -12,6 +12,7 @@ interface Hotel {
   city_slug?: string;
   min_price: number;
   main_image_url: string;
+  reviewStats?: { averageRating: number; totalReviews: number };
 }
 
 export default function HotelCard({ hotel }: { hotel: Hotel }) {
@@ -75,7 +76,11 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
               size={12}
               className='text-warm-400 fill-warm-400'
             />
-            <span className='text-xs font-bold'>4.9</span>
+            <span className='text-xs font-bold'>
+              {hotel.reviewStats?.averageRating
+                ? hotel.reviewStats.averageRating.toFixed(1)
+                : 'Nuevo'}
+            </span>
           </div>
         </div>
 

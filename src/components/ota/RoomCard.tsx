@@ -19,9 +19,10 @@ interface RoomCardProps {
   allRooms?: any[];
   totalRooms?: number;
   availableCount?: number;
+  hotel?: { cancellation_policy?: string | null };
 }
 
-export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, children, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0 }: RoomCardProps) {
+export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, children, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
   const coverImage = Array.isArray(room.gallery) && room.gallery.length > 0
     ? (room.gallery[0].url || room.gallery[0])
     : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
@@ -158,9 +159,11 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
                 </div>
               )}
 
-              <p className="text-xs font-medium text-secondary mt-2 flex items-center gap-1">
-                <ShieldCheck size={12} /> Cancelacion Gratuita Disponible
-              </p>
+              {hotel?.cancellation_policy && (
+                <p className="text-xs font-medium text-secondary mt-2 flex items-center gap-1">
+                  <ShieldCheck size={12} /> Cancelacion Gratuita Disponible
+                </p>
+              )}
             </div>
 
             {/* CTA — CSS active scale instead of motion.div whileTap */}

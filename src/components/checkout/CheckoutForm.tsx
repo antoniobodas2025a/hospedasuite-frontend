@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Wine, Coffee, HeartHandshake, ShieldCheck, ArrowRight, ArrowLeft, User, Mail, Phone, CreditCard, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPendingBookingAction } from '@/app/actions/bookings';
@@ -31,10 +31,41 @@ const UPSELL_OPTIONS = [
  */
 
 export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, basePrice, isOta }: CheckoutFormProps) {
-  const [step, setStep] = useState<1 | 2 | 3>(1);
-  const [selectedUpsells, setSelectedUpsells] = useState<string[]>([]);
+  const [step, setStep] = useState<1 | 2 | 3>(() => {
+    try {
+      const saved = sessionStorage.getItem('checkout-state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.step >= 1 && parsed.step <= 3) return parsed.step;
+      }
+    } catch { /* private browsing fallback */ }
+    return 1;
+  });
+  const [selectedUpsells, setSelectedUpsells] = useState<string[]>(() => {
+    try {
+      const saved = sessionStorage.getItem('checkout-state');
+      if (saved) return JSON.parse(saved).selectedUpsells || [];
+    } catch { /* private browsing fallback */ }
+    return [];
+  });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [formData, setFormData] = useState({ fullName: '', email: '', phone: '', document: '' });
+  const [isGuest, setIsGuest] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('checkout-state');
+      if (saved) return JSON.parse(saved).isGuest || false;
+    } catch { /* private browsing fallback */ }
+    return false;
+  });
+  const [formData, setFormData] = useState(() => {
+    try {
+      const saved = sessionStorage.getItem('checkout-state');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.formData) return parsed.formData;
+      }
+    } catch { /* private browsing fallback */ }
+    return { fullName: '', email: '', phone: '', document: '' };
+  });
   const [formError, setFormError] = useState<string | null>(null);
 
   const upsellsTotal = UPSELL_OPTIONS
@@ -42,6 +73,15 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     .reduce((sum, opt) => sum + opt.price, 0);
 
   const grandTotal = basePrice + upsellsTotal;
+
+  // Persist state to sessionStorage on every change
+  useEffect(() => {
+    try {
+      sessionStorage.setItem('checkout-state', JSON.stringify({
+        step, formData, selectedUpsells, isGuest,
+      }));
+    } catch { /* private browsing fallback — form works without persistence */ }
+  }, [step, formData, selectedUpsells, isGuest]);
 
   const toggleUpsell = (id: string) => {
     setSelectedUpsells(prev => prev.includes(id) ? prev.filter(u => u !== id) : [...prev, id]);
@@ -51,6 +91,18 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     if (step === 1) {
       setStep(2);
     } else if (step === 2) {
+      if (isGuest) {
+        // Guest checkout: skip validation, set placeholder data, advance to payment
+        setFormData({
+          fullName: 'Huésped Invitado',
+          email: 'guest@hospedasuite.com',
+          phone: 'N/A',
+          document: 'N/A',
+        });
+        setFormError(null);
+        setStep(3);
+        return;
+      }
       if (!formData.fullName || !formData.email || !formData.document || !formData.phone) {
         setFormError("Por favor, completa todos tus datos personales.");
         shakeHaptic();
@@ -59,6 +111,19 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
       setFormError(null);
       setStep(3);
     }
+  };
+
+  const handleGuestCheckout = () => {
+    setIsGuest(true);
+    setFormError(null);
+    // Advance directly to step 3 with placeholder data
+    setFormData({
+      fullName: 'Huésped Invitado',
+      email: 'guest@hospedasuite.com',
+      phone: 'N/A',
+      document: 'N/A',
+    });
+    setStep(3);
   };
 
   const handleBack = () => {
@@ -275,15 +340,26 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                   >
                     <ArrowLeft size={18} /> Volver
                   </motion.button>
-                  <motion.button
-                    type="button"
-                    onClick={handleNext}
-                    whileTap={{ scale: 0.97 }}
-                    transition={springSnappy()}
-                    className="px-8 py-4 bg-foreground text-background rounded-[var(--radius-squircle-xl)] font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-cta"
-                  >
-                    Continuar <ArrowRight size={18} />
-                  </motion.button>
+                  <div className="flex gap-3">
+                    <motion.button
+                      type="button"
+                      onClick={handleGuestCheckout}
+                      whileTap={{ scale: 0.97 }}
+                      transition={springSnappy()}
+                      className="px-6 py-4 text-brand-600 border-2 border-brand-200 hover:bg-brand-50 rounded-[var(--radius-squircle-xl)] font-bold flex items-center gap-2 transition-all"
+                    >
+                      Continuar como invitado
+                    </motion.button>
+                    <motion.button
+                      type="button"
+                      onClick={handleNext}
+                      whileTap={{ scale: 0.97 }}
+                      transition={springSnappy()}
+                      className="px-8 py-4 bg-foreground text-background rounded-[var(--radius-squircle-xl)] font-bold flex items-center gap-2 hover:scale-105 active:scale-95 transition-all shadow-cta"
+                    >
+                      Continuar <ArrowRight size={18} />
+                    </motion.button>
+                  </div>
                 </div>
               </motion.section>
             ) : (
@@ -301,7 +377,9 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
 
                 {/* Guest summary */}
                 <div className="bg-muted/30 p-5 rounded-[var(--radius-squircle-xl)] border border-border mb-6">
-                  <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">Huesped</p>
+                  <p className="text-xs text-muted-foreground uppercase tracking-widest mb-2">
+                    Huesped {isGuest && <span className="text-brand-500 font-bold">(Invitado)</span>}
+                  </p>
                   <p className="font-bold text-foreground">{formData.fullName}</p>
                   <p className="text-sm text-muted-foreground">{formData.document} · {formData.phone}</p>
                   <p className="text-sm text-muted-foreground">{formData.email}</p>

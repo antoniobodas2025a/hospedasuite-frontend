@@ -203,6 +203,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                   adults={adults ?? null}
                   children={children ?? null}
                   isSearchingDates={isSearchingDates}
+                  hotel={{ cancellation_policy: hotel.cancellation_policy }}
                 />
               </div>
             </div>
