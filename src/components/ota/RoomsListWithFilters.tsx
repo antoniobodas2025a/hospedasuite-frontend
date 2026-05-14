@@ -2,12 +2,10 @@
 
 import React, { useState, useMemo } from 'react';
 import { SlidersHorizontal, X, Users, CalendarX2 } from 'lucide-react';
-import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import RoomCard from './RoomCard';
 import RoomFilters from './RoomFilters';
 import RoomComparison from './RoomComparison';
-import { springGentle } from '@/lib/mac2026/spring';
 
 interface RoomItem {
   id: string;
@@ -70,7 +68,7 @@ export default function RoomsListWithFilters({
             {isSearchingDates && (
               <div className="glass-card p-4 max-w-sm">
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-bold text-foreground">Tip:</span> Las fechas entre semana suelen tener mayor disponibilidad. 
+                  <span className="font-bold text-foreground">Tip:</span> Las fechas entre semana suelen tener mayor disponibilidad.
                   También puedes contactar al hotel directamente para consultar opciones.
                 </p>
               </div>
@@ -89,32 +87,12 @@ export default function RoomsListWithFilters({
             </p>
           </div>
         ) : (
-          <motion.div
-            initial="hidden"
-            animate="visible"
-            variants={{
-              hidden: { opacity: 0 },
-              visible: {
-                opacity: 1,
-                transition: {
-                  staggerChildren: 0.08,
-                  delayChildren: 0.1,
-                },
-              },
-            }}
-            className="space-y-6"
-          >
-            {filteredRooms.map((room) => (
-              <motion.div
+          <div className="space-y-6">
+            {filteredRooms.map((room, index) => (
+              <div
                 key={room.id}
-                variants={{
-                  hidden: { opacity: 0, y: 20 },
-                  visible: {
-                    opacity: 1,
-                    y: 0,
-                    transition: springGentle(),
-                  },
-                }}
+                className="animate-fade-in-up"
+                style={{ animationDelay: `${index * 80}ms` }}
               >
                 <RoomCard
                   room={room}
@@ -128,9 +106,9 @@ export default function RoomsListWithFilters({
                   totalRooms={rooms.length}
                   availableCount={availableRooms.length}
                 />
-              </motion.div>
+              </div>
             ))}
-          </motion.div>
+          </div>
         )}
       </div>
     </>

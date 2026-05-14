@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { X, ChevronLeft, ChevronRight, Grid } from 'lucide-react';
 import { cn, optimizeSupabaseUrl } from '@/lib/utils';
+import { useIsMobile } from '@/hooks/useIsMediaQuery';
 
 // ============================================================================
 // HERO GALLERY — Grid estilo Airbnb para pagina de hotel OTA
@@ -118,6 +119,7 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
+  const isMobile = useIsMobile();
 
   // Mostrar hasta 9 fotos en el grid (antes solo 5)
   const displayImages = images.slice(0, 9);
@@ -328,62 +330,66 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
 
   return (
     <>
-      {/* ─── HERO CONTAINER ─────────────────────────────────────────────── */}
+      {/* ─── HERO CONTAINER — Conditional: desktop grid OR mobile carousel ─── */}
       <div className="relative w-full h-[45vh] min-h-[300px] md:h-[500px] lg:h-[550px] rounded-b-[var(--radius-squircle-3xl)] overflow-hidden group bg-muted">
-        {getDesktopGrid()}
+        {/* During SSR (isMobile === undefined), render desktop as default */}
+        {isMobile === undefined || !isMobile ? (
+          /* Desktop grid — only rendered on desktop */
+          <div className="hidden md:block h-full">{getDesktopGrid()}</div>
+        ) : (
+          /* Mobile carousel — only rendered on mobile */
+          <div
+            className="absolute inset-0 select-none"
+            onTouchStart={swipeHandlers.onTouchStart}
+            onTouchEnd={swipeHandlers.onTouchEnd}
+          >
+            <GalleryImage
+              src={displayImages[mobileIndex].url}
+              alt={displayImages[mobileIndex].alt || hotelName}
+              fill
+              className="object-cover transition-opacity duration-300"
+              sizes="100vw"
+              priority
+            />
 
-        {/* ─── Mobile: Carrusel (visible solo en pantallas pequenas) ────── */}
-        <div
-          className="absolute inset-0 md:hidden select-none"
-          onTouchStart={swipeHandlers.onTouchStart}
-          onTouchEnd={swipeHandlers.onTouchEnd}
-        >
-          <GalleryImage
-            src={displayImages[mobileIndex].url}
-            alt={displayImages[mobileIndex].alt || hotelName}
-            fill
-            className="object-cover transition-opacity duration-300"
-            sizes="100vw"
-            priority
-          />
+            {/* Dots indicator */}
+            {totalDisplay > 1 && (
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+                {displayImages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setMobileIndex(i)}
+                    className={cn(
+                      'size-2 rounded-full transition-all',
+                      i === mobileIndex ? 'bg-white w-6' : 'bg-white/50',
+                    )}
+                    aria-label={`Ver foto ${i + 1}`}
+                  />
+                ))}
+              </div>
+            )}
 
-          {/* Dots indicator */}
-          {totalDisplay > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-              {displayImages.map((_, i) => (
+            {/* Flechas */}
+            {totalDisplay > 1 && (
+              <>
                 <button
-                  key={i}
-                  onClick={() => setMobileIndex(i)}
-                  className={cn(
-                    'size-2 rounded-full transition-all',
-                    i === mobileIndex ? 'bg-white w-6' : 'bg-white/50',
-                  )}
-                  aria-label={`Ver foto ${i + 1}`}
-                />
-              ))}
-            </div>
-          )}
-
-          {/* Flechas */}
-          {totalDisplay > 1 && (
-            <>
-              <button
-                onClick={prevMobile}
-                className="absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
-                aria-label="Foto anterior"
-              >
-                <ChevronLeft size={20} className="text-foreground" />
-              </button>
-              <button
-                onClick={nextMobile}
-                className="absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
-                aria-label="Siguiente foto"
-              >
-                <ChevronRight size={20} className="text-foreground" />
-              </button>
-            </>
-          )}
-        </div>
+                  onClick={prevMobile}
+                  className="absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
+                  aria-label="Foto anterior"
+                >
+                  <ChevronLeft size={20} className="text-foreground" />
+                </button>
+                <button
+                  onClick={nextMobile}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
+                  aria-label="Siguiente foto"
+                >
+                  <ChevronRight size={20} className="text-foreground" />
+                </button>
+              </>
+            )}
+          </div>
+        )}
 
         {/* Boton "Ver todas las fotos" */}
         {images.length > (totalDisplay >= 6 ? 6 : 4) && (

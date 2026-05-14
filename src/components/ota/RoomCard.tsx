@@ -3,8 +3,6 @@
 import React from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { motion } from 'framer-motion';
-import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -24,12 +22,10 @@ interface RoomCardProps {
 }
 
 export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, children, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0 }: RoomCardProps) {
-  // Manejo seguro de imagen principal
-  const coverImage = Array.isArray(room.gallery) && room.gallery.length > 0 
-    ? (room.gallery[0].url || room.gallery[0]) 
+  const coverImage = Array.isArray(room.gallery) && room.gallery.length > 0
+    ? (room.gallery[0].url || room.gallery[0])
     : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
 
-  // Matematicas de persuasion: Mostrar precio total si hay fechas
   let nights = 1;
   if (checkIn && checkOut) {
     const d1 = new Date(checkIn);
@@ -38,24 +34,20 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
   }
   const basePrice = room.price_per_night || room.price || 0;
   const displayPrice = isSearchingDates ? (basePrice * nights) : basePrice;
-  const taxes = Math.round(displayPrice * 0.19); // 19% IVA Colombia
+  const taxes = Math.round(displayPrice * 0.19);
   const totalPrice = displayPrice + taxes;
 
-  // Logica de badges
   const allPrices = allRooms.map((r) => r.price_per_night || r.price || 0).filter((p) => p > 0);
   const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
   const avgPrice = allPrices.length > 0 ? Math.round(allPrices.reduce((a, b) => a + b, 0) / allPrices.length) : 0;
   const isBestValue = basePrice === minPrice && allRooms.length > 1;
-  const isGreatDeal = avgPrice > 0 && basePrice <= avgPrice * 0.8 && !isBestValue; // 20% below average
-  const isPopular = room.capacity >= 4; // Habitaciones grandes = mas populares
+  const isGreatDeal = avgPrice > 0 && basePrice <= avgPrice * 0.8 && !isBestValue;
+  const isPopular = room.capacity >= 4;
 
-  // Contextual urgency — solo mostrar cuando realmente hay escasez
   const availabilityRatio = totalRooms > 0 ? availableCount / totalRooms : 1;
-  const isLowStock = isSearchingDates && availabilityRatio <= 0.33; // Menos del 33% disponible
-  const isAlmostGone = isSearchingDates && availableCount <= 2 && availableCount > 0; // 1-2 habitaciones restantes
-  const isSoldOut = isSearchingDates && availableCount === 0;
+  const isLowStock = isSearchingDates && availabilityRatio <= 0.33;
+  const isAlmostGone = isSearchingDates && availableCount <= 2 && availableCount > 0;
 
-  // Logica de URL blindada
   const queryParams = new URLSearchParams();
   queryParams.set('showRoom', room.id);
   if (checkIn) queryParams.set('checkin', checkIn);
@@ -66,25 +58,18 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
   const destinationUrl = `?${queryParams.toString()}`;
 
   return (
-    // Mac 2026 Organic Affordance: motion.div wrapper with whileHover scale + whileTap spring physics
-    <motion.div
-      whileHover={{ scale: 1.01 }}
-      whileTap={{ scale: 0.98 }}
-      transition={springSnappy()}
-      className="group"
-    >
-      {/* Mac 2026 Glassmorphism: GlassCard with squircle radii + depth-aware blur */}
-      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl transition-all duration-500">
-        
+    <div className="group/card will-change-transform">
+      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl transition-all duration-500 transition-transform duration-200 group-hover/card:scale-[1.01]">
+
         {/* ZONA VISUAL (Atraccion) */}
         <div className="w-full md:w-72 h-64 md:h-full min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner">
-          <Image 
-            src={coverImage} 
-            alt={room.name} 
-            fill 
-            className="object-cover transition-transform duration-700 group-hover:scale-110" 
+          <Image
+            src={coverImage}
+            alt={room.name}
+            fill
+            className="object-cover transition-transform duration-700 group-hover/card:scale-110"
           />
-          
+
           {/* Badges superpuestos — Semantic status colors */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">
             {isBestValue && (
@@ -124,11 +109,11 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
                 <Users size={12} /> Max {room.capacity}
               </span>
             </div>
-            
+
             <p className="text-sm text-muted-foreground line-clamp-2 mb-4 font-lora italic">
               {room.description || "Un refugio disenado para aislar el ruido del mundo moderno y reconectar con lo esencial."}
             </p>
-            
+
             {/* Micro-Storytelling de Amenidades */}
             <div className="flex flex-wrap gap-2 mb-6">
               {room.amenities?.slice(0, 2).map((amenity: any, idx: number) => {
@@ -148,7 +133,6 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
           {/* DOCK DE CONVERSION */}
           <div className="mt-4 pt-5 flex flex-wrap items-end justify-between border-t border-border/40 gap-4">
             <div>
-              {/* Price breakdown */}
               {isSearchingDates ? (
                 <div className="space-y-1">
                   <p className="text-xs text-muted-foreground">
@@ -157,7 +141,7 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
                   <p className="text-xs text-muted-foreground/60">+ Impuestos y tasas: ${taxes.toLocaleString()}</p>
                   <div className="flex items-end gap-2 pt-1">
                     <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                      ${totalPrice.toLocaleString()} 
+                      ${totalPrice.toLocaleString()}
                     </p>
                     <span className="text-xs font-sans font-medium text-muted-foreground mb-1">COP total</span>
                   </div>
@@ -167,37 +151,34 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
                   <p className="text-xs text-muted-foreground/60 font-bold uppercase tracking-widest mb-1">Tarifa Base</p>
                   <div className="flex items-end gap-2">
                     <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                      ${displayPrice.toLocaleString()} 
+                      ${displayPrice.toLocaleString()}
                     </p>
                     <span className="text-xs font-sans font-medium text-muted-foreground mb-1">COP/noche</span>
                   </div>
                 </div>
               )}
-              
-              {/* Reversion de Riesgo */}
+
               <p className="text-xs font-medium text-secondary mt-2 flex items-center gap-1">
                 <ShieldCheck size={12} /> Cancelacion Gratuita Disponible
               </p>
             </div>
 
-            {/* CTA Persuasivo — Mac 2026 Spring Physics: whileTap + springSnappy */}
-            <motion.div whileTap={{ scale: 0.96 }} transition={springSnappy()}>
-              <Link 
-                href={destinationUrl}
-                scroll={false}
-                className={cn(
-                  "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md",
-                  isSearchingDates 
-                    ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta" 
-                    : "bg-foreground hover:bg-primary text-background"
-                )}
-              >
-                {isSearchingDates ? 'Asegurar Refugio' : 'Explorar Unidad'} <ArrowRight size={16} strokeWidth={2.5} />
-              </Link>
-            </motion.div>
+            {/* CTA — CSS active scale instead of motion.div whileTap */}
+            <Link
+              href={destinationUrl}
+              scroll={false}
+              className={cn(
+                "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] transition-transform",
+                isSearchingDates
+                  ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta"
+                  : "bg-foreground hover:bg-primary text-background"
+              )}
+            >
+              {isSearchingDates ? 'Asegurar Refugio' : 'Explorar Unidad'} <ArrowRight size={16} strokeWidth={2.5} />
+            </Link>
           </div>
         </div>
       </GlassCard>
-    </motion.div>
+    </div>
   );
 }

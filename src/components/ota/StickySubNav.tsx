@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { springLayout, springSnappy } from '@/lib/mac2026/spring';
 
@@ -13,6 +13,7 @@ import { springLayout, springSnappy } from '@/lib/mac2026/spring';
 // - Spring physics: layoutId indicator con springLayout()
 // - Reduccionismo cognitivo: max 5 chunks (Miller's Law)
 // - Affordance organico: whileTap spring feedback en cada boton
+// - Performance: IntersectionObserver for section detection, rAF for scroll
 // ============================================================================
 
 interface Section {
@@ -28,50 +29,113 @@ export default function StickySubNav({ sections }: StickySubNavProps) {
   const [activeId, setActiveId] = useState(sections[0]?.id ?? '');
   const [scrolled, setScrolled] = useState(false);
   const navRef = useRef<HTMLElement>(null);
+  const ioRef = useRef<IntersectionObserver | null>(null);
 
-  // Track scroll for sticky shadow + active section detection
+  // IntersectionObserver for active section detection (no getBoundingClientRect on scroll)
   useEffect(() => {
-    const onScroll = () => {
-      // Add shadow when page is scrolled past hero
-      setScrolled(window.scrollY > 400);
+    const hasIO = typeof IntersectionObserver !== 'undefined';
 
-      // Find which section is currently in view (threshold: 160px from top)
-      for (let i = sections.length - 1; i >= 0; i--) {
-        const el = document.getElementById(sections[i].id);
-        if (el) {
-          const rect = el.getBoundingClientRect();
-          if (rect.top <= 160) {
-            setActiveId(sections[i].id);
-            break;
+    if (hasIO) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          // Find the section that is most visible above the threshold
+          for (let i = entries.length - 1; i >= 0; i--) {
+            if (entries[i].isIntersecting) {
+              setActiveId(entries[i].target.id);
+              break;
+            }
+          }
+        },
+        { rootMargin: '-160px 0px -60% 0px', threshold: 0 }
+      );
+
+      // Observe each section element
+      sections.forEach((section) => {
+        const el = document.getElementById(section.id);
+        if (el) observer.observe(el);
+      });
+
+      ioRef.current = observer;
+
+      return () => {
+        observer.disconnect();
+        ioRef.current = null;
+      };
+    } else {
+      // Fallback for browsers without IntersectionObserver: throttled scroll
+      let lastTick = 0;
+      const THROTTLE_MS = 100;
+
+      const onScroll = () => {
+        const now = Date.now();
+        if (now - lastTick < THROTTLE_MS) return;
+        lastTick = now;
+
+        for (let i = sections.length - 1; i >= 0; i--) {
+          const el = document.getElementById(sections[i].id);
+          if (el) {
+            const rect = el.getBoundingClientRect();
+            if (rect.top <= 160) {
+              setActiveId(sections[i].id);
+              break;
+            }
           }
         }
+      };
+
+      window.addEventListener('scroll', onScroll, { passive: true });
+      onScroll();
+
+      return () => window.removeEventListener('scroll', onScroll);
+    }
+  }, [sections]);
+
+  // rAF-throttled scroll for shadow/glass effect only
+  useEffect(() => {
+    let ticking = false;
+
+    const onScroll = () => {
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          setScrolled(window.scrollY > 400);
+          ticking = false;
+        });
+        ticking = true;
       }
     };
 
     window.addEventListener('scroll', onScroll, { passive: true });
-    onScroll(); // Initial check
     return () => window.removeEventListener('scroll', onScroll);
+  }, []);
+
+  // Re-observe sections when they change (e.g. after navigation)
+  const reobserveSections = useCallback(() => {
+    if (ioRef.current) {
+      ioRef.current.disconnect();
+      sections.forEach((section) => {
+        const el = document.getElementById(section.id);
+        if (el) ioRef.current!.observe(el);
+      });
+    }
   }, [sections]);
 
-  const scrollTo = (id: string) => {
+  const scrollTo = useCallback((id: string) => {
     const el = document.getElementById(id);
     if (el) {
-      // Offset for sticky nav height
-      const y = el.getBoundingClientRect().top + window.scrollY - 120;
+      // Use pre-calculated offset instead of getBoundingClientRect
+      const y = el.offsetTop - 120;
       window.scrollTo({ top: y, behavior: 'smooth' });
     }
-  };
+  }, []);
 
   return (
     <nav
       ref={navRef}
-      className={`sticky top-0 z-[var(--z-sticky)] transition-all duration-300 ${
-        scrolled
-          ? 'shadow-lg shadow-elev-1 glass-panel !rounded-none'
-          : 'bg-transparent'
-      }`}
+      className="relative z-10"
     >
-      <div className="mx-auto max-w-6xl px-6 py-2">
+      <div className={`mx-auto max-w-6xl px-6 py-2 transition-all duration-300 ${
+        scrolled ? 'glass-panel !rounded-none shadow-lg shadow-elev-1' : 'bg-transparent'
+      }`}>
         <div className="flex items-center gap-1 overflow-x-auto scrollbar-hide glass-pill px-1.5 py-1">
           {sections.map((section) => {
             const isActive = section.id === activeId;

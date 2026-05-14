@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -9,6 +9,8 @@ import { cn } from '@/lib/utils';
 //
 // Aparece cuando el usuario scrollea pasado el hero.
 // Muestra precio minimo + boton "Reservar" que scrollea al search bar.
+//
+// Performance: rAF-throttled scroll + ref guard to prevent unnecessary re-renders.
 // ============================================================================
 
 interface MobileStickyCtaProps {
@@ -25,11 +27,24 @@ export default function MobileStickyCta({
   checkOut,
 }: MobileStickyCtaProps) {
   const [isVisible, setIsVisible] = useState(false);
+  const visibleRef = useRef(false);
 
   useEffect(() => {
+    let ticking = false;
+
     const handleScroll = () => {
-      // Mostrar despues de scrollear 300px (pasado el hero)
-      setIsVisible(window.scrollY > 300);
+      if (!ticking) {
+        requestAnimationFrame(() => {
+          const shouldBeVisible = window.scrollY > 300;
+          // Only update state when value actually changes
+          if (shouldBeVisible !== visibleRef.current) {
+            visibleRef.current = shouldBeVisible;
+            setIsVisible(shouldBeVisible);
+          }
+          ticking = false;
+        });
+        ticking = true;
+      }
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
@@ -38,10 +53,8 @@ export default function MobileStickyCta({
 
   const handleReserve = () => {
     if (checkIn && checkOut) {
-      // Si ya hay fechas, scrollear a habitaciones
       document.querySelector('[id="rooms-section"]')?.scrollIntoView({ behavior: 'smooth' });
     } else {
-      // Si no, scrollear al search bar
       document.querySelector('[id="search-bar"]')?.scrollIntoView({ behavior: 'smooth' });
     }
   };
@@ -53,7 +66,7 @@ export default function MobileStickyCta({
         isVisible ? 'translate-y-0' : 'translate-y-full',
       )}
     >
-      <div className="glass-panel border-t border-border/60 shadow-2xl shadow-elev-2 px-4 py-3 safe-area-bottom !rounded-none">
+      <div className="backdrop-blur-md bg-card/80 border-t border-border/60 shadow-2xl shadow-elev-2 px-4 py-3 safe-area-bottom !rounded-none">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1">
             <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Desde</p>
