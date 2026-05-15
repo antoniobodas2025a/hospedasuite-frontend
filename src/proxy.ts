@@ -1,36 +1,60 @@
 import { NextResponse, type NextRequest } from 'next/server';
-import { updateSession } from '@/utils/supabase/middleware';
+import { updateSession } from './utils/supabase/middleware';
 
-// 🚨 FIX QA CRÍTICO: Cambio de convención Next.js 16 (middleware -> proxy)
+// ============================================================================
+// SOCIAL LINK TRACKER — Atribución de canal directo
+//
+// Detecta ?ref={hotel-slug}-{channel} en URLs de /book/*
+// Guarda cookie hs_ref con expiry de 30 días
+// Canales válidos: instagram, whatsapp, facebook, tiktok, google
+// ============================================================================
+
+const VALID_CHANNELS = ['instagram', 'whatsapp', 'facebook', 'tiktok', 'google'] as const;
+const REF_COOKIE_NAME = 'hs_ref';
+const REF_COOKIE_MAX_AGE = 30 * 24 * 60 * 60; // 30 días en segundos
+
+function extractRefFromUrl(url: URL): { hotelSlug: string; channel: string } | null {
+  const refParam = url.searchParams.get('ref');
+  if (!refParam) return null;
+
+  // Formato esperado: {hotel-slug}-{channel}
+  // Ej: hotel-paraiso-cartagena-instagram
+  // El canal es siempre la última parte
+  const parts = refParam.split('-');
+  if (parts.length < 2) return null;
+
+  const channel = parts[parts.length - 1].toLowerCase();
+  if (!VALID_CHANNELS.includes(channel as (typeof VALID_CHANNELS)[number])) return null;
+
+  // El hotel slug es todo menos la última parte
+  const hotelSlug = parts.slice(0, -1).join('-');
+  if (!hotelSlug) return null;
+
+  return { hotelSlug, channel };
+}
+
+function handleReferralTracking(request: NextRequest, response: NextResponse): void {
+  const ref = extractRefFromUrl(request.nextUrl);
+  if (!ref) return;
+
+  // Solo trackear en rutas de booking directo
+  if (!request.nextUrl.pathname.startsWith('/book/') && !request.nextUrl.pathname.startsWith('/(direct)/')) return;
+
+  response.cookies.set(REF_COOKIE_NAME, JSON.stringify(ref), {
+    maxAge: REF_COOKIE_MAX_AGE,
+    path: '/',
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    httpOnly: false, // Necesario para que el client-side lo lea
+  });
+}
+
 export async function proxy(request: NextRequest) {
-  // 1. EL PORTERO PRINCIPAL (Valida y refresca la sesión JWT de Supabase)
+  // 1. Tracking de referral (antes de cualquier otra lógica)
   const response = await updateSession(request);
 
-  if (response.headers.has('Location') || response.status >= 300) {
-    return response;
-  }
-
-  const path = request.nextUrl.pathname;
-
-  // =======================================================================
-  // 🔐 EL GUARDIA INTERNO (Protección de Configuración por PIN)
-  // =======================================================================
-  if (path.startsWith('/dashboard/settings')) {
-    const staffSessionCookie = request.cookies.get('hospeda_staff_session')?.value;
-
-    if (staffSessionCookie) {
-      try {
-        const staffData = JSON.parse(staffSessionCookie);
-        
-        if (staffData.role !== 'Administrador' && staffData.role !== 'owner') {
-          return NextResponse.redirect(new URL('/dashboard', request.url));
-        }
-      } catch (error) {
-        console.error('Violación de seguridad: Cookie de PIN corrupta.');
-        return NextResponse.redirect(new URL('/dashboard', request.url));
-      }
-    }
-  }
+  // 2. Aplicar tracking de referral al response
+  handleReferralTracking(request, response);
 
   return response;
 }

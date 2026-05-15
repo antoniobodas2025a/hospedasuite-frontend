@@ -6,12 +6,14 @@ import { SAAS_PLANS, normalizePlan, PLAN_LABELS, PLAN_LEVELS, type PlanKey } fro
 import { isTrialActive, getEffectivePlanCost, type TrialHotel } from '@/lib/trial-check';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { trackDowngradeRequested } from '@/lib/analytics-server';
+import type { OtaCommission } from '@/types';
 
 export interface BillingStatement {
   hotelName: string;
   planName: string;
   subscriptionFee: number;
   platformFeesTotal: number; // Suma de OTA (10%) + Upsell (3%)
+  otaCommissionDetails: OtaCommission[]; // Detalle de cada comisión OTA
   totalDue: number;
   bookingsCount: number;
   period: string;
@@ -43,16 +45,28 @@ export async function getHotelBillingAction() {
     // 4. Extracción de Ledger (🛡️ CORRECCIÓN DE ESTADO: Ignorar reservas canceladas)
     const { data: bookings, error: bookingsError } = await supabaseAdmin
       .from('bookings')
-      .select('platform_fee')
+      .select('platform_fee, total_price, source, id')
       .eq('hotel_id', currentHotel.id)
       .neq('status', 'cancelled') // BARRERA ANTI-SOBREFACTURACIÓN
       .gte('created_at', startOfMonth.toISOString());
 
     if (bookingsError) throw new Error('Error al calcular el libro mayor de comisiones.');
 
-    // 5. Consolidación de Deuda (Zero-Trust Math + Trial Check)
+    // 5. Consolidación de Deuda + cálculo de comisiones OTA (10%)
     const platformFeesTotal = bookings.reduce((sum, b) => sum + Number(b.platform_fee || 0), 0);
-    
+
+    // Detalle de comisiones OTA: 10% sobre total_price de reservas con source='ota'
+    const otaCommissionDetails: OtaCommission[] = (bookings || [])
+      .filter(b => b.source === 'ota')
+      .map(b => ({
+        booking_id: b.id,
+        source: 'ota',
+        total: Number(b.total_price || 0),
+        commission: Math.round(Number(b.total_price || 0) * 0.10 * 100) / 100,
+      }));
+
+    const otaCommissionsTotal = otaCommissionDetails.reduce((sum, c) => sum + c.commission, 0);
+
     // 🧪 Si está en trial activo, el plan cuesta $0
     const trialHotel: TrialHotel = {
       subscription_status: hotel.subscription_status,
@@ -60,8 +74,8 @@ export async function getHotelBillingAction() {
       trial_ends_at: hotel.trial_ends_at,
     };
     const subscriptionFee = getEffectivePlanCost(trialHotel);
-    
-    const totalDue = subscriptionFee + platformFeesTotal;
+
+    const totalDue = subscriptionFee + otaCommissionsTotal + platformFeesTotal;
 
     // 6. Formateador de meses agnóstico para servidores Vercel/Node
     const monthNames = [
@@ -78,6 +92,7 @@ export async function getHotelBillingAction() {
       planName,
       subscriptionFee,
       platformFeesTotal,
+      otaCommissionDetails,
       totalDue,
       bookingsCount: bookings.length,
       period: periodString
@@ -95,6 +110,7 @@ export async function getHotelBillingAction() {
 export interface MonthlyInvoice {
   planCost: number;
   otaCommissions: number;
+  otaCommissionDetails: OtaCommission[];
   upsellCommissions: number;
   total: number;
   currency: string;
@@ -136,10 +152,10 @@ export async function calculateMonthlyInvoiceAction(
     const colTime = new Date(colTimeStr);
     const startOfMonth = new Date(colTime.getFullYear(), colTime.getMonth(), 1, 0, 0, 0);
 
-    // 4. Comisiones OTA (reservas de source='ota' en el ciclo)
+    // 4. Comisiones OTA (reservas de source='ota' en el ciclo) — 10% sobre total_price
     const { data: otaBookings, error: otaError } = await supabaseAdmin
       .from('bookings')
-      .select('platform_fee')
+      .select('id, total_price, source')
       .eq('hotel_id', hotelId)
       .eq('source', 'ota')
       .neq('status', 'cancelled')
@@ -148,10 +164,15 @@ export async function calculateMonthlyInvoiceAction(
     if (otaError) {
       console.error('Error al calcular comisiones OTA:', otaError.message);
     }
-    const otaCommissions = (otaBookings || []).reduce(
-      (sum, b) => sum + Number(b.platform_fee || 0),
-      0
-    );
+
+    const otaCommissionDetails: OtaCommission[] = (otaBookings || []).map(b => ({
+      booking_id: b.id,
+      source: 'ota',
+      total: Number(b.total_price || 0),
+      commission: Math.round(Number(b.total_price || 0) * 0.10 * 100) / 100,
+    }));
+
+    const otaCommissions = otaCommissionDetails.reduce((sum, c) => sum + c.commission, 0);
 
     // 5. Comisiones Upsell (transacciones de la tabla upsell_transactions en el ciclo)
     let upsellCommissions = 0;
@@ -184,6 +205,7 @@ export async function calculateMonthlyInvoiceAction(
     const invoice: MonthlyInvoice = {
       planCost,
       otaCommissions,
+      otaCommissionDetails,
       upsellCommissions,
       total,
       currency: 'COP',
@@ -274,6 +296,7 @@ export interface InvoiceRecord {
   periodEnd: string;
   planFee: number;
   otaCommissions: number;
+  otaCommissionDetails: OtaCommission[];
   upsellCommissions: number;
   total: number;
   status: 'pending' | 'paid' | 'overdue' | 'cancelled';
@@ -304,7 +327,8 @@ export async function getInvoiceHistoryAction(
       periodStart: row.period_start,
       periodEnd: row.period_end,
       planFee: row.plan_fee || 0,
-      otaCommissions: row.ota_commissions || 0,
+      otaCommissions: row.ota_commissions_total || 0,
+      otaCommissionDetails: row.ota_commissions || [],
       upsellCommissions: row.upsell_commissions || 0,
       total: row.total,
       status: row.status,

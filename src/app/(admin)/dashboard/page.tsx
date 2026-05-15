@@ -2,6 +2,8 @@ import { createClient } from '@/utils/supabase/server';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { redirect } from 'next/navigation';
 import DashboardPanel from '@/components/dashboard/DashboardPanel';
+import OtaSyncWidget from '@/components/dashboard/OtaSyncWidget';
+import { getOtaSyncStatusAction } from '@/app/actions/ota-sync';
 
 export const dynamic = 'force-dynamic';
 
@@ -15,31 +17,34 @@ export default async function DashboardPage() {
   const now = new Date();
   const offsetMs = now.getTimezoneOffset() * 60000;
   const localDate = new Date(now.getTime() - offsetMs);
-  
+
   const startOfDay = new Date(localDate);
   startOfDay.setUTCHours(0, 0, 0, 0);
-  
+
   const endOfDay = new Date(startOfDay);
   endOfDay.setUTCDate(startOfDay.getUTCDate() + 1);
 
   // 2. EJECUCIÓN PARALELA CON DESAMBIGUACIÓN (PGRST201 FIX)
-  const [occRes, dirtyRes, posRes, walkInRes] = await Promise.all([
+  const [occRes, dirtyRes, posRes, walkInRes, otaSyncRes] = await Promise.all([
     supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('hotel_id', hotel.id).eq('status', 'checked_in'),
     supabase.from('rooms').select('*', { count: 'exact', head: true }).eq('hotel_id', hotel.id).eq('status', 'dirty'),
-    
+
     // Ledger POS
     supabase.from('service_items')
       .select('total_price, bookings!inner(hotel_id)')
       .eq('bookings.hotel_id', hotel.id)
       .gte('created_at', startOfDay.toISOString())
       .lt('created_at', endOfDay.toISOString()),
-      
+
     // Walk-in Payments - 🛡️ REPARACIÓN: Declaración explícita de FK (fk_payments_staff)
     supabase.from('payments')
       .select('amount, staff!fk_payments_staff!inner(hotel_id)')
       .eq('staff.hotel_id', hotel.id)
       .gte('created_at', startOfDay.toISOString())
-      .lt('created_at', endOfDay.toISOString())
+      .lt('created_at', endOfDay.toISOString()),
+
+    // OTA Sync Status
+    getOtaSyncStatusAction(hotel.id),
   ]);
 
   // 3. REDUCCIÓN MATEMÁTICA
@@ -56,6 +61,8 @@ export default async function DashboardPage() {
     grossRevenue
   };
 
+  const otaStatus = otaSyncRes.success ? otaSyncRes.status : null;
+
   return (
     <div className="h-full">
       {/* ALERTA VISUAL (Se ocultará si no hay errores) */}
@@ -64,8 +71,15 @@ export default async function DashboardPage() {
           ⚠️ ERROR DB: {posRes.error?.message || walkInRes.error?.message}
         </div>
       )}
-      
+
       <DashboardPanel hotelName={hotel.name} metrics={metrics} />
+
+      {/* OTA Sync Widget — solo si hay iCal configurado */}
+      {otaStatus && (
+        <div className="mt-6 max-w-md">
+          <OtaSyncWidget initialStatus={otaStatus} hotelId={hotel.id} />
+        </div>
+      )}
     </div>
   );
 }

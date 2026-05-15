@@ -61,6 +61,8 @@ export interface Room {
   size_sqm?: number;
   ical_import_url?: string;
   ical_export_token?: string;
+  last_ical_sync?: string;
+  ical_sync_status?: 'ok' | 'error' | 'pending';
 }
 
 export interface GalleryItem {
@@ -94,6 +96,7 @@ export interface Booking {
   check_out: string;
   total_price: number;
   source?: 'direct' | 'ota' | 'admin' | string;
+  referral_channel?: 'instagram' | 'whatsapp' | 'facebook' | 'tiktok' | 'google' | string;
   type?: 'booking' | 'maintenance' | string;
   external_id?: string;
   guest_name?: string;
@@ -164,4 +167,31 @@ export interface ServiceItem {
   total_price: number;
   status: 'pending' | 'paid' | string;
   created_at?: string;
+}
+
+// --------------------------------------------------------------------------
+// OTA SYNC LOG (Registro de sincronización iCal)
+// --------------------------------------------------------------------------
+export interface OtaSyncLog {
+  id: string;
+  hotel_id: string;
+  rooms_synced: number;
+  bookings_created: number;
+  bookings_cancelled: number;
+  bookings_unchanged: number;
+  status: 'success' | 'partial' | 'error';
+  error_message?: string;
+  sync_source?: 'ical' | 'api' | 'manual';
+  executed_at: string;
+  duration_ms?: number;
+}
+
+// --------------------------------------------------------------------------
+// OTA COMMISSION (Comisión por reserva OTA)
+// --------------------------------------------------------------------------
+export interface OtaCommission {
+  booking_id: string;
+  source: string;
+  total: number;
+  commission: number;
 }

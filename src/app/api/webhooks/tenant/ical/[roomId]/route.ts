@@ -58,6 +58,10 @@ export async function GET(
     icalString += `PRODID:-//HospedaSuite//${hotelName.replace(/\s+/g, '')}//ES\r\n`;
     icalString += `CALSCALE:GREGORIAN\r\n`;
     icalString += `METHOD:PUBLISH\r\n`;
+    icalString += `X-WR-CALNAME:${hotelName} - Habitación ${room.name}\r\n`;
+    // Le dice a las OTAs que refresquen cada 15 minutos (estándar de la industria)
+    icalString += `REFRESH-INTERVAL;VALUE=DURATION:PT15M\r\n`;
+    icalString += `X-PUBLISHED-TTL:PT15M\r\n`;
 
     // 5. Agregar cada reserva como un evento (VEVENT) anonimizado
     if (bookings && bookings.length > 0) {

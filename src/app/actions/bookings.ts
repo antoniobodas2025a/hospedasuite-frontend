@@ -334,17 +334,37 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
       guestId = newG.id;
     }
 
+    // 🏷️ Atribución de canal: leer cookie hs_ref del middleware
+    const cookieStore = await cookies();
+    const refCookie = cookieStore.get('hs_ref');
+    let referralChannel: string | undefined;
+    let effectiveSource = payload.source;
+
+    if (refCookie) {
+      try {
+        const refData = JSON.parse(refCookie.value);
+        referralChannel = refData.channel;
+        // Si viene de link social, es directo (0% comisión)
+        if (referralChannel) {
+          effectiveSource = 'direct';
+        }
+      } catch {
+        // Cookie inválida, ignorar
+      }
+    }
+
     const { data: newB, error: bErr } = await supabaseAdmin
       .from('bookings')
       .insert([{
         hotel_id: room.hotel_id,
         room_id: room.id,
-        guest_id: guestId, 
+        guest_id: guestId,
         check_in: payload.checkin,
         check_out: payload.checkout,
         total_price: verifiedTotal,
         status: 'PENDING',
-        source: payload.source,
+        source: effectiveSource,
+        referral_channel: referralChannel || null,
       }])
       .select('id').single();
 
