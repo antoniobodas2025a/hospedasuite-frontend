@@ -1,13 +1,7 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import type { OtaSyncLog } from '@/types';
-
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
 
 export interface OtaSyncStatus {
   hasIcalConfigured: boolean;
@@ -22,13 +16,30 @@ export interface OtaSyncStatus {
  */
 export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success: boolean; status?: OtaSyncStatus; error?: string }> {
   try {
+    if (!hotelId) {
+      return { success: false, error: 'hotelId es requerido' };
+    }
+
     // 1. Contar habitaciones con iCal configurado
     const { data: roomsWithIcal, error: roomsError } = await supabaseAdmin
       .from('rooms')
-      .select('id, name, ical_import_url, last_ical_sync, ical_sync_status')
+      .select('id, name, ical_import_url')
       .eq('hotel_id', hotelId);
 
-    if (roomsError) throw new Error('Error leyendo habitaciones');
+    if (roomsError) {
+      console.error('[OTA SYNC] Error rooms query:', roomsError.message, roomsError.details);
+      // Si falla, retornamos status básico en lugar de lanzar error
+      return {
+        success: true,
+        status: {
+          hasIcalConfigured: false,
+          lastSync: null,
+          roomsWithIcal: 0,
+          totalRooms: 0,
+          recentSyncs: [],
+        },
+      };
+    }
 
     const totalRooms = roomsWithIcal?.length || 0;
     const roomsConfigured = roomsWithIcal?.filter(r => r.ical_import_url).length || 0;

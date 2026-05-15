@@ -32,16 +32,11 @@ yarn-error.log*
 
 # env files (can opt-in for committing if needed)
 .env*
-
-# vercel
-.vercel
-
-# typescript
-*.tsbuildinfo
 next-env.d.ts
-
-# Sentry Config File
 .env.sentry-build-plugin
+
+# Supabase exports (may contain sensitive data)
+supabase-export/
 
 # Agent orchestration (auto-generated)
 /.atl/
