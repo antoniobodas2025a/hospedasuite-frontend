@@ -2,6 +2,8 @@ import { NextResponse } from 'next/server';
 import { verifyWompiSignature, WompiEventPayload } from '@/lib/wompi-crypto';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { Resend } from 'resend';
+import { logAuditEvent } from '@/lib/audit-logger';
+import { trackPaymentCompleted, trackPlanUpgraded } from '@/lib/analytics-server';
 
 /**
  * 🛡️ CONFIGURACIÓN DE SEGURIDAD — Plataforma (HospedaSuite cobrando suscripciones)
@@ -123,6 +125,48 @@ export async function POST(request: Request) {
         );
       }
 
+      // 📝 Audit log: pago recibido
+      await logAuditEvent({
+        actor_type: 'webhook',
+        actor_id: 'wompi-platform',
+        action: 'payment_received',
+        entity_type: 'hotel',
+        entity_id: hotelId,
+        new_value: {
+          amount: (dataObj.amount_in_cents || 0) / 100,
+          wompi_reference: reference,
+          transaction_id: transactionId,
+          status: 'active',
+        },
+      });
+
+      // 📊 Analytics: pago completado
+      await trackPaymentCompleted(
+        hotelId,
+        (dataObj.amount_in_cents || 0) / 100,
+        'unknown', // Would need to fetch current plan
+        reference
+      );
+
+      // 📝 Audit log: cambio de plan (si es upgrade)
+      if (isUpgrade) {
+        const newPlan = parts.slice(3).join('-').toLowerCase();
+        if (['starter', 'pro', 'enterprise'].includes(newPlan)) {
+          await logAuditEvent({
+            actor_type: 'webhook',
+            actor_id: 'wompi-platform',
+            action: 'plan_changed',
+            entity_type: 'subscription',
+            entity_id: hotelId,
+            old_value: { plan: hotelId },
+            new_value: { plan: newPlan, reason: 'upgrade_payment' },
+          });
+
+          // 📊 Analytics: upgrade
+          await trackPlanUpgraded(hotelId, 'unknown', newPlan);
+        }
+      }
+
       // 📝 Registrar factura pagada (audit trail)
       await supabaseAdmin
         .from('billing_invoices')
@@ -206,6 +250,21 @@ export async function POST(request: Request) {
         .eq('id', hotelId);
         
       console.log(`🔒 [Platform Wompi] Hotel ${hotelId} marcado como past_due`);
+
+      // 📝 Audit log: pago rechazado
+      await logAuditEvent({
+        actor_type: 'webhook',
+        actor_id: 'wompi-platform',
+        action: 'payment_declined',
+        entity_type: 'hotel',
+        entity_id: hotelId,
+        new_value: {
+          wompi_reference: reference,
+          transaction_id: transactionId,
+          status: 'past_due',
+          reason: status,
+        },
+      });
     }
 
     return NextResponse.json({ success: true }, { status: 200 });

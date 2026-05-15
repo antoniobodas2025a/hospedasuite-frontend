@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import Sidebar from '@/components/layout/Sidebar';
 import MobileNav from '@/components/layout/MobileNav';
 import SubscriptionBanner from '@/components/layout/SubscriptionBanner';
+import PostHogProvider from '@/components/analytics/PostHogProvider';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import type { TrialHotel } from '@/lib/trial-check';
 
@@ -34,6 +35,12 @@ export default async function AdminLayout({
   return (
     // Océano Profundo dark theme — PMS/Dashboard
     <div className='flex h-screen bg-sidebar text-sidebar-foreground overflow-hidden font-poppins selection:bg-brand-500/30 selection:text-brand-200 dark'>
+      {/* 📊 PostHog Analytics */}
+      <PostHogProvider
+        hotelId={hotel?.id}
+        email={plainUser.email}
+        name={hotel?.name}
+      />
       
       {/* Sidebar para Desktop */}
       <div className='hidden lg:block w-72 h-full border-r border-sidebar-border bg-sidebar/50 relative z-20'>

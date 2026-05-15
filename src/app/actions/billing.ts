@@ -4,6 +4,8 @@ import { getCurrentHotel } from '@/lib/hotel-context';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { SAAS_PLANS, normalizePlan, PLAN_LABELS, PLAN_LEVELS, type PlanKey } from '@/config/saas-plans';
 import { isTrialActive, getEffectivePlanCost, type TrialHotel } from '@/lib/trial-check';
+import { logAuditEvent } from '@/lib/audit-logger';
+import { trackDowngradeRequested } from '@/lib/analytics-server';
 
 export interface BillingStatement {
   hotelName: string;
@@ -356,6 +358,20 @@ export async function requestPlanDowngradeAction(
     if (updateError) {
       throw new Error('Error guardando el cambio de plan.');
     }
+
+    // 📝 Audit log: downgrade solicitado
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: hotelId,
+      action: 'downgrade_requested',
+      entity_type: 'subscription',
+      entity_id: hotelId,
+      old_value: { plan: hotel.subscription_plan },
+      new_value: { pending_plan: newPlan, applies_at: 'next_billing_cycle' },
+    });
+
+    // 📊 Analytics: downgrade solicitado
+    await trackDowngradeRequested(hotelId, hotel.subscription_plan || 'starter', newPlan);
 
     console.log(`[BILLING] Downgrade solicitado: ${hotel.subscription_plan} → ${newPlan} para hotel ${hotelId}`);
 

@@ -11,6 +11,8 @@
 
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { logAuditEvent } from '@/lib/audit-logger';
+import { trackTrialExpired } from '@/lib/analytics-server';
 
 export const dynamic = 'force-dynamic';
 
@@ -27,7 +29,7 @@ export async function GET(request: Request) {
     // 2. Buscar hoteles con trial expirado
     const { data: expiredHotels, error: fetchError } = await supabaseAdmin
       .from('hotels')
-      .select('id, name, email, subscription_status, trial_ends_at')
+      .select('id, name, email, subscription_status, subscription_plan, trial_ends_at, created_at')
       .eq('subscription_status', 'trialing')
       .lt('trial_ends_at', new Date().toISOString());
 
@@ -56,6 +58,25 @@ export async function GET(request: Request) {
     }
 
     console.log(`[CRON] ${hotelIds.length} hotel(es) marcados como past_due.`);
+
+    // 📝 Audit log: trials expirados
+    for (const hotel of expiredHotels) {
+      await logAuditEvent({
+        actor_type: 'cron',
+        actor_id: 'expired-trials-check',
+        action: 'trial_expired',
+        entity_type: 'hotel',
+        entity_id: hotel.id,
+        old_value: { subscription_status: 'trialing', trial_ends_at: hotel.trial_ends_at },
+        new_value: { subscription_status: 'past_due' },
+      });
+
+      // 📊 Analytics: trial expired
+      const daysInTrial = hotel.trial_ends_at
+        ? Math.floor((new Date(hotel.trial_ends_at).getTime() - new Date(hotel.created_at || Date.now()).getTime()) / (1000 * 60 * 60 * 24))
+        : 90;
+      await trackTrialExpired(hotel.id, daysInTrial, hotel.subscription_plan || 'starter');
+    }
 
     return NextResponse.json({
       processed: hotelIds.length,
