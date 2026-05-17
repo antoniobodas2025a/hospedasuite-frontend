@@ -283,7 +283,7 @@ export async function submitReviewAction(submission: ReviewSubmission) {
 
     // 6. Revalidate cache so next page load shows updated reviews
     const { revalidateTag } = await import('next/cache');
-    revalidateTag(`reviews-${hotelId}`);
+   revalidateTag(`reviews-${hotelId}`, 'max');
 
     return { success: true };
   } catch (error: unknown) {

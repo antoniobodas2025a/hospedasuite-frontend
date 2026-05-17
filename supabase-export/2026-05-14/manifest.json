@@ -1,0 +1,46 @@
+{
+  "exported_at": "2026-05-14T15:27:57.918Z",
+  "bucket": "hotel-media",
+  "total_files": 7,
+  "success": 7,
+  "failed": 0,
+  "total_size_mb": "44.90",
+  "output_dir": "/home/anto/proyectos-programacion/hospedasuite/supabase-export/2026-05-14",
+  "files": [
+    {
+      "original_path": "covers/2d65355d-0b22-400a-bad2-68d488cddb15_1778508071318.png",
+      "local_path": "supabase-export/2026-05-14/covers/2d65355d-0b22-400a-bad2-68d488cddb15_1778508071318.png",
+      "r2_key": "covers/2d65355d-0b22-400a-bad2-68d488cddb15_1778508071318.png"
+    },
+    {
+      "original_path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508095920_9s1gw.png",
+      "local_path": "supabase-export/2026-05-14/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508095920_9s1gw.png",
+      "r2_key": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508095920_9s1gw.png"
+    },
+    {
+      "original_path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508098308_qgqmgq.jpg",
+      "local_path": "supabase-export/2026-05-14/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508098308_qgqmgq.jpg",
+      "r2_key": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508098308_qgqmgq.jpg"
+    },
+    {
+      "original_path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508099509_7fahn8.png",
+      "local_path": "supabase-export/2026-05-14/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508099509_7fahn8.png",
+      "r2_key": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508099509_7fahn8.png"
+    },
+    {
+      "original_path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508103572_u1knqv.png",
+      "local_path": "supabase-export/2026-05-14/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508103572_u1knqv.png",
+      "r2_key": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508103572_u1knqv.png"
+    },
+    {
+      "original_path": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508108451_1aeasm.png",
+      "local_path": "supabase-export/2026-05-14/gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508108451_1aeasm.png",
+      "r2_key": "gallery/2d65355d-0b22-400a-bad2-68d488cddb15_1778508108451_1aeasm.png"
+    },
+    {
+      "original_path": "hero/2d65355d-0b22-400a-bad2-68d488cddb15_1778508060737.jpg",
+      "local_path": "supabase-export/2026-05-14/hero/2d65355d-0b22-400a-bad2-68d488cddb15_1778508060737.jpg",
+      "r2_key": "hero/2d65355d-0b22-400a-bad2-68d488cddb15_1778508060737.jpg"
+    }
+  ]
+}

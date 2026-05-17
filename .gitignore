@@ -1,42 +1,46 @@
-# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+# Coincidencias de dependencias y entornos de ejecución
+node_modules/
+/.pnpm-store
+.env
+*.local
 
-# dependencies
-/node_modules
-/.pnp
-.pnp.*
-.yarn/*
-!.yarn/patches
-!.yarn/plugins
-!.yarn/releases
-!.yarn/versions
+# Archivos específicos de tu entorno local (Solicitado)
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
 
-# testing
-/coverage
+# Compilación y caché de TypeScript (Solicitado - Corrige error de Docker)
+*.tsbuildinfo
+tsconfig.tsbuildinfo
 
-# next.js
-/.next/
-/out/
+# Salidas de compilación del Framework (Next.js / Node)
+.next/
+out/
+build/
+dist/
 
-# production
-/build
-
-# misc
-.DS_Store
-*.pem
-
-# debug
+# Logs y depuración
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
+pnpm-debug.log*
+bun.lockb
 
-# env files (can opt-in for committing if needed)
-.env*
-next-env.d.ts
-.env.sentry-build-plugin
+# Archivos del sistema operativo
+.DS_Store
+.DS_Store?
+._*
+Thumbs.db
+ehthumbs.db
 
-# Supabase exports (may contain sensitive data)
-supabase-export/
-
-# Agent orchestration (auto-generated)
-/.atl/
+# Configuraciones de IDEs (VS Code, WebStorm)
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
