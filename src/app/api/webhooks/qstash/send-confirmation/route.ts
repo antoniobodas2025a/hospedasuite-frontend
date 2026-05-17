@@ -7,6 +7,7 @@
 // Reemplaza el envío inline que estaba en el webhook de Wompi.
 // ============================================================================
 
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { verifySignatureAppRouter } from '@upstash/qstash/nextjs';
 import { Resend } from 'resend';

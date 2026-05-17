@@ -8,12 +8,10 @@
  * URL: /api/cron/trial-reminders
  * Protegido por CRON_SECRET header.
  */
-
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { Resend } from 'resend';
-
-export const dynamic = 'force-dynamic';
 
 // Inicializar Resend solo si la API key existe
 const resend = process.env.RESEND_API_KEY

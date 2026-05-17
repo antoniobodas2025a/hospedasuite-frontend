@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { verifyWompiSignature, WompiEventPayload } from '@/lib/wompi-crypto';
 import { supabaseAdmin } from '@/lib/supabase-admin';
