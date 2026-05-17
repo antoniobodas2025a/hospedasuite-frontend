@@ -62,9 +62,9 @@ export async function approveReviewAction(reviewId: string) {
       return { success: false, error: error.message };
     }
 
-  // Revalidate the public reviews page for this hotel
+// Revalidate the public reviews page for this hotel
     if (review?.hotel_id) {
-     revalidateTag(`reviews-${review.hotel_id}`);
+      revalidateTag(`reviews-${review.hotel_id}`, 'max');
     }
 
     return { success: true };
