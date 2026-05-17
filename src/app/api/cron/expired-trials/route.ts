@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic';
 /**
  * ⏰ Cron Job: Detectar trials expirados y marcar como past_due
  *
@@ -8,7 +9,6 @@
  * URL: /api/cron/expired-trials
  * Protegido por CRON_SECRET header.
  */
-export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logAuditEvent } from '@/lib/audit-logger';
