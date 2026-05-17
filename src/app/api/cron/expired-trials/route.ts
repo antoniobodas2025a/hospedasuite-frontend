@@ -14,7 +14,6 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { trackTrialExpired } from '@/lib/analytics-server';
 
-export const dynamic = 'force-dynamic';
 
 export async function GET(request: Request) {
   // 1. Verificar que la llamada viene del cron (no de un usuario)
