@@ -97,7 +97,7 @@ export async function rejectReviewAction(reviewId: string) {
 
     if (review?.hotel_id) {
       const { revalidateTag } = await import('next/cache');
-      revalidateTag(`reviews-${review.hotel_id}`);
+     revalidateTag(`reviews-${review.hotel_id}`, 'max');
     }
 
     return { success: true };
