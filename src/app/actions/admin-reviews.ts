@@ -1,5 +1,6 @@
 'use server';
 import { createClient } from '@supabase/supabase-js';
+import { revalidateTag } from 'next/cache';
 
 const getSupabaseAdmin = () => {
   const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '';
@@ -63,9 +64,8 @@ export async function approveReviewAction(reviewId: string) {
 
     // Revalidate the public reviews page for this hotel
     if (review?.hotel_id) {
-      const { revalidateTag } = await import('next/cache');
-      revalidateTag(`reviews-${review.hotel_id}`);
-    }
+  revalidateTag(`reviews-${review.hotel_id}`);
+}
 
     return { success: true };
   } catch (error: unknown) {
