@@ -44,6 +44,13 @@ export async function approveReviewAction(reviewId: string) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
 
+    // Get hotel_id before updating so we can revalidate
+    const { data: review } = await supabaseAdmin
+      .from('reviews')
+      .select('hotel_id')
+      .eq('id', reviewId)
+      .single();
+
     const { error } = await supabaseAdmin
       .from('reviews')
       .update({ status: 'approved' })
@@ -52,6 +59,12 @@ export async function approveReviewAction(reviewId: string) {
     if (error) {
       console.error('[ADMIN REVIEWS] Error approving review:', error.message);
       return { success: false, error: error.message };
+    }
+
+    // Revalidate the public reviews page for this hotel
+    if (review?.hotel_id) {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag(`reviews-${review.hotel_id}`);
     }
 
     return { success: true };
@@ -66,6 +79,12 @@ export async function rejectReviewAction(reviewId: string) {
   try {
     const supabaseAdmin = getSupabaseAdmin();
 
+    const { data: review } = await supabaseAdmin
+      .from('reviews')
+      .select('hotel_id')
+      .eq('id', reviewId)
+      .single();
+
     const { error } = await supabaseAdmin
       .from('reviews')
       .update({ status: 'rejected' })
@@ -74,6 +93,11 @@ export async function rejectReviewAction(reviewId: string) {
     if (error) {
       console.error('[ADMIN REVIEWS] Error rejecting review:', error.message);
       return { success: false, error: error.message };
+    }
+
+    if (review?.hotel_id) {
+      const { revalidateTag } = await import('next/cache');
+      revalidateTag(`reviews-${review.hotel_id}`);
     }
 
     return { success: true };

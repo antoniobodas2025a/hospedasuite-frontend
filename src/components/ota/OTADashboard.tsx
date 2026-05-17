@@ -42,6 +42,8 @@ export default function OTADashboard({
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
+  const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+
   useEffect(() => {
     if (activeCategory === 'all' && searchTerm === '' && page === 0 && hotels === initialHotels) return;
 
@@ -68,6 +70,32 @@ export default function OTADashboard({
     };
   }, [searchTerm, activeCategory]);
 
+  // Scroll handler: hide header on scroll down, show on scroll up
+  useEffect(() => {
+    let lastScrollY = 0;
+    let ticking = false;
+
+    const handleScroll = () => {
+      if (!ticking) {
+        window.requestAnimationFrame(() => {
+          const currentScrollY = window.scrollY;
+          // Hide when scrolling down past 80px, show when scrolling up
+          if (currentScrollY > 80) {
+            setIsHeaderVisible(currentScrollY < lastScrollY);
+          } else {
+            setIsHeaderVisible(true);
+          }
+          lastScrollY = currentScrollY;
+          ticking = false;
+        });
+        ticking = true;
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   const loadMoreHotels = async () => {
     if (isLoadingMore) return;
     setIsLoadingMore(true);
@@ -89,7 +117,7 @@ export default function OTADashboard({
   return (
     <div className='min-h-screen bg-background flex flex-col font-sans text-foreground'>
       {/* HEADER */}
-      <header className='sticky top-0 z-50 glass-panel border-b border-border !rounded-none'>
+      <header className={`fixed top-0 left-0 right-0 z-50 glass-panel border-b border-border !rounded-none transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
         <div className='max-w-7xl mx-auto px-4 h-20 flex items-center justify-between'>
           <div className='flex items-center gap-3'>
             <div className='relative w-10 h-10'>
@@ -112,17 +140,19 @@ export default function OTADashboard({
         </div>
       </header>
 
-      <main className='flex-1 max-w-7xl mx-auto px-4 py-8 w-full'>
-        {/* HERO SEARCH SECTION */}
-        <div className='mb-12 text-center'>
+      <main className='flex-1 max-w-7xl mx-auto px-4 pt-28 pb-8 w-full'>
+        {/* HERO SECTION */}
+        <div className='text-center mb-8'>
           <h1 className='text-4xl md:text-6xl font-display font-bold text-foreground mb-6'>
             Encuentra tu lugar{' '}
             <span className='text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-warm-400'>
               seguro
             </span>
           </h1>
+        </div>
 
-          {/* Barra de Busqueda */}
+        {/* SEARCH BAR — sticky: stays below header, moves to top-0 when header hides */}
+        <div className={`sticky z-40 mb-12 transition-[top] duration-300 ${isHeaderVisible ? 'top-20' : 'top-0'}`}>
           <div className='max-w-2xl mx-auto relative group'>
             <div className='absolute inset-0 bg-gradient-to-r from-brand-400 to-warm-400 rounded-full blur opacity-20 group-hover:opacity-30 transition-opacity' />
             <div className='relative bg-card rounded-full shadow-xl flex items-center p-2 border border-border'>

@@ -26,7 +26,7 @@ const IMAGE_FALLBACK_URL = process.env.NEXT_PUBLIC_IMAGE_FALLBACK_URL || '';
 
 const PRESETS: Record<ImageSource, { baseUrl: string; fallback: string }> = {
   r2: {
-    baseUrl: 'https://images.hospedasuite.com', // Cambiar por tu R2 public URL
+    baseUrl: 'https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev',
     fallback: '',
   },
   supabase: {

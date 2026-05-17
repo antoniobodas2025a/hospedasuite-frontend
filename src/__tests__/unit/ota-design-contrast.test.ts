@@ -161,7 +161,6 @@ describe('AC6 — Zero hover:bg-brand- in OTA CTA buttons (T8-T15)', () => {
     'BookingWidget.tsx',
     'MobileStickyCta.tsx',
     'ReviewForm.tsx',
-    'RoomFilters.tsx',
     'OTADashboard.tsx',
   ];
 

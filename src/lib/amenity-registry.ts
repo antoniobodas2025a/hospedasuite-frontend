@@ -57,7 +57,7 @@ export function getAmenityIcon(id: string): React.ElementType {
 //
 // Usado por:
 // - RoomEditorModal.tsx (seleccion de comodidades)
-// - RoomFilters.tsx (filtros de amenidades OTA)
+// - AvailabilitySearchBar.tsx (filtros de amenidades OTA unificados)
 // - RoomComparison.tsx (tabla comparativa OTA)
 // - RoomCard.tsx (badges de storytelling OTA)
 // - RoomShowcaseModal.tsx (amenity glass OTA)

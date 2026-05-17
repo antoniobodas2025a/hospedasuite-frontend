@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
-import { SlidersHorizontal, X, Users, CalendarX2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import React, { useMemo } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { SlidersHorizontal, Users, CalendarX2 } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import RoomCard from './RoomCard';
-import RoomFilters from './RoomFilters';
 import RoomComparison from './RoomComparison';
 
 interface RoomItem {
@@ -42,7 +42,35 @@ export default function RoomsListWithFilters({
   isSearchingDates,
   hotel,
 }: RoomsListWithFiltersProps) {
-  const [filteredRooms, setFilteredRooms] = useState<RoomItem[]>(availableRooms);
+  const searchParams = useSearchParams();
+
+  // Leer filtros de la URL
+  const maxPriceParam = searchParams.get('max_price');
+  const minCapacityParam = searchParams.get('min_capacity');
+  const amenitiesParam = searchParams.get('amenities');
+
+  const maxPrice = maxPriceParam ? Number(maxPriceParam) : null;
+  const minCapacity = minCapacityParam ? Number(minCapacityParam) : null;
+  const selectedAmenities = amenitiesParam ? amenitiesParam.split(',').filter(Boolean) : [];
+
+  // Aplicar filtros localmente
+  const filteredRooms = useMemo(() => {
+    if (!maxPrice && !minCapacity && selectedAmenities.length === 0) return availableRooms;
+
+    return availableRooms.filter((room) => {
+      const price = room.price_per_night || room.price || 0;
+      const capacity = room.capacity || 0;
+
+      if (maxPrice !== null && price > maxPrice) return false;
+      if (minCapacity !== null && capacity < minCapacity) return false;
+      if (selectedAmenities.length > 0) {
+        const roomAmenities = room.amenities || [];
+        const hasAll = selectedAmenities.every((a) => roomAmenities.includes(a));
+        if (!hasAll) return false;
+      }
+      return true;
+    });
+  }, [availableRooms, maxPrice, minCapacity, selectedAmenities]);
 
   const hasResults = filteredRooms.length > 0;
   const hasAvailable = availableRooms.length > 0;
@@ -51,8 +79,6 @@ export default function RoomsListWithFilters({
     <>
       {/* Tabla comparativa — solo si hay 4+ habitaciones */}
       <RoomComparison rooms={availableRooms} />
-
-      <RoomFilters rooms={availableRooms} onFilterChange={setFilteredRooms} />
 
       <div id="rooms-section" className="space-y-6">
         {!hasAvailable ? (
@@ -89,10 +115,20 @@ export default function RoomsListWithFilters({
             </p>
           </div>
         ) : (
-          <div className="space-y-6">
+          <AnimatePresence mode="popLayout">
             {filteredRooms.map((room, index) => (
-              <div
+              <motion.div
                 key={room.id}
+                layout
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ 
+                  type: 'spring', 
+                  stiffness: 300, 
+                  damping: 25,
+                  delay: index * 0.04 
+                }}
                 className="animate-fade-in-up"
                 style={{ animationDelay: `${index * 80}ms` }}
               >
@@ -109,9 +145,9 @@ export default function RoomsListWithFilters({
                   availableCount={availableRooms.length}
                   hotel={hotel}
                 />
-              </div>
+              </motion.div>
             ))}
-          </div>
+          </AnimatePresence>
         )}
       </div>
     </>

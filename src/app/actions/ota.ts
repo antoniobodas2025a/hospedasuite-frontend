@@ -34,7 +34,7 @@ export async function fetchOTAHotelsAction(
 
     let query = supabaseAdmin
       .from('hotels')
-      .select(`id, name, location, slug, status, main_image_url, category, type, rooms!inner(price)`)
+      .select(`id, name, location, slug, status, main_image_url, description, category, type, rooms!inner(price)`)
       .eq('status', 'active');
 
     if (category !== 'all') {
@@ -61,6 +61,7 @@ export async function fetchOTAHotelsAction(
         city_slug: h.slug,
         min_price: roomPrices.length > 0 ? Math.min(...roomPrices) : 0, 
         main_image_url: h.main_image_url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070',
+        description: h.description || '',
         type: h.type || 'hotel', 
         category: h.category
       };
@@ -150,6 +151,56 @@ export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string
 // REVIEWS — Guest review system with moderation
 // ============================================================================
 
+import * as z from 'zod';
+
+const ReviewSubmissionSchema = z.object({
+  hotelId: z.string().min(1, 'Hotel ID es requerido'),
+  guestName: z.string().min(2, 'Nombre debe tener al menos 2 caracteres').max(100, 'Nombre muy largo'),
+  guestEmail: z.email('Email inválido'),
+  guestLocation: z.string().max(100).optional(),
+  rating: z.number().min(1, 'Selecciona una calificación').max(5, 'Calificación inválida'),
+  comment: z.string().min(10, 'Comentario debe tener al menos 10 caracteres').max(2000, 'Comentario muy largo (máx 2000)'),
+  stayDate: z.string().optional(),
+});
+
+/**
+ * Spam auto-detection: flags reviews that match common spam patterns.
+ * Returns { isSpam: true, reason: string } or { isSpam: false }.
+ */
+function detectSpam(comment: string, guestName: string): { isSpam: boolean; reason?: string } {
+  const text = comment.toLowerCase();
+  const name = guestName.toLowerCase();
+
+  // 1. URLs in comment (common in spam)
+  if (/(https?:\/\/|www\.)\S+/i.test(comment)) {
+    return { isSpam: true, reason: 'No se permiten enlaces en las opiniones.' };
+  }
+
+  // 2. Repeated words (e.g. "great great great great")
+  const words = text.split(/\s+/);
+  const wordCounts: Record<string, number> = {};
+  for (const w of words) {
+    if (w.length > 3) wordCounts[w] = (wordCounts[w] || 0) + 1;
+  }
+  const maxRepeat = Math.max(0, ...Object.values(wordCounts));
+  if (maxRepeat > 4) {
+    return { isSpam: true, reason: 'Texto repetitivo detectado.' };
+  }
+
+  // 3. All caps (>80% uppercase)
+  const alphaChars = comment.replace(/[^a-zA-ZáéíóúñÁÉÍÓÚÑ]/g, '');
+  if (alphaChars.length > 10 && (alphaChars.replace(/[^A-ZÁÉÍÓÚÑ]/g, '').length / alphaChars.length) > 0.8) {
+    return { isSpam: true, reason: 'No se permiten opiniones escritas completamente en mayúsculas.' };
+  }
+
+  // 4. Name appears in comment (self-promotion pattern)
+  if (name.length > 3 && text.includes(name)) {
+    return { isSpam: true, reason: 'El nombre no puede aparecer en el comentario.' };
+  }
+
+  return { isSpam: false };
+}
+
 export interface ReviewSubmission {
   hotelId: string;
   guestName: string;
@@ -162,16 +213,66 @@ export interface ReviewSubmission {
 
 export async function submitReviewAction(submission: ReviewSubmission) {
   try {
+    // 1. Zod v4 validation (server-side)
+    const validated = ReviewSubmissionSchema.safeParse(submission);
+    if (!validated.success) {
+      const flat = z.flattenError(validated.error);
+      const firstError = flat.formErrors[0] || Object.values(flat.fieldErrors)[0]?.[0] || 'Error de validación';
+      return { success: false, error: firstError };
+    }
+
+    const { hotelId, guestName, guestEmail, guestLocation, rating, comment, stayDate } = validated.data;
+
     const supabaseAdmin = getSupabaseAdmin();
 
+    // 2. Spam auto-detection
+    const spamCheck = detectSpam(comment, guestName);
+    if (spamCheck.isSpam) {
+      return { success: false, error: spamCheck.reason };
+    }
+
+    // 3. Booking verification: must have a completed stay at this hotel
+    const { data: completedBooking } = await supabaseAdmin
+      .from('bookings')
+      .select('id, check_out')
+      .eq('hotel_id', hotelId)
+      .eq('guests->>email', guestEmail.toLowerCase())
+      .in('status', ['checked_out', 'CHECKED_OUT'])
+      .maybeSingle();
+
+    if (!completedBooking) {
+      return {
+        success: false,
+        error: 'Solo huéspedes con una estadía completada pueden dejar una opinión. Si crees que esto es un error, contacta al hotel.',
+      };
+    }
+
+    // 4. Rate limiting: max 1 review per email per hotel per 30 days
+    const thirtyDaysAgo = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString();
+    const { data: existingReview } = await supabaseAdmin
+      .from('reviews')
+      .select('id, status')
+      .eq('guest_email', guestEmail.toLowerCase())
+      .eq('hotel_id', hotelId)
+      .gte('created_at', thirtyDaysAgo)
+      .maybeSingle();
+
+    if (existingReview) {
+      const msg = existingReview.status === 'pending'
+        ? 'Ya enviaste una opinión para este hotel. Está pendiente de verificación.'
+        : 'Ya dejaste una opinión para este hotel recientemente. Espera 30 días para enviar otra.';
+      return { success: false, error: msg };
+    }
+
+    // 4. Insert review
     const { error } = await supabaseAdmin.from('reviews').insert({
-      hotel_id: submission.hotelId,
-      guest_name: submission.guestName.trim(),
-      guest_email: submission.guestEmail.trim().toLowerCase(),
-      guest_location: submission.guestLocation?.trim() || null,
-      rating: submission.rating,
-      comment: submission.comment.trim(),
-      stay_date: submission.stayDate || null,
+      hotel_id: hotelId,
+      guest_name: guestName.trim(),
+      guest_email: guestEmail.trim().toLowerCase(),
+      guest_location: guestLocation?.trim() || null,
+      rating,
+      comment: comment.trim(),
+      stay_date: stayDate || null,
       status: 'pending',
     });
 
@@ -179,6 +280,10 @@ export async function submitReviewAction(submission: ReviewSubmission) {
       console.error('[REVIEWS] Error submitting review:', error.message);
       return { success: false, error: error.message };
     }
+
+    // 6. Revalidate cache so next page load shows updated reviews
+    const { revalidateTag } = await import('next/cache');
+    revalidateTag(`reviews-${hotelId}`);
 
     return { success: true };
   } catch (error: unknown) {

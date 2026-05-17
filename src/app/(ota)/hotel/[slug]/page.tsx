@@ -166,7 +166,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
       {/* Sticky Search Bar */}
       <div className="sticky top-0 z-[var(--z-sticky)] bg-background/80 backdrop-blur-sm border-b border-border/30">
         <div className="max-w-6xl mx-auto px-6 py-2">
-          <AvailabilitySearchBar sticky />
+          <AvailabilitySearchBar sticky rooms={hotel.rooms || []} />
         </div>
       </div>
 

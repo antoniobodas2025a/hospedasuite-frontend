@@ -1,6 +1,7 @@
 import { Star, Quote, ThumbsUp } from 'lucide-react';
 import { getApprovedReviewsAction, getReviewStatsAction } from '@/app/actions/ota';
 import { SectionHeader } from '@/components/ui/glass';
+import ReviewFormWithToggle from './ReviewFormWithToggle';
 
 // ============================================================================
 // REVIEWS SECTION — Real guest reviews from database
@@ -56,12 +57,15 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
   // No reviews yet
   if (reviews.length === 0) {
     return (
-      <div className="glass-card p-6 md:p-8 text-center">
-        <Star size={48} className="text-muted-foreground/30 mx-auto mb-4" strokeWidth={1} />
-        <h2 className="text-xl font-bold text-foreground mb-2">Aun no hay opiniones</h2>
-        <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Se el primero en compartir tu experiencia en {hotelName}. Tu opinion ayuda a otros viajeros a elegir.
-        </p>
+      <div className="glass-card p-6 md:p-8">
+        <div className="text-center">
+          <Star size={48} className="text-muted-foreground/30 mx-auto mb-4" strokeWidth={1} />
+          <h2 className="text-xl font-bold text-foreground mb-2">Aun no hay opiniones</h2>
+          <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
+            Se el primero en compartir tu experiencia en {hotelName}. Tu opinion ayuda a otros viajeros a elegir.
+          </p>
+        </div>
+        <ReviewFormWithToggle hotelId={hotelId} hotelName={hotelName} />
       </div>
     );
   }
@@ -174,12 +178,8 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
         ))}
       </div>
 
-      {/* CTA */}
-      <div className="mt-8 pt-6 border-t border-border/40 text-center">
-        <p className="text-xs text-muted-foreground italic">
-          Las resenas son de huespedes verificados que se alojaron en {hotelName}.
-        </p>
-      </div>
+      {/* CTA to write a review */}
+      <ReviewFormWithToggle hotelId={hotelId} hotelName={hotelName} />
     </div>
   );
 }

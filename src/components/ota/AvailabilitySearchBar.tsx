@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useTransition } from 'react';
+import React, { useState, useRef, useEffect, useTransition, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, Users, Plus, Minus } from 'lucide-react';
+import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, Users, Plus, Minus, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay } from 'date-fns';
@@ -10,21 +10,33 @@ import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
 import { mac2026Default as springPopover, springSnappy } from '@/lib/mac2026/spring';
 import { GlassPanel } from '@/components/ui/glass';
+import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 import 'react-day-picker/dist/style.css'; 
+
+interface RoomItem {
+  id: string;
+  name: string;
+  price: number;
+  price_per_night?: number;
+  capacity?: number;
+  amenities?: string[];
+}
 
 interface AvailabilitySearchBarProps {
   /** When true, renders in compact sticky mode (smaller padding, optimized popover) */
   sticky?: boolean;
+  /** Room data to calculate dynamic filter ranges */
+  rooms?: RoomItem[];
 }
 
-export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySearchBarProps) {
+export default function AvailabilitySearchBar({ sticky = false, rooms = [] }: AvailabilitySearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const popoverRef = useRef<HTMLDivElement>(null);
   const triggerRef = useRef<HTMLDivElement>(null);
 
   // Máquina de Estados Globales
-  const [activePopover, setActivePopover] = useState<'dates' | 'guests' | null>(null);
+  const [activePopover, setActivePopover] = useState<'dates' | 'guests' | 'filters' | null>(null);
   const [isPending, startTransition] = useTransition();
   const [popoverPosition, setPopoverPosition] = useState<'below' | 'above'>('below');
   
@@ -44,13 +56,30 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
   const [adults, setAdults] = useState(Number(searchParams.get('adults')) || 2);
   const [children, setChildren] = useState(Number(searchParams.get('children')) || 0);
 
+  // Hidratación Segura: Filtros de Habitación
+  const prices = rooms.map((r) => r.price_per_night || r.price || 0);
+  const maxPossiblePrice = prices.length > 0 ? Math.max(...prices) : 0;
+  const maxPossibleCapacity = rooms.length > 0 ? Math.max(...rooms.map((r) => r.capacity || 0)) : 0;
+
+  const [maxPrice, setMaxPrice] = useState<number | null>(() => {
+    const p = searchParams.get('max_price');
+    return p ? Number(p) : null;
+  });
+  const [minCapacity, setMinCapacity] = useState<number | null>(() => {
+    const c = searchParams.get('min_capacity');
+    return c ? Number(c) : null;
+  });
+  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(() => {
+    const a = searchParams.get('amenities');
+    return a ? a.split(',').filter(Boolean) : [];
+  });
+
   const today = startOfDay(new Date());
 
   // Listener para cerrar cualquier Popover orgánicamente
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
       const target = event.target as Node;
-      // Protección de Race Condition del V-DOM
       if (!document.contains(target)) return;
       if (popoverRef.current && !popoverRef.current.contains(target)) {
         setActivePopover(null);
@@ -67,7 +96,7 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
     const rect = triggerRef.current.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const spaceAbove = rect.top;
-    const popoverHeight = activePopover === 'dates' ? 360 : 400; // Aproximado
+    const popoverHeight = activePopover === 'dates' ? 360 : activePopover === 'filters' ? 450 : 400;
 
     if (spaceBelow < popoverHeight && spaceAbove > spaceBelow) {
       setPopoverPosition('above');
@@ -90,6 +119,17 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
 
     params.set('adults', a.toString());
     params.set('children', c.toString());
+
+    // Filtros
+    if (maxPrice !== null) params.set('max_price', maxPrice.toString());
+    else params.delete('max_price');
+
+    if (minCapacity !== null) params.set('min_capacity', minCapacity.toString());
+    else params.delete('min_capacity');
+
+    if (selectedAmenities.length > 0) params.set('amenities', selectedAmenities.join(','));
+    else params.delete('amenities');
+
     params.delete('showRoom');
 
     startTransition(() => {
@@ -100,7 +140,6 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
   // 🎯 MANEJADORES DE ESTADO
   const handleSelectDates = (newDate: DateRange | undefined) => {
     if (newDate?.from && newDate?.to) {
-      // Prevención de cero noches
       if (newDate.from.getTime() === newDate.to.getTime()) {
         setDate({ from: newDate.from, to: undefined });
         return;
@@ -118,11 +157,45 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
     triggerSearch(date?.from, date?.to, adults, children);
   };
 
+  const handleApplyFilters = () => {
+    setActivePopover(null);
+    triggerSearch(date?.from, date?.to, adults, children);
+  };
+
+  const toggleAmenity = (id: string) => {
+    const updated = selectedAmenities.includes(id)
+      ? selectedAmenities.filter((a) => a !== id)
+      : [...selectedAmenities, id];
+    setSelectedAmenities(updated);
+  };
+
+  const hasActiveFilters = maxPrice !== null || minCapacity !== null || selectedAmenities.length > 0;
+  const filterCount = [maxPrice, minCapacity, ...selectedAmenities].filter(Boolean).length;
+
+  // Live results counter (same logic as RoomsListWithFilters)
+  const matchingCount = useMemo(() => {
+    if (!hasActiveFilters) return rooms.length;
+    return rooms.filter((room) => {
+      const price = room.price_per_night || room.price || 0;
+      const capacity = room.capacity || 0;
+      if (maxPrice !== null && price > maxPrice) return false;
+      if (minCapacity !== null && capacity < minCapacity) return false;
+      if (selectedAmenities.length > 0) {
+        const roomAmenities = room.amenities || [];
+        if (!selectedAmenities.every((a) => roomAmenities.includes(a))) return false;
+      }
+      return true;
+    }).length;
+  }, [rooms, maxPrice, minCapacity, selectedAmenities, hasActiveFilters]);
+
   const clearAll = (e: React.MouseEvent) => {
     e.stopPropagation();
     setDate(undefined);
-    setAdults(2); // Restaurar a valores por defecto
+    setAdults(2);
     setChildren(0);
+    setMaxPrice(null);
+    setMinCapacity(null);
+    setSelectedAmenities([]);
     setActivePopover(null);
     
     const params = new URLSearchParams(searchParams.toString());
@@ -130,6 +203,9 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
     params.delete('checkout');
     params.delete('adults');
     params.delete('children');
+    params.delete('max_price');
+    params.delete('min_capacity');
+    params.delete('amenities');
     params.delete('showRoom');
     
     startTransition(() => {
@@ -236,7 +312,7 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
           </div>
 
           {/* Botón Purga (Solo visible si hay un cambio real) */}
-          {(date?.from || adults > 2 || children > 0) && !isPending && (
+          {(date?.from || adults > 2 || children > 0 || hasActiveFilters) && !isPending && (
             <button 
               onClick={clearAll}
               className={cn(
@@ -249,12 +325,67 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
             </button>
           )}
         </div>
+
+        {/* ZONA 3: FILTROS (Solo visible si hay habitaciones) */}
+        {rooms.length >= 3 && (
+          <>
+            <div className={cn(
+              "bg-border mx-0 sm:mx-2 hidden sm:block",
+              sticky ? "h-px w-full sm:w-px sm:h-8" : "h-px w-full sm:w-px sm:h-10"
+            )}></div>
+            <div 
+              onClick={() => !isPending && setActivePopover(activePopover === 'filters' ? null : 'filters')}
+              className={cn(
+                "flex items-center gap-2 cursor-pointer hover:bg-muted transition-colors",
+                sticky
+                  ? "px-3 py-2 sm:py-1.5 rounded-b-[var(--radius-squircle-xl)] sm:rounded-r-full sm:rounded-l-none"
+                  : "px-4 py-3 sm:py-2 rounded-b-[var(--radius-squircle-xl)] sm:rounded-r-full sm:rounded-l-none",
+                hasActiveFilters && "bg-brand-50/50"
+              )}
+            >
+              <div className={cn(
+                "rounded-full flex items-center justify-center shrink-0",
+                hasActiveFilters ? "bg-brand-500" : "bg-brand-50",
+                sticky ? "size-8" : "size-10"
+              )}>
+                <SlidersHorizontal size={sticky ? 14 : 18} className={hasActiveFilters ? "text-white" : "text-brand-600"} />
+              </div>
+              <div className="flex flex-col">
+                <span className={cn(
+                  "font-bold uppercase tracking-widest",
+                  sticky ? "text-[10px]" : "text-xs",
+                  hasActiveFilters ? "text-brand-600" : "text-muted-foreground"
+                )}>Filtros</span>
+                <span className={cn(
+                  "tracking-tight font-bold",
+                  sticky ? "text-sm" : "text-base",
+                  hasActiveFilters ? "text-brand-600" : "text-foreground"
+                )}>
+                  {filterCount > 0 ? `${filterCount} activo${filterCount > 1 ? 's' : ''}` : 'Refinar'}
+                </span>
+              </div>
+              <AnimatePresence>
+              {hasActiveFilters && (
+                <motion.span 
+                  initial={{ scale: 0 }}
+                  animate={{ scale: 1 }}
+                  exit={{ scale: 0 }}
+                  transition={{ type: 'spring', stiffness: 500, damping: 15 }}
+                  className="size-5 rounded-full bg-brand-500 text-white flex items-center justify-center text-[10px] font-black ml-1"
+                >
+                  {filterCount}
+                </motion.span>
+              )}
+              </AnimatePresence>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* 📅 & 👥 POPOVERS (Vistas Flotantes) */}
+      {/* 📅 & 👥 & ⚙️ POPOVERS (Vistas Flotantes) */}
       <AnimatePresence>
         
-        {/* POPOVER DE FECHAS — Mac 2026: GlassPanel + spring physics */}
+        {/* POPOVER DE FECHAS */}
         {activePopover === 'dates' && (
           <motion.div 
             initial={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
@@ -288,7 +419,7 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
           </motion.div>
         )}
 
-        {/* POPOVER DE HUÉSPEDES — Mac 2026: GlassPanel + spring physics */}
+        {/* POPOVER DE HUÉSPEDES */}
         {activePopover === 'guests' && (
           <motion.div 
             initial={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
@@ -313,20 +444,24 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
                     <p className="text-xs text-muted-foreground font-medium">13+ años</p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button 
+                    <motion.button 
                       onClick={() => setAdults(Math.max(1, adults - 1))}
                       disabled={adults <= 1}
+                      whileTap={{ scale: 0.85 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                       className="size-10 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-accent disabled:opacity-30 transition-colors"
                     >
                       <Minus size={16} className="text-muted-foreground" />
-                    </button>
+                    </motion.button>
                     <span className="font-bold text-foreground text-lg w-4 text-center">{adults}</span>
-                    <button 
+                    <motion.button 
                       onClick={() => setAdults(adults + 1)}
+                      whileTap={{ scale: 0.85 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                       className="size-10 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-accent transition-colors"
                     >
                       <Plus size={16} className="text-muted-foreground" />
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
 
@@ -337,24 +472,28 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
                     <p className="text-xs text-muted-foreground font-medium">0 - 12 años</p>
                   </div>
                   <div className="flex items-center gap-4">
-                    <button 
+                    <motion.button 
                       onClick={() => setChildren(Math.max(0, children - 1))}
                       disabled={children <= 0}
+                      whileTap={{ scale: 0.85 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                       className="size-10 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-accent disabled:opacity-30 transition-colors"
                     >
                       <Minus size={16} className="text-muted-foreground" />
-                    </button>
+                    </motion.button>
                     <span className="font-bold text-foreground text-lg w-4 text-center">{children}</span>
-                    <button 
+                    <motion.button 
                       onClick={() => setChildren(children + 1)}
+                      whileTap={{ scale: 0.85 }}
+                      transition={{ type: 'spring', stiffness: 400, damping: 15 }}
                       className="size-10 rounded-full bg-muted border border-border flex items-center justify-center hover:bg-accent transition-colors"
                     >
                       <Plus size={16} className="text-muted-foreground" />
-                    </button>
+                    </motion.button>
                   </div>
                 </div>
 
-                {/* Botón de Aplicar — Mac 2026 Spring Physics: whileTap + springSnappy */}
+                {/* Botón de Aplicar */}
                 <div className="pt-4 border-t border-border mt-2">
                   <motion.button 
                     onClick={handleApplyGuests}
@@ -363,6 +502,138 @@ export default function AvailabilitySearchBar({ sticky = false }: AvailabilitySe
                     className="w-full bg-foreground hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-[var(--radius-squircle-2xl)] transition-all shadow-md"
                   >
                     Aplicar y Buscar
+                  </motion.button>
+                </div>
+              </div>
+            </GlassPanel>
+          </motion.div>
+        )}
+
+        {/* POPOVER DE FILTROS */}
+        {activePopover === 'filters' && (
+          <motion.div 
+            initial={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
+            transition={springPopover}
+            className={cn(
+              "absolute z-[var(--z-popover)]",
+              popoverPosition === 'above'
+                ? "bottom-full mb-2 right-0 w-full sm:w-[400px]"
+                : "top-full mt-2 right-0 w-full sm:w-[400px]"
+            )}
+          >
+            <GlassPanel className="p-6 ring-1 ring-foreground/5 bg-background/95 backdrop-blur-xl">
+              <div className="space-y-5">
+                <div className="flex items-center justify-between">
+                  <h3 className="font-black text-foreground tracking-tight text-lg">Refinar búsqueda</h3>
+                  {hasActiveFilters && (
+                    <button 
+                      onClick={() => { setMaxPrice(null); setMinCapacity(null); setSelectedAmenities([]); }}
+                      className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
+                    >
+                      <X size={12} /> Limpiar
+                    </button>
+                  )}
+                </div>
+
+                {/* Precio */}
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+                    Precio máximo: {maxPrice !== null ? `$${maxPrice.toLocaleString()}` : 'Sin límite'}
+                  </label>
+                  <input
+                    type="range"
+                    min={0}
+                    max={maxPossiblePrice}
+                    step={10000}
+                    value={maxPrice ?? maxPossiblePrice}
+                    onChange={(e) => setMaxPrice(Number(e.target.value))}
+                    className="w-full accent-primary"
+                  />
+                  <div className="flex justify-between text-[10px] text-muted-foreground/60 mt-1">
+                    <span>$0</span>
+                    <span>${maxPossiblePrice.toLocaleString()}</span>
+                  </div>
+                </div>
+
+                {/* Capacidad */}
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+                    Capacidad mínima: {minCapacity || 'Cualquiera'}
+                  </label>
+                  <div className="flex gap-2">
+                    {Array.from({ length: Math.min(maxPossibleCapacity, 8) }, (_, i) => i + 1).map((cap) => (
+                      <motion.button
+                        key={cap}
+                        onClick={() => setMinCapacity(minCapacity === cap ? null : cap)}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                        className={cn(
+                          'size-10 rounded-[var(--radius-squircle-lg)] text-sm font-bold transition-all',
+                          minCapacity === cap
+                            ? 'bg-primary text-primary-foreground shadow-md'
+                            : 'bg-muted text-muted-foreground border border-border hover:border-brand-300',
+                        )}
+                      >
+                        {cap}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Amenidades */}
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+                    Amenidades
+                  </label>
+                  <div className="flex flex-wrap gap-2">
+                    {Object.values(ROOM_AMENITY_REGISTRY).map((amenity) => (
+                      <motion.button
+                        key={amenity.id}
+                        onClick={() => toggleAmenity(amenity.id)}
+                        whileTap={{ scale: 0.95 }}
+                        transition={{ type: 'spring', stiffness: 500, damping: 20 }}
+                        className={cn(
+                          'px-3 py-1.5 rounded-[var(--radius-squircle-md)] text-xs font-medium transition-all',
+                          selectedAmenities.includes(amenity.id)
+                            ? 'bg-brand-50 text-brand-700 border border-brand-200'
+                            : 'bg-muted text-muted-foreground border border-border hover:border-border/80',
+                        )}
+                      >
+                        {amenity.label}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Live counter */}
+                <div className="flex items-center justify-between pt-2 border-t border-border/50">
+                  <div className="flex items-center gap-2">
+                    <div className={cn(
+                      "size-2 rounded-full transition-colors",
+                      matchingCount > 0 ? "bg-secondary" : "bg-muted-foreground/30"
+                    )} />
+                    <span className="text-xs font-medium text-muted-foreground">
+                      {matchingCount} {matchingCount === 1 ? 'habitación disponible' : 'habitaciones disponibles'}
+                    </span>
+                  </div>
+                  {hasActiveFilters && (
+                    <span className="text-[10px] text-muted-foreground/50">
+                      de {rooms.length}
+                    </span>
+                  )}
+                </div>
+
+                {/* Botón de Aplicar */}
+                <div className="pt-4 border-t border-border mt-2">
+                  <motion.button 
+                    onClick={handleApplyFilters}
+                    whileTap={{ scale: 0.96 }}
+                    transition={springSnappy()}
+                    className="w-full bg-foreground hover:bg-primary/90 text-primary-foreground font-bold py-4 rounded-[var(--radius-squircle-2xl)] transition-all shadow-md"
+                  >
+                    Aplicar filtros
                   </motion.button>
                 </div>
               </div>

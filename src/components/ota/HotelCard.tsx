@@ -12,6 +12,7 @@ interface Hotel {
   city_slug?: string;
   min_price: number;
   main_image_url: string;
+  description?: string;
   reviewStats?: { averageRating: number; totalReviews: number };
 }
 
@@ -69,6 +70,11 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
                 ? hotel.city_slug.replace('-', ' ')
                 : hotel.location}
             </div>
+            {hotel.description && (
+              <p className='mt-2 text-xs text-white/70 leading-snug line-clamp-2'>
+                {hotel.description}
+              </p>
+            )}
           </div>
 
           <div className='flex items-center gap-1 bg-warm-500/20 backdrop-blur-md px-2 py-1 rounded-[var(--radius-squircle-md)] border border-warm-500/30'>

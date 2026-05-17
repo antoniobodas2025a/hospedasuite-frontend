@@ -64,7 +64,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
         <CheckCircle2 size={48} className="text-secondary mx-auto mb-4" />
         <h3 className="text-xl font-bold text-foreground mb-2">Gracias por tu opinion!</h3>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Tu resena sobre {hotelName} sera publicada despues de verificacion. Esto nos ayuda a mantener la calidad de las opiniones.
+          Tu resena sobre {hotelName} sera publicada despues de verificacion. Solo opiniones de huespedes verificados son publicadas.
         </p>
       </GlassCard>
     );
