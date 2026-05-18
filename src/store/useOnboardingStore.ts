@@ -1,85 +1,243 @@
 import { create } from 'zustand';
+import { PropertyType } from '@/lib/room-templates';
+import { getTemplateById } from '@/lib/room-templates';
+import {
+  hotelIdentitySchema,
+  settingsSchema,
+  HotelIdentityData,
+  RoomDraftData,
+  SettingsData,
+} from '@/lib/onboarding-schemas';
 
-// 1. Definición estricta de tipos
-export interface AdminData {
-  email: string;
-  password?: string;
+export interface RoomDraft extends RoomDraftData {
+  imageFiles: File[];
+  imagePreviews: string[];
 }
 
-export interface HotelData {
-  name: string;
-  city: string;
-  location?: string; // <- Agregado para compatibilidad con Supabase
-  rooms: number;
-}
+export interface OnboardingState {
+  // Navigation
+  currentStep: number;
+  maxCompletedStep: number;
+  hotelId: string | null;
 
-interface OnboardingState {
-  step: number;
-  adminData: AdminData | null;
-  hotelData: HotelData | null;
-  paymentToken: string | null;
+  // Step 1: Identity
+  hotelIdentity: HotelIdentityData;
+  logoFile: File | null;
+  logoPreview: string | null;
+  coverPhotoFile: File | null;
+  coverPhotoPreview: string | null;
+
+  // Step 2: Gallery
+  galleryImages: string[];
+  galleryFiles: File[];
+  galleryPreviews: string[];
+
+  // Step 4: Rooms
+  rooms: RoomDraft[];
+
+  // Step 5: Settings
+  settings: SettingsData;
+
+  // Step 6: Payment
+  paymentPlan: string | null;
+  paymentPrice: number;
+  paymentTransactionId: string | null;
+
+  // State
   isSubmitting: boolean;
   error: string | null;
+  validationErrors: Record<string, string>;
 
-  setStep: (step: number) => void;
-  nextStep: () => void;
-  prevStep: () => void;
-  setAdminData: (data: AdminData) => void;
-  setHotelData: (data: HotelData) => void;
-  setPaymentToken: (token: string) => void;
-  submitToSupabase: () => Promise<boolean>;
+  // Actions
+  setCurrentStep: (step: number) => void;
+  setMaxCompletedStep: (step: number) => void;
+  setHotelId: (id: string | null) => void;
+
+  // Step 1 actions
+  updateHotelIdentity: (data: Partial<HotelIdentityData>) => void;
+  setLogo: (file: File | null, preview: string | null) => void;
+  setCoverPhoto: (file: File | null, preview: string | null) => void;
+
+  // Step 2 actions
+  setGalleryImages: (files: File[], previews: string[]) => void;
+  removeGalleryImage: (index: number) => void;
+
+  // Step 4 actions
+  addRoomFromTemplate: (propertyType: PropertyType, templateId: string) => void;
+  addEmptyRoom: () => void;
+  updateRoom: (roomId: string, data: Partial<RoomDraft>) => void;
+  removeRoom: (roomId: string) => void;
+  setRoomImages: (roomId: string, files: File[], previews: string[]) => void;
+
+  // Step 5 actions
+  updateSettings: (data: Partial<SettingsData>) => void;
+
+  // Step 6 actions
+  setPaymentInfo: (plan: string | null, price: number) => void;
+  setPaymentTransactionId: (id: string | null) => void;
+
+  // General
+  setIsSubmitting: (value: boolean) => void;
+  setError: (error: string | null) => void;
+  setValidationErrors: (errors: Record<string, string>) => void;
   reset: () => void;
 }
 
-export const useOnboardingStore = create<OnboardingState>((set, get) => ({
-  step: 1,
-  adminData: null,
-  hotelData: null,
-  paymentToken: null,
+const defaultHotelIdentity: HotelIdentityData = {
+  name: '',
+  city: '',
+  location: '',
+  propertyType: 'hotel',
+};
+
+const defaultSettings: SettingsData = {
+  amenities: [],
+  checkInTime: '15:00',
+  checkOutTime: '11:00',
+};
+
+export const useOnboardingStore = create<OnboardingState>((set) => ({
+  currentStep: 1,
+  maxCompletedStep: 0,
+  hotelId: null,
+
+  hotelIdentity: defaultHotelIdentity,
+  logoFile: null,
+  logoPreview: null,
+  coverPhotoFile: null,
+  coverPhotoPreview: null,
+
+  galleryImages: [],
+  galleryFiles: [],
+  galleryPreviews: [],
+
+  rooms: [],
+
+  settings: defaultSettings,
+
+  paymentPlan: null,
+  paymentPrice: 89900,
+  paymentTransactionId: null,
+
   isSubmitting: false,
   error: null,
+  validationErrors: {},
 
-  setStep: (step) => set({ step }),
-  nextStep: () => set((state) => ({ step: state.step + 1 })),
-  prevStep: () => set((state) => ({ step: state.step - 1 })),
-  
-  setAdminData: (data) => set({ adminData: data }),
-  setHotelData: (data) => set({ hotelData: data }),
-  setPaymentToken: (token) => set({ paymentToken: token }),
+  setCurrentStep: (step) => set({ currentStep: step }),
+  setMaxCompletedStep: (step) => set({ maxCompletedStep: step }),
+  setHotelId: (id) => set({ hotelId: id }),
 
-  submitToSupabase: async () => {
-    set({ isSubmitting: true, error: null });
-    const { adminData, hotelData, paymentToken } = get();
+  updateHotelIdentity: (data) => set((state) => {
+    const updated = { ...state.hotelIdentity, ...data };
+    const result = hotelIdentitySchema.safeParse(updated);
+    const errors: Record<string, string> = result.success
+      ? {}
+      : { identity: result.error.issues[0]?.message || 'Datos inválidos' };
+    return { hotelIdentity: updated, validationErrors: errors };
+  }),
 
-    // 🚨 CLÍNICA DE DATOS: Clonamos el hotelData y convertimos 'city' en 'location'
-    // para cumplir con la regla "not-null" de la base de datos Supabase
-    const dbHotelPayload = {
-      ...hotelData,
-      location: hotelData?.city 
+  setLogo: (file, preview) => set({ logoFile: file, logoPreview: preview }),
+  setCoverPhoto: (file, preview) => set({ coverPhotoFile: file, coverPhotoPreview: preview }),
+
+  setGalleryImages: (files, previews) => set({
+    galleryFiles: files,
+    galleryPreviews: previews,
+    galleryImages: previews, // URLs for display
+  }),
+
+  removeGalleryImage: (index) => set((state) => {
+    const newFiles = [...state.galleryFiles];
+    const newPreviews = [...state.galleryPreviews];
+    newFiles.splice(index, 1);
+    newPreviews.splice(index, 1);
+    return { galleryFiles: newFiles, galleryPreviews: newPreviews, galleryImages: newPreviews };
+  }),
+
+  addRoomFromTemplate: (propertyType, templateId) => set((state) => {
+    const template = getTemplateById(propertyType, templateId);
+    if (!template) return state;
+
+    const newRoom: RoomDraft = {
+      id: crypto.randomUUID(),
+      name: template.name,
+      type: template.name,
+      price: template.priceRange[0],
+      description: template.description,
+      amenities: template.suggestedAmenities,
+      capacity: template.defaultCapacity,
+      beds: template.defaultBeds,
+      imageUrls: [],
+      imageFiles: [],
+      imagePreviews: [],
+      availabilityRange: null,
     };
 
-    try {
-      // Usamos la ruta corregida
-      const response = await fetch('/api/onboarding', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ adminData, hotelData: dbHotelPayload, paymentToken }),
-      });
+    return { rooms: [...state.rooms, newRoom] };
+  }),
 
-      if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Error en la transacción');
-      }
+  addEmptyRoom: () => set((state) => ({
+    rooms: [...state.rooms, {
+      id: crypto.randomUUID(),
+      name: '',
+      price: 0,
+      amenities: [],
+      capacity: 2,
+      beds: 1,
+      imageUrls: [],
+      imageFiles: [],
+      imagePreviews: [],
+      availabilityRange: null,
+    }],
+  })),
 
-      set({ isSubmitting: false });
-      return true;
-    } catch (err: any) {
-      set({ error: err.message, isSubmitting: false });
-      return false;
-    }
-  },
+  updateRoom: (roomId, data) => set((state) => ({
+    rooms: state.rooms.map(r => r.id === roomId ? { ...r, ...data } : r),
+  })),
+
+  removeRoom: (roomId) => set((state) => ({
+    rooms: state.rooms.filter(r => r.id !== roomId),
+  })),
+
+  setRoomImages: (roomId, files, previews) => set((state) => ({
+    rooms: state.rooms.map(r =>
+      r.id === roomId ? { ...r, imageFiles: files, imagePreviews: previews } : r
+    ),
+  })),
+
+  updateSettings: (data) => set((state) => {
+    const updated = { ...state.settings, ...data };
+    const result = settingsSchema.safeParse(updated);
+    const errors: Record<string, string> = result.success
+      ? {}
+      : { settings: result.error.issues[0]?.message || 'Datos inválidos' };
+    return { settings: updated, validationErrors: errors };
+  }),
+
+  setPaymentInfo: (plan, price) => set({ paymentPlan: plan, paymentPrice: price }),
+  setPaymentTransactionId: (id) => set({ paymentTransactionId: id }),
+
+  setIsSubmitting: (value) => set({ isSubmitting: value }),
+  setError: (error) => set({ error }),
+  setValidationErrors: (errors) => set({ validationErrors: errors }),
 
   reset: () => set({
-    step: 1, adminData: null, hotelData: null, paymentToken: null, isSubmitting: false, error: null
+    currentStep: 1,
+    maxCompletedStep: 0,
+    hotelIdentity: defaultHotelIdentity,
+    logoFile: null,
+    logoPreview: null,
+    coverPhotoFile: null,
+    coverPhotoPreview: null,
+    galleryFiles: [],
+    galleryPreviews: [],
+    galleryImages: [],
+    rooms: [],
+    settings: defaultSettings,
+    paymentPlan: null,
+    paymentPrice: 89900,
+    paymentTransactionId: null,
+    isSubmitting: false,
+    error: null,
+    validationErrors: {},
   }),
 }));
