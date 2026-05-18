@@ -1,24 +1,9 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import sharp from 'sharp';
-
-// 1. Instancia de Supabase con privilegios administrativos
-const getAdminClient = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) {
-    throw new Error('❌ Faltan las variables de entorno de Supabase en el archivo .env.local');
-  }
-
-  return createClient(url, key, {
-    auth: { persistSession: false }
-  });
-};
 
 // ============================================================================
 // 🛠️ ACCIÓN 1: CONFIGURACIÓN BÁSICA Y FINANCIERA (Recuperada y Blindada)
@@ -44,7 +29,7 @@ export async function saveSettingsAction(settings: HotelSettings) {
       throw new Error('Violación de Seguridad: No tienes permisos sobre este hotel.');
     }
 
-    const supabaseAdmin = getAdminClient();
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
 
     const { error } = await supabaseAdmin
       .from('hotels')
@@ -115,7 +100,7 @@ export async function updateHotelProfileAction(hotelId: string, formData: any) {
       throw new Error('Violación de Seguridad: No tienes permisos sobre este hotel.');
     }
 
-    const supabaseAdmin = getAdminClient();
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
     
     // Filtramos la carga útil (payload) a través del escudo Zod
     const validData = updateProfileSchema.parse(formData);
@@ -214,7 +199,7 @@ export async function uploadOptimizedImageAction(
     const fileName = `${currentHotel.id}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
 
     // Subir a Supabase
-    const supabaseAdmin = getAdminClient();
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
     const { error: uploadError } = await supabaseAdmin
       .storage
       .from('hotel-media')

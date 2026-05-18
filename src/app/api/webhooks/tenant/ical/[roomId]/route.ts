@@ -14,7 +14,7 @@ export async function GET(
       return new NextResponse('Bad Request', { status: 400 });
     }
 
-    const supabaseAdmin = getAdminClient();
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
 
     // 🛡️ 2. Resolución de Token (Zero-Trust)
     const { data: room, error: roomError } = await supabaseAdmin

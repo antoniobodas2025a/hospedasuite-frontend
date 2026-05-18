@@ -18,7 +18,8 @@ export async function GET(request: Request) {
       return NextResponse.json({ error: 'Firma de entorno inválida' }, { status: 401 });
     }
 
-    const supabaseAdmin = getAdminClient();
+    // Use the safe singleton (build-time compatible)
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
 
     // Query optimizada: Solo extraemos el hotel_id
     const { data: rooms, error } = await supabaseAdmin

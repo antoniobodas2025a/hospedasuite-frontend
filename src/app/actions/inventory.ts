@@ -1,23 +1,10 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { RoomSchema } from '@/lib/validations/inventory';
 import { getCurrentHotel } from '@/lib/hotel-context';
 
-/**
- * Constructor de Cliente Administrativo
- * Utiliza el Service Role Key para bypass de RLS en operaciones de escritura protegidas.
- */
-const getAdminClient = () => {
-  const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const key = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!url || !key) throw new Error('❌ Fallo crítico de entorno (Supabase Keys Missing)');
-
-  return createClient(url, key, { auth: { persistSession: false } });
-};
-
+// ============================================================================
 /**
  * saveRoomAction: Motor de persistencia para el nodo de inventario.
  * Soporta creación y actualización atómica con integridad Multi-Tenant.
@@ -30,7 +17,7 @@ export async function saveRoomAction(hotelId: string, data: any, roomId?: string
       throw new Error("SEC_VIOLATION: Acceso no autorizado al hotel solicitado.");
     }
 
-    const supabaseAdmin = getAdminClient();
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
     
     // 🛡️ PAYLOAD BLINDADO: Estructuración determinista de datos para Postgres
     // Aseguramos que 'gallery' y 'amenities' viajen como arreglos válidos.
@@ -89,7 +76,7 @@ export async function deleteRoomAction(id: string) {
     const currentHotel = await getCurrentHotel();
     if (!currentHotel) throw new Error("AUTH_ERROR: Sesión administrativa no válida.");
 
-    const supabaseAdmin = getAdminClient();
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
     
     // 🛡️ VERIFICACIÓN PRE-VUELO: ¿La habitación pertenece al hotel del usuario?
     const { data: room, error: fetchError } = await supabaseAdmin
@@ -142,7 +129,7 @@ export async function regenerateIcalTokenAction(roomId: string): Promise<{ succe
       throw new Error("AUTH_ERROR: Sesión administrativa no válida.");
     }
 
-    const supabaseAdmin = getAdminClient();
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
 
     // 🛡️ VERIFICACIÓN PRE-VUELO: ¿La habitación pertenece al hotel del usuario?
     const { data: room, error: fetchError } = await supabaseAdmin

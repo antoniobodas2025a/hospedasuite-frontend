@@ -134,7 +134,7 @@ async function handler(req: Request) {
     if (!hotelId) return NextResponse.json({ error: 'Falta hotelId' }, { status: 400 });
 
     console.log(`⚙️ [QSTASH WORKER] Sync iCal Hotel: ${hotelId}`);
-    const supabaseAdmin = getAdminClient();
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
 
     // 1. Obtener habitaciones con iCal import URL
     const { data: rooms, error: roomsError } = await supabaseAdmin
@@ -323,7 +323,7 @@ async function handler(req: Request) {
     try {
       const payload = await req.json();
       if (payload.hotelId) {
-        const supabaseAdmin = getAdminClient();
+        const { supabaseAdmin } = await import('@/lib/supabase-admin');
         await supabaseAdmin.from('ota_sync_log').insert({
           hotel_id: payload.hotelId,
           rooms_synced: 0,

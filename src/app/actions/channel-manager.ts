@@ -1,19 +1,10 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
 
-// 🛡️ 1. FÁBRICA DE CLIENTE DIOS (Aislada, no exportada)
-const getAdminClient = () => {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  );
-};
-
+// ============================================================================
 export async function syncChannelManagerAction(hotelId: string) {
   try {
     // 🚨 BARRERA ZERO-TRUST: Verificar sesión y permisos ANTES de actuar
@@ -46,7 +37,7 @@ export async function syncChannelManagerAction(hotelId: string) {
     }
 
     // Pasamos la barrera. Usamos el cliente Admin para el trabajo pesado (Ignora RLS para inserciones masivas).
-    const supabaseAdmin = getAdminClient();
+    const { supabaseAdmin } = await import('@/lib/supabase-admin');
     
     // 📦 IMPORTACIÓN DINÁMICA (Antídoto para Turbopack y e.BigInt)
     const ical = (await import('node-ical')).default || await import('node-ical');
