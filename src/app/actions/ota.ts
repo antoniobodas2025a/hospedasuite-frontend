@@ -120,7 +120,7 @@ export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string
       // 3. Fallback: Si el usuario entra al hotel sin fechas, mostramos el catálogo activo
       const { data: allRooms } = await supabaseAdmin
         .from('rooms')
-        .select('id, name, capacity, price, status, gallery, amenities, size_sqm')
+        .select('id, name, capacity, beds, price, status, gallery, amenities, size_sqm')
         .eq('hotel_id', hotel.id)
         .neq('status', 'maintenance');
 

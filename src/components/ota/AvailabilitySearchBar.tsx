@@ -105,6 +105,7 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
   const maxPossiblePrice = prices.length > 0 ? Math.max(...prices) : 0;
   const maxPossibleCapacity = rooms.length > 0 ? Math.max(...rooms.map((r) => r.capacity || 0)) : 0;
   const maxPossibleBeds = rooms.length > 0 ? Math.max(...rooms.map((r) => r.beds || 0)) : 0;
+  const bedsRangeCount = Math.max(4, Math.min(maxPossibleBeds, 6));
 
   const [maxPrice, setMaxPrice] = useState<number | null>(() => {
     const p = searchParams.get('max_price');
@@ -650,7 +651,7 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
                     Camas mínimas: {minBeds || 'Cualquiera'}
                   </label>
                   <div className="flex gap-2">
-                    {Array.from({ length: Math.min(maxPossibleBeds, 6) }, (_, i) => i + 1).map((bed) => (
+                    {Array.from({ length: bedsRangeCount }, (_, i) => i + 1).map((bed) => (
                       <motion.button
                         key={bed}
                         onClick={() => setMinBeds(minBeds === bed ? null : bed)}

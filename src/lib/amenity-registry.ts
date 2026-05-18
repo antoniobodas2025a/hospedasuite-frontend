@@ -1,4 +1,4 @@
-import { Wifi, Car, Waves, Coffee, Star, Snowflake, Tv, Dumbbell, Utensils, Wine, Bath, Mountain, Palmtree, Shield, Phone, CreditCard, Luggage, Key, Flame, Sun, Droplets, BedDouble, Wind } from 'lucide-react';
+import { Wifi, Car, Waves, Coffee, Star, Snowflake, Tv, Dumbbell, Utensils, Wine, Bath, Mountain, Palmtree, Shield, Phone, CreditCard, Luggage, Key, Flame, Sun, Droplets, BedDouble, Wind, ShowerHead } from 'lucide-react';
 
 // ============================================================================
 // AMENITY REGISTRY — Fuente unica de verdad para amenidades del hotel
@@ -104,6 +104,13 @@ export const ROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
     icon: Bath,
     storyTitle: 'Burbujas de Relajacion',
     storyDescription: 'Sumerja sus sentidos en hidromasaje privado con vistas inigualables al valle.',
+  },
+  bano_privado: {
+    id: 'bano_privado',
+    label: 'Bano Privado',
+    icon: ShowerHead,
+    storyTitle: 'Refugio Intimo',
+    storyDescription: 'Bano exclusivo de la habitacion con acabados premium para su total comodidad.',
   },
   parking: {
     id: 'parking',
