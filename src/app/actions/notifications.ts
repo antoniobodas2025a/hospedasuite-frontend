@@ -15,11 +15,11 @@ interface VoucherPayload {
   amount: number;
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const getResend = () => new Resend(process.env.RESEND_API_KEY || 're_dummy_for_build');
 
 export async function sendBookingConfirmationEmail(data: VoucherPayload) {
   try {
-    const { data: resendData, error } = await resend.emails.send({
+    const { data: resendData, error } = await getResend().emails.send({
       from: process.env.EMAIL_FROM!,
       to: [data.guestEmail],
       subject: `Confirmación de Reserva - ${data.hotelName}`,

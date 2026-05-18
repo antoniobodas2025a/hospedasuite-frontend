@@ -25,7 +25,8 @@ interface ConfirmationPayload {
   amount: number;
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+// Lazy init to avoid build-time crash when RESEND_API_KEY is not set
+const getResend = () => new Resend(process.env.RESEND_API_KEY || 're_dummy_for_build');
 
 async function handler(req: Request) {
   try {
@@ -39,7 +40,7 @@ async function handler(req: Request) {
       );
     }
 
-    const { data, error } = await resend.emails.send({
+    const { data, error } = await getResend().emails.send({
       from: process.env.EMAIL_FROM!,
       to: [payload.guestEmail],
       subject: `✅ Confirmación de Reserva - ${payload.hotelName}`,
