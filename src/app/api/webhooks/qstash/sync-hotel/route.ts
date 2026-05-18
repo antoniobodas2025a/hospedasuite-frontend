@@ -64,12 +64,20 @@ async function fetchExistingOtaBookings(
   supabaseAdmin: AdminClient,
   hotelId: string
 ): Promise<Map<string, { id: string; room_id: string; status: string }>> {
+  interface BookingRow {
+    id: string;
+    room_id: string;
+    status: string;
+    external_id: string | null;
+  }
+
   const { data, error } = await supabaseAdmin
     .from('bookings')
     .select('id, room_id, status, external_id')
     .eq('hotel_id', hotelId)
     .eq('source', 'ota')
-    .in('status', ['blocked_ota', 'confirmed', 'pending']);
+    .in('status', ['blocked_ota', 'confirmed', 'pending'])
+    .returns<BookingRow[]>();
 
   if (error || !data) return new Map();
 
