@@ -64,6 +64,8 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
             fill
             className="object-cover opacity-60"
             priority
+            sizes="(max-width: 768px) 100vw, 100vw"
+            quality={85}
           />
         ) : (
           <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-foreground/80 to-foreground flex items-center justify-center">
@@ -135,6 +137,8 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
                             alt={room.name}
                             fill
                             className="object-cover group-hover:scale-105 transition-transform duration-500"
+                            sizes="(max-width: 768px) 100vw, 256px"
+                            quality={75}
                           />
                         ) : (
                           <div className="absolute inset-0 w-full h-full bg-gradient-to-br from-muted to-muted/80 flex items-center justify-center">

@@ -94,7 +94,7 @@ export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string
 
     if (error || !hotel) return { success: false, hotel: null };
 
-    let finalRooms = [];
+    let finalRooms: any[] = [];
 
     // 2. MOTOR DE DISPONIBILIDAD (Postgres Anti-Join)
     if (checkIn && checkOut) {

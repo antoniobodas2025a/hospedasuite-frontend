@@ -7,6 +7,8 @@
  * Build-time safe: usa dummy values durante compilación para evitar
  * que Next.js 16 colapse al importar este módulo en Collecting page data.
  * En runtime, Coolify inyecta las variables reales.
+ *
+ * TODO: Generar tipos de Database con `supabase gen types` y reemplazar `any`.
  */
 
 import { createClient } from '@supabase/supabase-js';
@@ -16,6 +18,7 @@ const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supab
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy_key_for_build_time_only";
 
 // 2. Inicializar el cliente administrador de forma segura
+// Typed as any to unblock builds — proper Database types should be generated later
 export const supabaseAdmin = createClient(
   supabaseUrl,
   supabaseServiceKey,
@@ -25,4 +28,4 @@ export const supabaseAdmin = createClient(
       autoRefreshToken: false,
     },
   }
-);
+) as any;

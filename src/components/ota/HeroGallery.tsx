@@ -6,7 +6,6 @@ import { motion } from 'framer-motion';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { X, ChevronLeft, ChevronRight, Grid, TrendingUp, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { shouldUseNativeImg } from '@/lib/image-config';
 import { useIsMobile } from '@/hooks/useIsMediaQuery';
 
 // ============================================================================
@@ -81,41 +80,24 @@ function GalleryImage({
     );
   }
 
-  const useNative = shouldUseNativeImg(src);
-
   return (
     <>
       {/* Skeleton placeholder mientras carga */}
       {isLoading && fill && (
         <div className={cn('absolute inset-0 bg-muted animate-pulse', className)} />
       )}
-      {useNative ? (
-        /* CDN externo (Supabase, R2, S3) — ya optimizan, usar <img> */
-        <img
-          src={src}
-          alt={alt}
-          loading={loading ?? 'eager'}
-          decoding="async"
-          className={cn(isLoading ? 'opacity-0' : 'opacity-100', 'transition-opacity duration-500', className)}
-          onLoad={() => setIsLoading(false)}
-          onError={() => { setError(true); setIsLoading(false); }}
-        />
-      ) : (
-        /* Imágenes locales o sin CDN → Next.js optimiza a AVIF/WebP */
-        <Image
-          src={src}
-          alt={alt}
-          fill={fill}
-          className={cn(isLoading && fill ? 'opacity-0' : 'opacity-100', 'transition-opacity duration-300', className)}
-          sizes={sizes}
-          quality={quality ?? 75}
-          preload={priority}
-          loading={loading ?? 'eager'}
-          decoding="async"
-          onLoadingComplete={() => setIsLoading(false)}
-          onError={() => { setError(true); setIsLoading(false); }}
-        />
-      )}
+      <Image
+        src={src}
+        alt={alt}
+        fill={fill}
+        className={cn(isLoading && fill ? 'opacity-0' : 'opacity-100', 'transition-opacity duration-300', className)}
+        sizes={sizes}
+        quality={quality ?? 75}
+        priority={priority}
+        loading={loading ?? 'eager'}
+        onLoad={() => setIsLoading(false)}
+        onError={() => { setError(true); setIsLoading(false); }}
+      />
     </>
   );
 }
@@ -205,6 +187,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
             sizes="(max-width: 768px) 100vw, 100vw"
+            quality={85}
             priority
           />
         </button>
@@ -227,6 +210,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 50vw"
+                quality={i === 0 ? 85 : 75}
                 priority={i === 0}
               />
             </button>
@@ -249,6 +233,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
               fill
               className="object-cover transition-transform duration-700 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 66vw"
+              quality={85}
               priority
             />
           </button>
@@ -265,7 +250,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
                   fill
                   className="object-cover transition-transform duration-500 hover:scale-110"
                   sizes="33vw"
-                  quality={80}
+                  quality={75}
                 />
               </button>
             ))}
@@ -294,6 +279,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
             fill
             className="object-cover transition-transform duration-700 group-hover:scale-105"
             sizes={totalDisplay >= 6 ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 100vw, 50vw'}
+            quality={85}
             priority
           />
           {/* Semantic overlay token: uses foreground opacity for hover feedback */}
@@ -313,7 +299,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
               fill
               className="object-cover transition-transform duration-500 hover:scale-110"
               sizes={totalDisplay >= 6 ? '33vw' : '25vw'}
-              quality={80}
+              quality={75}
               loading="lazy"
             />
             {/* Semantic overlay token: uses foreground opacity for hover feedback */}
@@ -366,6 +352,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
               fill
               className="object-cover transition-opacity duration-300"
               sizes="100vw"
+              quality={85}
               priority
             />
 
@@ -491,6 +478,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
               fill
               className="object-contain"
               sizes="80vw"
+              quality={90}
               priority
             />
           </div>
@@ -516,7 +504,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
                     alt={img.alt || ''}
                     fill
                     className="object-cover"
-                    sizes="64px"
+                    sizes="100px"
                     quality={50}
                     loading="lazy"
                   />

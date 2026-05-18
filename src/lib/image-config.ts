@@ -9,9 +9,13 @@
  *   IMAGE_FALLBACK_URL  = URL de fallback (ej: Supabase durante transición)
  *   IMAGE_SOURCE        = 'r2' | 'supabase' | 'local' | 'external'
  *
+ * Next.js Image es la capa de optimización (AVIF/WebP, lazy loading,
+ * responsive sizing), no el CDN. Todas las imágenes pasan por next/image
+ * para aplicar transformaciones unificadas independientemente del origen.
+ *
  * Uso en componentes:
  *   import { getImageUrl } from '@/lib/image-config';
- *   <img src={getImageUrl('covers/mi-foto.jpg')} />
+ *   <Image src={getImageUrl('covers/mi-foto.jpg')} fill alt="..." />
  */
 
 export type ImageSource = 'r2' | 'supabase' | 'local' | 'external';
@@ -120,36 +124,20 @@ export function supabaseToR2(supabaseUrl: string, r2BaseUrl?: string): string {
   return `${r2Base}/${relativePath}`;
 }
 
-/**
- * Determina si una imagen debe servirse con <img> (CDN externo)
- * o con <Image> de Next.js (optimización local).
- *
- * @param url - URL de la imagen
- * @returns true si usar <img> directo, false si usar <Image>
- */
-export function shouldUseNativeImg(url: string): boolean {
-  // CDN externo (R2, Supabase, S3) → ya optimizan, usar <img>
-  if (url.includes('supabase.co')) return true;
-  if (url.includes('r2.dev')) return true;
-  if (url.includes('cloudflare')) return true;
-  if (url.includes('s3.') || url.includes('amazonaws.com')) return true;
-
-  // Imágenes locales o de Next.js → usar <Image> para AVIF/WebP
-  return false;
-}
-
 // ─── Helper para componentes ───────────────────────────────────────
 
 /**
- * Hook/función para usar en componentes que necesitan saber
- * qué tipo de componente de imagen usar.
+ * Resuelve la URL completa de una imagen para usar con next/image.
+ *
+ * Next.js Image es la capa de optimización (AVIF/WebP, lazy loading,
+ * responsive sizing) — todas las imágenes, sin importar su origen,
+ * pasan por next/image para aplicar transformaciones unificadas.
  *
  * Usage:
- *   const { url, useNative } = resolveImage('covers/foto.jpg');
- *   {useNative ? <img src={url} /> : <Image src={url} fill />}
+ *   const { url } = resolveImage('covers/foto.jpg');
+ *   <Image src={url} fill alt="..." />
  */
 export function resolveImage(relativePath: string) {
   const url = getImageUrl(relativePath);
-  const useNative = shouldUseNativeImg(url);
-  return { url, useNative };
+  return { url, useNative: false };
 }

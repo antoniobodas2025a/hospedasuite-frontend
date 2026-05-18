@@ -53,12 +53,12 @@ export async function getHotelBillingAction() {
     if (bookingsError) throw new Error('Error al calcular el libro mayor de comisiones.');
 
     // 5. Consolidación de Deuda + cálculo de comisiones OTA (10%)
-    const platformFeesTotal = bookings.reduce((sum, b) => sum + Number(b.platform_fee || 0), 0);
+    const platformFeesTotal = bookings.reduce((sum: number, b: any) => sum + Number(b.platform_fee || 0), 0);
 
     // Detalle de comisiones OTA: 10% sobre total_price de reservas con source='ota'
     const otaCommissionDetails: OtaCommission[] = (bookings || [])
-      .filter(b => b.source === 'ota')
-      .map(b => ({
+      .filter((b: any) => b.source === 'ota')
+      .map((b: any) => ({
         booking_id: b.id,
         source: 'ota',
         total: Number(b.total_price || 0),
@@ -165,7 +165,7 @@ export async function calculateMonthlyInvoiceAction(
       console.error('Error al calcular comisiones OTA:', otaError.message);
     }
 
-    const otaCommissionDetails: OtaCommission[] = (otaBookings || []).map(b => ({
+    const otaCommissionDetails: OtaCommission[] = (otaBookings || []).map((b: any) => ({
       booking_id: b.id,
       source: 'ota',
       total: Number(b.total_price || 0),
@@ -185,7 +185,7 @@ export async function calculateMonthlyInvoiceAction(
 
       if (!upsellError && upsellTx) {
         upsellCommissions = upsellTx.reduce(
-          (sum, t) => sum + Number(t.commission || 0),
+          (sum: number, t: any) => sum + Number(t.commission || 0),
           0
         );
       }
@@ -322,7 +322,7 @@ export async function getInvoiceHistoryAction(
       throw new Error('Error leyendo historial de facturas.');
     }
 
-    const invoices: InvoiceRecord[] = (data || []).map(row => ({
+    const invoices: InvoiceRecord[] = (data || []).map((row: any) => ({
       id: row.id,
       periodStart: row.period_start,
       periodEnd: row.period_end,

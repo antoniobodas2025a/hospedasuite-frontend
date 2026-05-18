@@ -88,25 +88,15 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
           className="relative block h-[260px] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
           aria-label={`Ver galería de ${roomName}`}
         >
-          {images[0]?.url.includes('supabase.co') ? (
-            <img
-              src={images[0]?.url ?? ''}
-              alt={images[0]?.alt ?? roomName}
-              className="object-cover w-full h-full transition-transform duration-700 group-hover:scale-105"
-              loading="eager"
-              decoding="async"
-            />
-          ) : (
-            <Image
-              src={images[0]?.url ?? ''}
-              alt={images[0]?.alt ?? roomName}
-              fill
-              className="object-cover transition-transform duration-700 group-hover:scale-105"
-              priority
-              sizes="100vw"
-              quality={75}
-            />
-          )}
+          <Image
+            src={images[0]?.url ?? ''}
+            alt={images[0]?.alt ?? roomName}
+            fill
+            className="object-cover transition-transform duration-700 group-hover:scale-105"
+            priority
+            sizes="100vw"
+            quality={85}
+          />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           <div className="absolute bottom-3 left-3">
             <span className="inline-flex items-center gap-1.5 px-3 py-1.5 glass-pill text-white text-xs font-semibold shadow-lg">
@@ -132,24 +122,15 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
                   className="relative shrink-0 w-20 h-14 rounded-[var(--radius-squircle-lg)] overflow-hidden transition-all duration-300 group"
                   aria-label={`Ver imagen ${realIndex + 1}`}
                 >
-                  {img.url.includes('supabase.co') ? (
-                    <img
-                      src={img.url}
-                      alt={img.alt ?? `${roomName} — ${realIndex + 1}`}
-                      className="object-cover w-full h-full"
-                      loading="lazy"
-                      decoding="async"
-                    />
-                  ) : (
-                    <Image
-                      src={img.url}
-                      alt={img.alt ?? `${roomName} — ${realIndex + 1}`}
-                      fill
-                      className="object-cover"
-                      sizes="80px"
-                      quality={50}
-                    />
-                  )}
+                  <Image
+                    src={img.url}
+                    alt={img.alt ?? `${roomName} — ${realIndex + 1}`}
+                    fill
+                    className="object-cover"
+                    sizes="80px"
+                    quality={50}
+                    loading="lazy"
+                  />
                   <div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors rounded-[var(--radius-squircle-lg)]" />
                   <div className="absolute inset-0 rounded-[var(--radius-squircle-lg)] ring-1 ring-white/20" />
                 </button>

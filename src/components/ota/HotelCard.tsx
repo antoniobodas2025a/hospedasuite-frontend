@@ -23,8 +23,6 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
     hotel.main_image_url ||
     'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=2049';
 
-  const isSupabase = bgImage.includes('supabase.co');
-
   return (
     <motion.div
       layout
@@ -37,21 +35,14 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
         router.push(`/hotel/${hotel.city_slug}`);
       }}
     >
-      {isSupabase ? (
-        <img
-          src={bgImage}
-          alt={hotel.name}
-          className='object-cover w-full h-full transition-transform duration-700 group-hover:scale-110'
-        />
-      ) : (
-        <Image
-          src={bgImage}
-          alt={hotel.name}
-          fill
-          className='object-cover transition-transform duration-700 group-hover:scale-110'
-          sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
-        />
-      )}
+      <Image
+        src={bgImage}
+        alt={hotel.name}
+        fill
+        className='object-cover transition-transform duration-700 group-hover:scale-110'
+        sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
+        quality={75}
+      />
 
       <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity' />
 

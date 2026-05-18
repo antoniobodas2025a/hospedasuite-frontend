@@ -29,8 +29,8 @@ export async function createHotelAction(formData: FormData) {
   const password = formData.get('password') as string;
   const plan = formData.get('plan') as string;
 
-  let createdAuthId = null;
-  let createdHotelId = null;
+  let createdAuthId: string | null = null;
+  let createdHotelId: string | null = null;
 
   try {
     // 1. Crear Usuario en Supabase Auth

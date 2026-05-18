@@ -36,6 +36,10 @@ export default function RootLayout({
   return (
     // 🛡️ suppressHydrationWarning añadido preventivamente para extensiones o Theme Providers
     <html lang='es' className={cn("font-sans", geist.variable)} suppressHydrationWarning>
+      <head>
+        <link rel="preconnect" href="https://auaqpomuivfhomlkvhju.supabase.co" />
+        <link rel="preconnect" href="https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev" />
+      </head>
       <body className={geist.className}>
         {children}
       </body>

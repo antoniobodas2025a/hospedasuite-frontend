@@ -93,6 +93,7 @@ export default function HotelGallery({ images, hotelName, location }: HotelGalle
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 66vw"
               quality={85}
+              priority
             />
             {/* Glass overlay con storytelling */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />

@@ -79,7 +79,8 @@ function renderSlide(slide: { src?: unknown; alt?: string }, rect: { width: numb
         loading="eager"
         draggable={false}
         style={{ objectFit: 'cover', cursor: 'pointer' }}
-        sizes={`${Math.ceil((rect.width / (typeof window !== 'undefined' ? window.innerWidth : 1200)) * 100)}vw`}
+        sizes="80vw"
+        quality={90}
       />
     </div>
   );
@@ -96,6 +97,7 @@ function renderThumbnail(slide: { src?: unknown }, rect: { width: number; height
         loading="lazy"
         style={{ objectFit: 'cover' }}
         sizes={`${rect.width}px`}
+        quality={50}
       />
     </div>
   );

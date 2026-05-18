@@ -75,10 +75,10 @@ export async function getHQFinancialReportAction() {
     let globalSaaS = 0;
     let globalCommissions = 0;
 
-    const report: HotelFinancialRecord[] = hotels.map(hotel => {
-      const hotelBookings = bookings.filter(b => b.hotel_id === hotel.id);
+    const report: HotelFinancialRecord[] = hotels.map((hotel: any) => {
+      const hotelBookings = bookings.filter((b: any) => b.hotel_id === hotel.id);
       
-      const accumulatedFees = hotelBookings.reduce((sum, b) => sum + Number(b.platform_fee || 0), 0);
+      const accumulatedFees = hotelBookings.reduce((sum: number, b: any) => sum + Number(b.platform_fee || 0), 0);
       
       // 🧪 Si está en trial, el plan cuesta $0
       const trialHotel: TrialHotel = {
