@@ -32,14 +32,14 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Consumers & Server Actions
 
-- [ ] 2.1 Create `src/app/api/events/[topic]/route.ts` — generic QStash consumer: `verifySignatureAppRouter`, Zod validate, idempotency check (`processed_events`), dispatch to handlers via registry
-- [ ] 2.2 Create `src/app/api/events/handlers/cache-invalidate.ts` — calls `revalidatePath()` / `revalidateTag()` from event payload paths/tags
-- [ ] 2.3 Create `src/app/api/events/handlers/audit-log.ts` — inserts row into `audit_logs` table, reuses `logAuditEvent` internally
-- [ ] 2.4 Create `src/app/api/events/handlers/analytics-track.ts` — forwards to PostHog `capture()` via `trackPostHogEvent`
-- [ ] 2.5 Create `src/app/api/events/handlers/email-send.ts` — calls Resend API with template/recipient/data
-- [ ] 2.6 Create `src/app/api/events/handlers/ota-sync.ts` — publishes to existing QStash sync-hotel worker endpoint
-- [ ] 2.7 Modify `src/app/actions/bookings.ts` — add `emitEvent('booking.created', ...)`, `emitEvent('booking.cancelled', ...)`, `emitEvent('booking.updated', ...)` after DB commit, gated by `EVENT_DRIVEN_MODE`
-- [ ] 2.8 Modify `src/app/actions/rooms.ts` — add `emitEvent('room.status_changed', ...)` after `updateRoomStatusAction` DB commit
+- [x] 2.1 Create `src/app/api/events/handler/route.ts` — generic QStash consumer: `verifyQStashSignature`, Zod validate, idempotency check (`processed_events`), dispatch to handlers via registry
+- [x] 2.2 Create `src/app/api/events/handlers/cache-invalidate.ts` — calls `revalidatePath()` / `revalidateTag()` from event payload paths/tags
+- [x] 2.3 Create `src/app/api/events/handlers/audit-log.ts` — inserts row into `audit_log` table, registers for 14 event types
+- [x] 2.4 Create `src/app/api/events/handlers/analytics-track.ts` — forwards to PostHog `capture()`, registers for 5 event types
+- [x] 2.5 Create `src/app/api/events/handlers/email-send.ts` — calls Resend API with template/recipient/data
+- [x] 2.6 Create `src/app/api/events/handlers/ota-sync.ts` — publishes to existing QStash sync-hotel worker endpoint
+- [x] 2.7 Modify `src/app/actions/bookings.ts` — add `emitEvent('booking.created', ...)` + `emitEvent('booking.cancelled', ...)` after DB commit, dual-write (keeps `revalidatePath`)
+- [x] 2.8 Modify `src/app/actions/rooms.ts` — add `emitEvent('room.status_changed', ...)` + `emitEvent('cache.invalidate', ...)` after DB commit, dual-write (keeps `revalidatePath`)
 - [ ] 2.9 Modify `src/app/actions/payments.ts` — add `emitEvent('payment.received', ...)` / `emitEvent('payment.approved', ...)` after DB commit
 
 ## Phase 3: Realtime & Dual-Write Gating

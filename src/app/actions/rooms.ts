@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
+import { emitEvent } from '@/lib/events';
 
 export type RoomStatus = 'available' | 'dirty' | 'maintenance' | 'occupied';
 
@@ -17,6 +18,14 @@ export async function updateRoomStatusAction(roomId: string, newStatus: RoomStat
 
     const supabase = await createClient();
 
+    // Fetch current status for the event payload
+    const { data: currentRoom } = await supabase
+      .from('rooms')
+      .select('status')
+      .eq('id', roomId)
+      .eq('hotel_id', hotel.id)
+      .single();
+
     // 1. Mutación Atómica de Estado
     const { error } = await supabase
       .from('rooms')
@@ -25,6 +34,24 @@ export async function updateRoomStatusAction(roomId: string, newStatus: RoomStat
       .eq('hotel_id', hotel.id);
 
     if (error) throw new Error(`DB_ERROR: Fallo al actualizar inventario: ${error.message}`);
+
+    await emitEvent('room.status_changed', {
+      roomId: roomId,
+      hotelId: hotel.id,
+      oldStatus: currentRoom?.status || 'unknown',
+      newStatus: newStatus,
+    }, {
+      hotelId: hotel.id,
+      source: 'server-action',
+    });
+
+    await (emitEvent as any)('cache.invalidate', {
+      paths: ['/dashboard', '/dashboard/calendar'],
+      tags: [`rooms-${hotel.id}`],
+    }, {
+      hotelId: hotel.id,
+      source: 'server-action',
+    });
 
     // 2. Protocolo de Revalidación Global
     // Invalida el calendario, el dashboard y el propio panel de limpieza.

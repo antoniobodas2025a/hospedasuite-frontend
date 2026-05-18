@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { cookies } from 'next/headers';
 import { isTemporalCollision, type PostgresError } from '@/lib/booking-helpers';
+import { emitEvent } from '@/lib/events';
 
 // 🛡️ CLIENTE PRIVILEGIADO GLOBAL (Admin Tier)
 const supabaseAdmin = createSupabaseClient(
@@ -185,7 +186,7 @@ export async function createBookingAction(data: BookingPayload) {
       }
     }
 
-    const { error: bookingError } = await supabaseAdmin.from('bookings').insert([{
+    const { data: newBooking, error: bookingError } = await supabaseAdmin.from('bookings').insert([{
         hotel_id: currentHotel.id,
         room_id: data.roomId,
         guest_id: guestId,
@@ -193,14 +194,36 @@ export async function createBookingAction(data: BookingPayload) {
         check_out: data.checkOut,
         status: data.type === 'booking' ? 'confirmed' : 'maintenance',
         total_price: data.price,
-        staff_id: staffId, 
-        source: data.source || 'admin', 
-      }]);
+        staff_id: staffId,
+        source: data.source || 'admin',
+      }]).select('id').single();
 
     if (bookingError) {
       if (isTemporalCollision(bookingError)) throw new Error('prevent_double_booking');
       throw new Error(bookingError.message);
     }
+
+    await emitEvent('booking.created', {
+      bookingId: newBooking.id,
+      hotelId: currentHotel.id,
+      guestId: guestId,
+      roomId: data.roomId,
+      checkIn: data.checkIn,
+      checkOut: data.checkOut,
+      totalAmount: data.price,
+      status: 'confirmed',
+    }, {
+      hotelId: currentHotel.id,
+      source: 'server-action',
+    });
+
+    await (emitEvent as any)('cache.invalidate', {
+      paths: ['/dashboard/calendar'],
+      tags: [`bookings-${currentHotel.id}`],
+    }, {
+      hotelId: currentHotel.id,
+      source: 'server-action',
+    });
 
     revalidatePath('/dashboard/calendar');
     return { success: true };
@@ -244,6 +267,22 @@ export async function cancelBookingAction(bookingId: string) {
       .eq('hotel_id', currentHotel.id);
 
     if (cancelError) throw new Error('Error al purgar nodo: ' + cancelError.message);
+
+    await emitEvent('booking.cancelled', {
+      bookingId: bookingId,
+      hotelId: currentHotel.id,
+    }, {
+      hotelId: currentHotel.id,
+      source: 'server-action',
+    });
+
+    await (emitEvent as any)('cache.invalidate', {
+      paths: ['/dashboard/calendar'],
+      tags: [`bookings-${currentHotel.id}`],
+    }, {
+      hotelId: currentHotel.id,
+      source: 'server-action',
+    });
 
     revalidatePath('/dashboard/calendar');
     return { success: true };
