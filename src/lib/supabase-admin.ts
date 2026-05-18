@@ -9,6 +9,7 @@
  * En runtime, Coolify inyecta las variables reales.
  *
  * TODO: Generar tipos de Database con `supabase gen types` y reemplazar `any`.
+ * El archivo src/types/database.ts tiene los tipos generados como referencia.
  */
 
 import { createClient } from '@supabase/supabase-js';

@@ -57,7 +57,7 @@ export async function GET(
 
     // 5. Agregar cada reserva como un evento (VEVENT) anonimizado
     if (bookings && bookings.length > 0) {
-      bookings.forEach((booking) => {
+      bookings.forEach((booking: any) => {
         const formatIcalDate = (dateString: string) => dateString.replace(/-/g, '');
 
         const dtStart = formatIcalDate(booking.check_in);

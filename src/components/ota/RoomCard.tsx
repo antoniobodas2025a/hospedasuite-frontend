@@ -171,7 +171,7 @@ function RoomCardInner({
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.25 }}
                 className="bg-urgent text-urgent-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5"
               >
-                <Flame size={12} className="fill-white" /> Solo {availableCount} disponible{availableCount > 1 ? 's' : ''}
+                <Flame size={12} className="fill-white" /> Solo {availableCount} disponible{(availableCount || 0) > 1 ? 's' : ''}
               </motion.div>
             )}
             {isLowStock && !isAlmostGone && (

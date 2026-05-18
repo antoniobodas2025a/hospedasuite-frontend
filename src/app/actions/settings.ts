@@ -150,16 +150,18 @@ export async function updateHotelProfileAction(hotelId: string, formData: any) {
 
 
 // ============================================================================
-// 📸 ACCIÓN 3: UPLOAD DE IMÁGENES OPTIMIZADAS CON SHARP
+// 📸 ACCIÓN 3: UPLOAD DE IMÁGENES MULTI-TAMAÑO CON SHARP
 // ============================================================================
 
 /**
- * Recibe un archivo, lo optimiza con Sharp (resize + WebP), y lo sube a Supabase Storage.
- * 
- * - Resize: max 1920x1080 (sin agrandar si es más chica)
- * - Formato: WebP quality 80
- * - Bucket: hotel-media
- * - Retorna: URL pública de la imagen optimizada
+ * Genera 3 tamaños + blur placeholder para cada imagen subida.
+ *
+ * - Thumb: 256px (listados, thumbnails)
+ * - Card:  640px (cards, previews)
+ * - Full:  1920px (hero, lightbox)
+ * - Blur:  20×20px base64 WebP (placeholder LQIP)
+ *
+ * Retorna URLs con sufijos: _thumb.webp, _card.webp, _full.webp
  */
 export async function uploadOptimizedImageAction(
   formData: FormData,
@@ -176,54 +178,66 @@ export async function uploadOptimizedImageAction(
       throw new Error('No se recibió ningún archivo.');
     }
 
-    // Validar tipo
     if (!file.type.startsWith('image/')) {
       throw new Error('El archivo debe ser una imagen.');
     }
 
-    // Validar tamaño (max 20MB antes de comprimir)
     if (file.size > 20 * 1024 * 1024) {
       throw new Error('La imagen no puede superar los 20MB.');
     }
 
-    // Leer buffer
     const buffer = Buffer.from(await file.arrayBuffer());
+    const image = sharp(buffer);
+    const metadata = await image.metadata();
 
-    // Optimizar con Sharp
-    const optimized = await sharp(buffer)
-      .resize(1920, 1080, { fit: 'inside', withoutEnlargement: true })
-      .webp({ quality: 80, effort: 6 })
-      .toBuffer();
+    // Generar 3 tamaños
+    const [thumb, card, full] = await Promise.all([
+      image.clone().resize(256, 256, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 50, effort: 6 }).toBuffer(),
+      image.clone().resize(640, 640, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 75, effort: 6 }).toBuffer(),
+      image.clone().resize(1920, 1080, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 80, effort: 6 }).toBuffer(),
+    ]);
 
-    // Generar nombre único
-    const fileName = `${currentHotel.id}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+    // Generar blur placeholder (20×20px)
+    const blurBuffer = await image.clone().resize(20, 20, { fit: 'inside' }).webp({ quality: 50 }).toBuffer();
+    const blurDataURL = `data:image/webp;base64,${blurBuffer.toString('base64')}`;
 
-    // Subir a Supabase
+    // Subir los 3 tamaños
     const { supabaseAdmin } = await import('@/lib/supabase-admin');
-    const { error: uploadError } = await supabaseAdmin
-      .storage
-      .from('hotel-media')
-      .upload(fileName, optimized, {
-        contentType: 'image/webp',
-        cacheControl: '31536000', // 1 año
-        upsert: false,
-      });
+    const baseName = `${currentHotel.id}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
-    if (uploadError) throw uploadError;
+    const uploads = await Promise.all([
+      supabaseAdmin.storage.from('hotel-media').upload(`${baseName}_thumb.webp`, thumb, { contentType: 'image/webp', cacheControl: '31536000', upsert: false }),
+      supabaseAdmin.storage.from('hotel-media').upload(`${baseName}_card.webp`, card, { contentType: 'image/webp', cacheControl: '31536000', upsert: false }),
+      supabaseAdmin.storage.from('hotel-media').upload(`${baseName}_full.webp`, full, { contentType: 'image/webp', cacheControl: '31536000', upsert: false }),
+    ]);
 
-    // Obtener URL pública
-    const { data: urlData } = supabaseAdmin
-      .storage
-      .from('hotel-media')
-      .getPublicUrl(fileName);
+    for (const { error } of uploads) {
+      if (error) throw error;
+    }
 
-    // Stats para logging
+    // Obtener URLs públicas
+    const { data: thumbUrl } = supabaseAdmin.storage.from('hotel-media').getPublicUrl(`${baseName}_thumb.webp`);
+    const { data: cardUrl } = supabaseAdmin.storage.from('hotel-media').getPublicUrl(`${baseName}_card.webp`);
+    const { data: fullUrl } = supabaseAdmin.storage.from('hotel-media').getPublicUrl(`${baseName}_full.webp`);
+
     const originalKB = (file.size / 1024).toFixed(0);
-    const optimizedKB = (optimized.length / 1024).toFixed(0);
-    const savings = Math.round((1 - optimized.length / file.size) * 100);
-    console.log(`📸 Imagen optimizada: ${originalKB}KB → ${optimizedKB}KB (${savings}% menos)`);
+    const fullKB = (full.length / 1024).toFixed(0);
+    const cardKB = (card.length / 1024).toFixed(0);
+    const thumbKB = (thumb.length / 1024).toFixed(0);
 
-    return { success: true, url: urlData.publicUrl, stats: { originalKB, optimizedKB, savings } };
+    console.log(`📸 Multi-size: ${originalKB}KB → full:${fullKB}KB, card:${cardKB}KB, thumb:${thumbKB}KB`);
+
+    return {
+      success: true,
+      url: fullUrl.publicUrl, // URL principal (full) para compatibilidad
+      urls: {
+        thumb: thumbUrl.publicUrl,
+        card: cardUrl.publicUrl,
+        full: fullUrl.publicUrl,
+      },
+      blurDataURL,
+      stats: { originalKB, fullKB, cardKB, thumbKB },
+    };
 
   } catch (error: any) {
     console.error('🔥 Error optimizando imagen:', error);

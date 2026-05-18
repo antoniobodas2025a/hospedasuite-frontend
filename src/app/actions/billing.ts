@@ -28,7 +28,7 @@ export async function getHotelBillingAction() {
     // 2. Extracción de Plan de Suscripción
     const { data: hotel, error: hotelError } = await supabaseAdmin
       .from('hotels')
-      .select('id, name, subscription_plan, subscription_status, trial_ends_at')
+      .select('*')
       .eq('id', currentHotel.id)
       .single();
 

@@ -4,10 +4,8 @@ import { verifySignatureAppRouter } from '@upstash/qstash/nextjs';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
-import { createClient } from '@supabase/supabase-js';
-
 // Type alias for the admin client
-type AdminClient = ReturnType<typeof createClient>;
+type AdminClient = any;
 
 // ============================================================================
 // iCal Sync Engine — Diff Algorithm
@@ -76,8 +74,7 @@ async function fetchExistingOtaBookings(
     .select('id, room_id, status, external_id')
     .eq('hotel_id', hotelId)
     .eq('source', 'ota')
-    .in('status', ['blocked_ota', 'confirmed', 'pending'])
-    .returns<BookingRow[]>();
+    .in('status', ['blocked_ota', 'confirmed', 'pending']);
 
   if (error || !data) return new Map();
 

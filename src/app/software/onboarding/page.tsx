@@ -149,7 +149,7 @@ export default function PremiumOnboardingWizard() {
     setIsLoading(true);
     setStep(4); // Forzar pantalla de compilación
     try {
-      let logoUrl = null;
+      let logoUrl: string | null = null;
       
       // 1. Inyección de Logo Principal
       if (logoFile) {

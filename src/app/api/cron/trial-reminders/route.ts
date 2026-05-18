@@ -109,7 +109,7 @@ export async function GET(request: Request) {
     return NextResponse.json({
       sent,
       total: reminderHotels.length,
-      hotels: reminderHotels.map(h => ({ id: h.id, name: h.name, email: h.email })),
+      hotels: reminderHotels.map((h: any) => ({ id: h.id, name: h.name, email: h.email })),
     });
   } catch (error: any) {
     console.error('[CRON] Error procesando reminders:', error.message);

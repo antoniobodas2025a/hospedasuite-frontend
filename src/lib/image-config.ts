@@ -141,3 +141,65 @@ export function resolveImage(relativePath: string) {
   const url = getImageUrl(relativePath);
   return { url, useNative: false };
 }
+
+// ─── Multi-size URL resolution ─────────────────────────────────────
+
+export type ImageSize = 'thumb' | 'card' | 'full';
+
+/**
+ * Deriva la URL de un tamaño específico desde una URL base.
+ *
+ * Convención de nombres:
+ *   - `image.webp` (legacy, sin sufijo) → fallback a la misma URL
+ *   - `image_full.webp` → full size
+ *   - `image_card.webp` → card size (640px)
+ *   - `image_thumb.webp` → thumbnail (256px)
+ *
+ * Para imágenes legacy sin sufijo, devuelve la URL original.
+ * Next.js Image optimiza al vuelo como fallback.
+ *
+ * @param baseUrl - URL completa de la imagen (generalmente la versión full)
+ * @param size - Tamaño deseado: 'thumb' | 'card' | 'full'
+ * @returns URL del tamaño solicitado
+ */
+export function getImageSizeUrl(baseUrl: string, size: ImageSize): string {
+  if (!baseUrl) return '';
+
+  // Si ya tiene el sufijo correcto, devolver tal cual
+  if (baseUrl.includes(`_${size}.webp`) || baseUrl.includes(`_${size}.jpg`) || baseUrl.includes(`_${size}.png`)) {
+    return baseUrl;
+  }
+
+  // Si tiene otro sufijo de tamaño, reemplazarlo
+  const sizePattern = /_(thumb|card|full)\.(webp|jpg|png|jpeg)$/i;
+  if (sizePattern.test(baseUrl)) {
+    return baseUrl.replace(sizePattern, `_${size}.$2`);
+  }
+
+  // Si no tiene sufijo (legacy), agregar el sufijo antes de la extensión
+  const extPattern = /\.(webp|jpg|png|jpeg)(\?.*)?$/i;
+  const match = baseUrl.match(extPattern);
+  if (match) {
+    const ext = match[1];
+    const query = match[2] || '';
+    return baseUrl.replace(extPattern, `_${size}.${ext}${query}`);
+  }
+
+  // Si no se puede determinar la extensión, fallback a la URL original
+  return baseUrl;
+}
+
+/**
+ * Extrae el blurDataURL de una URL si está almacenado como query param.
+ * Para imágenes nuevas, el blurDataURL se genera al subir y se pasa
+ * como prop separado. Esta función es un fallback para casos edge.
+ */
+export function extractBlurDataUrl(url: string): string | null {
+  if (!url) return null;
+  try {
+    const urlObj = new URL(url);
+    return urlObj.searchParams.get('blur') || null;
+  } catch {
+    return null;
+  }
+}

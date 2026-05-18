@@ -45,7 +45,7 @@ export async function GET(request: Request) {
     console.log(`[CRON] ${expiredHotels.length} trial(s) expirado(s) encontrado(s).`);
 
     // 3. Marcar como past_due
-    const hotelIds = expiredHotels.map(h => h.id);
+    const hotelIds = expiredHotels.map((h: any) => h.id);
     const { error: updateError } = await supabaseAdmin
       .from('hotels')
       .update({ subscription_status: 'past_due' })
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({
       processed: hotelIds.length,
-      hotels: expiredHotels.map(h => ({ id: h.id, name: h.name })),
+      hotels: expiredHotels.map((h: any) => ({ id: h.id, name: h.name })),
     });
   } catch (error: any) {
     console.error('[CRON] Error procesando trials expirados:', error.message);

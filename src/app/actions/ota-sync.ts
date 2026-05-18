@@ -42,7 +42,7 @@ export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success
     }
 
     const totalRooms = roomsWithIcal?.length || 0;
-    const roomsConfigured = roomsWithIcal?.filter(r => r.ical_import_url).length || 0;
+    const roomsConfigured = roomsWithIcal?.filter((r: any) => r.ical_import_url).length || 0;
 
     if (roomsConfigured === 0) {
       return {
@@ -88,7 +88,7 @@ export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success
       lastSync: lastSync || null,
       roomsWithIcal: roomsConfigured,
       totalRooms,
-      recentSyncs: (recentSyncs || []).map(r => ({
+      recentSyncs: (recentSyncs || []).map((r: any) => ({
         id: r.id,
         hotel_id: r.hotel_id,
         rooms_synced: r.rooms_synced,

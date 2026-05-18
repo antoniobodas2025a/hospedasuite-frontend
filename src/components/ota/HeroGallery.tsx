@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { X, ChevronLeft, ChevronRight, Grid, TrendingUp, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { getImageSizeUrl } from '@/lib/image-config';
 import { useIsMobile } from '@/hooks/useIsMediaQuery';
 
 // ============================================================================

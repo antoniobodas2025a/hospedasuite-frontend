@@ -25,15 +25,14 @@ export async function GET(request: Request) {
     const { data: rooms, error } = await supabaseAdmin
       .from('rooms')
       .select('hotel_id')
-      .not('ical_import_url', 'is', null)
-      .returns<HotelRoomInfo[]>();
+      .not('ical_import_url', 'is', null);
 
     if (error || !rooms) {
       throw new Error(`Fallo de integridad en base de datos: ${error?.message || 'Data nula'}`);
     }
 
     // Algoritmo de unicidad O(N)
-    const uniqueHotelIds = Array.from(new Set(rooms.map(room => room.hotel_id)));
+    const uniqueHotelIds = Array.from(new Set(rooms.map((room: any) => room.hotel_id)));
 
     if (uniqueHotelIds.length === 0) {
       return NextResponse.json({ success: true, dispatched: 0, message: 'Inventario vacío' }, { status: 200 });
