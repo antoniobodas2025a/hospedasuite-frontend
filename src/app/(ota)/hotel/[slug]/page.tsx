@@ -57,6 +57,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
   const checkin = resolvedSearchParams?.checkin as string | undefined;
   const checkout = resolvedSearchParams?.checkout as string | undefined;
   const minCapacity = resolvedSearchParams?.min_capacity as string | undefined;
+  const minBeds = resolvedSearchParams?.min_beds as string | undefined;
   const showRoom = resolvedSearchParams?.showRoom as string | undefined;
 
   const { success, hotel } = await getHotelDetailsBySlugAction(slug, checkin, checkout);
@@ -69,8 +70,10 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
   const availableRooms = (hotel.rooms || []).filter((room: any) => {
     const isActive = room.status === 'active';
     const minCap = Number(minCapacity) || 0;
+    const minB = Number(minBeds) || 0;
     const hasCapacity = minCap === 0 || Number(room.capacity ?? 0) >= minCap;
-    return isActive && hasCapacity;
+    const hasBeds = minB === 0 || Number(room.beds ?? 0) >= minB;
+    return isActive && hasCapacity && hasBeds;
   });
 
   const isSearchingDates = !!(checkin && checkout);

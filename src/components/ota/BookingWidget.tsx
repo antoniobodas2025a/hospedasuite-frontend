@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { springSnappy } from '@/lib/mac2026/spring';
@@ -53,6 +53,10 @@ export default function BookingWidget({
   // Detect selected room from URL
   const selectedRoomId = searchParams.get('showRoom');
   const selectedRoom = selectedRoomId ? activeRooms.find(r => r.id === selectedRoomId) : null;
+
+  // Guest count from min_capacity filter
+  const minCapacityParam = searchParams.get('min_capacity');
+  const guestCount = minCapacityParam ? Number(minCapacityParam) : null;
 
   let nights = 0;
   if (checkIn && checkOut) {
@@ -130,6 +134,11 @@ export default function BookingWidget({
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(checkIn).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} — {new Date(checkOut).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                 </p>
+                {guestCount && (
+                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
+                    <Users size={12} /> {guestCount} huésped{guestCount > 1 ? 'es' : ''}
+                  </p>
+                )}
               </div>
             </div>
           ) : (

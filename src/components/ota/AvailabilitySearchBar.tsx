@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useTransition, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, SlidersHorizontal, Tag, DollarSign, Users as UsersIcon } from 'lucide-react';
+import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, SlidersHorizontal, Tag, DollarSign, Users as UsersIcon, Bed } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay } from 'date-fns';
@@ -19,6 +19,7 @@ interface RoomItem {
   price: number;
   price_per_night?: number;
   capacity?: number;
+  beds?: number;
   amenities?: string[];
 }
 
@@ -103,6 +104,7 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
   const prices = rooms.map((r) => r.price_per_night || r.price || 0);
   const maxPossiblePrice = prices.length > 0 ? Math.max(...prices) : 0;
   const maxPossibleCapacity = rooms.length > 0 ? Math.max(...rooms.map((r) => r.capacity || 0)) : 0;
+  const maxPossibleBeds = rooms.length > 0 ? Math.max(...rooms.map((r) => r.beds || 0)) : 0;
 
   const [maxPrice, setMaxPrice] = useState<number | null>(() => {
     const p = searchParams.get('max_price');
@@ -111,6 +113,10 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
   const [minCapacity, setMinCapacity] = useState<number | null>(() => {
     const c = searchParams.get('min_capacity');
     return c ? Number(c) : null;
+  });
+  const [minBeds, setMinBeds] = useState<number | null>(() => {
+    const b = searchParams.get('min_beds');
+    return b ? Number(b) : null;
   });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>(() => {
     const a = searchParams.get('amenities');
@@ -167,6 +173,9 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
     if (minCapacity !== null) params.set('min_capacity', minCapacity.toString());
     else params.delete('min_capacity');
 
+    if (minBeds !== null) params.set('min_beds', minBeds.toString());
+    else params.delete('min_beds');
+
     if (selectedAmenities.length > 0) params.set('amenities', selectedAmenities.join(','));
     else params.delete('amenities');
 
@@ -204,8 +213,8 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
     setSelectedAmenities(updated);
   };
 
-  const hasActiveFilters = maxPrice !== null || minCapacity !== null || selectedAmenities.length > 0;
-  const filterCount = [maxPrice, minCapacity, ...selectedAmenities].filter(Boolean).length;
+  const hasActiveFilters = maxPrice !== null || minCapacity !== null || minBeds !== null || selectedAmenities.length > 0;
+  const filterCount = [maxPrice, minCapacity, minBeds, ...selectedAmenities].filter(Boolean).length;
 
   // Live results counter (same logic as RoomsListWithFilters)
   const matchingCount = useMemo(() => {
@@ -213,21 +222,24 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
     return rooms.filter((room) => {
       const price = room.price_per_night || room.price || 0;
       const capacity = room.capacity || 0;
+      const beds = room.beds || 0;
       if (maxPrice !== null && price > maxPrice) return false;
       if (minCapacity !== null && capacity < minCapacity) return false;
+      if (minBeds !== null && beds < minBeds) return false;
       if (selectedAmenities.length > 0) {
         const roomAmenities = room.amenities || [];
         if (!selectedAmenities.every((a) => roomAmenities.includes(a))) return false;
       }
       return true;
     }).length;
-  }, [rooms, maxPrice, minCapacity, selectedAmenities, hasActiveFilters]);
+  }, [rooms, maxPrice, minCapacity, minBeds, selectedAmenities, hasActiveFilters]);
 
   const clearAll = (e: React.MouseEvent) => {
     e.stopPropagation();
     setDate(undefined);
     setMaxPrice(null);
     setMinCapacity(null);
+    setMinBeds(null);
     setSelectedAmenities([]);
     setActivePopover(null);
     
@@ -236,6 +248,7 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
     params.delete('checkout');
     params.delete('max_price');
     params.delete('min_capacity');
+    params.delete('min_beds');
     params.delete('amenities');
     params.delete('showRoom');
     
@@ -422,6 +435,28 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
               </motion.span>
             )}
 
+            {/* Camas pill */}
+            {minBeds !== null && (
+              <motion.span
+                layout
+                initial={{ opacity: 0, scale: 0.8 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.8 }}
+                transition={springSnappy()}
+                className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-muted/80 border border-border text-xs font-medium text-foreground"
+              >
+                <Bed size={12} className="text-muted-foreground" />
+                <span>Mín. {minBeds} cama{minBeds > 1 ? 's' : ''}</span>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setMinBeds(null); triggerSearch(date?.from, date?.to); }}
+                  className="size-4 rounded-full flex items-center justify-center hover:bg-destructive/20 hover:text-destructive transition-colors"
+                  title="Quitar filtro de camas"
+                >
+                  <X size={10} strokeWidth={3} />
+                </button>
+              </motion.span>
+            )}
+
             {/* Amenidades pills */}
             {selectedAmenities.map((amenityId) => {
               const amenity = Object.values(ROOM_AMENITY_REGISTRY).find(a => a.id === amenityId);
@@ -556,7 +591,7 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
                   <h3 className="font-black text-foreground tracking-tight text-lg">Refinar búsqueda</h3>
                   {hasActiveFilters && (
                     <button 
-                      onClick={() => { setMaxPrice(null); setMinCapacity(null); setSelectedAmenities([]); triggerSearch(date?.from, date?.to); }}
+                      onClick={() => { setMaxPrice(null); setMinCapacity(null); setMinBeds(null); setSelectedAmenities([]); triggerSearch(date?.from, date?.to); }}
                       className="flex items-center gap-1 text-xs text-muted-foreground hover:text-destructive transition-colors"
                     >
                       <X size={12} /> Limpiar
@@ -604,6 +639,31 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
                         )}
                       >
                         {cap}
+                      </motion.button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Camas */}
+                <div>
+                  <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+                    Camas mínimas: {minBeds || 'Cualquiera'}
+                  </label>
+                  <div className="flex gap-2">
+                    {Array.from({ length: Math.min(maxPossibleBeds, 6) }, (_, i) => i + 1).map((bed) => (
+                      <motion.button
+                        key={bed}
+                        onClick={() => setMinBeds(minBeds === bed ? null : bed)}
+                        whileTap={{ scale: 0.9 }}
+                        transition={{ type: 'spring', stiffness: 400, damping: 15 }}
+                        className={cn(
+                          'size-10 rounded-[var(--radius-squircle-lg)] text-sm font-bold transition-all',
+                          minBeds === bed
+                            ? 'bg-primary text-primary-foreground shadow-md'
+                            : 'bg-muted text-muted-foreground border border-border hover:border-brand-300',
+                        )}
+                      >
+                        {bed}
                       </motion.button>
                     ))}
                   </div>

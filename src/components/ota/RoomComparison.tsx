@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
-import { Check, X, ChevronDown, ChevronUp } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Check, X, ChevronDown, ChevronUp, Bed } from 'lucide-react';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 
 // ============================================================================
@@ -19,6 +18,7 @@ interface RoomComparisonProps {
     price: number;
     price_per_night?: number;
     capacity?: number;
+    beds?: number;
     amenities?: string[];
     description?: string;
     size_sqm?: number;
@@ -66,6 +66,18 @@ export default function RoomComparison({ rooms }: RoomComparisonProps) {
                   {rooms.map((room) => (
                     <td key={room.id} className="text-center py-3 px-4 text-foreground font-bold">
                       {room.capacity || '-'} personas
+                    </td>
+                  ))}
+                </tr>
+
+                {/* Camas */}
+                <tr className="border-b border-border/40">
+                  <td className="py-3 px-4 text-muted-foreground font-medium flex items-center gap-1.5">
+                    <Bed size={14} /> Camas
+                  </td>
+                  {rooms.map((room) => (
+                    <td key={room.id} className="text-center py-3 px-4 text-foreground font-bold">
+                      {room.beds || '-'}
                     </td>
                   ))}
                 </tr>

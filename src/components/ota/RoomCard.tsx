@@ -5,7 +5,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { motion, useInView } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass';
-import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame } from 'lucide-react';
+import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRoomAmenityById } from '@/lib/amenity-registry';
 import { getImageSizeUrl } from '@/lib/image-config';
@@ -189,9 +189,16 @@ function RoomCardInner({
           <div>
             <div className="flex justify-between items-start mb-3">
               <h4 className="text-2xl font-bold text-foreground tracking-tight">{room.name}</h4>
-              <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
-                <Users size={12} /> Max {room.capacity}
-              </span>
+              <div className="flex flex-col items-end gap-1">
+                <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
+                  <Users size={12} /> Max {room.capacity}
+                </span>
+                {room.beds && room.beds > 0 && (
+                  <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
+                    <Bed size={12} /> {room.beds} cama{room.beds > 1 ? 's' : ''}
+                  </span>
+                )}
+              </div>
             </div>
 
             <p className="text-sm text-muted-foreground line-clamp-2 mb-4 font-lora italic">
