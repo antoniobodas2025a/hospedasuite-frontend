@@ -44,10 +44,10 @@ Chain strategy: stacked-to-main
 - [x] **3.6** Create `src/components/onboarding/RoomDetailStep.tsx` — Step 4b: inline editor for name/price/description/capacity, amenities toggles (`ROOM_AMENITY_REGISTRY`), gallery (max 5 via `uploadOptimizedImageAction(folder='rooms')`), DayPicker availability range.
 - [x] **3.7** Create `src/components/onboarding/SettingsStep.tsx` — Step 5: hotel amenities toggle (`AMENITY_REGISTRY`), check-in/out time, WhatsApp, Google Maps, cancellation. Advanced accordion (SEO, trust badges, reception hours). Staff editor pre-filled from DB.
 - [x] **3.8** Create `src/components/onboarding/PaymentStep.tsx` — Step 6: summary of all data. `WompiButton` with amount from `?price=` (default 89900). On success → calls `executeProvisioningAction`. Error state with retry.
-- [ ] **3.9** Create `src/components/onboarding/ProvisioningStep.tsx` — Loading overlay with 3 progress stages ("Subiendo imágenes", "Guardando datos", "Configurando unidades"). Navigation lock. Error state with retry button.
+- [x] **3.9** Create `src/components/onboarding/ProvisioningStep.tsx` — Loading overlay with 3 progress stages ("Subiendo imágenes", "Guardando datos", "Configurando unidades"). Navigation lock. Error state with retry button.
 
 ## Phase 4: Integration
 
 - [ ] **4.1** Modify `src/app/actions/onboarding.ts` — ✅ `executeOnboardingProvisioning(state)` done (Phase 1). ⬜ `saveOnboardingDraftAction(hotelId, step, config)` pending. ⬜ `recoverOnboardingAction()` pending.
-- [ ] **4.2** Rewrite `src/app/software/onboarding/page.tsx` — Thin orchestrator (~80 LOC): step machine with `AnimatePresence`, store sync (`recoverFromDB` on mount), route to correct step component. No inline forms.
-- [ ] **4.3** Create `src/app/software/onboarding/success/page.tsx` — Post-provisioning success: "¡Tu propiedad está lista!" message, preview link, dashboard link, OTA config link.
+- [x] **4.2** Rewrite `src/app/software/onboarding/page.tsx` — Thin orchestrator (~80 LOC): step machine with `AnimatePresence`, store sync (`recoverFromDB` on mount), route to correct step component. No inline forms.
+- [x] **4.3** Create `src/app/software/onboarding/success/page.tsx` — Post-provisioning success: "¡Tu propiedad está lista!" message, preview link, dashboard link, OTA config link.
