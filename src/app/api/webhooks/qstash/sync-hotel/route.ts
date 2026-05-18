@@ -4,6 +4,10 @@ import { verifySignatureAppRouter } from '@upstash/qstash/nextjs';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+// Build-safe: dummy signing keys if not set (overridden by real env at runtime)
+if (!process.env.QSTASH_CURRENT_SIGNING_KEY) process.env.QSTASH_CURRENT_SIGNING_KEY = 'dummy_current';
+if (!process.env.QSTASH_NEXT_SIGNING_KEY) process.env.QSTASH_NEXT_SIGNING_KEY = 'dummy_next';
+
 // Type alias for the admin client
 type AdminClient = any;
 

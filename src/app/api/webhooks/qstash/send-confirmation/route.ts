@@ -13,6 +13,10 @@ import { verifySignatureAppRouter } from '@upstash/qstash/nextjs';
 import { Resend } from 'resend';
 import { BookingVoucher } from '@/emails/BookingVoucher';
 
+// Build-safe: dummy signing keys if not set (overridden by real env at runtime)
+if (!process.env.QSTASH_CURRENT_SIGNING_KEY) process.env.QSTASH_CURRENT_SIGNING_KEY = 'dummy_current';
+if (!process.env.QSTASH_NEXT_SIGNING_KEY) process.env.QSTASH_NEXT_SIGNING_KEY = 'dummy_next';
+
 // Tipado del payload que recibe desde el webhook de Wompi
 interface ConfirmationPayload {
   guestEmail: string;
