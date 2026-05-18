@@ -512,8 +512,8 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
             className={cn(
               "absolute z-[var(--z-popover)]",
               popoverPosition === 'above'
-                ? "bottom-full mb-2 right-0 w-full sm:w-[340px]"
-                : "top-full mt-2 right-0 w-full sm:w-[340px]"
+                ? "bottom-full mb-2 left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2"
+                : "top-full mt-2 left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2"
             )}
           >
             <GlassPanel className="p-6 ring-1 ring-foreground/5 bg-background/95 backdrop-blur-xl">
@@ -602,8 +602,8 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
             className={cn(
               "absolute z-[var(--z-popover)]",
               popoverPosition === 'above'
-                ? "bottom-full mb-2 right-0 w-full sm:w-[400px]"
-                : "top-full mt-2 right-0 w-full sm:w-[400px]"
+                ? "bottom-full mb-2 left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2"
+                : "top-full mt-2 left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2"
             )}
           >
             <GlassPanel className="p-6 ring-1 ring-foreground/5 bg-background/95 backdrop-blur-xl">
