@@ -8,7 +8,7 @@ import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { mac2026Default as springPopover, springSnappy } from '@/lib/mac2026/spring';
+import { mac2026Default as springPopover, springSnappy, springLayout } from '@/lib/mac2026/spring';
 import { GlassPanel } from '@/components/ui/glass';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 import 'react-day-picker/dist/style.css'; 
@@ -22,14 +22,21 @@ interface RoomItem {
   amenities?: string[];
 }
 
+interface NavSection {
+  id: string;
+  label: string;
+}
+
 interface AvailabilitySearchBarProps {
   /** When true, renders in compact sticky mode (smaller padding, optimized popover) */
   sticky?: boolean;
   /** Room data to calculate dynamic filter ranges */
   rooms?: RoomItem[];
+  /** Navigation sections for unified sticky bar */
+  navSections?: NavSection[];
 }
 
-export default function AvailabilitySearchBar({ sticky = false, rooms = [] }: AvailabilitySearchBarProps) {
+export default function AvailabilitySearchBar({ sticky = false, rooms = [], navSections = [] }: AvailabilitySearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const popoverRef = useRef<HTMLDivElement>(null);
@@ -39,6 +46,46 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [] }: Av
   const [activePopover, setActivePopover] = useState<'dates' | 'guests' | 'filters' | null>(null);
   const [isPending, startTransition] = useTransition();
   const [popoverPosition, setPopoverPosition] = useState<'below' | 'above'>('below');
+  
+  // Nav section tracking
+  const [activeSection, setActiveSection] = useState(navSections[0]?.id ?? '');
+  const navIoRef = useRef<IntersectionObserver | null>(null);
+
+  // IntersectionObserver for active section detection
+  useEffect(() => {
+    if (navSections.length === 0) return;
+    const hasIO = typeof IntersectionObserver !== 'undefined';
+
+    if (hasIO) {
+      const observer = new IntersectionObserver(
+        (entries) => {
+          for (let i = entries.length - 1; i >= 0; i--) {
+            if (entries[i].isIntersecting) {
+              setActiveSection(entries[i].target.id);
+              break;
+            }
+          }
+        },
+        { rootMargin: '-160px 0px -60% 0px', threshold: 0 }
+      );
+
+      navSections.forEach((section) => {
+        const el = document.getElementById(section.id);
+        if (el) observer.observe(el);
+      });
+
+      navIoRef.current = observer;
+      return () => { observer.disconnect(); navIoRef.current = null; };
+    }
+  }, [navSections]);
+
+  const scrollToSection = (id: string) => {
+    const el = document.getElementById(id);
+    if (el) {
+      const y = el.offsetTop - 120;
+      window.scrollTo({ top: y, behavior: 'smooth' });
+    }
+  };
   
   // Hidratación Segura: Fechas
   const [date, setDate] = useState<DateRange | undefined>(() => {
@@ -227,16 +274,19 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [] }: Av
   return (
     <div className="relative w-full z-[var(--z-dropdown)]" ref={popoverRef}>
       
-      {/* 🔮 SMART PILL INTERACTIVO MULTI-ZONA */}
-      <div 
-        ref={triggerRef}
-        className={cn(
-          "flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[var(--radius-squircle-2xl)] sm:rounded-full transition-all duration-300",
-          sticky ? "p-1.5 sm:p-1" : "p-2",
-          activePopover ? "ring-2 ring-ring shadow-xl" : "hover:border-border hover:shadow-md",
-          isPending && "opacity-70 pointer-events-none grayscale-[0.2]"
-        )}
-      >
+      {/* 🔮 UNIFIED STICKY BAR: Search + Nav */}
+      <div className="flex flex-col lg:flex-row lg:items-center gap-2">
+        
+        {/* SEARCH PILL */}
+        <div 
+          ref={triggerRef}
+          className={cn(
+            "flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[var(--radius-squircle-2xl)] sm:rounded-full transition-all duration-300",
+            sticky ? "p-1.5 sm:p-1" : "p-2",
+            activePopover ? "ring-2 ring-ring shadow-xl" : "hover:border-border hover:shadow-md",
+            isPending && "opacity-70 pointer-events-none grayscale-[0.2]"
+          )}
+        >
         
         {/* ZONA 1: FECHAS */}
         <div 
@@ -379,6 +429,39 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [] }: Av
               </AnimatePresence>
             </div>
           </>
+        )}
+        </div>
+
+        {/* NAV TABS PILL — Desktop only, sits alongside search bar */}
+        {navSections.length > 0 && (
+          <nav className="hidden lg:flex items-center gap-1 bg-card rounded-full px-1.5 py-1 border border-border/30 shadow-sm">
+            {navSections.map((section) => {
+              const isActive = section.id === activeSection;
+              return (
+                <motion.button
+                  key={section.id}
+                  onClick={() => scrollToSection(section.id)}
+                  whileTap={{ scale: 0.95 }}
+                  transition={springSnappy()}
+                  className={cn(
+                    "relative shrink-0 px-4 py-2 text-sm font-medium rounded-[var(--radius-squircle-lg)] transition-colors duration-200",
+                    isActive ? "text-foreground" : "text-muted-foreground hover:text-foreground"
+                  )}
+                  aria-current={isActive ? 'true' : undefined}
+                >
+                  {isActive && (
+                    <motion.div
+                      layoutId="subnav-active-bg"
+                      className="absolute inset-0 bg-foreground/8"
+                      transition={springLayout()}
+                      style={{ borderRadius: 12 }}
+                    />
+                  )}
+                  <span className="relative z-10">{section.label}</span>
+                </motion.button>
+              );
+            })}
+          </nav>
         )}
       </div>
 

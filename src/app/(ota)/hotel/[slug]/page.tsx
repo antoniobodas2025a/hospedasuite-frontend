@@ -11,12 +11,10 @@ import BookingWidget from '@/components/ota/BookingWidget';
 import ReviewsSection from '@/components/ota/ReviewsSection';
 import HotelInfoSection from '@/components/ota/HotelInfoSection';
 import MobileStickyCta from '@/components/ota/MobileStickyCta';
-import RecentActivity from '@/components/ota/RecentActivity';
 import RoomsListWithFilters from '@/components/ota/RoomsListWithFilters';
 import HotelJsonLd from '@/components/seo/HotelJsonLd';
 import ReviewSkeleton from '@/components/ota/ReviewSkeleton';
 import MapSkeleton from '@/components/ota/MapSkeleton';
-import StickySubNav from '@/components/ota/StickySubNav';
 import { SectionHeader } from '@/components/ui/glass';
 import { ErrorBoundary } from '@/components/ota/ErrorBoundary';
 
@@ -120,7 +118,11 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
 
       {/* Hero Gallery */}
       <ErrorBoundary name="HeroGallery">
-        <HeroGallery images={hotelGalleryImages} hotelName={hotel.name} />
+        <HeroGallery
+          images={hotelGalleryImages}
+          hotelName={hotel.name}
+          activityMessages={hotel.recent_activity_messages ?? null}
+        />
       </ErrorBoundary>
 
       {/* Hotel Header */}
@@ -163,25 +165,19 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
         </div>
       </div>
 
-      {/* Sticky Search Bar */}
+      {/* Unified Sticky Search Bar + Nav */}
       <div className="sticky top-0 z-[var(--z-sticky)] bg-background/80 backdrop-blur-sm border-b border-border/30">
         <div className="max-w-6xl mx-auto px-6 py-2">
-          <AvailabilitySearchBar sticky rooms={hotel.rooms || []} />
-        </div>
-      </div>
-
-      {/* Sticky Sub-Nav (stacks below search bar) */}
-      <div className="sticky top-[64px] z-[calc(var(--z-sticky)-1)] bg-background/80 backdrop-blur-sm border-b border-border/30">
-        <div className="max-w-6xl mx-auto px-6 py-2">
-          <StickySubNav sections={navSections} />
+          <AvailabilitySearchBar 
+            sticky 
+            rooms={hotel.rooms || []} 
+            navSections={navSections}
+          />
         </div>
       </div>
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 pt-8">
-
-        {/* Recent Activity */}
-        <RecentActivity messages={hotel.recent_activity_messages ?? null} />
 
         {/* Two-column layout: main + sidebar */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">

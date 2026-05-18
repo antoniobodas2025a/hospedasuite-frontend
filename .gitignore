@@ -44,3 +44,6 @@ ehthumbs.db
 *.njsproj
 *.sln
 *.sw?
+
+# Engram AI agent memory
+.engram/

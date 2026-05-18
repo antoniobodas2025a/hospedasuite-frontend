@@ -4,7 +4,7 @@ import React, { useState, useRef, useCallback, useEffect } from 'react';
 import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { springSnappy } from '@/lib/mac2026/spring';
-import { X, ChevronLeft, ChevronRight, Grid } from 'lucide-react';
+import { X, ChevronLeft, ChevronRight, Grid, TrendingUp, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { shouldUseNativeImg } from '@/lib/image-config';
 import { useIsMobile } from '@/hooks/useIsMediaQuery';
@@ -23,6 +23,8 @@ import { useIsMobile } from '@/hooks/useIsMediaQuery';
 interface HeroGalleryProps {
   images: { url: string; alt?: string }[];
   hotelName: string;
+  /** Optional activity pills to overlay on the hero */
+  activityMessages?: { icon: string; text: string; color: string }[] | null;
 }
 
 // Hook para touch swipe con loop infinito
@@ -118,7 +120,19 @@ function GalleryImage({
   );
 }
 
-export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
+const ICON_MAP: Record<string, React.ElementType> = {
+  TrendingUp,
+  Clock,
+}
+
+const MUTED_MAP: Record<string, string> = {
+  'text-success': 'bg-success-muted/80 border-success-border/60',
+  'text-warning': 'bg-warning-muted/80 border-warning-border/60',
+  'text-trust': 'bg-trust-muted/80 border-trust-border/60',
+  'text-urgent': 'bg-urgent-muted/80 border-urgent-border/60',
+}
+
+export default function HeroGallery({ images, hotelName, activityMessages }: HeroGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
@@ -391,6 +405,28 @@ export default function HeroGallery({ images, hotelName }: HeroGalleryProps) {
                 </button>
               </>
             )}
+          </div>
+        )}
+
+        {/* Activity Pills Overlay — subtle urgency signals on hero */}
+        {activityMessages && activityMessages.length > 0 && (
+          <div className="absolute bottom-4 left-4 md:bottom-6 md:left-6 flex flex-wrap gap-2 z-10 max-w-[calc(100%-6rem)]">
+            {activityMessages.map((item, i) => {
+              const Icon = ICON_MAP[item.icon] || TrendingUp
+              const mutedClasses = MUTED_MAP[item.color] || 'bg-muted/80 border-border/60'
+              return (
+                <div
+                  key={i}
+                  className={cn(
+                    'flex items-center gap-1.5 px-3 py-1.5 rounded-[var(--radius-squircle-lg)] backdrop-blur-md border shadow-sm',
+                    mutedClasses
+                  )}
+                >
+                  <Icon size={12} className={item.color} />
+                  <span className={cn('text-[11px] font-bold whitespace-nowrap', item.color)}>{item.text}</span>
+                </div>
+              )
+            })}
           </div>
         )}
 
