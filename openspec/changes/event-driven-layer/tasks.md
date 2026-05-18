@@ -44,10 +44,10 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Realtime & Dual-Write Gating
 
-- [ ] 3.1 Create `src/hooks/useRoomRealtime.ts` — Supabase channel on `rooms` table (INSERT/UPDATE/DELETE), triggers `router.refresh()`
-- [ ] 3.2 Create `src/hooks/usePaymentRealtime.ts` — Supabase channel on `payments` table, triggers `router.refresh()`
+- [x] 3.1 Create `src/hooks/useRoomRealtime.ts` — Supabase channel on `rooms` table (INSERT/UPDATE/DELETE), triggers `router.refresh()`
+- [x] 3.2 Create `src/hooks/usePaymentRealtime.ts` — Supabase channel on `payments` table, triggers `router.refresh()`
 - [ ] 3.3 Create `src/hooks/useServiceItemRealtime.ts` — Supabase channel on `service_items` table, triggers `router.refresh()`
-- [ ] 3.4 Add `EVENT_DRIVEN_MODE` env var (values: `inline|dual|event`) and dual-write helper — runs old inlines AND/OR `emitEvent()` based on mode
+- [x] 3.4 Add `EVENT_DRIVEN_MODE` env var (values: `inline|dual|event`) and dual-write helper — runs old inlines AND/OR `emitEvent()` based on mode
 
 ## Phase 4: Testing
 
