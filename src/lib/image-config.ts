@@ -147,46 +147,40 @@ export function resolveImage(relativePath: string) {
 export type ImageSize = 'thumb' | 'card' | 'full';
 
 /**
- * Deriva la URL de un tamaño específico desde una URL base.
+ * Resuelve la URL de imagen para usar con next/image.
  *
- * Convención de nombres:
- *   - `image.webp` (legacy, sin sufijo) → fallback a la misma URL
- *   - `image_full.webp` → full size
- *   - `image_card.webp` → card size (640px)
- *   - `image_thumb.webp` → thumbnail (256px)
+ * STRATEGY: Next.js Image optimiza al vuelo (AVIF/WebP, responsive sizing).
+ * Las versiones pre-redimensionadas (_thumb, _card, _full) pueden no existir
+ * en el bucket, así que quitamos los sufijos y usamos la imagen original.
+ * Next.js se encarga de la optimización bajo demanda.
  *
- * Para imágenes legacy sin sufijo, devuelve la URL original.
- * Next.js Image optimiza al vuelo como fallback.
- *
- * @param baseUrl - URL completa de la imagen (generalmente la versión full)
- * @param size - Tamaño deseado: 'thumb' | 'card' | 'full'
- * @returns URL del tamaño solicitado
+ * @param baseUrl - URL completa de la imagen
+ * @param size - Tamaño solicitado (ignorado, Next.js optimiza al vuelo)
+ * @returns URL de la imagen original (sin sufijo de tamaño)
  */
-export function getImageSizeUrl(baseUrl: string, size: ImageSize): string {
+export function getImageSizeUrl(baseUrl: string, _size: ImageSize): string {
   if (!baseUrl) return '';
 
-  // Si ya tiene el sufijo correcto, devolver tal cual
-  if (baseUrl.includes(`_${size}.webp`) || baseUrl.includes(`_${size}.jpg`) || baseUrl.includes(`_${size}.png`)) {
-    return baseUrl;
-  }
-
-  // Si tiene otro sufijo de tamaño, reemplazarlo
-  const sizePattern = /_(thumb|card|full)\.(webp|jpg|png|jpeg)$/i;
+  // Si ya es una URL absoluta, quitar sufijos de tamaño si existen
+  // para evitar 400 de Supabase cuando las versiones redimensionadas no existen
+  const sizePattern = /_(thumb|card|full)\.(webp|jpg|png|jpeg)/i;
   if (sizePattern.test(baseUrl)) {
-    return baseUrl.replace(sizePattern, `_${size}.$2`);
+    return baseUrl.replace(sizePattern, '.$1');
   }
 
-  // Si no tiene sufijo (legacy), agregar el sufijo antes de la extensión
-  const extPattern = /\.(webp|jpg|png|jpeg)(\?.*)?$/i;
-  const match = baseUrl.match(extPattern);
-  if (match) {
-    const ext = match[1];
-    const query = match[2] || '';
-    return baseUrl.replace(extPattern, `_${size}.${ext}${query}`);
-  }
-
-  // Si no se puede determinar la extensión, fallback a la URL original
   return baseUrl;
+}
+
+/**
+ * Quita cualquier sufijo de tamaño (_thumb, _card, _full) de una URL.
+ * Útil como fallback cuando la versión redimensionada no existe en el bucket.
+ *
+ * @param url - URL completa de la imagen
+ * @returns URL sin sufijo de tamaño (versión original)
+ */
+export function stripSizeSuffix(url: string): string {
+  if (!url) return '';
+  return url.replace(/_(thumb|card|full)\.(webp|jpg|png|jpeg)/i, '.$1');
 }
 
 /**
