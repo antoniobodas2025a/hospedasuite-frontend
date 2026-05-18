@@ -1,15 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-// 🛡️ FÁBRICA DE CLIENTE DIOS (Aislada por request para evitar fugas de memoria en Serverless)
-const getAdminClient = () => {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  );
-};
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function GET(
   request: Request,

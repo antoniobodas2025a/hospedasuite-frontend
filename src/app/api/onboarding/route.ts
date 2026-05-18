@@ -1,16 +1,9 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { generateUniqueSlug } from '@/lib/slug';
 
 export async function POST(request: Request) {
-  // 1. Inicialización de Supabase con Service Role (Bypass RLS)
-  // persistSession: false es vital para evitar memory leaks en Serverless
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    { auth: { persistSession: false } }
-  );
 
   let createdUserId: string | null = null;
 

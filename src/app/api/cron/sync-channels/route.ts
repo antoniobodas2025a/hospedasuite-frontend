@@ -1,18 +1,12 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { Client } from '@upstash/qstash';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // Interfaz estricta para el contrato de datos
 interface HotelRoomInfo {
   hotel_id: string;
 }
-
-const getAdminClient = () => createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
 
 const qstashClient = new Client({ token: process.env.QSTASH_TOKEN! });
 

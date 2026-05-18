@@ -1,15 +1,6 @@
 export const dynamic = 'force-dynamic';
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
-
-/**
- * 🔐 CLIENTE ADMINISTRATIVO — Bypassea RLS para escrituras de facturación.
- */
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 /**
  * 🧾 Webhook de redirección post-pago Wompi (Plataforma).

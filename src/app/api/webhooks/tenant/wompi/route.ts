@@ -1,21 +1,10 @@
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
 import { Client } from '@upstash/qstash';
 import { verifyWompiSignature, WompiEventPayload } from '@/lib/wompi-crypto';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 const qstashClient = new Client({ token: process.env.QSTASH_TOKEN! });
-
-/**
- * 🛡️ CONFIGURACIÓN DE SEGURIDAD NIVEL 0
- * Privilegios Administrativos para Reconciliación Bancaria.
- * Deshabilitamos persistSession para entornos Edge/Node Workers.
- */
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  { auth: { persistSession: false } }
-);
 
 export async function POST(request: Request) {
   try {

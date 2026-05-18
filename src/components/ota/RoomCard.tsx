@@ -61,8 +61,65 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
   const destinationUrl = `?${queryParams.toString()}`;
 
   return (
-    <div className="group/card will-change-transform">
-      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl transition-all duration-500 transition-transform duration-200 group-hover/card:scale-[1.01]">
+    <RoomCardInner
+      room={room}
+      hotelSlug={hotelSlug}
+      checkIn={checkIn}
+      checkOut={checkOut}
+      adults={adults}
+      children={children}
+      isSearchingDates={isSearchingDates}
+      allRooms={allRooms}
+      totalRooms={totalRooms}
+      availableCount={availableCount}
+      hotel={hotel}
+      isBestValue={isBestValue}
+      isGreatDeal={isGreatDeal}
+      isPopular={isPopular}
+      isAlmostGone={isAlmostGone}
+      isLowStock={isLowStock}
+      destinationUrl={destinationUrl}
+      coverImage={coverImage}
+      displayPrice={displayPrice}
+      basePrice={basePrice}
+      taxes={taxes}
+      totalPrice={totalPrice}
+      nights={nights}
+    />
+  );
+}
+
+function RoomCardInner({
+  room, hotelSlug, checkIn, checkOut, adults, children, isSearchingDates,
+  allRooms, totalRooms, availableCount, hotel, isBestValue, isGreatDeal,
+  isPopular, isAlmostGone, isLowStock, destinationUrl, coverImage,
+  displayPrice, basePrice, taxes, totalPrice, nights,
+}: RoomCardProps & {
+  isBestValue: boolean; isGreatDeal: boolean; isPopular: boolean;
+  isAlmostGone: boolean; isLowStock: boolean; destinationUrl: string;
+  coverImage: string; displayPrice: number; basePrice: number;
+  taxes: number; totalPrice: number; nights: number;
+}) {
+  const ref = useRef(null);
+  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const [badgeVisible, setBadgeVisible] = useState(false);
+
+  useEffect(() => {
+    if (isInView) {
+      const timer = setTimeout(() => setBadgeVisible(true), 200);
+      return () => clearTimeout(timer);
+    }
+  }, [isInView]);
+
+  return (
+    <motion.div
+      ref={ref}
+      className="group/card will-change-transform"
+      initial={{ opacity: 0, y: 24 }}
+      animate={isInView ? { opacity: 1, y: 0 } : {}}
+      transition={{ type: 'spring', stiffness: 200, damping: 20, duration: 0.4 }}
+    >
+      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl transition-all duration-500 group-hover/card:scale-[1.01]">
 
         {/* ZONA VISUAL (Atraccion) */}
         <div className="w-full md:w-72 h-64 md:h-full min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner">
@@ -88,32 +145,57 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
             />
           )}
 
-          {/* Badges superpuestos — Semantic status colors */}
+          {/* Badges superpuestos — Gravity Reveal con spring physics */}
           <div className="absolute top-4 left-4 flex flex-col gap-2">
             {isBestValue && (
-              <div className="bg-success text-success-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <motion.div
+                initial={{ scale: 0.7, y: -8, opacity: 0 }}
+                animate={badgeVisible ? { scale: [1.1, 1.0, 1.0], y: 0, opacity: 1 } : {}}
+                transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.1 }}
+                className="bg-success text-success-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5"
+              >
                 <Award size={12} /> Mejor Valor
-              </div>
+              </motion.div>
             )}
             {isGreatDeal && (
-              <div className="bg-brand-500 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <motion.div
+                initial={{ scale: 0.7, y: -8, opacity: 0 }}
+                animate={badgeVisible ? { scale: 1.1, y: 0, opacity: 1 } : {}}
+                transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.15 }}
+                className="bg-brand-500 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5"
+              >
                 <Star size={12} className="fill-white" /> Oferta
-              </div>
+              </motion.div>
             )}
             {isPopular && (
-              <div className="bg-warning text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <motion.div
+                initial={{ scale: 0.7, y: -8, opacity: 0 }}
+                animate={badgeVisible ? { scale: 1.1, y: 0, opacity: 1 } : {}}
+                transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.2 }}
+                className="bg-warning text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5"
+              >
                 <TrendingUp size={12} /> Mas Popular
-              </div>
+              </motion.div>
             )}
             {isAlmostGone && (
-              <div className="bg-urgent text-urgent-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <motion.div
+                initial={{ scale: 0.7, y: -8, opacity: 0 }}
+                animate={badgeVisible ? { scale: [1.1, 1.05, 1.1], y: 0, opacity: 1 } : {}}
+                transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.25 }}
+                className="bg-urgent text-urgent-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5"
+              >
                 <Flame size={12} className="fill-white" /> Solo {availableCount} disponible{availableCount > 1 ? 's' : ''}
-              </div>
+              </motion.div>
             )}
             {isLowStock && !isAlmostGone && (
-              <div className="bg-warning/80 text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5 animate-in fade-in zoom-in duration-500">
+              <motion.div
+                initial={{ scale: 0.7, y: -8, opacity: 0 }}
+                animate={badgeVisible ? { scale: 1.1, y: 0, opacity: 1 } : {}}
+                transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.3 }}
+                className="bg-warning/80 text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5"
+              >
                 <TrendingUp size={12} /> Alta Demanda
-              </div>
+              </motion.div>
             )}
           </div>
         </div>
@@ -199,6 +281,6 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
           </div>
         </div>
       </GlassCard>
-    </div>
+    </motion.div>
   );
 }

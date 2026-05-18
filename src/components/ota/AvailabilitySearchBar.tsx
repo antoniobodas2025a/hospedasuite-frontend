@@ -274,14 +274,14 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
   return (
     <div className="relative w-full z-[var(--z-dropdown)]" ref={popoverRef}>
       
-      {/* 🔮 UNIFIED STICKY BAR: Search + Nav */}
-      <div className="flex flex-col lg:flex-row lg:items-center gap-2">
+      {/* 🔮 UNIFIED STICKY BAR: 2/3 Search + 1/3 Nav */}
+      <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
         
-        {/* SEARCH PILL */}
+        {/* SEARCH PILL — 2/3 width on desktop */}
         <div 
           ref={triggerRef}
           className={cn(
-            "flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[var(--radius-squircle-2xl)] sm:rounded-full transition-all duration-300",
+            "flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[var(--radius-squircle-2xl)] sm:rounded-full transition-all duration-300 w-full lg:w-2/3",
             sticky ? "p-1.5 sm:p-1" : "p-2",
             activePopover ? "ring-2 ring-ring shadow-xl" : "hover:border-border hover:shadow-md",
             isPending && "opacity-70 pointer-events-none grayscale-[0.2]"
@@ -432,9 +432,9 @@ export default function AvailabilitySearchBar({ sticky = false, rooms = [], navS
         )}
         </div>
 
-        {/* NAV TABS PILL — Desktop only, sits alongside search bar */}
+        {/* NAV TABS PILL — 1/3 width on desktop, full width on mobile */}
         {navSections.length > 0 && (
-          <nav className="hidden lg:flex items-center gap-1 bg-card rounded-full px-1.5 py-1 border border-border/30 shadow-sm">
+          <nav className="hidden lg:flex items-center gap-1 bg-card rounded-full px-1.5 py-1 border border-border/30 shadow-sm w-1/3 justify-center">
             {navSections.map((section) => {
               const isActive = section.id === activeSection;
               return (
