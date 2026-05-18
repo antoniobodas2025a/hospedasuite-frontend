@@ -56,8 +56,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
   const resolvedSearchParams = await searchParams;
   const checkin = resolvedSearchParams?.checkin as string | undefined;
   const checkout = resolvedSearchParams?.checkout as string | undefined;
-  const adults = resolvedSearchParams?.adults as string | undefined;
-  const children = resolvedSearchParams?.children as string | undefined;
+  const minCapacity = resolvedSearchParams?.min_capacity as string | undefined;
   const showRoom = resolvedSearchParams?.showRoom as string | undefined;
 
   const { success, hotel } = await getHotelDetailsBySlugAction(slug, checkin, checkout);
@@ -69,7 +68,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
 
   const availableRooms = (hotel.rooms || []).filter((room: any) => {
     const isActive = room.status === 'active';
-    const hasCapacity = Number(room.capacity ?? 0) >= (Number(adults) || 1) + (Number(children) || 0);
+    const minCap = Number(minCapacity) || 0;
+    const hasCapacity = minCap === 0 || Number(room.capacity ?? 0) >= minCap;
     return isActive && hasCapacity;
   });
 
@@ -202,8 +202,6 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                   slug={slug}
                   checkin={checkin ?? null}
                   checkout={checkout ?? null}
-                  adults={adults ?? null}
-                  children={children ?? null}
                   isSearchingDates={isSearchingDates}
                   hotel={{ cancellation_policy: hotel.cancellation_policy }}
                 />
@@ -242,8 +240,6 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
               rooms={hotel.rooms || []}
               checkIn={checkin ?? null}
               checkOut={checkout ?? null}
-              adults={adults ?? null}
-              children={children ?? null}
               cancellationPolicy={hotel.cancellation_policy}
               totalRooms={(hotel.rooms || []).length}
             />

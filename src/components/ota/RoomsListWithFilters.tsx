@@ -25,8 +25,6 @@ interface RoomsListWithFiltersProps {
   slug: string;
   checkin?: string | null;
   checkout?: string | null;
-  adults?: string | null;
-  children?: string | null;
   isSearchingDates: boolean;
   hotel?: { cancellation_policy?: string | null };
 }
@@ -37,8 +35,6 @@ export default function RoomsListWithFilters({
   slug,
   checkin,
   checkout,
-  adults,
-  children,
   isSearchingDates,
   hotel,
 }: RoomsListWithFiltersProps) {
@@ -137,8 +133,6 @@ export default function RoomsListWithFilters({
                   hotelSlug={slug}
                   checkIn={checkin}
                   checkOut={checkout}
-                  adults={adults}
-                  children={children}
                   isSearchingDates={isSearchingDates}
                   allRooms={filteredRooms}
                   totalRooms={rooms.length}

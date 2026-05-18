@@ -15,8 +15,6 @@ interface RoomCardProps {
   hotelSlug: string;
   checkIn?: string | null;
   checkOut?: string | null;
-  adults?: string | null;
-  children?: string | null;
   isSearchingDates: boolean;
   allRooms?: any[];
   totalRooms?: number;
@@ -24,7 +22,7 @@ interface RoomCardProps {
   hotel?: { cancellation_policy?: string | null };
 }
 
-export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, children, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
+export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
   const coverImage = Array.isArray(room.gallery) && room.gallery.length > 0
     ? (room.gallery[0].url || room.gallery[0])
     : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
@@ -55,8 +53,6 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
   queryParams.set('showRoom', room.id);
   if (checkIn) queryParams.set('checkin', checkIn);
   if (checkOut) queryParams.set('checkout', checkOut);
-  if (adults) queryParams.set('adults', adults);
-  if (children) queryParams.set('children', children);
 
   const destinationUrl = `?${queryParams.toString()}`;
 
@@ -66,8 +62,6 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
       hotelSlug={hotelSlug}
       checkIn={checkIn}
       checkOut={checkOut}
-      adults={adults}
-      children={children}
       isSearchingDates={isSearchingDates}
       allRooms={allRooms}
       totalRooms={totalRooms}
@@ -90,7 +84,7 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, adults, c
 }
 
 function RoomCardInner({
-  room, hotelSlug, checkIn, checkOut, adults, children, isSearchingDates,
+  room, hotelSlug, checkIn, checkOut, isSearchingDates,
   allRooms, totalRooms, availableCount, hotel, isBestValue, isGreatDeal,
   isPopular, isAlmostGone, isLowStock, destinationUrl, coverImage,
   displayPrice, basePrice, taxes, totalPrice, nights,

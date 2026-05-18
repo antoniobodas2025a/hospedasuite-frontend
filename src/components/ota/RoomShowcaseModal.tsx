@@ -47,10 +47,10 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   const roomId = searchParams.get('showRoom');
   const checkIn = searchParams.get('checkin');
   const checkOut = searchParams.get('checkout');
-  const adults = Number(searchParams.get('adults')) || 2;
-  const children = Number(searchParams.get('children')) || 0;
+  const minCapacity = Number(searchParams.get('min_capacity')) || 0;
 
-  const totalGuests = adults + children;
+  // Default guest count for booking (can be adjusted in checkout)
+  const defaultGuests = minCapacity > 0 ? minCapacity : 2;
 
   const room = useMemo(() => 
     hotel.rooms?.find((r) => r.id === roomId), 
@@ -91,7 +91,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   const nights = Math.max(1, Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 3600 * 24)));
   const basePrice = room.price_per_night || room.price || 0;
   const totalPrice = basePrice * nights;
-  const isOverCapacity = totalGuests > Number(room.capacity ?? 0);
+  const isOverCapacity = defaultGuests > Number(room.capacity ?? 0);
 
   const handleCheckout = () => {
     if (isOverCapacity) return;
@@ -99,8 +99,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
     params.set('room', room.id!);
     params.set('checkin', checkIn);
     params.set('checkout', checkOut);
-    params.set('adults', adults.toString());
-    params.set('children', children.toString());
+    params.set('adults', defaultGuests.toString());
     router.push(`/book/${hotel.slug}/checkout?${params.toString()}`);
   };
 
@@ -211,7 +210,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                       <div>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">Ocupacion</p>
                         <p className="text-sm font-bold text-foreground">
-                          {adults} Adulto{adults > 1 ? 's' : ''} {children > 0 ? `y ${children} Ninos` : ''}
+                          {defaultGuests} Huésped{defaultGuests > 1 ? 'es' : ''}
                         </p>
                       </div>
                       <Users size={16} className="text-muted-foreground/40" />
@@ -371,7 +370,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                     <div>
                       <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">Ocupacion</p>
                       <p className="text-sm font-bold text-foreground">
-                        {adults} Adulto{adults > 1 ? 's' : ''} {children > 0 ? `y ${children} Ninos` : ''}
+                        {defaultGuests} Huésped{defaultGuests > 1 ? 'es' : ''}
                       </p>
                     </div>
                     <Users size={16} className="text-muted-foreground/40" />

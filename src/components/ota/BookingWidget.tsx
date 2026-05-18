@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { ShieldCheck, CheckCircle2, Clock, Users, ArrowRight, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { springSnappy } from '@/lib/mac2026/spring';
@@ -28,8 +28,6 @@ interface BookingWidgetProps {
   }>;
   checkIn?: string | null;
   checkOut?: string | null;
-  adults?: string | null;
-  children?: string | null;
   cancellationPolicy?: string | null;
   totalRooms?: number;
 }
@@ -39,8 +37,6 @@ export default function BookingWidget({
   rooms,
   checkIn,
   checkOut,
-  adults,
-  children,
   cancellationPolicy,
   totalRooms,
 }: BookingWidgetProps) {
@@ -81,8 +77,6 @@ export default function BookingWidget({
     params.set('showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
     params.set('checkin', checkIn);
     params.set('checkout', checkOut);
-    if (adults) params.set('adults', adults);
-    if (children) params.set('children', children);
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
@@ -136,12 +130,6 @@ export default function BookingWidget({
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(checkIn).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} — {new Date(checkOut).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                 </p>
-                {adults && (
-                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                    <Users size={12} /> {adults} adulto{Number(adults) > 1 ? 's' : ''}
-                    {children && Number(children) > 0 ? `, ${children} nino${Number(children) > 1 ? 's' : ''}` : ''}
-                  </p>
-                )}
               </div>
             </div>
           ) : (
