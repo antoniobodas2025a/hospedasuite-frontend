@@ -1,70 +1,85 @@
 'use server';
 
-import { createClient as createAdminClient } from '@supabase/supabase-js';
+import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
-import { getCurrentHotel } from '@/lib/hotel-context';
+import { redirect } from 'next/navigation';
+import { FullWizardState } from '@/lib/onboarding-schemas';
 
-// 🛡️ Cliente Administrativo (Tier-0) para ejecución atómica masiva
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
-
-/**
- * 🧹 MOTOR DE PURGA ATÓMICA (CLEAN SLATE)
- * Destruye secuencialmente el grafo de datos sintéticos respetando la integridad referencial.
- */
-export async function executeCleanSlateAction() {
+export async function executeOnboardingProvisioning(state: FullWizardState): Promise<{ success: boolean; error?: string }> {
+  const supabase = await createClient();
+  
   try {
-    // 1. VALIDACIÓN ZERO-TRUST (El usuario solo puede purgar su propia jurisdicción)
-    const hotel = await getCurrentHotel();
-    if (!hotel) throw new Error('AUTH_ERROR: Contexto de hotel no encontrado.');
+    // Get current user's hotel_id from staff table
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'No autenticado' };
 
-    const hotelId = hotel.id;
+    const { data: staff } = await supabase
+      .from('staff')
+      .select('hotel_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
 
-    // 2. OBTENCIÓN DE VECTORES DE RELACIÓN (Resolución de Llaves Foráneas)
-    const [{ data: staff }, { data: bookings }] = await Promise.all([
-      supabaseAdmin.from('staff').select('id').eq('hotel_id', hotelId),
-      supabaseAdmin.from('bookings').select('id').eq('hotel_id', hotelId)
-    ]);
+    if (!staff?.hotel_id) return { success: false, error: 'No se encontró el hotel' };
 
-    const staffIds = staff?.map(s => s.id) || [];
-    const bookingIds = bookings?.map(b => b.id) || [];
+    const hotelId = staff.hotel_id;
 
-    // 3. DESTRUCCIÓN CAPA 3 (Dependencias Transaccionales)
-    if (bookingIds.length > 0) {
-      const { error: posErr } = await supabaseAdmin.from('service_items').delete().in('booking_id', bookingIds);
-      if (posErr) throw new Error(`POS_PURGE_ERROR: ${posErr.message}`);
-    }
+    // 1. Update hotel profile
+    const { error: hotelError } = await supabase
+      .from('hotels')
+      .update({
+        name: state.hotelIdentity.name,
+        city: state.hotelIdentity.city,
+        location: state.hotelIdentity.location,
+        address: state.hotelIdentity.address || null,
+        phone: state.hotelIdentity.phone || null,
+        email: state.hotelIdentity.email || null,
+        description: state.hotelIdentity.description || null,
+        category: state.hotelIdentity.category || null,
+        type: state.hotelIdentity.propertyType,
+        gallery_urls: state.galleryImages,
+        amenities: state.settings.amenities,
+        check_in_time: state.settings.checkInTime || '15:00',
+        check_out_time: state.settings.checkOutTime || '11:00',
+        cancellation_policy: state.settings.cancellationPolicy || null,
+        whatsapp_number: state.settings.whatsappNumber || null,
+        google_maps_url: state.settings.googleMapsUrl || null,
+        status: 'active',
+        is_onboarding_complete: true,
+        onboarding_step: 6,
+      })
+      .eq('id', hotelId);
 
-    if (staffIds.length > 0) {
-      const { error: payErr } = await supabaseAdmin.from('payments').delete().in('staff_id', staffIds);
-      if (payErr) throw new Error(`PAYMENTS_PURGE_ERROR: ${payErr.message}`);
-    }
+    if (hotelError) throw hotelError;
 
-    // 4. DESTRUCCIÓN CAPA 2 (Reservas y Línea de Tiempo)
-    const { error: bookErr } = await supabaseAdmin.from('bookings').delete().eq('hotel_id', hotelId);
-    if (bookErr) throw new Error(`BOOKINGS_PURGE_ERROR: ${bookErr.message}`);
+    // 2. Insert rooms
+    const roomsPayload = state.rooms.map(room => ({
+      hotel_id: hotelId,
+      name: room.name,
+      type: room.type || null,
+      price: room.price,
+      description: room.description || null,
+      amenities: room.amenities,
+      capacity: room.capacity || null,
+      beds: room.beds || null,
+      gallery: room.imageUrls.map(url => ({ url })),
+      availability_range: room.availabilityRange,
+      status: 'available',
+      ical_export_token: crypto.randomUUID(),
+    }));
 
-    // 5. DESTRUCCIÓN CAPA 1 (Identidades PII y Topología Física)
-    const [{ error: guestsErr }, { error: roomsErr }] = await Promise.all([
-      supabaseAdmin.from('guests').delete().eq('hotel_id', hotelId),
-      supabaseAdmin.from('rooms').delete().eq('hotel_id', hotelId)
-    ]);
+    const { error: roomsError } = await supabase
+      .from('rooms')
+      .insert(roomsPayload);
 
-    if (guestsErr) throw new Error(`GUESTS_PURGE_ERROR: ${guestsErr.message}`);
-    if (roomsErr) throw new Error(`ROOMS_PURGE_ERROR: ${roomsErr.message}`);
+    if (roomsError) throw roomsError;
 
-    // 6. PURGA DE CACHÉ GLOBAL Y ACTUALIZACIÓN DE ESTADO
+    // 3. Revalidate and redirect
     revalidatePath('/', 'layout');
-
-    return { 
-      success: true, 
-      message: 'Matriz purgada exitosamente. Clean Slate activado.' 
-    };
-
+    revalidatePath('/dashboard');
+    
+    return { success: true };
   } catch (error: any) {
-    console.error('🚨 CLEAN_SLATE_FORENSIC_ERROR:', error.message);
+    console.error('🚨 ONBOARDING_PROVISIONING_ERROR:', error.message);
     return { success: false, error: error.message };
   }
 }
