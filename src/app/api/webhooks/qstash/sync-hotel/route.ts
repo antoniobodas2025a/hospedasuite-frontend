@@ -4,6 +4,11 @@ import { verifySignatureAppRouter } from '@upstash/qstash/nextjs';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+import { createClient } from '@supabase/supabase-js';
+
+// Type alias for the admin client
+type AdminClient = ReturnType<typeof createClient>;
+
 // ============================================================================
 // iCal Sync Engine — Diff Algorithm
 //
@@ -56,7 +61,7 @@ async function fetchIcalEvents(url: string): Promise<IcalEvent[]> {
  * Retorna un Map de external_id → booking para lookup O(1).
  */
 async function fetchExistingOtaBookings(
-  supabaseAdmin: ReturnType<typeof getAdminClient>,
+  supabaseAdmin: AdminClient,
   hotelId: string
 ): Promise<Map<string, { id: string; room_id: string; status: string }>> {
   const { data, error } = await supabaseAdmin
@@ -86,7 +91,7 @@ async function fetchExistingOtaBookings(
  * Obtiene o crea el huésped genérico para reservas OTA.
  */
 async function ensureOtaGuest(
-  supabaseAdmin: ReturnType<typeof getAdminClient>,
+  supabaseAdmin: AdminClient,
   hotelId: string
 ): Promise<string | null> {
   const { data: otaGuest } = await supabaseAdmin
