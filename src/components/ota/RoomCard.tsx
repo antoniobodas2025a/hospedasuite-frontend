@@ -150,7 +150,7 @@ function RoomCardInner({
             {isBestValue && (
               <motion.div
                 initial={{ scale: 0.7, y: -8, opacity: 0 }}
-                animate={badgeVisible ? { scale: [1.1, 1.0, 1.0], y: 0, opacity: 1 } : {}}
+                animate={badgeVisible ? { scale: 1, y: 0, opacity: 1 } : {}}
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.1 }}
                 className="bg-success text-success-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5"
               >
@@ -160,7 +160,7 @@ function RoomCardInner({
             {isGreatDeal && (
               <motion.div
                 initial={{ scale: 0.7, y: -8, opacity: 0 }}
-                animate={badgeVisible ? { scale: 1.1, y: 0, opacity: 1 } : {}}
+                animate={badgeVisible ? { scale: 1, y: 0, opacity: 1 } : {}}
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.15 }}
                 className="bg-brand-500 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5"
               >
@@ -170,7 +170,7 @@ function RoomCardInner({
             {isPopular && (
               <motion.div
                 initial={{ scale: 0.7, y: -8, opacity: 0 }}
-                animate={badgeVisible ? { scale: 1.1, y: 0, opacity: 1 } : {}}
+                animate={badgeVisible ? { scale: 1, y: 0, opacity: 1 } : {}}
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.2 }}
                 className="bg-warning text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5"
               >
@@ -180,7 +180,7 @@ function RoomCardInner({
             {isAlmostGone && (
               <motion.div
                 initial={{ scale: 0.7, y: -8, opacity: 0 }}
-                animate={badgeVisible ? { scale: [1.1, 1.05, 1.1], y: 0, opacity: 1 } : {}}
+                animate={badgeVisible ? { scale: 1, y: 0, opacity: 1 } : {}}
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.25 }}
                 className="bg-urgent text-urgent-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5"
               >
@@ -190,7 +190,7 @@ function RoomCardInner({
             {isLowStock && !isAlmostGone && (
               <motion.div
                 initial={{ scale: 0.7, y: -8, opacity: 0 }}
-                animate={badgeVisible ? { scale: 1.1, y: 0, opacity: 1 } : {}}
+                animate={badgeVisible ? { scale: 1, y: 0, opacity: 1 } : {}}
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.3 }}
                 className="bg-warning/80 text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5"
               >

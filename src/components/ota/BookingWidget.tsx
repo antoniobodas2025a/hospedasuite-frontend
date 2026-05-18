@@ -3,13 +3,17 @@
 import React, { useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, CheckCircle2, Clock, Users, ArrowRight, ChevronDown, ChevronUp, Info } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
 
 // ============================================================================
-// BOOKING WIDGET — Sidebar de conversion para pagina OTA
+// BOOKING WIDGET — Smart Summary Sidebar
+//
+// Progressive Disclosure:
+// - Sin room seleccionada: muestra "Desde $X/noche" + CTA compacto
+// - Con room seleccionada: muestra detalle de precio + CTA de reserva
 // ============================================================================
 
 interface BookingWidgetProps {
@@ -18,6 +22,7 @@ interface BookingWidgetProps {
     id: string;
     name: string;
     price: number;
+    price_per_night?: number;
     capacity?: number;
     status: string;
   }>;
@@ -46,8 +51,12 @@ export default function BookingWidget({
   const [showDateError, setShowDateError] = useState(false);
 
   const activeRooms = rooms.filter((r) => r.status === 'active');
-  const minPrice = activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price)) : 0;
+  const minPrice = activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price_per_night || r.price)) : 0;
   const availableCount = activeRooms.length;
+
+  // Detect selected room from URL
+  const selectedRoomId = searchParams.get('showRoom');
+  const selectedRoom = selectedRoomId ? activeRooms.find(r => r.id === selectedRoomId) : null;
 
   let nights = 0;
   if (checkIn && checkOut) {
@@ -56,7 +65,9 @@ export default function BookingWidget({
     nights = Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
   }
 
-  const totalPrice = nights > 0 ? minPrice * nights : minPrice;
+  const roomPrice = selectedRoom ? (selectedRoom.price_per_night || selectedRoom.price) : minPrice;
+  const totalPrice = nights > 0 ? roomPrice * nights : roomPrice;
+  const taxes = Math.round(totalPrice * 0.19);
 
   const handleReserve = () => {
     if (!checkIn || !checkOut) {
@@ -67,7 +78,7 @@ export default function BookingWidget({
     setShowDateError(false);
 
     const params = new URLSearchParams();
-    params.set('showRoom', activeRooms[0]?.id || '');
+    params.set('showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
     params.set('checkin', checkIn);
     params.set('checkout', checkOut);
     if (adults) params.set('adults', adults);
@@ -75,23 +86,42 @@ export default function BookingWidget({
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
+  const handleViewRooms = () => {
+    const el = document.getElementById('rooms-section');
+    if (el) {
+      el.scrollIntoView({ behavior: 'smooth' });
+    }
+  };
+
   return (
     <div className="sticky top-8">
-      {/* Mac 2026 Glassmorphism: GlassCard with squircle radii + depth-aware blur */}
       <GlassCard className="overflow-hidden">
-        {/* Header con precio */}
-        <div className="bg-gradient-to-br from-primary to-primary/90 p-6 text-primary-foreground">
-          <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">Desde</p>
-          <div className="flex items-baseline gap-2">
-            <p className="text-4xl font-black tracking-tight">${minPrice.toLocaleString()}</p>
-            <span className="text-primary-foreground/70 text-sm font-medium">COP/noche</span>
-          </div>
-          {nights > 0 && (
-            <div className="mt-3 pt-3 border-t border-primary-foreground/20">
-              <p className="text-xs text-primary-foreground/70">
-                Total {nights} noche{nights > 1 ? 's' : ''}: <span className="font-bold text-primary-foreground">${totalPrice.toLocaleString()} COP</span>
-              </p>
-            </div>
+        {/* Header con precio — Smart Summary */}
+        <div className={cn(
+          "p-6 text-primary-foreground transition-colors duration-300",
+          selectedRoom ? "bg-gradient-to-br from-brand-500 to-brand-600" : "bg-gradient-to-br from-primary to-primary/90"
+        )}>
+          {selectedRoom ? (
+            <>
+              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">{selectedRoom.name}</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-4xl font-black tracking-tight">${totalPrice.toLocaleString()}</p>
+                <span className="text-primary-foreground/70 text-sm font-medium">COP total</span>
+              </div>
+              {nights > 1 && (
+                <p className="text-xs text-primary-foreground/70 mt-1">
+                  ${roomPrice.toLocaleString()} x {nights} noches + impuestos
+                </p>
+              )}
+            </>
+          ) : (
+            <>
+              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">Desde</p>
+              <div className="flex items-baseline gap-2">
+                <p className="text-4xl font-black tracking-tight">${minPrice.toLocaleString()}</p>
+                <span className="text-primary-foreground/70 text-sm font-medium">COP/noche</span>
+              </div>
+            </>
           )}
         </div>
 
@@ -125,15 +155,22 @@ export default function BookingWidget({
           )}
 
           {/* Error feedback — CTA clicked without dates */}
-          {showDateError && (
-            <div className="flex items-start gap-3 p-4 bg-destructive/10 rounded-[var(--radius-squircle-2xl)] border border-destructive/20 animate-in fade-in slide-in-from-top-2 duration-200">
-              <Info size={18} className="text-destructive shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-bold text-destructive">Selecciona tus fechas primero</p>
-                <p className="text-xs text-destructive/80 mt-0.5">Usa la barra de busqueda de arriba para elegir cuando llegas y cuando te vas.</p>
-              </div>
-            </div>
-          )}
+          <AnimatePresence>
+            {showDateError && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                className="flex items-start gap-3 p-4 bg-destructive/10 rounded-[var(--radius-squircle-2xl)] border border-destructive/20"
+              >
+                <Info size={18} className="text-destructive shrink-0 mt-0.5" />
+                <div>
+                  <p className="text-sm font-bold text-destructive">Selecciona tus fechas primero</p>
+                  <p className="text-xs text-destructive/80 mt-0.5">Usa la barra de busqueda de arriba para elegir cuando llegas y cuando te vas.</p>
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
 
           {/* Disponibilidad */}
           {availableCount > 0 && (
@@ -158,7 +195,7 @@ export default function BookingWidget({
               {availableCount <= 2 && (
                 <p className="text-xs font-bold text-destructive flex items-center gap-1">
                   <span className="inline-block size-2 rounded-full bg-destructive animate-pulse" />
-                  {availableCount === 1 ? 'Solo queda 1 disponible' : `Solo quedan ${availableCount} disponibles`} — Reserva ahora
+                  {availableCount === 1 ? 'Solo queda 1 disponible' : `Solo quedan ${availableCount} disponibles`}
                 </p>
               )}
             </div>
@@ -170,29 +207,29 @@ export default function BookingWidget({
             </div>
           )}
 
-          {/* CTA principal — Mac 2026 Spring Physics: whileTap + springSnappy */}
+          {/* CTA principal — Smart: Ver habitaciones o Reservar */}
           <motion.button
-            onClick={handleReserve}
+            onClick={selectedRoom ? handleReserve : handleViewRooms}
             disabled={availableCount === 0}
             whileTap={availableCount > 0 ? { scale: 0.96 } : undefined}
             transition={springSnappy()}
             className={cn(
-              'w-full py-4 rounded-[var(--radius-squircle-2xl)] font-bold text-sm flex items-center justify-center gap-2 shadow-lg',
+              'w-full py-4 rounded-[var(--radius-squircle-2xl)] font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-colors duration-300',
               availableCount === 0
                 ? 'bg-muted text-muted-foreground/40 cursor-not-allowed shadow-none'
-                : checkIn && checkOut
-                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta hover:shadow-cta'
+                : selectedRoom
+                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta'
                   : 'bg-foreground hover:bg-primary text-background shadow-foreground/20',
             )}
           >
-            {checkIn && checkOut ? 'Reservar Ahora' : 'Ver Disponibilidad'}
+            {selectedRoom ? (checkIn && checkOut ? 'Reservar Ahora' : 'Ver Disponibilidad') : 'Ver Habitaciones'}
             <ArrowRight size={16} strokeWidth={2.5} />
           </motion.button>
 
           {/* Divider */}
           <div className="h-px bg-border/40" />
 
-          {/* Mejor precio garantizado — Badge destacado para canal directo */}
+          {/* Mejor precio garantizado */}
           <div className="relative overflow-hidden rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-50 to-warm-50 border border-brand-200/60 p-4">
             <div className="absolute top-0 right-0 size-16 bg-brand-500/5 rounded-full -translate-y-8 translate-x-8" />
             <div className="relative flex items-start gap-3">
@@ -201,7 +238,7 @@ export default function BookingWidget({
               </div>
               <div>
                 <p className="text-xs font-bold text-foreground">Mejor precio garantizado</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Reserva directo sin comisiones de intermediarios. El precio que ves aqui es el mejor disponible.</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Reserva directo sin comisiones de intermediarios.</p>
               </div>
             </div>
           </div>
@@ -218,19 +255,38 @@ export default function BookingWidget({
           </div>
 
           {/* Politica de cancelacion */}
-          {cancellationPolicy && (
-            <div className="border-t border-border/40 pt-4">
-              <button
-                onClick={() => setShowPolicy(!showPolicy)}
-                className="flex items-center justify-between w-full text-left"
+          <AnimatePresence>
+            {cancellationPolicy && (
+              <motion.div
+                initial={false}
+                animate={{ height: showPolicy ? 'auto' : 0, opacity: showPolicy ? 1 : 0 }}
+                className="border-t border-border/40 overflow-hidden"
               >
-                <p className="text-xs font-bold text-foreground">Politica de cancelacion</p>
-                {showPolicy ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
-              </button>
-              {showPolicy && (
-                <p className="text-xs text-muted-foreground mt-2 leading-relaxed">{cancellationPolicy}</p>
-              )}
-            </div>
+                <div className="pt-4">
+                  <button
+                    onClick={() => setShowPolicy(!showPolicy)}
+                    className="flex items-center justify-between w-full text-left mb-2"
+                  >
+                    <p className="text-xs font-bold text-foreground">Politica de cancelacion</p>
+                    {showPolicy ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
+                  </button>
+                  {showPolicy && (
+                    <p className="text-xs text-muted-foreground leading-relaxed">{cancellationPolicy}</p>
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Toggle politica (siempre visible si hay politica) */}
+          {cancellationPolicy && (
+            <button
+              onClick={() => setShowPolicy(!showPolicy)}
+              className="flex items-center justify-between w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <span className="font-bold">Politica de cancelacion</span>
+              {showPolicy ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+            </button>
           )}
         </div>
       </GlassCard>
