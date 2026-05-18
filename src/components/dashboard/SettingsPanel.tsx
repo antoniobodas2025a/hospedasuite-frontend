@@ -93,6 +93,11 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
   const [mainImagePreview, setMainImagePreview] = useState<string | null>(initialData?.main_image_url || null);
   const [galleryPreviews, setGalleryPreviews] = useState<string[]>(initialData?.gallery_urls || []);
   const [localStaff, setLocalStaff] = useState(initialStaff);
+  const [imageBlurMeta, setImageBlurMeta] = useState<{
+    main_image_blur?: string;
+    cover_photo_blur?: string;
+    gallery_blurs: { url: string; blur: string }[];
+  }>({ gallery_blurs: [] });
   
   // Progressive disclosure state — Mac 2026: complexity emerges on deliberate interaction
   const [showOtaImages, setShowOtaImages] = useState(false);
@@ -136,6 +141,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
       if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
       setValue('cover_photo_url', result.url);
       setCoverPhotoPreview(result.url);
+      setImageBlurMeta(prev => ({ ...prev, cover_photo_blur: result.blurDataURL }));
     } catch (error: any) {
       alert('Error al subir imagen: ' + error.message);
     } finally {
@@ -154,6 +160,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
       if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
       setValue('main_image_url', result.url);
       setMainImagePreview(result.url);
+      setImageBlurMeta(prev => ({ ...prev, main_image_blur: result.blurDataURL }));
     } catch (error: any) {
       alert('Error al subir imagen (Hero): ' + error.message);
     } finally {
@@ -173,6 +180,11 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
         const result = await uploadOptimizedImageAction(formData, 'gallery');
         if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
         newUrls.push(result.url);
+        const blurURL = result.blurDataURL ?? '';
+        setImageBlurMeta(prev => ({
+          ...prev,
+          gallery_blurs: [...prev.gallery_blurs, { url: result.url, blur: blurURL }]
+        }));
       }
       setGalleryPreviews(newUrls);
       setValue('gallery_urls', newUrls);
@@ -234,7 +246,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
     try {
       let res;
       if (activeTab === 'general' || activeTab === 'staff') res = await saveSettingsAction(data);
-      else res = await updateHotelProfileAction(hotelId, data);
+      else res = await updateHotelProfileAction(hotelId, { ...data, image_blur_meta: imageBlurMeta });
       if (!res.success) throw new Error(res.error);
       alert('✅ Cambios aplicados.');
     } catch (err: any) {

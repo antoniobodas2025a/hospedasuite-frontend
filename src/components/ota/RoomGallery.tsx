@@ -4,6 +4,7 @@ import { useState, useCallback, Suspense } from 'react';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import type { GalleryItem } from '@/types';
+import { getImageSizeUrl } from '@/lib/image-config';
 
 // CSS imports at top level (tree-shaken by PostCSS, minimal JS impact)
 import 'yet-another-react-lightbox/styles.css';
@@ -34,16 +35,19 @@ interface RoomGalleryProps {
   roomName: string;
   onClose?: () => void;
   variant?: 'inline' | 'compact';
+  /** Optional blur placeholder for the main/hero image */
+  blurDataURL?: string;
 }
 
-export default function RoomGallery({ images, roomName, onClose, variant = 'inline' }: RoomGalleryProps) {
+export default function RoomGallery({ images, roomName, onClose, variant = 'inline', blurDataURL }: RoomGalleryProps) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
 
-  const slides = images.map((img) => ({
+  const slides = images.map((img, i) => ({
     src: img.url,
     alt: img.alt ?? roomName,
     description: img.caption,
+    blurDataURL: i === 0 ? blurDataURL : undefined,
   }));
 
   const handleThumbnailClick = useCallback((i: number) => {
@@ -96,6 +100,8 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
             priority
             sizes="100vw"
             quality={85}
+            placeholder={blurDataURL ? 'blur' : undefined}
+            blurDataURL={blurDataURL}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
           <div className="absolute bottom-3 left-3">
@@ -123,7 +129,7 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
                   aria-label={`Ver imagen ${realIndex + 1}`}
                 >
                   <Image
-                    src={img.url}
+                    src={getImageSizeUrl(img.url, 'thumb')}
                     alt={img.alt ?? `${roomName} — ${realIndex + 1}`}
                     fill
                     className="object-cover"

@@ -1,6 +1,7 @@
 'use client';
 
 import Image from 'next/image';
+import { getImageSizeUrl } from '@/lib/image-config';
 import Lightbox from 'yet-another-react-lightbox';
 import Inline from 'yet-another-react-lightbox/plugins/inline';
 import Thumbnails from 'yet-another-react-lightbox/plugins/thumbnails';
@@ -68,19 +69,21 @@ const THUMBNAILS_FULLSCREEN = {
 // RENDERERS COMPARTIDOS
 // ============================================================================
 
-function renderSlide(slide: { src?: unknown; alt?: string }, rect: { width: number; height: number }) {
+function renderSlide(slide: { src?: unknown; alt?: string; blurDataURL?: string }, rect: { width: number; height: number }) {
   if (typeof slide.src !== 'string') return null;
   return (
     <div style={{ position: 'relative', width: rect.width, height: rect.height }}>
       <Image
         fill
         alt={slide.alt ?? ''}
-        src={slide.src}
+        src={getImageSizeUrl(slide.src, 'full')}
         loading="eager"
         draggable={false}
         style={{ objectFit: 'cover', cursor: 'pointer' }}
         sizes="80vw"
         quality={90}
+        placeholder={slide.blurDataURL ? 'blur' : undefined}
+        blurDataURL={slide.blurDataURL}
       />
     </div>
   );
@@ -93,7 +96,7 @@ function renderThumbnail(slide: { src?: unknown }, rect: { width: number; height
       <Image
         fill
         alt=""
-        src={slide.src}
+        src={getImageSizeUrl(slide.src, 'thumb')}
         loading="lazy"
         style={{ objectFit: 'cover' }}
         sizes={`${rect.width}px`}
@@ -109,7 +112,7 @@ function renderThumbnail(slide: { src?: unknown }, rect: { width: number; height
 
 interface LightboxWrapperProps {
   variant: 'inline' | 'compact';
-  slides: { src: string; alt: string; description?: string }[];
+  slides: { src: string; alt: string; description?: string; blurDataURL?: string }[];
   open: boolean;
   openIndex: number;
   onOpen: (v: boolean) => void;

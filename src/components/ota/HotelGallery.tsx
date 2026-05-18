@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import React from 'react';
 import { MapPin, Mountain, Coffee, Sunset } from 'lucide-react';
+import { getImageSizeUrl, type ImageBlurMeta } from '@/lib/image-config';
 
 // ============================================================================
 // HOTEL GALLERY — Seccion cinematografica con storytelling
@@ -13,6 +14,7 @@ interface HotelGalleryProps {
   images: { url: string; alt?: string }[];
   hotelName: string;
   location: string;
+  blurs?: ImageBlurMeta;
 }
 
 // Plantillas de storytelling por tipo de destino — se seleccionan segun la ubicacion
@@ -58,7 +60,7 @@ function getStoryCaptions(location: string) {
   return STORY_CAPTIONS_BY_TYPE[type] || STORY_CAPTIONS_BY_TYPE.montaña;
 }
 
-export default function HotelGallery({ images, hotelName, location }: HotelGalleryProps) {
+export default function HotelGallery({ images, hotelName, location, blurs }: HotelGalleryProps) {
   if (images.length === 0) return null;
 
   const captions = getStoryCaptions(location);
@@ -87,13 +89,15 @@ export default function HotelGallery({ images, hotelName, location }: HotelGalle
         {images[0] && (
           <div className="md:col-span-2 relative h-[320px] md:h-[420px] rounded-[var(--radius-squircle-2xl)] overflow-hidden group">
             <Image
-              src={images[0].url}
+              src={getImageSizeUrl(images[0].url, 'full')}
               alt={images[0].alt ?? hotelName}
               fill
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 66vw"
               quality={85}
               priority
+              placeholder={blurs?.gallery_blurs?.[0]?.blur ? 'blur' : undefined}
+              blurDataURL={blurs?.gallery_blurs?.[0]?.blur}
             />
             {/* Glass overlay con storytelling */}
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
@@ -115,12 +119,14 @@ export default function HotelGallery({ images, hotelName, location }: HotelGalle
         {images[1] && (
           <div className="relative h-[320px] md:h-[420px] rounded-[var(--radius-squircle-2xl)] overflow-hidden group">
             <Image
-              src={images[1].url}
+              src={getImageSizeUrl(images[1].url, 'card')}
               alt={images[1].alt ?? `${hotelName} detalle`}
               fill
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 33vw"
               quality={90}
+              placeholder={blurs?.gallery_blurs?.[1]?.blur ? 'blur' : undefined}
+              blurDataURL={blurs?.gallery_blurs?.[1]?.blur}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent" />
             <div className="absolute bottom-0 left-0 right-0 p-5">
@@ -147,7 +153,7 @@ export default function HotelGallery({ images, hotelName, location }: HotelGalle
             return (
               <div key={i} className="relative h-[180px] rounded-[1.5rem] overflow-hidden group">
                 <Image
-                  src={img.url}
+                  src={getImageSizeUrl(img.url, 'card')}
                   alt={img.alt ?? `${hotelName} ${i + 3}`}
                   fill
                   className="object-cover transition-transform duration-700 group-hover:scale-105"

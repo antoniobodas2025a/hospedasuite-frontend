@@ -203,3 +203,29 @@ export function extractBlurDataUrl(url: string): string | null {
     return null;
   }
 }
+
+// ─── Blur metadata type ─────────────────────────────────────────────
+
+export type ImageBlurMeta = {
+  main_image_blur?: string;
+  cover_photo_blur?: string;
+  gallery_blurs?: { url: string; blur: string }[];
+};
+
+// ─── SrcSet builder ─────────────────────────────────────────────────
+
+/**
+ * Construye un string srcSet con los 3 tamaños para <img srcSet>.
+ *
+ * Formato: "thumb_url 256w, card_url 640w, full_url 1920w"
+ *
+ * @param baseUrl - URL base de la imagen (generalmente la versión full)
+ * @returns String srcSet listo para usar en un atributo srcSet
+ */
+export function buildSrcSet(baseUrl: string): string {
+  if (!baseUrl) return '';
+  const thumb = getImageSizeUrl(baseUrl, 'thumb');
+  const card = getImageSizeUrl(baseUrl, 'card');
+  const full = getImageSizeUrl(baseUrl, 'full');
+  return `${thumb} 256w, ${card} 640w, ${full} 1920w`;
+}

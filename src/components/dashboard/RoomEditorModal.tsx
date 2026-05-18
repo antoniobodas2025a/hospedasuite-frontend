@@ -9,7 +9,7 @@ import * as z from 'zod';
 type RoomFormValues = z.input<typeof RoomSchema>;
 import { saveRoomAction } from '@/app/actions/inventory';
 import { motion } from 'framer-motion';
-import { createClient } from '@supabase/supabase-js';
+import { uploadOptimizedImageAction } from '@/app/actions/settings';
 import { cn } from '@/lib/utils';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 import {
@@ -27,54 +27,7 @@ interface RoomEditorModalProps {
 }
 
 // ==========================================
-// BLOQUE 2: MOTOR DE OPTIMIZACIÓN (WEBP)
-// ==========================================
-
-const optimizeImage = (file: File): Promise<File> => {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.readAsDataURL(file);
-    reader.onload = (event) => {
-      const img = new window.Image();
-      img.src = event.target?.result as string;
-      img.onload = () => {
-        const canvas = document.createElement('canvas');
-        const MAX_WIDTH = 1920;
-        const MAX_HEIGHT = 1080;
-        let width = img.width;
-        let height = img.height;
-
-        if (width > height) {
-          if (width > MAX_WIDTH) {
-            height *= MAX_WIDTH / width;
-            width = MAX_WIDTH;
-          }
-        } else {
-          if (height > MAX_HEIGHT) {
-            width *= MAX_HEIGHT / height;
-            height = MAX_HEIGHT;
-          }
-        }
-        canvas.width = width;
-        canvas.height = height;
-        const ctx = canvas.getContext('2d');
-        ctx?.drawImage(img, 0, 0, width, height);
-        canvas.toBlob((blob) => {
-          if (!blob) return reject(new Error('Canvas compilation failed'));
-          resolve(new File([blob], file.name.replace(/\.[^/.]+$/, "") + ".webp", {
-            type: 'image/webp',
-            lastModified: Date.now(),
-          }));
-        }, 'image/webp', 0.80);
-      };
-      img.onerror = reject;
-    };
-    reader.onerror = reject;
-  });
-};
-
-// ==========================================
-// BLOQUE 3: COMPONENTE PRINCIPAL
+// BLOQUE 2: COMPONENTE PRINCIPAL
 // ==========================================
 
 export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomEditorModalProps) {
@@ -113,39 +66,26 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
     
     setIsUploadingMedia(true);
     try {
-      const supabase = createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!, 
-        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-      );
-      
-      // 🔍 AUDITORÍA DE SESIÓN EN VIVO
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log("Estado de la sesión en cliente:", session ? "LOGUEADO" : "ANÓNIMO");
-
-      const newUrls: string[] = [];
+      const newGallery: { url: string; blurDataURL?: string }[] = [];
 
       for (let i = 0; i < files.length; i++) {
         const file = files[i];
-        const optimizedFile = await optimizeImage(file);
-        const fileName = `${hotelId}/room-${Date.now()}-${Math.random().toString(36).substring(7)}.webp`;
+        const formData = new FormData();
+        formData.set('file', file);
         
-        const { error } = await supabase.storage
-          .from('gallery')
-          .upload(fileName, optimizedFile, {
-            cacheControl: '31536000',
-            upsert: true 
-          });
-
-        if (error) {
-          console.error("Error específico de Storage:", error);
-          throw error;
+        const result = await uploadOptimizedImageAction(formData, 'rooms');
+        
+        if (!result.success) {
+          throw new Error(result.error || 'Upload failed');
         }
-
-        const { data: publicUrlData } = supabase.storage.from('gallery').getPublicUrl(fileName);
-        newUrls.push(publicUrlData.publicUrl);
+        
+        newGallery.push({
+          url: result.url,
+          blurDataURL: result.blurDataURL,
+        });
       }
 
-      setValue('gallery', [...currentGallery, ...newUrls], { shouldDirty: true });
+      setValue('gallery', [...currentGallery, ...newGallery], { shouldDirty: true });
     } catch (error: any) {
       console.error("[CRITICAL] Falla en la carga multimedia:", error);
       alert(`Error al subir archivo: ${error.message || 'Verifique conexión y bucket'}`);

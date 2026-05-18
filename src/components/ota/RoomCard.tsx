@@ -8,6 +8,7 @@ import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getRoomAmenityById } from '@/lib/amenity-registry';
+import { getImageSizeUrl } from '@/lib/image-config';
 
 interface RoomCardProps {
   room: any;
@@ -123,13 +124,15 @@ function RoomCardInner({
         {/* ZONA VISUAL (Atraccion) */}
         <div className="w-full md:w-72 h-64 md:h-full min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner">
           <Image
-            src={coverImage}
+            src={getImageSizeUrl(coverImage, 'card')}
             alt={room.name}
             fill
             className="object-cover transition-transform duration-700 group-hover/card:scale-110"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 288px"
             quality={75}
             loading="lazy"
+            placeholder={room.cover_image_blur ? 'blur' : undefined}
+            blurDataURL={room.cover_image_blur}
           />
 
           {/* Badges superpuestos — Gravity Reveal con spring physics */}

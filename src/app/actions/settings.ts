@@ -90,6 +90,7 @@ const updateProfileSchema = z.object({
   trust_badge_1_subtitle: z.string().nullable().optional(),
   trust_badge_2_title: z.string().nullable().optional(),
   trust_badge_2_subtitle: z.string().nullable().optional(),
+  image_blur_meta: z.any().nullable().optional(),
 });
 
 export async function updateHotelProfileAction(hotelId: string, formData: any) {
@@ -133,6 +134,7 @@ export async function updateHotelProfileAction(hotelId: string, formData: any) {
         trust_badge_1_subtitle: validData.trust_badge_1_subtitle,
         trust_badge_2_title: validData.trust_badge_2_title,
         trust_badge_2_subtitle: validData.trust_badge_2_subtitle,
+        image_blur_meta: validData.image_blur_meta,
       })
       .eq('id', hotelId);
 
@@ -165,7 +167,7 @@ export async function updateHotelProfileAction(hotelId: string, formData: any) {
  */
 export async function uploadOptimizedImageAction(
   formData: FormData,
-  folder: 'hero' | 'covers' | 'gallery' = 'gallery'
+  folder: 'hero' | 'covers' | 'gallery' | 'rooms' = 'gallery'
 ) {
   try {
     const currentHotel = await getCurrentHotel();

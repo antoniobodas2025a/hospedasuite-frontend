@@ -7,6 +7,7 @@ import { Suspense } from 'react';
 import { RoomShowcaseModal } from '@/components/ota/RoomShowcaseModal';
 import AvailabilitySearchBar from '@/components/ota/AvailabilitySearchBar';
 import HeroGallery from '@/components/ota/HeroGallery';
+import type { ImageBlurMeta } from '@/lib/image-config';
 import BookingWidget from '@/components/ota/BookingWidget';
 import ReviewsSection from '@/components/ota/ReviewsSection';
 import HotelInfoSection from '@/components/ota/HotelInfoSection';
@@ -122,6 +123,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
           images={hotelGalleryImages}
           hotelName={hotel.name}
           activityMessages={hotel.recent_activity_messages ?? null}
+          blurs={hotel.image_blur_meta as ImageBlurMeta | undefined}
         />
       </ErrorBoundary>
 

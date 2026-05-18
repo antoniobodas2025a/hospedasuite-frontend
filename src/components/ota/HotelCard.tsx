@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { useRouter } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import Image from 'next/image';
+import { getImageSizeUrl } from '@/lib/image-config';
 
 interface Hotel {
   id: string;
@@ -14,6 +15,7 @@ interface Hotel {
   main_image_url: string;
   description?: string;
   reviewStats?: { averageRating: number; totalReviews: number };
+  main_image_blur?: string;
 }
 
 export default function HotelCard({ hotel }: { hotel: Hotel }) {
@@ -36,12 +38,14 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
       }}
     >
       <Image
-        src={bgImage}
+        src={getImageSizeUrl(bgImage, 'card')}
         alt={hotel.name}
         fill
         className='object-cover transition-transform duration-700 group-hover:scale-110'
         sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
         quality={75}
+        placeholder={hotel.main_image_blur ? 'blur' : undefined}
+        blurDataURL={hotel.main_image_blur}
       />
 
       <div className='absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent opacity-80 group-hover:opacity-90 transition-opacity' />

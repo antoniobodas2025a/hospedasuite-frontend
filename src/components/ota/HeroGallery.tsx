@@ -6,7 +6,7 @@ import { motion } from 'framer-motion';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { X, ChevronLeft, ChevronRight, Grid, TrendingUp, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { getImageSizeUrl } from '@/lib/image-config';
+import { getImageSizeUrl, type ImageBlurMeta } from '@/lib/image-config';
 import { useIsMobile } from '@/hooks/useIsMediaQuery';
 
 // ============================================================================
@@ -25,6 +25,8 @@ interface HeroGalleryProps {
   hotelName: string;
   /** Optional activity pills to overlay on the hero */
   activityMessages?: { icon: string; text: string; color: string }[] | null;
+  /** Blur placeholders for progressive image loading */
+  blurs?: ImageBlurMeta;
 }
 
 // Hook para touch swipe con loop infinito
@@ -60,6 +62,8 @@ function GalleryImage({
   quality,
   priority,
   loading,
+  blurDataURL,
+  placeholder,
 }: {
   src: string;
   alt: string;
@@ -69,6 +73,8 @@ function GalleryImage({
   quality?: number;
   priority?: boolean;
   loading?: 'lazy' | 'eager';
+  blurDataURL?: string;
+  placeholder?: 'blur';
 }) {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(false);
@@ -96,6 +102,8 @@ function GalleryImage({
         quality={quality ?? 75}
         priority={priority}
         loading={loading ?? 'eager'}
+        placeholder={placeholder}
+        blurDataURL={blurDataURL}
         onLoad={() => setIsLoading(false)}
         onError={() => { setError(true); setIsLoading(false); }}
       />
@@ -115,7 +123,7 @@ const MUTED_MAP: Record<string, string> = {
   'text-urgent': 'bg-urgent-muted/80 border-urgent-border/60',
 }
 
-export default function HeroGallery({ images, hotelName, activityMessages }: HeroGalleryProps) {
+export default function HeroGallery({ images, hotelName, activityMessages, blurs }: HeroGalleryProps) {
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
@@ -190,6 +198,8 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
             sizes="(max-width: 768px) 100vw, 100vw"
             quality={85}
             priority
+            placeholder={blurs?.gallery_blurs?.[0]?.blur ? 'blur' : undefined}
+            blurDataURL={blurs?.gallery_blurs?.[0]?.blur}
           />
         </button>
       );
@@ -206,13 +216,15 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
               aria-label={`Ver foto ${i + 1} de ${hotelName}`}
             >
               <GalleryImage
-                src={img.url}
+                src={i === 0 ? img.url : getImageSizeUrl(img.url, 'thumb')}
                 alt={img.alt || `${hotelName} ${i + 1}`}
                 fill
                 className="object-cover transition-transform duration-700 group-hover:scale-105"
                 sizes="(max-width: 768px) 100vw, 50vw"
                 quality={i === 0 ? 85 : 75}
                 priority={i === 0}
+                placeholder={i === 0 && blurs?.gallery_blurs?.[0]?.blur ? 'blur' : undefined}
+                blurDataURL={i === 0 ? blurs?.gallery_blurs?.[0]?.blur : undefined}
               />
             </button>
           ))}
@@ -236,6 +248,8 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
               sizes="(max-width: 768px) 100vw, 66vw"
               quality={85}
               priority
+              placeholder={blurs?.gallery_blurs?.[0]?.blur ? 'blur' : undefined}
+              blurDataURL={blurs?.gallery_blurs?.[0]?.blur}
             />
           </button>
           <div className="flex flex-col gap-1">
@@ -246,7 +260,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
                 className="relative flex-1 overflow-hidden cursor-pointer"
               >
                 <GalleryImage
-                  src={img.url}
+                  src={getImageSizeUrl(img.url, 'thumb')}
                   alt={img.alt || `${hotelName} ${i + 2}`}
                   fill
                   className="object-cover transition-transform duration-500 hover:scale-110"
@@ -282,6 +296,8 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
             sizes={totalDisplay >= 6 ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 100vw, 50vw'}
             quality={85}
             priority
+            placeholder={blurs?.gallery_blurs?.[0]?.blur ? 'blur' : undefined}
+            blurDataURL={blurs?.gallery_blurs?.[0]?.blur}
           />
           {/* Semantic overlay token: uses foreground opacity for hover feedback */}
           <div className="absolute inset-0 bg-foreground/0 hover:bg-foreground/[0.05] transition-colors" />
@@ -295,7 +311,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
             aria-label={`Ver foto ${i + 2} de ${hotelName}`}
           >
             <GalleryImage
-              src={img.url}
+              src={getImageSizeUrl(img.url, 'thumb')}
               alt={img.alt || `${hotelName} ${i + 2}`}
               fill
               className="object-cover transition-transform duration-500 hover:scale-110"
@@ -312,7 +328,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
         {totalDisplay > (totalDisplay >= 6 ? 6 : 4) && (
           <div className="relative overflow-hidden">
             <GalleryImage
-              src={displayImages[totalDisplay >= 6 ? 6 : 4].url}
+              src={getImageSizeUrl(displayImages[totalDisplay >= 6 ? 6 : 4].url, 'thumb')}
               alt="Ver todas las fotos"
               fill
               className="object-cover brightness-50"
@@ -355,6 +371,8 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
               sizes="100vw"
               quality={85}
               priority
+              placeholder={blurs?.gallery_blurs?.[mobileIndex]?.blur ? 'blur' : undefined}
+              blurDataURL={blurs?.gallery_blurs?.[mobileIndex]?.blur}
             />
 
             {/* Dots indicator */}
@@ -474,13 +492,15 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
 
           <div className="relative w-full max-w-5xl h-[80vh]">
             <GalleryImage
-              src={images[activeIndex].url}
+              src={getImageSizeUrl(images[activeIndex].url, 'full')}
               alt={images[activeIndex].alt || hotelName}
               fill
               className="object-contain"
               sizes="80vw"
               quality={90}
               priority
+              placeholder={blurs?.gallery_blurs?.[activeIndex]?.blur ? 'blur' : undefined}
+              blurDataURL={blurs?.gallery_blurs?.[activeIndex]?.blur}
             />
           </div>
 
@@ -501,7 +521,7 @@ export default function HeroGallery({ images, hotelName, activityMessages }: Her
                   aria-label={`Ir a foto ${i + 1}`}
                 >
                   <GalleryImage
-                    src={img.url}
+                    src={getImageSizeUrl(img.url, 'thumb')}
                     alt={img.alt || ''}
                     fill
                     className="object-cover"
