@@ -41,6 +41,8 @@ export interface RefinementPanelProps {
   matchingCount: number;
   /** Whether the panel is expanded */
   isOpen: boolean;
+  /** Called to close the panel */
+  onClose?: () => void;
 }
 
 // ── Component ─────────────────────────────────────────────────────────────────
@@ -56,6 +58,7 @@ export default function RefinementPanel({
   onClearAll,
   matchingCount,
   isOpen,
+  onClose,
 }: RefinementPanelProps) {
   // ── Derived values ──────────────────────────────────────────────────────
 
@@ -98,18 +101,31 @@ export default function RefinementPanel({
                 <h3 className="font-black text-foreground tracking-tight text-lg">
                   Refinar búsqueda
                 </h3>
-                {hasActiveFilters && (
+                <div className="flex items-center gap-2">
+                  {hasActiveFilters && (
+                    <motion.button
+                      onClick={onClearAll}
+                      whileTap={{ scale: 0.95 }}
+                      transition={springSnappy()}
+                      className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors"
+                      aria-label="Limpiar todos los filtros"
+                    >
+                      <X size={12} />
+                      Limpiar todo
+                    </motion.button>
+                  )}
+                  {/* Close panel button */}
                   <motion.button
-                    onClick={onClearAll}
-                    whileTap={{ scale: 0.95 }}
+                    onClick={onClose}
+                    whileTap={{ scale: 0.9 }}
                     transition={springSnappy()}
-                    className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors"
-                    aria-label="Limpiar todos los filtros"
+                    className="size-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
+                    aria-label="Cerrar panel de refinamiento"
+                    title="Cerrar"
                   >
-                    <X size={12} />
-                    Limpiar todo
+                    <X size={14} strokeWidth={2.5} />
                   </motion.button>
-                )}
+                </div>
               </div>
 
               {/* Price Slider */}

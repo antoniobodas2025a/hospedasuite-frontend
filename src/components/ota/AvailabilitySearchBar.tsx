@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useTransition, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Calendar as CalendarIcon, Loader2, CheckCircle2, SlidersHorizontal, User } from 'lucide-react';
+import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, SlidersHorizontal, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay } from 'date-fns';
@@ -80,7 +80,8 @@ export default function AvailabilitySearchBar({
   const router = useRouter();
   const searchParams = useSearchParams();
   const popoverRef = useRef<HTMLDivElement>(null);
-  const triggerRef = useRef<HTMLDivElement>(null);
+  const datesTriggerRef = useRef<HTMLDivElement>(null);
+  const guestsTriggerRef = useRef<HTMLDivElement>(null);
   const navIoRef = useRef<IntersectionObserver | null>(null);
 
   // Active popover
@@ -137,10 +138,12 @@ export default function AvailabilitySearchBar({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activePopover]);
 
-  // Above/below positioning
+  // Above/below positioning — uses the specific trigger ref for the active popover
   useEffect(() => {
-    if (!activePopover || !triggerRef.current) return;
-    const rect = triggerRef.current.getBoundingClientRect();
+    if (!activePopover) return;
+    const trigger = activePopover === 'dates' ? datesTriggerRef.current : guestsTriggerRef.current;
+    if (!trigger) return;
+    const rect = trigger.getBoundingClientRect();
     const spaceBelow = window.innerHeight - rect.bottom;
     const popoverHeight = activePopover === 'dates' ? 360 : 280;
     setPopoverPosition(spaceBelow < popoverHeight && rect.top > spaceBelow ? 'above' : 'below');
@@ -171,6 +174,13 @@ export default function AvailabilitySearchBar({
       setActivePopover(null);
       if (guests > 0) pushUrl({ checkin: newDate.from, checkout: newDate.to, guests });
     } else setDate(newDate);
+  };
+
+  const handleClearDates = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setDate(undefined);
+    setActivePopover(null);
+    pushUrl({ checkin: undefined, checkout: undefined });
   };
 
   const handleGuestsChange = (value: number) => {
@@ -240,7 +250,6 @@ export default function AvailabilitySearchBar({
       <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
         {/* SEARCH PILL — 2/3 width */}
         <div
-          ref={triggerRef}
           className={cn(
             'flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[var(--radius-squircle-2xl)] sm:rounded-full transition-all duration-300 w-full lg:w-2/3',
             sticky ? 'p-1.5 sm:p-1' : 'p-2',
@@ -250,6 +259,7 @@ export default function AvailabilitySearchBar({
         >
           {/* ZONE 1: DATES */}
           <div
+            ref={datesTriggerRef}
             onClick={() => !isPending && setActivePopover(activePopover === 'dates' ? null : 'dates')}
             role="button" aria-expanded={activePopover === 'dates'} aria-label="Seleccionar fechas de estadía"
             className={pillBase('rounded-t-[var(--radius-squircle-xl)] sm:rounded-l-full sm:rounded-r-none')}
@@ -259,10 +269,25 @@ export default function AvailabilitySearchBar({
                 : date?.from && date?.to ? <CheckCircle2 size={ios} className="text-secondary" />
                 : <CalendarIcon size={ios} className="text-brand-600" />}
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <span className={labelClass}>Estadía</span>
               <span className={valueClass(!!date?.from)}>{displayRange()}</span>
             </div>
+            {/* Clear dates button — only visible when dates are selected */}
+            {date?.from && (
+              <motion.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={springSnappy()}
+                onClick={handleClearDates}
+                className="size-6 rounded-full flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0 ml-1"
+                aria-label="Limpiar fechas seleccionadas"
+                title="Limpiar fechas"
+              >
+                <X size={12} strokeWidth={2.5} />
+              </motion.button>
+            )}
           </div>
 
           {/* DIVIDER */}
@@ -271,6 +296,7 @@ export default function AvailabilitySearchBar({
 
           {/* ZONE 2: GUESTS */}
           <div
+            ref={guestsTriggerRef}
             onClick={() => !isPending && setActivePopover(activePopover === 'guests' ? null : 'guests')}
             role="button" aria-expanded={activePopover === 'guests'} aria-label="Seleccionar número de huéspedes"
             className={pillBase('rounded-b-[var(--radius-squircle-xl)] sm:rounded-r-full sm:rounded-l-none')}
@@ -337,6 +363,7 @@ export default function AvailabilitySearchBar({
           minBeds={minBeds} onMinBedsChange={handleMinBedsChange}
           selectedAmenities={selectedAmenities} onAmenitiesChange={handleAmenitiesChange}
           onClearAll={handleClearAllRefinement} matchingCount={matchingCount} isOpen={showRefinement}
+          onClose={() => setShowRefinement(false)}
         />
       </div>
 
@@ -349,7 +376,14 @@ export default function AvailabilitySearchBar({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
             transition={springPopover}
-            className={cn('absolute z-[var(--z-popover)] date-picker-b2c', popoverPosition === 'above' ? 'bottom-full mb-2 left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2' : 'top-full mt-2 left-0 w-full md:w-auto md:left-1/2 md:-translate-x-1/2')}
+            style={{
+              position: 'absolute',
+              zIndex: 'var(--z-popover)',
+              ...(popoverPosition === 'above'
+                ? { bottom: '100%', marginBottom: 8 }
+                : { top: '100%', marginTop: 8 }),
+            }}
+            className="date-picker-b2c w-full md:w-auto"
           >
             <GlassPanel className="p-4 sm:p-6 ring-1 ring-foreground/5 bg-background/95 backdrop-blur-xl">
               <DayPicker
@@ -373,7 +407,14 @@ export default function AvailabilitySearchBar({
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
             transition={springGentle()}
-            className={cn('absolute z-[var(--z-popover)] w-full sm:w-80', popoverPosition === 'above' ? 'bottom-full mb-2 left-0 sm:left-auto sm:right-0' : 'top-full mt-2 left-0 sm:left-auto sm:right-0')}
+            style={{
+              position: 'absolute',
+              zIndex: 'var(--z-popover)',
+              ...(popoverPosition === 'above'
+                ? { bottom: '100%', marginBottom: 8, right: 0 }
+                : { top: '100%', marginTop: 8, right: 0 }),
+            }}
+            className="w-full sm:w-80"
           >
             <GlassPanel className="p-4 ring-1 ring-foreground/5 bg-background/95 backdrop-blur-xl">
               <GuestSelector value={guests} onChange={handleGuestsChange} min={1} max={20} />
