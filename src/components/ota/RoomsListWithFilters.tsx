@@ -41,28 +41,24 @@ export default function RoomsListWithFilters({
 }: RoomsListWithFiltersProps) {
   const searchParams = useSearchParams();
 
-  // Leer filtros de la URL
+  // Leer filtros de refinamiento de la URL (client-side only)
   const maxPriceParam = searchParams.get('max_price');
-  const minCapacityParam = searchParams.get('min_capacity');
   const minBedsParam = searchParams.get('min_beds');
   const amenitiesParam = searchParams.get('amenities');
 
   const maxPrice = maxPriceParam ? Number(maxPriceParam) : null;
-  const minCapacity = minCapacityParam ? Number(minCapacityParam) : null;
   const minBeds = minBedsParam ? Number(minBedsParam) : null;
   const selectedAmenities = amenitiesParam ? amenitiesParam.split(',').filter(Boolean) : [];
 
-  // Aplicar filtros localmente
+  // Aplicar filtros de refinamiento localmente (sin network requests)
   const filteredRooms = useMemo(() => {
-    if (!maxPrice && !minCapacity && !minBeds && selectedAmenities.length === 0) return availableRooms;
+    if (!maxPrice && !minBeds && selectedAmenities.length === 0) return availableRooms;
 
     return availableRooms.filter((room) => {
       const price = room.price_per_night || room.price || 0;
-      const capacity = room.capacity || 0;
       const beds = room.beds || 0;
 
       if (maxPrice !== null && price > maxPrice) return false;
-      if (minCapacity !== null && capacity < minCapacity) return false;
       if (minBeds !== null && beds < minBeds) return false;
       if (selectedAmenities.length > 0) {
         const roomAmenities = room.amenities || [];
@@ -71,7 +67,7 @@ export default function RoomsListWithFilters({
       }
       return true;
     });
-  }, [availableRooms, maxPrice, minCapacity, minBeds, selectedAmenities]);
+  }, [availableRooms, maxPrice, minBeds, selectedAmenities]);
 
   const hasResults = filteredRooms.length > 0;
   const hasAvailable = availableRooms.length > 0;

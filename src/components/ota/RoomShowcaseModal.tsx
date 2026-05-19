@@ -47,10 +47,10 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   const roomId = searchParams.get('showRoom');
   const checkIn = searchParams.get('checkin');
   const checkOut = searchParams.get('checkout');
-  const minCapacity = Number(searchParams.get('min_capacity')) || 0;
+  const guests = Number(searchParams.get('guests')) || 0;
 
   // Default guest count for booking (can be adjusted in checkout)
-  const defaultGuests = minCapacity > 0 ? minCapacity : 2;
+  const defaultGuests = guests > 0 ? guests : 2;
 
   const room = useMemo(() => 
     hotel.rooms?.find((r) => r.id === roomId), 
@@ -99,7 +99,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
     params.set('room', room.id!);
     params.set('checkin', checkIn);
     params.set('checkout', checkOut);
-    params.set('adults', defaultGuests.toString());
+    params.set('guests', defaultGuests.toString());
     router.push(`/book/${hotel.slug}/checkout?${params.toString()}`);
   };
 

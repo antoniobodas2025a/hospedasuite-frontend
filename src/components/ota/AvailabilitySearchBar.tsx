@@ -159,7 +159,7 @@ export default function AvailabilitySearchBar({
       });
       startTransition(() => router.push(url, { scroll: false }));
     },
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
     [searchParams, date, guests, maxPrice, minBeds, selectedAmenities, router]
   );
 

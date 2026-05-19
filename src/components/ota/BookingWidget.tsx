@@ -54,9 +54,9 @@ export default function BookingWidget({
   const selectedRoomId = searchParams.get('showRoom');
   const selectedRoom = selectedRoomId ? activeRooms.find(r => r.id === selectedRoomId) : null;
 
-  // Guest count from min_capacity filter
-  const minCapacityParam = searchParams.get('min_capacity');
-  const guestCount = minCapacityParam ? Number(minCapacityParam) : null;
+  // Guest count from guests filter
+  const guestsParam = searchParams.get('guests');
+  const guestCount = guestsParam ? Number(guestsParam) : null;
 
   let nights = 0;
   if (checkIn && checkOut) {
