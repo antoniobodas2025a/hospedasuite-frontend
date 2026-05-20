@@ -162,7 +162,9 @@ CREATE TRIGGER update_saas_subscriptions_updated_at
 -- 7. Migrar datos existentes
 -- ============================================================================
 
+-- Explicitly generate UUIDs in the INSERT to avoid relying on column defaults
 INSERT INTO saas_subscriptions (
+  id,
   hotel_id, 
   plan_key, 
   status, 
@@ -170,6 +172,7 @@ INSERT INTO saas_subscriptions (
   current_period_end
 )
 SELECT 
+  gen_random_uuid(),
   h.id,
   COALESCE(h.subscription_plan, 'starter'),
   COALESCE(h.subscription_status, 'trialing'),
