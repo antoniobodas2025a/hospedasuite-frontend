@@ -89,7 +89,12 @@ INSERT INTO saas_subscriptions (
 SELECT 
   gen_random_uuid(),
   h.id,
-  LOWER(COALESCE(h.subscription_plan, 'starter')),
+  CASE LOWER(COALESCE(h.subscription_plan, 'starter'))
+    WHEN 'standard' THEN 'starter'
+    WHEN 'pro' THEN 'pro'
+    WHEN 'enterprise' THEN 'enterprise'
+    ELSE 'starter'
+  END,
   COALESCE(h.subscription_status, 'trialing'),
   h.created_at,
   COALESCE(h.trial_ends_at, h.created_at + INTERVAL '90 days')
