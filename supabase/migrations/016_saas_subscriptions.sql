@@ -14,35 +14,39 @@
 -- 1. SAAS_SUBSCRIPTIONS — Tabla central de suscripciones
 -- ============================================================================
 
-CREATE TABLE IF NOT EXISTS saas_subscriptions (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  hotel_id UUID NOT NULL REFERENCES hotels(id) ON DELETE CASCADE,
-  
-  -- Plan info
-  plan_key TEXT NOT NULL CHECK (plan_key IN ('starter', 'pro', 'enterprise')),
-  status TEXT NOT NULL CHECK (status IN ('trialing', 'active', 'past_due', 'cancelled', 'paused')),
-  
-  -- Billing periods
-  current_period_start TIMESTAMPTZ NOT NULL,
-  current_period_end TIMESTAMPTZ NOT NULL,
-  cancel_at_period_end BOOLEAN DEFAULT false,
-  
-  -- Wompi integration
-  wompi_customer_id TEXT,
-  wompi_payment_source_id TEXT,
-  wompi_subscription_id TEXT,
-  last_wompi_payment_id TEXT,
-  last_wompi_payment_date TIMESTAMPTZ,
-  
-  -- Metadata
-  created_at TIMESTAMPTZ DEFAULT NOW(),
-  updated_at TIMESTAMPTZ DEFAULT NOW(),
-  
-  -- Unique constraint: one subscription per hotel
-  CONSTRAINT uq_saas_subscriptions_hotel UNIQUE (hotel_id)
-);
+-- Create table ONLY if it doesn't exist, using a DO block for full control
+DO $$
+BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM information_schema.tables 
+    WHERE table_schema = 'public' AND table_name = 'saas_subscriptions'
+  ) THEN
+    CREATE TABLE saas_subscriptions (
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+      hotel_id UUID NOT NULL REFERENCES hotels(id) ON DELETE CASCADE,
+      plan_key TEXT NOT NULL,
+      status TEXT NOT NULL,
+      current_period_start TIMESTAMPTZ NOT NULL,
+      current_period_end TIMESTAMPTZ NOT NULL,
+      cancel_at_period_end BOOLEAN DEFAULT false,
+      wompi_customer_id TEXT,
+      wompi_payment_source_id TEXT,
+      wompi_subscription_id TEXT,
+      last_wompi_payment_id TEXT,
+      last_wompi_payment_date TIMESTAMPTZ,
+      created_at TIMESTAMPTZ DEFAULT NOW(),
+      updated_at TIMESTAMPTZ DEFAULT NOW(),
+      CONSTRAINT uq_saas_subscriptions_hotel UNIQUE (hotel_id)
+    );
+  END IF;
+END $$;
 
--- Idempotencia: agregar columnas si la tabla ya existe pero le faltan
+-- ============================================================================
+-- 2. Idempotencia: agregar columnas faltantes si la tabla existe pero está incompleta
+-- ============================================================================
+
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS plan_key TEXT;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS status TEXT;
 ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS current_period_start TIMESTAMPTZ;
 ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMPTZ;
 ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN DEFAULT false;
@@ -51,10 +55,13 @@ ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS wompi_payment_source_id 
 ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS wompi_subscription_id TEXT;
 ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS last_wompi_payment_id TEXT;
 ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS last_wompi_payment_date TIMESTAMPTZ;
-ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS plan_key TEXT;
-ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS status TEXT;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS created_at TIMESTAMPTZ DEFAULT NOW();
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT NOW();
 
--- CHECK constraints idempotentes (solo si no existen)
+-- ============================================================================
+-- 3. Constraints idempotentes
+-- ============================================================================
+
 DO $$
 BEGIN
   -- plan_key check
@@ -81,18 +88,22 @@ BEGIN
   END IF;
 END $$;
 
--- Índices para queries frecuentes
+-- ============================================================================
+-- 4. Índices
+-- ============================================================================
+
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON saas_subscriptions(status);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_period_end ON saas_subscriptions(current_period_end);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_plan ON saas_subscriptions(plan_key);
 
--- RLS: habilitar row-level security
+-- ============================================================================
+-- 5. RLS
+-- ============================================================================
+
 ALTER TABLE saas_subscriptions ENABLE ROW LEVEL SECURITY;
 
--- Políticas idempotentes
 DO $$
 BEGIN
-  -- hotels_view_own_subscriptions
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'hotels_view_own_subscriptions' AND tablename = 'saas_subscriptions'
   ) THEN
@@ -101,7 +112,6 @@ BEGIN
       USING (hotel_id IN (SELECT id FROM hotels WHERE owner_id = auth.uid()));
   END IF;
 
-  -- no_client_modify_subscriptions (INSERT)
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'no_client_modify_subscriptions' AND tablename = 'saas_subscriptions'
   ) THEN
@@ -109,7 +119,6 @@ BEGIN
       ON saas_subscriptions FOR INSERT WITH CHECK (false);
   END IF;
 
-  -- no_client_update_subscriptions
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'no_client_update_subscriptions' AND tablename = 'saas_subscriptions'
   ) THEN
@@ -117,7 +126,6 @@ BEGIN
       ON saas_subscriptions FOR UPDATE USING (false);
   END IF;
 
-  -- no_client_delete_subscriptions
   IF NOT EXISTS (
     SELECT 1 FROM pg_policies WHERE policyname = 'no_client_delete_subscriptions' AND tablename = 'saas_subscriptions'
   ) THEN
@@ -126,7 +134,10 @@ BEGIN
   END IF;
 END $$;
 
--- Trigger: actualizar updated_at (idempotente)
+-- ============================================================================
+-- 6. Trigger updated_at
+-- ============================================================================
+
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -135,7 +146,6 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
--- Drop existing trigger if it exists, then recreate
 DROP TRIGGER IF EXISTS update_saas_subscriptions_updated_at ON saas_subscriptions;
 CREATE TRIGGER update_saas_subscriptions_updated_at
   BEFORE UPDATE ON saas_subscriptions
@@ -143,7 +153,7 @@ CREATE TRIGGER update_saas_subscriptions_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
--- 2. Migrar datos existentes: crear suscripciones para hoteles con trial/active
+-- 7. Migrar datos existentes
 -- ============================================================================
 
 INSERT INTO saas_subscriptions (
@@ -167,7 +177,7 @@ WHERE h.subscription_status IN ('trialing', 'active')
 ON CONFLICT (hotel_id) DO NOTHING;
 
 -- ============================================================================
--- 3. COMMENTS
+-- 8. COMMENTS
 -- ============================================================================
 
 COMMENT ON TABLE saas_subscriptions IS 'Suscripciones SaaS de hoteles. Una por hotel, trackea plan, estado, períodos de facturación y datos de Wompi.';
