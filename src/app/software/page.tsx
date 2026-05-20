@@ -163,7 +163,7 @@ export default function App() {
               onClick={() => router.push('/software/onboarding?plan=pro')}
               className="bg-[#0071e3] text-white px-4 py-1.5 rounded-full text-[13px] font-medium hover:bg-[#0077ED] transition-all duration-200 shadow-[0_2px_8px_rgba(0,113,227,0.2)] hover:shadow-[0_4px_16px_rgba(0,113,227,0.3)] active:scale-[0.97]"
             >
-              Iniciar 3 Meses Gratis
+              Iniciar 1 Mes Gratis
             </button>
             <button className="md:hidden text-[#1d1d1f] p-1" onClick={() => setMobileMenuOpen(!mobileMenuOpen)}>
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -265,7 +265,7 @@ export default function App() {
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full w-fit border" style={{ backgroundColor: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(20px)', borderColor: 'rgba(255,255,255,0.10)' }}>
-                  <span className="text-sm font-semibold" style={{ color: 'white' }}>3 Meses Gratis</span>
+                  <span className="text-sm font-semibold" style={{ color: 'white' }}>1 Mes Gratis</span>
                   <span className="text-xs font-medium uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.70)' }}>Luego suscripción</span>
                 </div>
               </div>

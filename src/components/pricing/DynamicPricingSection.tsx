@@ -100,7 +100,7 @@ export async function DynamicPricingSection() {
                   }
                 `}
               >
-                Empezar 3 Meses Gratis
+                Empezar 1 Mes Gratis
               </a>
             </div>
           ))}
