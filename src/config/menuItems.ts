@@ -87,12 +87,13 @@ export const MENU_GROUPS: MenuGroup[] = [
         bg: 'bg-rose-500/10'
       },
       {
-        id: 'pos',
+        id: 'carta-digital',
         label: 'Carta Digital',
-        href: '/dashboard/pos',
+        href: '/dashboard/carta-digital',
         icon: ShoppingCart,
         color: 'text-purple-500',
-        bg: 'bg-purple-500/10'
+        bg: 'bg-purple-500/10',
+        minPlan: 'pro',
       },
     ]
   },
