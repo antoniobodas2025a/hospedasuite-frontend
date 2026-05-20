@@ -80,27 +80,22 @@ CREATE TRIGGER update_saas_subscriptions_updated_at
   EXECUTE FUNCTION update_updated_at_column();
 
 -- ============================================================================
--- 6. Migrar datos existentes
+-- 6. Migrar datos existentes — SALTADO
 -- ============================================================================
-
-INSERT INTO saas_subscriptions (
-  id, hotel_id, plan_key, status, current_period_start, current_period_end
-)
-SELECT 
-  gen_random_uuid(),
-  h.id,
-  CASE LOWER(COALESCE(h.subscription_plan, 'starter'))
-    WHEN 'standard' THEN 'starter'
-    WHEN 'pro' THEN 'pro'
-    WHEN 'enterprise' THEN 'enterprise'
-    ELSE 'starter'
-  END,
-  COALESCE(h.subscription_status, 'trialing'),
-  h.created_at,
-  COALESCE(h.trial_ends_at, h.created_at + INTERVAL '90 days')
-FROM hotels h
-WHERE h.subscription_status IN ('trialing', 'active')
-ON CONFLICT (hotel_id) DO NOTHING;
+-- NOTA: La migración de datos se saltea porque los valores de subscription_plan
+-- en la tabla hotels pueden ser inconsistentes ('standard', 'PRO', etc.).
+-- Los hoteles crearán su suscripción on-demand al interactuar con el sistema.
+--
+-- Si querés migrar datos manualmente, ejecutá esto en el SQL editor:
+--
+-- INSERT INTO saas_subscriptions (id, hotel_id, plan_key, status, current_period_start, current_period_end)
+-- SELECT gen_random_uuid(), id,
+--   CASE TRIM(LOWER(subscription_plan))
+--     WHEN 'standard' THEN 'starter' WHEN 'pro' THEN 'pro'
+--     WHEN 'enterprise' THEN 'enterprise' ELSE 'starter' END,
+--   COALESCE(subscription_status, 'trialing'), created_at,
+--   COALESCE(trial_ends_at, created_at + INTERVAL '90 days')
+-- FROM hotels WHERE subscription_status IN ('trialing', 'active');
 
 -- ============================================================================
 -- 7. Comments
