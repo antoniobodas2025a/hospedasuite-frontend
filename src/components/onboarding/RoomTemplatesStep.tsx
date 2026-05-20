@@ -3,11 +3,13 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Plus, Trash2, ChevronDown, ChevronUp } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { getTemplatesForProperty, PropertyType } from '@/lib/room-templates';
 import RoomDetailStep from './RoomDetailStep';
 
 export default function RoomTemplatesStep() {
+  const t = useTranslations('onboarding.roomTemplates');
   const { hotelIdentity, rooms, addRoomFromTemplate, addEmptyRoom, removeRoom, updateRoom } = useOnboardingStore();
   const propertyType = hotelIdentity.propertyType as PropertyType;
   const templates = getTemplatesForProperty(propertyType);
@@ -17,12 +19,12 @@ export default function RoomTemplatesStep() {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8">
       <div className="flex justify-between items-end">
         <div>
-          <h3 className="text-xl font-bold text-white uppercase tracking-widest">Tus Unidades</h3>
-          <p className="text-zinc-500 text-sm mt-1">Elegí plantillas o creá habitaciones personalizadas</p>
+          <h3 className="text-xl font-bold text-white uppercase tracking-widest">{t('title')}</h3>
+          <p className="text-zinc-500 text-sm mt-1">{t('subtitle')}</p>
         </div>
         <div className="flex gap-2">
           <button onClick={addEmptyRoom} className="text-xs font-bold text-zinc-400 hover:text-white flex items-center gap-1 uppercase">
-            <Plus size={14} /> Vacía
+            <Plus size={14} /> {t('empty')}
           </button>
         </div>
       </div>
@@ -50,13 +52,15 @@ export default function RoomTemplatesStep() {
       <AnimatePresence>
         {rooms.length > 0 && (
           <div className="space-y-4">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{rooms.length} unidad{rooms.length > 1 ? 'es' : ''} configurada{rooms.length > 1 ? 's' : ''}</p>
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">
+              {t('configured', { count: rooms.length, plural: rooms.length > 1 ? 'es' : '' })}
+            </p>
             {rooms.map(room => (
               <motion.div key={room.id} layout className="bg-zinc-900/30 border border-white/5 rounded-[var(--radius-squircle-xl)] overflow-hidden">
                 <div className="flex items-center justify-between p-4 cursor-pointer" onClick={() => setExpandedRoomId(expandedRoomId === room.id ? null : room.id)}>
                   <div>
-                    <p className="font-bold text-white text-sm">{room.name || 'Sin nombre'}</p>
-                    <p className="text-xs text-zinc-500">${room.price.toLocaleString()} / noche</p>
+                    <p className="font-bold text-white text-sm">{room.name || t('noName')}</p>
+                    <p className="text-xs text-zinc-500">${room.price.toLocaleString()} {t('perNight')}</p>
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={(e) => { e.stopPropagation(); removeRoom(room.id); }} disabled={rooms.length === 1} className="text-zinc-600 hover:text-rose-500 transition-colors disabled:opacity-0">

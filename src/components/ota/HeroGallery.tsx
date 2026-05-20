@@ -8,6 +8,7 @@ import { X, ChevronLeft, ChevronRight, Grid, TrendingUp, Clock } from 'lucide-re
 import { cn } from '@/lib/utils';
 import { getImageSizeUrl, type ImageBlurMeta } from '@/lib/image-config';
 import { useIsMobile } from '@/hooks/useIsMediaQuery';
+import { useTranslations } from 'next-intl';
 
 // ============================================================================
 // HERO GALLERY — Grid estilo Airbnb para pagina de hotel OTA
@@ -124,6 +125,7 @@ const MUTED_MAP: Record<string, string> = {
 }
 
 export default function HeroGallery({ images, hotelName, activityMessages, blurs }: HeroGalleryProps) {
+  const t = useTranslations();
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
@@ -188,7 +190,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
         <button
           onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
           className="relative overflow-hidden cursor-pointer h-full"
-          aria-label={`Ver foto 1 de ${hotelName}`}
+          aria-label={t('ota.heroGallery.viewPhoto', { num: 1, hotelName })}
         >
           <GalleryImage
             src={displayImages[0].url}
@@ -213,7 +215,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
               key={i}
               onClick={() => { setActiveIndex(i); setLightboxOpen(true); }}
               className="relative overflow-hidden cursor-pointer"
-              aria-label={`Ver foto ${i + 1} de ${hotelName}`}
+              aria-label={t('ota.heroGallery.viewPhoto', { num: i + 1, hotelName })}
             >
               <GalleryImage
                 src={i === 0 ? img.url : getImageSizeUrl(img.url, 'thumb')}
@@ -238,7 +240,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
           <button
             onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
             className="col-span-2 relative overflow-hidden cursor-pointer"
-            aria-label={`Ver foto 1 de ${hotelName}`}
+            aria-label={t('ota.heroGallery.viewPhoto', { num: 1, hotelName })}
           >
             <GalleryImage
               src={displayImages[0].url}
@@ -286,7 +288,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
         <button
           onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
           className={cn('relative overflow-hidden cursor-pointer', heroSpan)}
-          aria-label={`Ver foto 1 de ${hotelName}`}
+          aria-label={t('ota.heroGallery.viewPhoto', { num: 1, hotelName })}
         >
           <GalleryImage
             src={displayImages[0].url}
@@ -308,7 +310,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
             key={i}
             onClick={() => { setActiveIndex(i + 1); setLightboxOpen(true); }}
             className="relative overflow-hidden cursor-pointer"
-            aria-label={`Ver foto ${i + 2} de ${hotelName}`}
+              aria-label={t('ota.heroGallery.viewPhoto', { num: i + 2, hotelName })}
           >
             <GalleryImage
               src={getImageSizeUrl(img.url, 'thumb')}
@@ -329,7 +331,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
           <div className="relative overflow-hidden">
             <GalleryImage
               src={getImageSizeUrl(displayImages[totalDisplay >= 6 ? 6 : 4].url, 'thumb')}
-              alt="Ver todas las fotos"
+              alt={t('ota.heroGallery.viewAllPhotosAlt')}
               fill
               className="object-cover brightness-50"
               sizes={totalDisplay >= 6 ? '33vw' : '25vw'}
@@ -338,7 +340,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
             <button
               onClick={() => setLightboxOpen(true)}
               className="absolute inset-0 flex items-center justify-center"
-              aria-label={`Ver las ${images.length} fotos de ${hotelName}`}
+              aria-label={t('ota.heroGallery.viewAllPhotosOf', { count: images.length, hotelName })}
             >
               <span className="text-white font-bold text-sm">+{images.length - (totalDisplay >= 6 ? 6 : 4)} fotos</span>
             </button>
@@ -386,7 +388,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
                       'size-2 rounded-full transition-all',
                       i === mobileIndex ? 'bg-white w-6' : 'bg-white/50',
                     )}
-                    aria-label={`Ver foto ${i + 1}`}
+                    aria-label={t('ota.heroGallery.viewPhotoNum', { num: i + 1 })}
                   />
                 ))}
               </div>
@@ -398,14 +400,14 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
                 <button
                   onClick={prevMobile}
                   className="absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
-                  aria-label="Foto anterior"
+                  aria-label={t('ota.heroGallery.prevPhoto')}
                 >
                   <ChevronLeft size={20} className="text-foreground" />
                 </button>
                 <button
                   onClick={nextMobile}
                   className="absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
-                  aria-label="Siguiente foto"
+                  aria-label={t('ota.heroGallery.nextPhoto')}
                 >
                   <ChevronRight size={20} className="text-foreground" />
                 </button>
@@ -444,7 +446,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
             aria-label={`Ver las ${images.length} fotos de ${hotelName}`}
           >
             <Grid size={16} />
-            Ver las {images.length} fotos
+            {t('ota.heroGallery.viewAllPhotos', { count: images.length })}
           </button>
         )}
 
@@ -455,7 +457,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
           aria-label={`Ver las ${images.length} fotos de ${hotelName}`}
         >
           <Grid size={14} />
-          {images.length} fotos
+          {t('ota.heroGallery.photoCount', { count: images.length })}
         </button>
       </div>
 
@@ -465,12 +467,12 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
           className="fixed inset-0 z-[var(--z-lightbox)] bg-black/95 backdrop-blur-xl flex items-center justify-center"
           role="dialog"
           aria-modal="true"
-          aria-label="Galeria de fotos"
+          aria-label={t('ota.heroGallery.galleryDialog')}
         >
           <button
             onClick={closeLightbox}
             className="absolute top-6 right-6 z-10 size-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-            aria-label="Cerrar galeria"
+            aria-label={t('ota.heroGallery.closeGallery')}
           >
             <X size={24} />
           </button>
@@ -518,7 +520,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
                     'relative size-16 rounded-[var(--radius-squircle-md)] overflow-hidden border-2 transition-all shrink-0',
                     i === activeIndex ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100',
                   )}
-                  aria-label={`Ir a foto ${i + 1}`}
+                  aria-label={t('ota.heroGallery.goToPhoto', { num: i + 1 })}
                 >
                   <GalleryImage
                     src={getImageSizeUrl(img.url, 'thumb')}

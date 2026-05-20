@@ -2,6 +2,7 @@
 
 import { Suspense, useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Building2, Loader2, AlertCircle } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
@@ -15,15 +16,6 @@ import SettingsStep from '@/components/onboarding/SettingsStep';
 import PaymentStep from '@/components/onboarding/PaymentStep';
 import ProvisioningStep from '@/components/onboarding/ProvisioningStep';
 
-const STEPS = [
-  { number: 1, label: 'Identidad' },
-  { number: 2, label: 'Galería' },
-  { number: 3, label: 'Tipo' },
-  { number: 4, label: 'Unidades' },
-  { number: 5, label: 'Config' },
-  { number: 6, label: 'Activar' },
-];
-
 const slideVariants = {
   enter: { x: 20, opacity: 0 },
   center: { x: 0, opacity: 1, transition: { type: 'spring' as const, stiffness: 300, damping: 24 } },
@@ -31,12 +23,23 @@ const slideVariants = {
 };
 
 export default function OnboardingWizard() {
+  const t = useTranslations();
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
   const { currentStep, maxCompletedStep, setCurrentStep, setMaxCompletedStep, setHotelId, setPaymentInfo, paymentTransactionId } = useOnboardingStore();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  // Resolve step labels from translations
+  const STEPS = [
+    { number: 1, label: t('onboarding.steps.identity') },
+    { number: 2, label: t('onboarding.steps.gallery') },
+    { number: 3, label: t('onboarding.steps.type') },
+    { number: 4, label: t('onboarding.steps.units') },
+    { number: 5, label: t('onboarding.steps.config') },
+    { number: 6, label: t('onboarding.steps.activate') },
+  ];
 
   // Resolve context on mount
   useEffect(() => {

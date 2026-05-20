@@ -2,6 +2,7 @@ import { Star, Quote, ThumbsUp } from 'lucide-react';
 import { getApprovedReviewsAction, getReviewStatsAction } from '@/app/actions/ota';
 import { SectionHeader } from '@/components/ui/glass';
 import ReviewFormWithToggle from './ReviewFormWithToggle';
+import { getTranslations } from 'next-intl/server';
 
 // ============================================================================
 // REVIEWS SECTION — Real guest reviews from database
@@ -29,21 +30,22 @@ function StarRating({ rating, size = 14 }: { rating: number; size?: number }) {
   );
 }
 
-function timeAgo(dateStr: string): string {
+function timeAgo(dateStr: string, t: (key: string, values?: Record<string, string | number | Date>) => string): string {
   const now = new Date();
   const date = new Date(dateStr);
   const diffMs = now.getTime() - date.getTime();
   const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
 
-  if (diffDays === 0) return 'Hoy';
-  if (diffDays === 1) return 'Ayer';
-  if (diffDays < 7) return `Hace ${diffDays} dias`;
-  if (diffDays < 30) return `Hace ${Math.floor(diffDays / 7)} semanas`;
-  if (diffDays < 365) return `Hace ${Math.floor(diffDays / 30)} meses`;
-  return `Hace ${Math.floor(diffDays / 365)} ano(s)`;
+  if (diffDays === 0) return t('reviews.today');
+  if (diffDays === 1) return t('reviews.yesterday');
+  if (diffDays < 7) return t('reviews.daysAgo', { count: diffDays });
+  if (diffDays < 30) return t('reviews.weeksAgo', { count: Math.floor(diffDays / 7) });
+  if (diffDays < 365) return t('reviews.monthsAgo', { count: Math.floor(diffDays / 30) });
+  return t('reviews.yearsAgo', { count: Math.floor(diffDays / 365) });
 }
 
 export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSectionProps) {
+  const t = await getTranslations();
   const [reviewsResult, statsResult] = await Promise.all([
     getApprovedReviewsAction(hotelId),
     getReviewStatsAction(hotelId),
@@ -60,9 +62,9 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
       <div className="glass-card p-6 md:p-8">
         <div className="text-center">
           <Star size={48} className="text-muted-foreground/30 mx-auto mb-4" strokeWidth={1} />
-          <h2 className="text-xl font-bold text-foreground mb-2">Aun no hay opiniones</h2>
+          <h2 className="text-xl font-bold text-foreground mb-2">{t('reviews.noReviewsYet')}</h2>
           <p className="text-sm text-muted-foreground max-w-md mx-auto mb-6">
-            Se el primero en compartir tu experiencia en {hotelName}. Tu opinion ayuda a otros viajeros a elegir.
+            {t('reviews.noReviewsDesc', { hotelName })}
           </p>
         </div>
         <ReviewFormWithToggle hotelId={hotelId} hotelName={hotelName} />
@@ -75,15 +77,15 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
       {/* Header — rating summary row */}
       <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4 mb-8">
         <SectionHeader
-          title="Opiniones de Huespedes"
-          subtitle={`${stats.total} resenas verificadas`}
+          title={t('reviews.guestReviews')}
+          subtitle={t('reviews.verifiedReviews', { count: stats.total })}
           className="mb-0"
         />
         <div className="flex items-center gap-3">
           <span className="text-4xl font-black text-foreground">{stats.overall}</span>
           <div>
             <StarRating rating={Math.round(stats.overall)} size={16} />
-            <p className="text-xs text-muted-foreground mt-0.5">de {stats.total} reviews</p>
+            <p className="text-xs text-muted-foreground mt-0.5">{t('reviews.ofReviews', { count: stats.total })}</p>
           </div>
         </div>
       </div>
@@ -91,11 +93,11 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
       {/* Breakdown por categoria */}
       <div className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-8">
         {[
-          { label: 'Excelente', count: stats.breakdown[5] },
-          { label: 'Muy bueno', count: stats.breakdown[4] },
-          { label: 'Regular', count: stats.breakdown[3] },
-          { label: 'Malo', count: stats.breakdown[2] },
-          { label: 'Pesimo', count: stats.breakdown[1] },
+          { label: t('reviews.excellent'), count: stats.breakdown[5] },
+          { label: t('reviews.veryGood'), count: stats.breakdown[4] },
+          { label: t('reviews.average'), count: stats.breakdown[3] },
+          { label: t('reviews.poor'), count: stats.breakdown[2] },
+          { label: t('reviews.terrible'), count: stats.breakdown[1] },
         ].map((item) => (
           <div key={item.label} className="bg-muted/50 rounded-[var(--radius-squircle-lg)] p-3 text-center border border-border/40">
             <p className="text-lg font-bold text-foreground">{item.count}</p>
@@ -151,7 +153,7 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
                   )}
                 </div>
               </div>
-              <span className="text-xs text-muted-foreground/60">{timeAgo(review.created_at)}</span>
+              <span className="text-xs text-muted-foreground/60">{timeAgo(review.created_at, t)}</span>
             </div>
 
             <div className="mb-2">
@@ -165,13 +167,13 @@ export default async function ReviewsSection({ hotelId, hotelName }: ReviewsSect
 
             {review.stay_date && (
               <p className="text-[11px] text-muted-foreground/50 mt-2">
-                Estadia: {new Date(review.stay_date).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
+                {t('reviews.stay')}: {new Date(review.stay_date).toLocaleDateString('es-ES', { month: 'long', year: 'numeric' })}
               </p>
             )}
 
             <div className="flex items-center gap-2 mt-3">
               <button className="flex items-center gap-1.5 text-xs text-muted-foreground/60 hover:text-brand-600 transition-colors">
-                <ThumbsUp size={12} /> Util
+                <ThumbsUp size={12} /> {t('reviews.helpful')}
               </button>
             </div>
           </div>

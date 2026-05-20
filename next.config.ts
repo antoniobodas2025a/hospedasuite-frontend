@@ -1,10 +1,13 @@
 import { withSentryConfig } from '@sentry/nextjs';
+import createNextIntlPlugin from 'next-intl/plugin';
+
+const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // 📸 CONFIGURACIÓN DE MOTOR DE IMÁGENES (SUPABASE + CDN)
   images: {
-    formats: ['image/avif', 'image/webp'],  // AVIF primero, fallback WebP
+    formats: ['image/avif', 'image/webp'] as ['image/avif', 'image/webp'],  // AVIF primero, fallback WebP
     minimumCacheTTL: 31536000,              // 1 año — imágenes no cambian
     deviceSizes: [320, 480, 640, 768, 1024, 1280, 1536],
     imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
@@ -60,4 +63,4 @@ const sentryOptions = {
 };
 
 // EXPORTACIÓN DETERMINISTA
-export default withSentryConfig(nextConfig, sentryOptions);
+export default withSentryConfig(withNextIntl(nextConfig as import('next').NextConfig), sentryOptions);

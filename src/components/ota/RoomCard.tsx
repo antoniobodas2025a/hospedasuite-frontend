@@ -9,6 +9,7 @@ import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } f
 import { cn } from '@/lib/utils';
 import { getRoomAmenityById } from '@/lib/amenity-registry';
 import { getImageSizeUrl } from '@/lib/image-config';
+import { useTranslations } from 'next-intl';
 
 interface RoomCardProps {
   room: any;
@@ -94,6 +95,7 @@ function RoomCardInner({
   coverImage: string; displayPrice: number; basePrice: number;
   taxes: number; totalPrice: number; nights: number;
 }) {
+  const t = useTranslations();
   const ref = useRef(null);
   const isInView = useInView(ref, { once: true, margin: '-50px' });
   const [badgeVisible, setBadgeVisible] = useState(false);
@@ -138,7 +140,7 @@ function RoomCardInner({
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.1 }}
                 className="bg-success text-success-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5"
               >
-                <Award size={12} /> Mejor Valor
+                <Award size={12} /> {t('ota.roomCard.bestValue')}
               </motion.div>
             )}
             {isGreatDeal && (
@@ -148,7 +150,7 @@ function RoomCardInner({
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.15 }}
                 className="bg-brand-500 text-primary-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5"
               >
-                <Star size={12} className="fill-white" /> Oferta
+                <Star size={12} className="fill-white" /> {t('ota.roomCard.deal')}
               </motion.div>
             )}
             {isPopular && (
@@ -158,7 +160,7 @@ function RoomCardInner({
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.2 }}
                 className="bg-warning text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full uppercase tracking-widest shadow-md flex items-center gap-1.5"
               >
-                <TrendingUp size={12} /> Mas Popular
+                <TrendingUp size={12} /> {t('ota.roomCard.mostPopular')}
               </motion.div>
             )}
             {isAlmostGone && (
@@ -168,7 +170,7 @@ function RoomCardInner({
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.25 }}
                 className="bg-urgent text-urgent-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5"
               >
-                <Flame size={12} className="fill-white" /> Solo {availableCount} disponible{(availableCount || 0) > 1 ? 's' : ''}
+                <Flame size={12} className="fill-white" /> {t('ota.roomCard.onlyXAvailable', { count: availableCount || 0 })}
               </motion.div>
             )}
             {isLowStock && !isAlmostGone && (
@@ -178,7 +180,7 @@ function RoomCardInner({
                 transition={{ type: 'spring', stiffness: 400, damping: 12, delay: 0.3 }}
                 className="bg-warning/80 text-warning-foreground text-xs font-bold px-3 py-1.5 rounded-full shadow-md flex items-center gap-1.5"
               >
-                <TrendingUp size={12} /> Alta Demanda
+                <TrendingUp size={12} /> {t('ota.roomCard.highDemand')}
               </motion.div>
             )}
           </div>
@@ -195,14 +197,14 @@ function RoomCardInner({
                 </span>
                 {room.beds && room.beds > 0 && (
                   <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
-                    <Bed size={12} /> {room.beds} cama{room.beds > 1 ? 's' : ''}
+                    <Bed size={12} /> {room.beds} {t('ota.roomCard.beds', { count: room.beds })}
                   </span>
                 )}
               </div>
             </div>
 
             <p className="text-sm text-muted-foreground line-clamp-2 mb-4 font-lora italic">
-              {room.description || "Un refugio disenado para aislar el ruido del mundo moderno y reconectar con lo esencial."}
+              {room.description || t('ota.roomCard.fallbackDescription')}
             </p>
 
             {/* Micro-Storytelling de Amenidades */}
@@ -226,32 +228,32 @@ function RoomCardInner({
             <div>
               {isSearchingDates ? (
                 <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground">
-                    <span className="font-bold text-foreground">${basePrice.toLocaleString()}</span> x {nights} noche{nights > 1 ? 's' : ''}
-                  </p>
-                  <p className="text-xs text-muted-foreground/60">+ Impuestos y tasas: ${taxes.toLocaleString()}</p>
+                    <p className="text-xs text-muted-foreground">
+                      <span className="font-bold text-foreground">${basePrice.toLocaleString()}</span> x {nights} {t('ota.roomCard.nights', { count: nights })}
+                    </p>
+                    <p className="text-xs text-muted-foreground/60">+ {t('ota.roomCard.taxesAndFees')}: ${taxes.toLocaleString()}</p>
                   <div className="flex items-end gap-2 pt-1">
                     <p className="text-3xl font-mono font-bold text-secondary leading-none">
                       ${totalPrice.toLocaleString()}
                     </p>
-                    <span className="text-xs font-sans font-medium text-muted-foreground mb-1">COP total</span>
+                    <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copTotal')}</span>
                   </div>
                 </div>
               ) : (
                 <div>
-                  <p className="text-xs text-muted-foreground/60 font-bold uppercase tracking-widest mb-1">Tarifa Base</p>
+                  <p className="text-xs text-muted-foreground/60 font-bold uppercase tracking-widest mb-1">{t('ota.roomCard.baseRate')}</p>
                   <div className="flex items-end gap-2">
                     <p className="text-3xl font-mono font-bold text-secondary leading-none">
                       ${displayPrice.toLocaleString()}
                     </p>
-                    <span className="text-xs font-sans font-medium text-muted-foreground mb-1">COP/noche</span>
+                    <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copPerNight')}</span>
                   </div>
                 </div>
               )}
 
               {hotel?.cancellation_policy && (
                 <p className="text-xs font-medium text-secondary mt-2 flex items-center gap-1">
-                  <ShieldCheck size={12} /> Cancelacion Gratuita Disponible
+                  <ShieldCheck size={12} /> {t('ota.roomCard.freeCancellation')}
                 </p>
               )}
             </div>
@@ -267,7 +269,7 @@ function RoomCardInner({
                   : "bg-foreground hover:bg-primary text-background"
               )}
             >
-              {isSearchingDates ? 'Asegurar Refugio' : 'Explorar Unidad'} <ArrowRight size={16} strokeWidth={2.5} />
+              {isSearchingDates ? t('ota.roomCard.secureRoom') : t('ota.roomCard.exploreRoom')} <ArrowRight size={16} strokeWidth={2.5} />
             </Link>
           </div>
         </div>

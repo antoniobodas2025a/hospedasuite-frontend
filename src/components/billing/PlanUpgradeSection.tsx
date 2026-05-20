@@ -12,61 +12,52 @@ import {
 import { Button } from '@/components/ui/button';
 import { Loader2, ArrowUpRight, ArrowDownRight, Check, Lock, ShieldCheck } from 'lucide-react';
 import { generateBillingPaymentLinkAction } from '@/app/actions/billing';
+import { upgradeSubscriptionAction } from '@/app/actions/billing-subscriptions';
+import { SAAS_PLANS, PLAN_LIMITS, normalizePlan, type PlanKey } from '@/config/saas-plans';
 import { cn } from '@/lib/utils';
 
 // ——— Tipos ———
 
 interface PlanCard {
-  id: string;
+  id: PlanKey;
   name: string;
   price: string;
   period: string;
   features: string[];
+  limits: { maxUnits: number; maxOTAs: number; maxStaff: number; storageMB: number };
   badgeClass: string;
   recommended?: boolean;
 }
 
-// ——— Datos de planes (espejo de la página server para el componente cliente) ———
+// ——— Datos de planes (espejo de saas-plans.ts) ———
 
 const PLANS: PlanCard[] = [
   {
     id: 'starter',
     name: 'Starter',
-    price: '$49.000',
+    price: `$${SAAS_PLANS.starter.priceCOP.toLocaleString('es-CO')}`,
     period: 'COP / mes',
-    features: [
-      'Motor de Reservas Básico',
-      'Calendario Interactivo',
-      'Gestión de Huéspedes',
-      'Channel Manager (Manual)',
-    ],
+    features: SAAS_PLANS.starter.features,
+    limits: PLAN_LIMITS.starter,
     badgeClass: 'bg-muted text-muted-foreground border-border',
   },
   {
     id: 'pro',
     name: 'Pro',
-    price: '$99.000',
+    price: `$${SAAS_PLANS.pro.priceCOP.toLocaleString('es-CO')}`,
     period: 'COP / mes',
-    features: [
-      'Todo lo del Plan Starter',
-      'Channel Manager Automatizado (iCal)',
-      'Sincronización con Booking/Airbnb',
-      'POS (Punto de Venta)',
-    ],
+    features: SAAS_PLANS.pro.features,
+    limits: PLAN_LIMITS.pro,
     badgeClass: 'bg-indigo-500/10 text-indigo-400 border-indigo-500/20',
     recommended: true,
   },
   {
     id: 'enterprise',
     name: 'Enterprise',
-    price: '$169.000',
+    price: `$${SAAS_PLANS.enterprise.priceCOP.toLocaleString('es-CO')}`,
     period: 'COP / mes',
-    features: [
-      'Todo lo del Plan Pro',
-      'Motor de Upselling Inteligente (IA)',
-      'Reportes Financieros Avanzados',
-      'Facturación Automática',
-    ],
+    features: SAAS_PLANS.enterprise.features,
+    limits: PLAN_LIMITS.enterprise,
     badgeClass: 'bg-amber-500/10 text-amber-400 border-amber-500/20',
   },
 ];
@@ -102,17 +93,21 @@ export default function PlanUpgradeSection({
     setError(null);
 
     try {
-      const isUpgrade = selectedPlan.id !== currentPlan;
-      const result = await generateBillingPaymentLinkAction(hotelId, isUpgrade);
+      const result = await upgradeSubscriptionAction(selectedPlan.id as PlanKey);
 
-      if (!result.success || !result.link) {
-        setError(result.error || 'Error al generar el enlace de pago.');
+      if (!result.success) {
+        setError(result.error || 'Error al procesar el upgrade.');
         setLoading(false);
         return;
       }
 
       // Redirigir a Wompi checkout en la misma ventana
-      window.location.href = result.link.paymentUrl;
+      if (result.paymentUrl) {
+        window.location.href = result.paymentUrl;
+      } else {
+        // If no payment URL (e.g., free trial), reload to show updated status
+        window.location.reload();
+      }
     } catch (err: any) {
       setError('Error inesperado al conectar con Wompi.');
       setLoading(false);
@@ -187,7 +182,7 @@ export default function PlanUpgradeSection({
                 </div>
 
                 {/* Features */}
-                <ul className="space-y-3 mb-8 flex-1">
+                <ul className="space-y-3 mb-6 flex-1">
                   {plan.features.map((feat, i) => (
                     <li
                       key={i}
@@ -202,6 +197,29 @@ export default function PlanUpgradeSection({
                     </li>
                   ))}
                 </ul>
+
+                {/* Límites del plan */}
+                <div className="mb-6 p-3 rounded-[var(--radius-squircle-lg)] bg-muted/30 border border-border/50">
+                  <p className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground mb-2">Límites</p>
+                  <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">🏠</span>
+                      <span className="text-sidebar-foreground">{plan.limits.maxUnits} unidades</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">🌐</span>
+                      <span className="text-sidebar-foreground">{plan.limits.maxOTAs} OTAs</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">👥</span>
+                      <span className="text-sidebar-foreground">{plan.limits.maxStaff} staff</span>
+                    </div>
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-muted-foreground">💾</span>
+                      <span className="text-sidebar-foreground">{plan.limits.storageMB >= 1024 ? `${plan.limits.storageMB / 1024} GB` : `${plan.limits.storageMB} MB`}</span>
+                    </div>
+                  </div>
+                </div>
 
                 {/* Botón de acción */}
                 <div>

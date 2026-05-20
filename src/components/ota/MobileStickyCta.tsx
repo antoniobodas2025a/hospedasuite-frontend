@@ -3,6 +3,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 // ============================================================================
 // MOBILE STICKY CTA — Barra inferior fija para mobile
@@ -26,6 +27,7 @@ export default function MobileStickyCta({
   checkIn,
   checkOut,
 }: MobileStickyCtaProps) {
+  const t = useTranslations();
   const [isVisible, setIsVisible] = useState(false);
   const visibleRef = useRef(false);
 
@@ -69,15 +71,15 @@ export default function MobileStickyCta({
       <div className="backdrop-blur-md bg-card/80 border-t border-border/60 shadow-2xl shadow-elev-2 px-4 py-3 safe-area-bottom !rounded-none">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1">
-            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">Desde</p>
+            <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{t('ota.mobileCta.from')}</p>
             <div className="flex items-baseline gap-1">
               <p className="text-2xl font-black text-foreground">${minPrice.toLocaleString()}</p>
-              <span className="text-xs text-muted-foreground font-medium">COP/noche</span>
+              <span className="text-xs text-muted-foreground font-medium">{t('ota.mobileCta.copPerNight')}</span>
             </div>
             {availableCount > 0 && availableCount <= 2 && (
               <p className="text-[10px] font-bold text-destructive flex items-center gap-1 mt-0.5">
                 <span className="size-1.5 rounded-full bg-destructive animate-pulse" />
-                {availableCount === 1 ? 'Solo queda 1' : `Solo quedan ${availableCount}`}
+                {availableCount === 1 ? t('ota.mobileCta.onlyOneLeft') : t('ota.mobileCta.onlyXLeft', { count: availableCount })}
               </p>
             )}
           </div>
@@ -92,7 +94,7 @@ export default function MobileStickyCta({
             )}
           >
             <ShieldCheck size={14} />
-            {checkIn && checkOut ? 'Reservar' : 'Ver disponibilidad'}
+            {checkIn && checkOut ? t('ota.mobileCta.reserve') : t('ota.mobileCta.checkAvailability')}
             <ArrowRight size={14} strokeWidth={2.5} />
           </button>
         </div>

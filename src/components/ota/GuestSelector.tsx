@@ -5,21 +5,22 @@ import { User, Users, Plus, Minus } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { springSnappy, springLayout } from '@/lib/mac2026/spring';
+import { useTranslations } from 'next-intl';
 
 // ── Presets ──────────────────────────────────────────────────────────────────
 
 interface Preset {
   key: string;
-  label: string;
+  labelKey: string;
   value: number;
   icon: React.ElementType;
 }
 
 const PRESETS: Preset[] = [
-  { key: 'solo', label: 'Solo', value: 1, icon: User },
-  { key: 'couple', label: 'Pareja', value: 2, icon: Users },
-  { key: 'family', label: 'Familia', value: 3, icon: Users },
-  { key: 'group', label: 'Grupo', value: 5, icon: Users },
+  { key: 'solo', labelKey: 'ota.guestSelector.solo', value: 1, icon: User },
+  { key: 'couple', labelKey: 'ota.guestSelector.couple', value: 2, icon: Users },
+  { key: 'family', labelKey: 'ota.guestSelector.family', value: 3, icon: Users },
+  { key: 'group', labelKey: 'ota.guestSelector.group', value: 5, icon: Users },
 ];
 
 // ── Props ─────────────────────────────────────────────────────────────────────
@@ -43,6 +44,7 @@ export default function GuestSelector({
   min = 1,
   max = 20,
 }: GuestSelectorProps) {
+  const t = useTranslations();
   const matchedPreset = PRESETS.find((p) => p.value === value);
 
   const decrement = useCallback(() => {
@@ -54,7 +56,7 @@ export default function GuestSelector({
   }, [value, max, onChange]);
 
   return (
-    <div className="flex flex-col gap-5 p-1" role="group" aria-label="Selector de huéspedes">
+    <div className="flex flex-col gap-5 p-1" role="group" aria-label={t('ota.guestSelector.label')}>
       {/* Presets row */}
       <div className="flex items-center gap-2">
         {PRESETS.map((preset) => {
@@ -73,7 +75,7 @@ export default function GuestSelector({
                   : 'bg-muted/60 text-muted-foreground border border-border/40 hover:border-brand-300 hover:text-foreground'
               )}
               aria-pressed={isActive}
-              aria-label={`${preset.label}: ${preset.value} huésped${preset.value > 1 ? 'es' : ''}`}
+              aria-label={`${t(preset.labelKey)}: ${preset.value} ${t('ota.guestSelector.guest', { count: preset.value })}`}
             >
               {isActive && (
                 <motion.div
@@ -83,7 +85,7 @@ export default function GuestSelector({
                 />
               )}
               <Icon size={16} className="relative z-10" />
-              <span className="relative z-10">{preset.label}</span>
+              <span className="relative z-10">{t(preset.labelKey)}</span>
             </motion.button>
           );
         })}
@@ -102,7 +104,7 @@ export default function GuestSelector({
               ? 'bg-muted/40 text-muted-foreground/40 cursor-not-allowed'
               : 'bg-muted text-foreground border border-border/40 hover:border-brand-300 hover:bg-brand-50'
           )}
-          aria-label="Reducir huéspedes"
+          aria-label={t('ota.guestSelector.decrease')}
         >
           <Minus size={18} />
         </motion.button>
@@ -114,7 +116,7 @@ export default function GuestSelector({
           transition={springSnappy()}
           className="min-w-[3ch] text-center text-2xl font-black tabular-nums select-none"
           aria-live="polite"
-          aria-label={`${value} huésped${value > 1 ? 'es' : ''}`}
+          aria-label={`${value} ${t('ota.guestSelector.guest', { count: value })}`}
         >
           {value}
         </motion.span>
@@ -130,7 +132,7 @@ export default function GuestSelector({
               ? 'bg-muted/40 text-muted-foreground/40 cursor-not-allowed'
               : 'bg-muted text-foreground border border-border/40 hover:border-brand-300 hover:bg-brand-50'
           )}
-          aria-label="Aumentar huéspedes"
+          aria-label={t('ota.guestSelector.increase')}
         >
           <Plus size={18} />
         </motion.button>

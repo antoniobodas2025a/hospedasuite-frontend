@@ -2,6 +2,7 @@
 
 import { motion } from 'framer-motion';
 import { Building2, Tent, Home, Hotel, Warehouse } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { PropertyType } from '@/lib/room-templates';
 
@@ -13,22 +14,15 @@ const typeIcons: Record<PropertyType, typeof Building2> = {
   apartamento: Building2,
 };
 
-const typeDescriptions: Record<PropertyType, string> = {
-  hotel: 'Establecimiento tradicional con habitaciones y servicios completos',
-  glamping: 'Experiencia de lujo en la naturaleza',
-  cabanas: 'Alojamiento independiente rodeado de naturaleza',
-  hostal: 'Alojamiento económico con ambiente social',
-  apartamento: 'Espacio completo con cocina y amenities de hogar',
-};
-
 export default function PropertyTypeStep() {
+  const t = useTranslations('onboarding.propertyType');
   const { hotelIdentity, updateHotelIdentity } = useOnboardingStore();
 
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 max-w-xl mx-auto">
       <div className="text-center space-y-2">
-        <h3 className="text-2xl font-bold text-white">Tipo de Propiedad</h3>
-        <p className="text-zinc-500 text-sm">Esto determina las plantillas de habitaciones disponibles</p>
+        <h3 className="text-2xl font-bold text-white">{t('title')}</h3>
+        <p className="text-zinc-500 text-sm">{t('subtitle')}</p>
       </div>
 
       <div className="grid gap-3">
@@ -50,7 +44,7 @@ export default function PropertyTypeStep() {
               </div>
               <div>
                 <p className={`font-bold text-sm uppercase tracking-wider ${isSelected ? 'text-indigo-300' : 'text-zinc-300'}`}>{type}</p>
-                <p className="text-xs text-zinc-500 mt-1">{typeDescriptions[type]}</p>
+                <p className="text-xs text-zinc-500 mt-1">{t(`descriptions.${type}`)}</p>
               </div>
             </button>
           );

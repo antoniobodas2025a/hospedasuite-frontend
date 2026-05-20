@@ -1,6 +1,7 @@
 'use server';
 
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { checkPlanFeature } from '@/data/plan-guard';
 import type { OtaSyncLog } from '@/types';
 
 export interface OtaSyncStatus {
@@ -112,9 +113,16 @@ export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success
 
 /**
  * Dispara un sync manual vía QStash.
+ * Requires Channel Manager feature (Pro+ plan).
  */
 export async function triggerManualSyncAction(hotelId: string): Promise<{ success: boolean; error?: string }> {
   try {
+    // ─── Plan Gating: Channel Manager requires Pro+ ─────────────
+    const featureCheck = await checkPlanFeature(hotelId, 'channel_manager')
+    if (!featureCheck.ok) {
+      return { success: false, error: featureCheck.reason }
+    }
+
     const appUrl = process.env.NEXT_PUBLIC_APP_URL;
     const qstashToken = process.env.QSTASH_TOKEN;
 

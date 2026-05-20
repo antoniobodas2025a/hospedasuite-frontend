@@ -6,6 +6,7 @@ import { motion } from 'framer-motion';
 import { submitReviewAction } from '@/app/actions/ota';
 import { GlassCard, SectionHeader } from '@/components/ui/glass';
 import { springSnappy, shakeHaptic, desaturateFeedback } from '@/lib/mac2026/spring';
+import { useTranslations } from 'next-intl';
 
 interface ReviewFormProps {
   hotelId: string;
@@ -13,6 +14,7 @@ interface ReviewFormProps {
 }
 
 export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
+  const t = useTranslations();
   const [isPending, startTransition] = useTransition();
   const [submitted, setSubmitted] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -30,12 +32,12 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
     setError(null);
 
     if (!guestName.trim() || !guestEmail.trim() || !comment.trim() || rating === 0) {
-      setError('Por favor completa todos los campos obligatorios y selecciona una calificacion.');
+      setError(t('reviewForm.requiredFields'));
       return;
     }
 
     if (comment.length > 2000) {
-      setError('El comentario no puede superar los 2000 caracteres.');
+      setError(t('reviewForm.commentTooLong'));
       return;
     }
 
@@ -53,7 +55,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
       if (result.success) {
         setSubmitted(true);
       } else {
-        setError(result.error || 'Error al enviar la opinion. Intenta de nuevo.');
+        setError(result.error || t('reviewForm.submitError'));
       }
     });
   };
@@ -62,9 +64,9 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
     return (
       <GlassCard className="p-6 md:p-8 text-center">
         <CheckCircle2 size={48} className="text-secondary mx-auto mb-4" />
-        <h3 className="text-xl font-bold text-foreground mb-2">Gracias por tu opinion!</h3>
+        <h3 className="text-xl font-bold text-foreground mb-2">{t('reviewForm.thankYou')}</h3>
         <p className="text-sm text-muted-foreground max-w-md mx-auto">
-          Tu resena sobre {hotelName} sera publicada despues de verificacion. Solo opiniones de huespedes verificados son publicadas.
+          {t('reviewForm.thankYouDesc', { hotelName })}
         </p>
       </GlassCard>
     );
@@ -73,8 +75,8 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
   return (
     <GlassCard className="p-6 md:p-8">
       <SectionHeader
-        title="Comparte tu experiencia"
-        subtitle="Tu opinion ayuda a otros viajeros a elegir. Sera publicada despues de verificacion."
+        title={t('reviewForm.title')}
+        subtitle={t('reviewForm.subtitle')}
       />
 
       <motion.form
@@ -85,7 +87,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
       >
         {/* Rating stars */}
         <div>
-          <label className="text-sm font-bold text-foreground mb-2 block">Tu calificacion</label>
+          <label className="text-sm font-bold text-foreground mb-2 block">{t('reviewForm.yourRating')}</label>
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map((star) => (
               <button
@@ -108,7 +110,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
             ))}
             {rating > 0 && (
               <span className="ml-3 text-sm font-medium text-foreground">
-                {['', 'Malo', 'Regular', 'Bueno', 'Muy bueno', 'Excelente'][rating]}
+                {['', t('reviewForm.rating1'), t('reviewForm.rating2'), t('reviewForm.rating3'), t('reviewForm.rating4'), t('reviewForm.rating5')][rating]}
               </span>
             )}
           </div>
@@ -118,21 +120,21 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label htmlFor="review-name" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
-              Nombre
+              {t('reviewForm.name')}
             </label>
             <input
               id="review-name"
               type="text"
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
-              placeholder="Como te llamas?"
+              placeholder={t('reviewForm.namePlaceholder')}
               className="w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
               required
             />
           </div>
           <div>
             <label htmlFor="review-email" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
-              Email
+              {t('reviewForm.email')}
             </label>
             <input
               id="review-email"
@@ -149,7 +151,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
         {/* Location */}
         <div>
           <label htmlFor="review-location" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
-            Ubicacion (opcional)
+            {t('reviewForm.location')}
           </label>
           <input
             id="review-location"
@@ -164,7 +166,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
         {/* Stay date */}
         <div>
           <label htmlFor="review-stay-date" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
-            Fecha de estadia (opcional)
+            {t('reviewForm.stayDate')}
           </label>
           <input
             id="review-stay-date"
@@ -178,13 +180,13 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
         {/* Comment */}
         <div>
           <label htmlFor="review-comment" className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1.5 block">
-            Tu experiencia
+            {t('reviewForm.yourExperience')}
           </label>
           <textarea
             id="review-comment"
             value={comment}
             onChange={(e) => setComment(e.target.value)}
-            placeholder="Que te parecio el hotel? Que destacarias?"
+            placeholder={t('reviewForm.commentPlaceholder')}
             rows={4}
             maxLength={2000}
             className="w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all resize-none"
@@ -215,11 +217,11 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
         >
           {isPending ? (
             <>
-              <Loader2 size={18} className="animate-spin" /> Enviando...
+              <Loader2 size={18} className="animate-spin" /> {t('reviewForm.submitting')}
             </>
           ) : (
             <>
-              Enviar Opinion <Send size={16} strokeWidth={2.5} />
+              {t('reviewForm.submit')} <Send size={16} strokeWidth={2.5} />
             </>
           )}
         </motion.button>

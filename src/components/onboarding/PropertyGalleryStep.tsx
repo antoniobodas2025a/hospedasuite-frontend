@@ -2,9 +2,11 @@
 
 import { motion } from 'framer-motion';
 import { UploadCloud, Plus, X } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 
 export default function PropertyGalleryStep() {
+  const t = useTranslations('onboarding.gallery');
   const { galleryPreviews, setGalleryImages, removeGalleryImage } = useOnboardingStore();
 
   const handleFiles = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,8 +19,8 @@ export default function PropertyGalleryStep() {
   return (
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-8 max-w-xl mx-auto">
       <div className="text-center space-y-2">
-        <h3 className="text-2xl font-bold text-white">Galería de tu Propiedad</h3>
-        <p className="text-zinc-500 text-sm">Subí 3-8 fotos que muestren lo mejor de tu espacio</p>
+        <h3 className="text-2xl font-bold text-white">{t('title')}</h3>
+        <p className="text-zinc-500 text-sm">{t('subtitle')}</p>
       </div>
 
       {galleryPreviews.length > 0 ? (
@@ -44,14 +46,16 @@ export default function PropertyGalleryStep() {
       ) : (
         <label className="flex flex-col items-center justify-center w-full h-48 border-2 border-dashed border-white/10 rounded-[var(--radius-squircle-3xl)] hover:border-indigo-500/40 hover:bg-indigo-500/5 cursor-pointer transition-all group">
           <UploadCloud className="text-zinc-500 group-hover:text-indigo-400 mb-3 transition-colors" size={32} />
-          <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">Subir Fotos</p>
-          <p className="text-[10px] text-zinc-600 mt-1">Mínimo 3, máximo 8</p>
+          <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{t('uploadPhotos')}</p>
+          <p className="text-[10px] text-zinc-600 mt-1">{t('photoRange')}</p>
           <input type="file" multiple accept="image/*" className="hidden" onChange={handleFiles} />
         </label>
       )}
 
       <div className="text-xs text-zinc-600 text-center">
-        {galleryPreviews.length >= 3 ? `✅ ${galleryPreviews.length} fotos subidas` : `⚠️ Necesitás al menos 3 fotos (${galleryPreviews.length}/3)`}
+        {galleryPreviews.length >= 3
+          ? t('valid', { count: galleryPreviews.length })
+          : t('invalid', { current: galleryPreviews.length })}
       </div>
     </motion.div>
   );

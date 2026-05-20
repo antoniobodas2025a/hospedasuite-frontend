@@ -18,6 +18,8 @@ import ReviewSkeleton from '@/components/ota/ReviewSkeleton';
 import MapSkeleton from '@/components/ota/MapSkeleton';
 import { SectionHeader } from '@/components/ui/glass';
 import { ErrorBoundary } from '@/components/ota/ErrorBoundary';
+import LanguageSwitcher from '@/components/ota/LanguageSwitcher';
+import { getTranslations } from 'next-intl/server';
 
 // Incremental Static Regeneration — 60s cache for inventory balance
 export const revalidate = 60;
@@ -30,19 +32,20 @@ interface PageProps {
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
   const { slug } = await params;
-  if (!slug || slug === 'null' || slug.length < 2) return { title: 'Propiedad no encontrada' };
+  const t = await getTranslations('hotelDetail');
+  if (!slug || slug === 'null' || slug.length < 2) return { title: t('propertyNotFound') };
 
   const { success, hotel } = await getHotelDetailsBySlugAction(slug);
 
-  if (!success || !hotel) return { title: 'Propiedad no encontrada' };
+  if (!success || !hotel) return { title: t('propertyNotFound') };
 
   return {
-    title: hotel.seo_meta_title || `${hotel.name} | Reserva Oficial | HospedaSuite`,
-    description: hotel.seo_meta_description || `Descubre la experiencia en ${hotel.name} ubicado en ${hotel.location}. Reserva directa al mejor precio garantizado.`,
+    title: hotel.seo_meta_title || `${hotel.name} | ${t('officialBooking')} | HospedaSuite`,
+    description: hotel.seo_meta_description || t('metaDescription', { hotelName: hotel.name, location: hotel.location }),
     openGraph: {
       images: [hotel.seo_og_image_url || hotel.main_image_url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb'],
-      title: hotel.seo_meta_title || `${hotel.name} | Experiencia de Lujo`,
-      description: hotel.seo_meta_description || `Descubre la experiencia en ${hotel.name} ubicado en ${hotel.location}. Reserva directa al mejor precio garantizado.`,
+      title: hotel.seo_meta_title || `${hotel.name} | ${t('luxuryExperience')}`,
+      description: hotel.seo_meta_description || t('metaDescription', { hotelName: hotel.name, location: hotel.location }),
     },
     alternates: hotel.seo_canonical_url ? { canonical: hotel.seo_canonical_url } : undefined,
   };
@@ -50,6 +53,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 export default async function OTAHotelDetailPage({ params, searchParams }: PageProps) {
   const { slug } = await params;
+  const t = await getTranslations('hotelDetail');
 
   if (!slug || slug === 'null' || slug.length < 2) notFound();
 
@@ -151,6 +155,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             </div>
           </div>
           <div className="flex items-center gap-3">
+            <LanguageSwitcher />
             {reviewStats && reviewStats.total > 0 && (
               <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success-muted border border-success-border text-success text-xs font-bold">
                 <Star size={12} className="fill-success text-success" />
@@ -190,10 +195,10 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
             {/* Rooms List */}
             <div id="rooms-section">
               <SectionHeader
-                title="Habitaciones Disponibles"
+                title={t('availableRooms')}
                 subtitle={isSearchingDates
-                  ? `${availableRooms.length} de ${(hotel.rooms || []).length} unidades para tus fechas`
-                  : `Explora nuestras ${(hotel.rooms || []).length} unidades`}
+                  ? t('roomsForDates', { available: availableRooms.length, total: (hotel.rooms || []).length })
+                  : t('exploreUnits', { count: (hotel.rooms || []).length })}
               />
               <div className="mt-6">
                 <RoomsListWithFilters

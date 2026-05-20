@@ -7,6 +7,7 @@ import { cn } from '@/lib/utils';
 import { springSnappy, springGentle, progressiveReveal } from '@/lib/mac2026/spring';
 import { GlassPanel } from '@/components/ui/glass';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
+import { useTranslations } from 'next-intl';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -60,6 +61,7 @@ export default function RefinementPanel({
   isOpen,
   onClose,
 }: RefinementPanelProps) {
+  const t = useTranslations();
   // ── Derived values ──────────────────────────────────────────────────────
 
   const prices = rooms.map((r) => r.price_per_night || r.price || 0);
@@ -99,7 +101,7 @@ export default function RefinementPanel({
               {/* Header */}
               <div className="flex items-center justify-between">
                 <h3 className="font-black text-foreground tracking-tight text-lg">
-                  Refinar búsqueda
+                  {t('ota.refinement.title')}
                 </h3>
                 <div className="flex items-center gap-2">
                   {hasActiveFilters && (
@@ -108,10 +110,10 @@ export default function RefinementPanel({
                       whileTap={{ scale: 0.95 }}
                       transition={springSnappy()}
                       className="flex items-center gap-1 text-xs font-medium text-muted-foreground hover:text-destructive transition-colors"
-                      aria-label="Limpiar todos los filtros"
+                      aria-label={t('ota.refinement.clearAllFilters')}
                     >
                       <X size={12} />
-                      Limpiar todo
+                      {t('ota.refinement.clearAll')}
                     </motion.button>
                   )}
                   {/* Close panel button */}
@@ -120,8 +122,8 @@ export default function RefinementPanel({
                     whileTap={{ scale: 0.9 }}
                     transition={springSnappy()}
                     className="size-7 rounded-full flex items-center justify-center hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
-                    aria-label="Cerrar panel de refinamiento"
-                    title="Cerrar"
+                    aria-label={t('ota.refinement.closePanel')}
+                    title={t('ota.refinement.close')}
                   >
                     <X size={14} strokeWidth={2.5} />
                   </motion.button>
@@ -131,10 +133,10 @@ export default function RefinementPanel({
               {/* Price Slider */}
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
-                  Precio máximo:{' '}
+                  {t('ota.refinement.maxPrice')}:{' '}
                   {maxPrice !== null
                     ? `$${maxPrice.toLocaleString()}`
-                    : 'Sin límite'}
+                    : t('ota.refinement.noLimit')}
                 </label>
                 <input
                   type="range"
@@ -147,7 +149,7 @@ export default function RefinementPanel({
                     onMaxPriceChange(val >= maxPossiblePrice ? null : val);
                   }}
                   className="w-full accent-primary"
-                  aria-label={`Precio máximo: ${maxPrice !== null ? `$${maxPrice.toLocaleString()}` : 'Sin límite'}`}
+                  aria-label={t('ota.refinement.maxPriceAria', { price: maxPrice !== null ? `$${maxPrice.toLocaleString()}` : t('ota.refinement.noLimit') })}
                 />
                 <div className="flex justify-between text-[10px] text-muted-foreground/60 mt-1">
                   <span>$0</span>
@@ -158,7 +160,7 @@ export default function RefinementPanel({
               {/* Beds Selector */}
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
-                  Camas mínimas: {minBeds || 'Cualquiera'}
+                  {t('ota.refinement.minBeds')}: {minBeds || t('ota.refinement.any')}
                 </label>
                 <div className="flex gap-2">
                   {Array.from({ length: bedsRangeCount }, (_, i) => i + 1).map((bed) => (
@@ -174,7 +176,7 @@ export default function RefinementPanel({
                           : 'bg-muted text-muted-foreground border border-border hover:border-brand-300'
                       )}
                       aria-pressed={minBeds === bed}
-                      aria-label={`${bed} cama${bed > 1 ? 's' : ''} mínima`}
+                      aria-label={t('ota.refinement.minBedsAria', { count: bed })}
                     >
                       {bed}
                     </motion.button>
@@ -185,7 +187,7 @@ export default function RefinementPanel({
               {/* Amenity Chips */}
               <div>
                 <label className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
-                  Amenidades
+                  {t('ota.refinement.amenities')}
                 </label>
                 <div className="flex flex-wrap gap-2">
                   {Object.values(ROOM_AMENITY_REGISTRY).map((amenity) => {
@@ -223,8 +225,8 @@ export default function RefinementPanel({
                   <span className="text-xs font-medium text-muted-foreground">
                     {matchingCount}{' '}
                     {matchingCount === 1
-                      ? 'habitación disponible'
-                      : 'habitaciones disponibles'}
+                      ? t('ota.refinement.roomAvailable')
+                      : t('ota.refinement.roomsAvailable')}
                   </span>
                 </div>
                 {hasActiveFilters && (
@@ -257,12 +259,12 @@ export default function RefinementPanel({
                     className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-muted/80 border border-border text-xs font-medium text-foreground"
                   >
                     <DollarSign size={12} className="text-muted-foreground" />
-                    <span>Hasta ${maxPrice.toLocaleString()}</span>
+                    <span>{t('ota.refinement.upTo')} ${maxPrice.toLocaleString()}</span>
                     <button
                       onClick={() => onMaxPriceChange(null)}
                       className="size-4 rounded-full flex items-center justify-center hover:bg-destructive/20 hover:text-destructive transition-colors"
-                      title="Quitar filtro de precio"
-                      aria-label="Quitar filtro de precio"
+                      title={t('ota.refinement.removePriceFilter')}
+                      aria-label={t('ota.refinement.removePriceFilter')}
                     >
                       <X size={10} strokeWidth={3} />
                     </button>
@@ -280,12 +282,12 @@ export default function RefinementPanel({
                     className="inline-flex items-center gap-1.5 pl-2.5 pr-1.5 py-1 rounded-full bg-muted/80 border border-border text-xs font-medium text-foreground"
                   >
                     <Bed size={12} className="text-muted-foreground" />
-                    <span>Mín. {minBeds} cama{minBeds > 1 ? 's' : ''}</span>
+                    <span>{t('ota.refinement.minShort')} {minBeds} {t('ota.refinement.beds', { count: minBeds })}</span>
                     <button
                       onClick={() => onMinBedsChange(null)}
                       className="size-4 rounded-full flex items-center justify-center hover:bg-destructive/20 hover:text-destructive transition-colors"
-                      title="Quitar filtro de camas"
-                      aria-label="Quitar filtro de camas"
+                      title={t('ota.refinement.removeBedsFilter')}
+                      aria-label={t('ota.refinement.removeBedsFilter')}
                     >
                       <X size={10} strokeWidth={3} />
                     </button>
@@ -313,8 +315,8 @@ export default function RefinementPanel({
                       <button
                         onClick={() => toggleAmenity(amenityId)}
                         className="size-4 rounded-full flex items-center justify-center hover:bg-destructive/20 hover:text-destructive transition-colors"
-                        title={`Quitar filtro ${amenity.label}`}
-                        aria-label={`Quitar filtro ${amenity.label}`}
+                        title={t('ota.refinement.removeFilter', { label: amenity.label })}
+                        aria-label={t('ota.refinement.removeFilter', { label: amenity.label })}
                       >
                         <X size={10} strokeWidth={3} />
                       </button>

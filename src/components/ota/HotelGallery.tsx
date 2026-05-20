@@ -2,6 +2,7 @@ import Image from 'next/image';
 import React from 'react';
 import { MapPin, Mountain, Coffee, Sunset } from 'lucide-react';
 import { getImageSizeUrl, type ImageBlurMeta } from '@/lib/image-config';
+import { useTranslations } from 'next-intl';
 
 // ============================================================================
 // HOTEL GALLERY — Seccion cinematografica con storytelling
@@ -17,32 +18,12 @@ interface HotelGalleryProps {
   blurs?: ImageBlurMeta;
 }
 
-// Plantillas de storytelling por tipo de destino — se seleccionan segun la ubicacion
-const STORY_CAPTIONS_BY_TYPE: Record<string, Array<{ icon: React.ElementType; title: string; story: string }>> = {
-  montaña: [
-    { icon: Mountain, title: 'Donde la montana abraza', story: 'Cada amanecer aqui no es solo luz — es el momento en que el valle despierta y te recuerda por que viniste.' },
-    { icon: Coffee, title: 'Rituales de cada manana', story: 'El aroma del cafe local mezclado con el aire fresco de la montana. Asi empiezan los dias que no se olvidan.' },
-    { icon: Sunset, title: 'Atardeceres que se quedan', story: 'Hay cielos que se miran y cielos que se sienten. Este es de los segundos.' },
-    { icon: MapPin, title: 'Un lugar que te encuentra', story: 'No todos los destinos se eligen. Algunos te llaman sin que lo sepas.' },
-  ],
-  playa: [
-    { icon: Sunset, title: 'Sal y horizonte infinito', story: 'El mar no pide permiso para entrar. Se cuela por la brisa, por el sonido, por la calma que te cambia el ritmo.' },
-    { icon: MapPin, title: 'Arena bajo los pies', story: 'Hay lugares que se sienten antes de pisarlos. Este es uno de esos.' },
-    { icon: Coffee, title: 'Manenas con brisa', story: 'Cafe, sal y silencio. La combinacion perfecta para empezar de nuevo.' },
-    { icon: Mountain, title: 'Donde el cielo toca el agua', story: 'El horizonte aqui no es una linea. Es una promesa.' },
-  ],
-  ciudad: [
-    { icon: MapPin, title: 'En el corazon de todo', story: 'A pasos de lo que importa, pero lo suficientemente lejos para descansar de verdad.' },
-    { icon: Coffee, title: 'Cafe de esquina', story: 'Las mejores experiencias no estan en las guias. Estan en la vuelta de la esquina.' },
-    { icon: Sunset, title: 'Luces que cuentan historias', story: 'Cuando cae la noche, la ciudad se transforma en un escenario hecho para vos.' },
-    { icon: Mountain, title: 'Un oasis urbano', story: 'No hace falta irse lejos para encontrar calma. A veces esta escondida en el lugar correcto.' },
-  ],
-  lago: [
-    { icon: Sunset, title: 'Espejo de agua', story: 'El lago no refleja solo el cielo. Refleja la calma que viniste a buscar.' },
-    { icon: Coffee, title: 'Silencio que se saborea', story: 'Aca el tiempo se mide en olas suaves y tazas de cafe con vista.' },
-    { icon: MapPin, title: 'Refugio natural', story: 'Entre el agua y el bosque, hay un lugar donde el ruido no llega.' },
-    { icon: Mountain, title: 'Horizonte liquido', story: 'Mirar el lago es recordar que hay cosas que no necesitan explicacion.' },
-  ],
+// Iconos por posicion por tipo de destino — no necesitan traduccion
+const CAPTION_ICONS_BY_TYPE: Record<string, React.ElementType[]> = {
+  montaña: [Mountain, Coffee, Sunset, MapPin],
+  playa: [Sunset, MapPin, Coffee, Mountain],
+  ciudad: [MapPin, Coffee, Sunset, Mountain],
+  lago: [Sunset, Coffee, MapPin, Mountain],
 };
 
 // Detecta el tipo de destino segun la ubicacion
@@ -55,15 +36,21 @@ function detectLocationType(location: string): string {
   return 'montaña'; // default
 }
 
-function getStoryCaptions(location: string) {
+function getStoryCaptions(location: string, t: ReturnType<typeof useTranslations>) {
   const type = detectLocationType(location);
-  return STORY_CAPTIONS_BY_TYPE[type] || STORY_CAPTIONS_BY_TYPE.montaña;
+  const icons = CAPTION_ICONS_BY_TYPE[type] || CAPTION_ICONS_BY_TYPE.montaña;
+  return Array.from({ length: 4 }, (_, i) => ({
+    icon: icons[i],
+    title: t(`ota.hotelGallery.storyCaptions.${type}.${i}.title`),
+    story: t(`ota.hotelGallery.storyCaptions.${type}.${i}.story`),
+  }));
 }
 
 export default function HotelGallery({ images, hotelName, location, blurs }: HotelGalleryProps) {
+  const t = useTranslations();
   if (images.length === 0) return null;
 
-  const captions = getStoryCaptions(location);
+  const captions = getStoryCaptions(location, t);
 
   return (
     <section className="space-y-8">
@@ -73,10 +60,10 @@ export default function HotelGallery({ images, hotelName, location, blurs }: Hot
           <MapPin size={11} /> {location}
         </span>
         <h2 className="text-3xl md:text-4xl font-black text-foreground tracking-tight">
-          Descubri {hotelName}
+          {t('ota.hotelGallery.discover', { hotelName })}
         </h2>
         <p className="text-muted-foreground font-lora italic text-base max-w-lg mx-auto">
-          Antes de elegir tu habitacion, deja que el lugar te elija a vos.
+          {t('ota.hotelGallery.subtitle')}
         </p>
       </div>
 

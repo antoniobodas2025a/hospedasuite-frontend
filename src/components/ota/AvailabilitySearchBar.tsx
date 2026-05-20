@@ -14,6 +14,8 @@ import GuestSelector from '@/components/ota/GuestSelector';
 import RefinementPanel from '@/components/ota/RefinementPanel';
 import 'react-day-picker/dist/style.css';
 
+import { useTranslations } from 'next-intl';
+
 // ── Types ─────────────────────────────────────────────────────────────────────
 
 interface RoomItem {
@@ -79,6 +81,7 @@ export default function AvailabilitySearchBar({
 }: AvailabilitySearchBarProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations();
   const popoverRef = useRef<HTMLDivElement>(null);
   const datesTriggerRef = useRef<HTMLDivElement>(null);
   const guestsTriggerRef = useRef<HTMLDivElement>(null);
@@ -225,12 +228,12 @@ export default function AvailabilitySearchBar({
 
   const displayRange = () => {
     if (date?.from) {
-      if (!date.to) return format(date.from, "dd 'de' MMM", { locale: es }) + ' — Salida';
+      if (!date.to) return format(date.from, "dd 'de' MMM", { locale: es }) + ` — ${t('ota.search.departure')}`;
       return `${format(date.from, 'dd MMM', { locale: es })} — ${format(date.to, 'dd MMM', { locale: es })}`;
     }
-    return 'Llegada — Salida';
+    return `${t('ota.search.arrival')} — ${t('ota.search.departure')}`;
   };
-  const guestLabel = `${guests} huésped${guests > 1 ? 'es' : ''}`;
+  const guestLabel = `${guests} ${t('ota.search.guest', { count: guests })}`;
 
   // Shared style helpers
   const pillBase = (rounded: string) => cn(
@@ -261,7 +264,7 @@ export default function AvailabilitySearchBar({
           <div
             ref={datesTriggerRef}
             onClick={() => !isPending && setActivePopover(activePopover === 'dates' ? null : 'dates')}
-            role="button" aria-expanded={activePopover === 'dates'} aria-label="Seleccionar fechas de estadía"
+            role="button" aria-expanded={activePopover === 'dates'} aria-label={t('ota.search.selectDates')}
             className={pillBase('rounded-t-[var(--radius-squircle-xl)] sm:rounded-l-full sm:rounded-r-none')}
           >
             <div className={iconCircle}>
@@ -270,7 +273,7 @@ export default function AvailabilitySearchBar({
                 : <CalendarIcon size={ios} className="text-brand-600" />}
             </div>
             <div className="flex flex-col min-w-0">
-              <span className={labelClass}>Estadía</span>
+              <span className={labelClass}>{t('ota.search.stay')}</span>
               <span className={valueClass(!!date?.from)}>{displayRange()}</span>
             </div>
             {/* Clear dates button — only visible when dates are selected */}
@@ -282,8 +285,8 @@ export default function AvailabilitySearchBar({
                 transition={springSnappy()}
                 onClick={handleClearDates}
                 className="size-6 rounded-full flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0 ml-1"
-                aria-label="Limpiar fechas seleccionadas"
-                title="Limpiar fechas"
+                aria-label={t('ota.search.clearDates')}
+                title={t('ota.search.clearDates')}
               >
                 <X size={12} strokeWidth={2.5} />
               </motion.button>
@@ -298,14 +301,14 @@ export default function AvailabilitySearchBar({
           <div
             ref={guestsTriggerRef}
             onClick={() => !isPending && setActivePopover(activePopover === 'guests' ? null : 'guests')}
-            role="button" aria-expanded={activePopover === 'guests'} aria-label="Seleccionar número de huéspedes"
+            role="button" aria-expanded={activePopover === 'guests'} aria-label={t('ota.search.selectGuests')}
             className={pillBase('rounded-b-[var(--radius-squircle-xl)] sm:rounded-r-full sm:rounded-l-none')}
           >
             <div className={iconCircle}>
               <User size={ios} className="text-brand-600" />
             </div>
             <div className="flex flex-col">
-              <span className={labelClass}>Huéspedes</span>
+              <span className={labelClass}>{t('ota.search.guests')}</span>
               <span className={valueClass(true)}>{guestLabel}</span>
             </div>
           </div>
@@ -342,10 +345,10 @@ export default function AvailabilitySearchBar({
               showRefinement || hasActiveFilters ? 'bg-brand-50 text-brand-700 border border-brand-200' : 'bg-card/80 text-muted-foreground border border-border/30 hover:border-brand-300 hover:text-foreground'
             )}
             aria-expanded={showRefinement}
-            aria-label={hasActiveFilters ? `Refinar búsqueda (${filterCount} filtro${filterCount > 1 ? 's' : ''} activo${filterCount > 1 ? 's' : ''})` : 'Refinar búsqueda'}
+            aria-label={hasActiveFilters ? t('ota.search.refineWithCount', { count: filterCount }) : t('ota.search.refine')}
           >
             <SlidersHorizontal size={14} />
-            <span>Refinar búsqueda</span>
+            <span>{t('ota.search.refine')}</span>
             <AnimatePresence>
               {hasActiveFilters && (
                 <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }}

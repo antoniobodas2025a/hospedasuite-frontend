@@ -19,17 +19,17 @@ export const PRICING: Record<PricingVariant, { starter: number; pro: number; ent
   control: {
     starter: 49_000,
     pro: 99_000,
-    enterprise: 169_000,
+    enterprise: 199_000,
   },
   'variant-a': {
     starter: 59_000,
     pro: 119_000,
-    enterprise: 199_000,
+    enterprise: 249_000,
   },
   'variant-b': {
     starter: 39_000,
     pro: 79_000,
-    enterprise: 139_000,
+    enterprise: 149_000,
   },
 };
 

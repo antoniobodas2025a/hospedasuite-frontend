@@ -11,8 +11,8 @@ const calistoga = Calistoga({
 });
 
 export const metadata: Metadata = {
-  title: 'HospedaSuite | Encuentra tu escape perfecto',
-  description: 'Reserva los mejores hoteles sin comisiones ocultas.',
+  title: 'HospedaSuite | Find your perfect escape',
+  description: 'Book the best hotels with no hidden fees.',
   robots: {
     index: true,
     follow: true,
@@ -21,7 +21,6 @@ export const metadata: Metadata = {
 
 export default function OTALayout({ children }: { children: React.ReactNode }) {
   return (
-    // data-theme="ota" activates Tierra & Sal palette via CSS cascade
     <div data-theme="ota" className={`${calistoga.variable} font-sans bg-background text-foreground min-h-screen`}>
       <AttributionTracker />
       {children}

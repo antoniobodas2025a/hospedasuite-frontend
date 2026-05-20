@@ -17,7 +17,7 @@ function sweepExpiredIPs(now: number) {
   }
 }
 
-export async function updateSession(request: NextRequest) {
+export async function updateSession(request: NextRequest, initialResponse?: NextResponse) {
   const now = Date.now();
   
   // Limpieza de memoria asíncrona pasiva para evitar fugas en V8 Isolates
@@ -41,7 +41,8 @@ export async function updateSession(request: NextRequest) {
   }
 
   // --- 🛡️ BARRERA 2: GESTIÓN DE SESIÓN Y SEGURIDAD DE RUTAS ---
-  let supabaseResponse = NextResponse.next({
+  // Usar el response inicial si viene de otro middleware (ej: next-intl)
+  let supabaseResponse = initialResponse ?? NextResponse.next({
     request,
   });
 
@@ -57,9 +58,18 @@ export async function updateSession(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) =>
             request.cookies.set(name, value),
           );
-          supabaseResponse = NextResponse.next({
-            request,
-          });
+          // Clone the initial response preserving headers and status
+          if (initialResponse) {
+            supabaseResponse = new NextResponse(initialResponse.body, {
+              status: initialResponse.status,
+              statusText: initialResponse.statusText,
+              headers: initialResponse.headers,
+            });
+          } else {
+            supabaseResponse = NextResponse.next({
+              request,
+            });
+          }
           cookiesToSet.forEach(({ name, value, options }) =>
             supabaseResponse.cookies.set(name, value, options),
           );
@@ -74,13 +84,18 @@ export async function updateSession(request: NextRequest) {
 
   const path = request.nextUrl.pathname;
 
+  // Normalizar path: quitar prefijo de locale (/en, /es) para auth checks
+  const normalizedPath = path.replace(/^\/(en|es)(\/|$)/, '/');
+
   // 🛡️ 1. Protección Básica: Invitados no pueden entrar a zonas seguras
-  if ((path.startsWith('/dashboard') || path.startsWith('/admin')) && !user) {
-    return NextResponse.redirect(new URL('/login', request.url));
+  if ((normalizedPath.startsWith('/dashboard') || normalizedPath.startsWith('/admin')) && !user) {
+    // Preservar el locale prefix si existe
+    const localePrefix = path.match(/^\/(en|es)/)?.[0] ?? '';
+    return NextResponse.redirect(new URL(`${localePrefix}/login`, request.url));
   }
 
   // 🛡️ 2. Protección Avanzada: Zero-Trust para rutas Super Admin
-  if (path.startsWith('/admin') && user) {
+  if (normalizedPath.startsWith('/admin') && user) {
     // Consultamos la tabla de roles usando el cliente de SSR (Respeta RLS)
     const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
@@ -96,8 +111,9 @@ export async function updateSession(request: NextRequest) {
   }
 
   // 🔄 Redirigir si ya está logueado e intenta ir al login
-  if (path.startsWith('/login') && user) {
-     return NextResponse.redirect(new URL('/dashboard', request.url));
+  if (normalizedPath.startsWith('/login') && user) {
+     const localePrefix = path.match(/^\/(en|es)/)?.[0] ?? '';
+     return NextResponse.redirect(new URL(`${localePrefix}/dashboard`, request.url));
   }
 
   return supabaseResponse;

@@ -7,6 +7,10 @@ interface Props {
   children: ReactNode;
   fallback?: ReactNode;
   name?: string;
+  /** Optional translated strings for error messages */
+  errorTitle?: string;
+  errorDescription?: string;
+  retryLabel?: string;
 }
 
 interface State {
@@ -45,16 +49,18 @@ export class ErrorBoundary extends Component<Props, State> {
         <div className="p-6 text-center glass-card border-destructive/20 rounded-[var(--radius-squircle-2xl)]">
           <AlertTriangle size={24} className="text-destructive mx-auto mb-2" />
           <p className="text-sm font-bold text-foreground mb-1">
-            {this.props.name ? `Error en ${this.props.name}` : 'Algo salio mal'}
+            {this.props.name
+              ? (this.props.errorTitle || `Error in ${this.props.name}`)
+              : (this.props.errorTitle || 'Something went wrong')}
           </p>
           <p className="text-xs text-muted-foreground mb-3">
-            Este componente no se pudo cargar correctamente.
+            {this.props.errorDescription || 'This component could not load correctly.'}
           </p>
           <button
             onClick={this.handleReset}
             className="inline-flex items-center gap-1.5 text-xs font-bold text-brand-600 hover:text-brand-700 transition-colors"
           >
-            <RefreshCw size={12} /> Intentar de nuevo
+            <RefreshCw size={12} /> {this.props.retryLabel || 'Try again'}
           </button>
         </div>
       );

@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import { MessageCircle, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 // ============================================================================
 // FLOATING WHATSAPP — Boton flotante para consultas directas
@@ -17,6 +18,7 @@ interface FloatingWhatsAppProps {
 }
 
 export default function FloatingWhatsApp({ phoneNumber, message, hotelName }: FloatingWhatsAppProps) {
+  const t = useTranslations();
   const [isVisible, setIsVisible] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
@@ -28,7 +30,7 @@ export default function FloatingWhatsApp({ phoneNumber, message, hotelName }: Fl
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const waMessage = message || `Hola! Me interesa reservar en ${hotelName || 'su hotel'}. Podrian darme mas informacion?`;
+  const waMessage = message || `${t('ota.whatsapp.defaultMessage', { hotelName: hotelName || t('ota.whatsapp.hotelNameFallback') })}`;
   const waUrl = `https://wa.me/${phoneNumber}?text=${encodeURIComponent(waMessage)}`;
 
   return (
@@ -47,13 +49,13 @@ export default function FloatingWhatsApp({ phoneNumber, message, hotelName }: Fl
               <MessageCircle size={20} className="text-white" />
             </div>
             <div>
-              <p className="text-sm font-bold text-foreground">{hotelName || 'Nuestro Equipo'}</p>
-              <p className="text-xs text-muted-foreground">En linea</p>
+              <p className="text-sm font-bold text-foreground">{hotelName || t('ota.whatsapp.ourTeam')}</p>
+              <p className="text-xs text-muted-foreground">{t('ota.whatsapp.online')}</p>
             </div>
           </div>
           <div className="bg-muted/50 rounded-[var(--radius-squircle-lg)] p-3 mb-3">
             <p className="text-sm text-muted-foreground">
-              Hola! Necesitas ayuda para reservar? Escribinos por WhatsApp y te respondemos al instante.
+              {t('ota.whatsapp.tooltip')}
             </p>
           </div>
           <a
@@ -62,7 +64,7 @@ export default function FloatingWhatsApp({ phoneNumber, message, hotelName }: Fl
             rel="noopener noreferrer"
             className="block w-full bg-emerald-500 hover:bg-emerald-600 text-white text-center text-sm font-bold py-3 rounded-[var(--radius-squircle-lg)] transition-colors"
           >
-            Iniciar Chat
+            {t('ota.whatsapp.startChat')}
           </a>
         </div>
       )}
@@ -74,7 +76,7 @@ export default function FloatingWhatsApp({ phoneNumber, message, hotelName }: Fl
           'fixed bottom-6 right-6 z-50 size-14 rounded-full bg-emerald-500 hover:bg-emerald-600 text-white shadow-xl shadow-emerald-500/30 flex items-center justify-center transition-all duration-300 active:scale-90',
           isVisible ? 'translate-y-0 opacity-100' : 'translate-y-20 opacity-0 pointer-events-none',
         )}
-        aria-label="Contactar por WhatsApp"
+        aria-label={t('ota.whatsapp.contactLabel')}
       >
         <MessageCircle size={28} />
       </button>

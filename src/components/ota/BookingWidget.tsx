@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
+import { useTranslations } from 'next-intl';
 
 // ============================================================================
 // BOOKING WIDGET — Smart Summary Sidebar
@@ -42,6 +43,7 @@ export default function BookingWidget({
 }: BookingWidgetProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
+  const t = useTranslations();
 
   const [showPolicy, setShowPolicy] = useState(false);
   const [showDateError, setShowDateError] = useState(false);
@@ -104,20 +106,20 @@ export default function BookingWidget({
               <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">{selectedRoom.name}</p>
               <div className="flex items-baseline gap-2">
                 <p className="text-4xl font-black tracking-tight">${totalPrice.toLocaleString()}</p>
-                <span className="text-primary-foreground/70 text-sm font-medium">COP total</span>
+                <span className="text-primary-foreground/70 text-sm font-medium">{t('ota.booking.totalCOP')}</span>
               </div>
               {nights > 1 && (
                 <p className="text-xs text-primary-foreground/70 mt-1">
-                  ${roomPrice.toLocaleString()} x {nights} noches + impuestos
+                  ${roomPrice.toLocaleString()} x {nights} {t('ota.booking.nights')} + {t('ota.booking.taxes')}
                 </p>
               )}
             </>
           ) : (
             <>
-              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">Desde</p>
+              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">{t('ota.booking.from')}</p>
               <div className="flex items-baseline gap-2">
                 <p className="text-4xl font-black tracking-tight">${minPrice.toLocaleString()}</p>
-                <span className="text-primary-foreground/70 text-sm font-medium">COP/noche</span>
+                <span className="text-primary-foreground/70 text-sm font-medium">{t('ota.booking.copPerNight')}</span>
               </div>
             </>
           )}
@@ -130,13 +132,13 @@ export default function BookingWidget({
             <div className="flex items-start gap-3 p-4 bg-secondary/10 rounded-[var(--radius-squircle-2xl)] border border-secondary/30">
               <CheckCircle2 size={18} className="text-secondary shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-bold text-foreground">Fechas confirmadas</p>
+                <p className="text-sm font-bold text-foreground">{t('ota.booking.datesConfirmed')}</p>
                 <p className="text-xs text-muted-foreground mt-0.5">
                   {new Date(checkIn).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} — {new Date(checkOut).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
                 </p>
                 {guestCount && (
                   <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                    <Users size={12} /> {guestCount} huésped{guestCount > 1 ? 'es' : ''}
+                    <Users size={12} /> {guestCount} {t('ota.booking.guest', { count: guestCount })}
                   </p>
                 )}
               </div>
@@ -145,8 +147,8 @@ export default function BookingWidget({
             <div className="flex items-start gap-3 p-4 bg-warm-100/50 rounded-[var(--radius-squircle-2xl)] border border-warm-200/60">
               <Clock size={18} className="text-warm-600 shrink-0 mt-0.5" />
               <div>
-                <p className="text-sm font-bold text-foreground">Selecciona tus fechas</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Usa la barra de busqueda para ver disponibilidad y precios exactos.</p>
+                <p className="text-sm font-bold text-foreground">{t('ota.booking.selectDates')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('ota.booking.selectDatesHint')}</p>
               </div>
             </div>
           )}
@@ -162,8 +164,8 @@ export default function BookingWidget({
               >
                 <Info size={18} className="text-destructive shrink-0 mt-0.5" />
                 <div>
-                  <p className="text-sm font-bold text-destructive">Selecciona tus fechas primero</p>
-                  <p className="text-xs text-destructive/80 mt-0.5">Usa la barra de busqueda de arriba para elegir cuando llegas y cuando te vas.</p>
+                <p className="text-sm font-bold text-destructive">{t('ota.booking.selectDatesFirst')}</p>
+                <p className="text-xs text-destructive/80 mt-0.5">{t('ota.booking.selectDatesFirstHint')}</p>
                 </div>
               </motion.div>
             )}
@@ -175,7 +177,7 @@ export default function BookingWidget({
               <div className="flex items-center gap-2 text-sm">
                 <div className="size-2 rounded-full bg-secondary animate-pulse" />
                 <span className="text-muted-foreground">
-                  <span className="font-bold text-foreground">{availableCount}</span> de {totalRooms || availableCount} unidades disponible{availableCount > 1 ? 's' : ''}
+                  <span className="font-bold text-foreground">{availableCount}</span> {t('ota.booking.of')} {totalRooms || availableCount} {t('ota.booking.unitsAvailable', { count: availableCount })}
                 </span>
               </div>
               {totalRooms && totalRooms > availableCount && (
@@ -192,7 +194,7 @@ export default function BookingWidget({
               {availableCount <= 2 && (
                 <p className="text-xs font-bold text-destructive flex items-center gap-1">
                   <span className="inline-block size-2 rounded-full bg-destructive animate-pulse" />
-                  {availableCount === 1 ? 'Solo queda 1 disponible' : `Solo quedan ${availableCount} disponibles`}
+                  {availableCount === 1 ? t('ota.booking.onlyOneLeft') : t('ota.booking.onlyXLeft', { count: availableCount })}
                 </p>
               )}
             </div>
@@ -200,7 +202,7 @@ export default function BookingWidget({
           {availableCount === 0 && (
             <div className="flex items-center gap-2 text-sm text-destructive">
               <div className="size-2 rounded-full bg-destructive" />
-              <span className="font-bold">Sin disponibilidad</span>
+              <span className="font-bold">{t('ota.booking.noAvailability')}</span>
             </div>
           )}
 
@@ -219,7 +221,7 @@ export default function BookingWidget({
                   : 'bg-foreground hover:bg-primary text-background shadow-foreground/20',
             )}
           >
-            {selectedRoom ? (checkIn && checkOut ? 'Reservar Ahora' : 'Ver Disponibilidad') : 'Ver Habitaciones'}
+            {selectedRoom ? (checkIn && checkOut ? t('ota.booking.reserveNow') : t('ota.booking.checkAvailability')) : t('ota.booking.viewRooms')}
             <ArrowRight size={16} strokeWidth={2.5} />
           </motion.button>
 
@@ -234,8 +236,8 @@ export default function BookingWidget({
                 <ShieldCheck size={16} className="text-brand-600" />
               </div>
               <div>
-                <p className="text-xs font-bold text-foreground">Mejor precio garantizado</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Reserva directo sin comisiones de intermediarios.</p>
+                <p className="text-xs font-bold text-foreground">{t('ota.booking.bestPriceGuaranteed')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('ota.booking.bestPriceDesc')}</p>
               </div>
             </div>
           </div>
@@ -245,8 +247,8 @@ export default function BookingWidget({
             <div className="flex items-start gap-3">
               <CheckCircle2 size={16} className="text-secondary shrink-0 mt-0.5" />
               <div>
-                <p className="text-xs font-bold text-foreground">Confirmacion inmediata</p>
-                <p className="text-xs text-muted-foreground mt-0.5">Tu habitacion se bloquea al instante.</p>
+                <p className="text-xs font-bold text-foreground">{t('ota.booking.instantConfirmation')}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">{t('ota.booking.instantConfirmationDesc')}</p>
               </div>
             </div>
           </div>
@@ -264,7 +266,7 @@ export default function BookingWidget({
                     onClick={() => setShowPolicy(!showPolicy)}
                     className="flex items-center justify-between w-full text-left mb-2"
                   >
-                    <p className="text-xs font-bold text-foreground">Politica de cancelacion</p>
+                    <p className="text-xs font-bold text-foreground">{t('ota.booking.cancellationPolicy')}</p>
                     {showPolicy ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
                   </button>
                   {showPolicy && (
@@ -281,7 +283,7 @@ export default function BookingWidget({
               onClick={() => setShowPolicy(!showPolicy)}
               className="flex items-center justify-between w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
             >
-              <span className="font-bold">Politica de cancelacion</span>
+              <span className="font-bold">{t('ota.booking.cancellationPolicy')}</span>
               {showPolicy ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
             </button>
           )}

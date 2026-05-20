@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import { Check, X, ChevronDown, ChevronUp, Bed } from 'lucide-react';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
+import { useTranslations } from 'next-intl';
 
 // ============================================================================
 // ROOM COMPARISON TABLE — Tabla comparativa de habitaciones
@@ -26,6 +27,7 @@ interface RoomComparisonProps {
 }
 
 export default function RoomComparison({ rooms }: RoomComparisonProps) {
+  const t = useTranslations();
   const [isOpen, setIsOpen] = useState(false);
 
   if (rooms.length < 4) return null;
@@ -37,7 +39,7 @@ export default function RoomComparison({ rooms }: RoomComparisonProps) {
         className="flex items-center gap-2 text-sm font-bold text-muted-foreground hover:text-foreground transition-colors"
       >
         {isOpen ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-        Comparar {rooms.length} habitaciones
+        {t('ota.comparison.compare', { count: rooms.length })}
       </button>
 
       {isOpen && (
@@ -47,7 +49,7 @@ export default function RoomComparison({ rooms }: RoomComparisonProps) {
               <thead>
                 <tr className="border-b border-border">
                   <th className="text-left py-3 px-4 text-muted-foreground font-bold text-xs uppercase tracking-widest w-40">
-                    Caracteristica
+                    {t('ota.comparison.feature')}
                   </th>
                   {rooms.map((room) => (
                     <th key={room.id} className="text-center py-3 px-4 min-w-[140px]">
@@ -62,10 +64,10 @@ export default function RoomComparison({ rooms }: RoomComparisonProps) {
               <tbody>
                 {/* Capacidad */}
                 <tr className="border-b border-border/40">
-                  <td className="py-3 px-4 text-muted-foreground font-medium">Capacidad</td>
+                  <td className="py-3 px-4 text-muted-foreground font-medium">{t('ota.comparison.capacity')}</td>
                   {rooms.map((room) => (
                     <td key={room.id} className="text-center py-3 px-4 text-foreground font-bold">
-                      {room.capacity || '-'} personas
+                      {room.capacity || '-'} {t('ota.comparison.people')}
                     </td>
                   ))}
                 </tr>
@@ -73,7 +75,7 @@ export default function RoomComparison({ rooms }: RoomComparisonProps) {
                 {/* Camas */}
                 <tr className="border-b border-border/40">
                   <td className="py-3 px-4 text-muted-foreground font-medium flex items-center gap-1.5">
-                    <Bed size={14} /> Camas
+                    <Bed size={14} /> {t('ota.comparison.beds')}
                   </td>
                   {rooms.map((room) => (
                     <td key={room.id} className="text-center py-3 px-4 text-foreground font-bold">
@@ -84,7 +86,7 @@ export default function RoomComparison({ rooms }: RoomComparisonProps) {
 
                 {/* Tamano */}
                 <tr className="border-b border-border/40">
-                  <td className="py-3 px-4 text-muted-foreground font-medium">Tamano</td>
+                  <td className="py-3 px-4 text-muted-foreground font-medium">{t('ota.comparison.size')}</td>
                   {rooms.map((room) => (
                     <td key={room.id} className="text-center py-3 px-4 text-foreground font-bold">
                       {room.size_sqm ? `${room.size_sqm} m2` : '-'}

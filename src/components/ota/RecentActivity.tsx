@@ -4,6 +4,7 @@ import { Clock, TrendingUp } from 'lucide-react'
 import { motion } from 'framer-motion'
 import { springGentle } from '@/lib/mac2026/spring'
 import { GlassPill } from '@/components/ui/glass'
+import { useTranslations } from 'next-intl'
 
 // ============================================================================
 // RECENT ACTIVITY — Indicador de actividad reciente para generar urgencia social
@@ -43,6 +44,11 @@ interface RecentActivityProps {
 }
 
 export default function RecentActivity({ messages }: RecentActivityProps) {
+  const t = useTranslations()
+  const DEFAULT_MESSAGES: ActivityMessage[] = [
+    { icon: 'TrendingUp', text: t('ota.recentActivity.bookings24h'), color: 'text-success' },
+    { icon: 'Clock', text: t('ota.recentActivity.viewingNow'), color: 'text-warning' },
+  ]
   const activityMessages = messages && messages.length > 0 ? messages : DEFAULT_MESSAGES
 
   return (

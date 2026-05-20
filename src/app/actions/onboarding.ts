@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { FullWizardState } from '@/lib/onboarding-schemas';
+import { checkUnitLimit } from '@/data/plan-guard';
 
 export async function executeOnboardingProvisioning(state: FullWizardState): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
@@ -22,6 +23,22 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     if (!staff?.hotel_id) return { success: false, error: 'No se encontró el hotel' };
 
     const hotelId = staff.hotel_id;
+
+    // ─── Plan Gating: Check unit limit before creating rooms ────
+    const roomCount = state.rooms.length
+    if (roomCount > 0) {
+      const limitCheck = await checkUnitLimit(hotelId)
+      if (!limitCheck.ok) {
+        return { success: false, error: limitCheck.reason }
+      }
+      // Also check if adding these rooms would exceed the limit
+      if (limitCheck.currentCount + roomCount > limitCheck.maxAllowed) {
+        return {
+          success: false,
+          error: `Tu plan permite hasta ${limitCheck.maxAllowed} unidades. Estás intentando crear ${roomCount} pero solo tienes espacio para ${limitCheck.remaining}.`,
+        }
+      }
+    }
 
     // 1. Update hotel profile
     const { error: hotelError } = await supabase

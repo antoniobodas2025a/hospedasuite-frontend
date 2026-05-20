@@ -3,12 +3,14 @@
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
 import { Building2, CheckCircle2, AlertCircle } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { executeOnboardingProvisioning } from '@/app/actions/onboarding';
 import { fullWizardStateSchema } from '@/lib/onboarding-schemas';
 
 export default function ProvisioningStep() {
+  const t = useTranslations('onboarding.provisioning');
   const router = useRouter();
   const { hotelIdentity, galleryPreviews, rooms, settings, paymentTransactionId, setError, reset } = useOnboardingStore();
   const [status, setStatus] = useState<'provisioning' | 'success' | 'error'>('provisioning');
@@ -18,7 +20,7 @@ export default function ProvisioningStep() {
     async function provision() {
       if (!paymentTransactionId) {
         setStatus('error');
-        setErrorMessage('No se encontró el ID de transacción');
+        setErrorMessage(t('noTransaction'));
         return;
       }
 
@@ -50,7 +52,7 @@ export default function ProvisioningStep() {
       const result = fullWizardStateSchema.safeParse(wizardState);
       if (!result.success) {
         setStatus('error');
-        setErrorMessage(`Datos inválidos: ${result.error.issues[0]?.message}`);
+        setErrorMessage(t('invalidData', { message: result.error.issues[0]?.message }));
         return;
       }
 
@@ -64,7 +66,7 @@ export default function ProvisioningStep() {
         }, 2000);
       } else {
         setStatus('error');
-        setErrorMessage(provisioningResult.error || 'Error desconocido');
+        setErrorMessage(provisioningResult.error || t('errorTitle'));
       }
     }
 
@@ -81,8 +83,8 @@ export default function ProvisioningStep() {
             <Building2 className="absolute inset-0 m-auto text-white/50" size={32} />
           </div>
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-white uppercase tracking-widest">Activando tu Propiedad</h3>
-            <p className="text-zinc-500 text-xs font-mono">Configurando habitaciones, galería y pagos...</p>
+            <h3 className="text-xl font-bold text-white uppercase tracking-widest">{t('activating')}</h3>
+            <p className="text-zinc-500 text-xs font-mono">{t('configuring')}</p>
           </div>
         </>
       )}
@@ -91,8 +93,8 @@ export default function ProvisioningStep() {
         <>
           <CheckCircle2 className="mx-auto text-emerald-400" size={64} />
           <div className="space-y-2">
-            <h3 className="text-xl font-bold text-white uppercase tracking-widest">¡Todo Listo!</h3>
-            <p className="text-zinc-500 text-sm">Redirigiendo al dashboard...</p>
+            <h3 className="text-xl font-bold text-white uppercase tracking-widest">{t('success')}</h3>
+            <p className="text-zinc-500 text-sm">{t('redirecting')}</p>
           </div>
         </>
       )}
@@ -101,13 +103,13 @@ export default function ProvisioningStep() {
         <>
           <AlertCircle className="mx-auto text-rose-500" size={64} />
           <div className="space-y-4">
-            <h3 className="text-xl font-bold text-white uppercase tracking-widest">Error en la Activación</h3>
+            <h3 className="text-xl font-bold text-white uppercase tracking-widest">{t('errorTitle')}</h3>
             <p className="text-zinc-400 text-sm">{errorMessage}</p>
             <button
               onClick={() => { reset(); router.push('/software/onboarding'); }}
               className="px-8 py-3 bg-zinc-800 border border-white/10 rounded-[var(--radius-squircle-xl)] text-white font-bold hover:bg-zinc-700 transition-colors"
             >
-              Reintentar
+              {t('retry')}
             </button>
           </div>
         </>

@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { MapPin, Star } from 'lucide-react';
 import Image from 'next/image';
 import { getImageSizeUrl } from '@/lib/image-config';
+import { useTranslations } from 'next-intl';
 
 interface Hotel {
   id: string;
@@ -20,6 +21,7 @@ interface Hotel {
 
 export default function HotelCard({ hotel }: { hotel: Hotel }) {
   const router = useRouter();
+  const t = useTranslations();
 
   const bgImage =
     hotel.main_image_url ||
@@ -80,17 +82,17 @@ export default function HotelCard({ hotel }: { hotel: Hotel }) {
             <span className='text-xs font-bold'>
               {hotel.reviewStats?.averageRating
                 ? hotel.reviewStats.averageRating.toFixed(1)
-                : 'Nuevo'}
+                : t('ota.hotelCard.new')}
             </span>
           </div>
         </div>
 
         <div className='flex items-center justify-between mt-4 pt-4 border-t border-white/10'>
           <div className='flex flex-col'>
-            <span className='text-[10px] text-white/60 uppercase'>Desde</span>
+            <span className='text-[10px] text-white/60 uppercase'>{t('ota.hotelCard.from')}</span>
             <span className='text-lg font-bold'>
               ${(hotel.min_price || 0).toLocaleString()}
-              <span className='text-xs font-normal text-white/60'> /noche</span>
+              <span className='text-xs font-normal text-white/60'> {t('ota.hotelCard.perNight')}</span>
             </span>
           </div>
 

@@ -1,0 +1,574 @@
+{
+  "ota": {
+    "header": {
+      "brand": "HOSPEDA",
+      "brandAccent": "SUITE",
+      "hotelAccess": "HOTEL ACCESS"
+    },
+    "hero": {
+      "title": "Find your",
+      "highlight": "perfect escape"
+    },
+    "search": {
+      "placeholder": "Where do you want to escape to?",
+      "button": "Search",
+      "arrival": "Arrival",
+      "departure": "Departure",
+      "selectDates": "Select stay dates",
+      "clearDates": "Clear dates",
+      "stay": "Stay",
+      "selectGuests": "Select number of guests",
+      "guests": "Guests",
+      "guest_one": "guest",
+      "guest_other": "guests",
+      "refine": "Refine search",
+      "refineWithCount_one": "Refine search ({count} active filter)",
+      "refineWithCount_other": "Refine search ({count} active filters)"
+    },
+    "categories": {
+      "all": "All",
+      "glamping": "Glamping",
+      "hotels": "Hotels",
+      "cabins": "Cabins",
+      "boutique": "Boutique"
+    },
+    "loading": {
+      "searching": "Searching destinations...",
+      "loadingMore": "Loading more destinations..."
+    },
+    "noResults": {
+      "title": "No results",
+      "description": "Try adjusting your search or clearing filters."
+    },
+    "loadMore": "Show more places to stay",
+    "hotelCard": {
+      "perNight": "/night",
+      "from": "From",
+      "viewDetails": "View details",
+      "reviews": "reviews",
+      "new": "New"
+    },
+    "booking": {
+      "totalCOP": "COP total",
+      "nights": "nights",
+      "taxes": "taxes",
+      "from": "From",
+      "copPerNight": "COP/night",
+      "datesConfirmed": "Dates confirmed",
+      "guest_one": "guest",
+      "guest_other": "guests",
+      "selectDates": "Select your dates",
+      "selectDatesHint": "Use the search bar above to see availability and exact prices.",
+      "selectDatesFirst": "Select your dates first",
+      "selectDatesFirstHint": "Use the search bar above to choose when you arrive and leave.",
+      "of": "of",
+      "unitsAvailable_one": "unit available",
+      "unitsAvailable_other": "units available",
+      "onlyOneLeft": "Only 1 left",
+      "onlyXLeft": "Only {count} left",
+      "noAvailability": "No availability",
+      "reserveNow": "Book Now",
+      "checkAvailability": "Check Availability",
+      "viewRooms": "View Rooms",
+      "bestPriceGuaranteed": "Best price guaranteed",
+      "bestPriceDesc": "Book direct with no intermediary commissions.",
+      "instantConfirmation": "Instant confirmation",
+      "instantConfirmationDesc": "Your room is blocked instantly.",
+      "cancellationPolicy": "Cancellation policy"
+    },
+    "guestSelector": {
+      "label": "Guest selector",
+      "solo": "Solo",
+      "couple": "Couple",
+      "family": "Family",
+      "group": "Group",
+      "guest_one": "guest",
+      "guest_other": "guests",
+      "decrease": "Decrease guests",
+      "increase": "Increase guests"
+    },
+    "refinement": {
+      "title": "Refine search",
+      "clearAllFilters": "Clear all filters",
+      "clearAll": "Clear all",
+      "closePanel": "Close refinement panel",
+      "close": "Close",
+      "maxPrice": "Max price",
+      "noLimit": "No limit",
+      "maxPriceAria": "Max price: {price}",
+      "minBeds": "Min beds",
+      "any": "Any",
+      "minBedsAria": "{count} bed minimum",
+      "amenities": "Amenities",
+      "roomAvailable": "room available",
+      "roomsAvailable": "rooms available",
+      "upTo": "Up to",
+      "removePriceFilter": "Remove price filter",
+      "minShort": "Min",
+      "beds_one": "bed",
+      "beds_other": "beds",
+      "removeBedsFilter": "Remove beds filter",
+      "removeFilter": "Remove {label} filter"
+    },
+    "whatsapp": {
+      "defaultMessage": "Hi! I'm interested in booking at {hotelName}. Could you give me more information?",
+      "hotelNameFallback": "your hotel",
+      "online": "Online",
+      "tooltip": "Hi! Need help booking? Write us on WhatsApp and we'll respond instantly.",
+      "startChat": "Start Chat",
+      "contactLabel": "Contact via WhatsApp",
+      "ourTeam": "Our Team"
+    },
+    "mobileCta": {
+      "from": "From",
+      "copPerNight": "COP/night",
+      "onlyOneLeft": "Only 1 left",
+      "onlyXLeft": "Only {count} left",
+      "reserve": "Book Now",
+      "checkAvailability": "Check Availability"
+    },
+    "recentActivity": {
+      "bookings24h": "3 bookings in the last 24 hours",
+      "viewingNow": "2 people are viewing this property right now"
+    },
+    "roomsList": {
+      "inventoryExhausted": "Inventory Exhausted",
+      "inventoryExhaustedDesc": "We couldn't find available units for these dates. Try modifying your stay.",
+      "tipLabel": "Tip",
+      "tipText": "Weekday dates typically have higher availability. You can also contact the hotel directly to check options.",
+      "noResults": "No Results",
+      "noResultsDesc": "No rooms match your filters. Try adjusting your criteria."
+    },
+    "comparison": {
+      "compare_one": "Compare {count} room",
+      "compare_other": "Compare {count} rooms",
+      "feature": "Feature",
+      "capacity": "Capacity",
+      "people": "people",
+      "beds": "Beds",
+      "size": "Size"
+    },
+    "hotelInfo": {
+      "locationDetails": "Location & Details",
+      "mapTitle": "Location of",
+      "mapNotAvailable": "Map not available",
+      "address": "Address",
+      "contact": "Contact",
+      "schedules": "Schedules",
+      "checkin": "Check-in",
+      "checkout": "Check-out",
+      "reception": "Reception",
+      "cancellationPolicy": "Cancellation Policy",
+      "defaultCancellationPolicy": "Free cancellation up to 48 hours before check-in. After that, the first night is charged."
+    },
+    "roomCard": {
+      "bestValue": "Best Value",
+      "deal": "Deal",
+      "mostPopular": "Most Popular",
+      "onlyXAvailable_one": "Only 1 available",
+      "onlyXAvailable_other": "Only {count} available",
+      "highDemand": "High Demand",
+      "beds_one": "bed",
+      "beds_other": "beds",
+      "fallbackDescription": "A refuge designed to shut out the noise of the modern world and reconnect with what matters.",
+      "nights_one": "night",
+      "nights_other": "nights",
+      "taxesAndFees": "Taxes and fees",
+      "copTotal": "COP total",
+      "baseRate": "Base Rate",
+      "copPerNight": "COP/night",
+      "freeCancellation": "Free Cancellation Available",
+      "secureRoom": "Secure Room",
+      "exploreRoom": "Explore Room"
+    },
+    "showcase": {
+      "defineStay": "Define Your Stay",
+      "defineStayDesc": "To guarantee the exact rate, we need to know when you'll visit.",
+      "selectDates": "Select Dates",
+      "fallbackRoom": "Room",
+      "authorsPick": "Author's Pick",
+      "fallbackDescription": "A refuge designed for those seeking to silence the noise of the world and reconnect with the essence of the mountains.",
+      "amenities": "Amenities",
+      "premiumService": "Premium service guaranteed by HospedaSuite.",
+      "bookingSummary": "Booking Summary",
+      "stay": "Stay",
+      "nights_one": "night",
+      "nights_other": "nights",
+      "occupancy": "Occupancy",
+      "guest_one": "guest",
+      "guest_other": "guests",
+      "overCapacity": "Over Capacity",
+      "overCapacityDesc": "This unit allows a maximum of {capacity} people.",
+      "overCapacityDescShort": "Maximum {capacity} people.",
+      "adjustGuests": "Adjust guests",
+      "seeLargerRooms": "See larger rooms",
+      "baseRate": "Base Rate",
+      "taxesAndFees": "Taxes and Fees",
+      "included": "Included",
+      "total": "Total",
+      "cop": "COP",
+      "adjustSearch": "Adjust Search",
+      "adjust": "Adjust",
+      "reserve": "Book Now"
+    },
+    "reviews": {
+      "today": "Today",
+      "yesterday": "Yesterday",
+      "daysAgo": "{count} days ago",
+      "weeksAgo": "{count} weeks ago",
+      "monthsAgo": "{count} months ago",
+      "yearsAgo": "{count} year(s) ago",
+      "noReviewsYet": "No reviews yet",
+      "noReviewsDesc": "Be the first to share your experience at {hotelName}. Your opinion helps other travelers choose.",
+      "guestReviews": "Guest Reviews",
+      "verifiedReviews": "{count} verified reviews",
+      "ofReviews": "of {count} reviews",
+      "excellent": "Excellent",
+      "veryGood": "Very Good",
+      "average": "Average",
+      "poor": "Poor",
+      "terrible": "Terrible",
+      "stay": "Stay",
+      "helpful": "Helpful"
+    },
+    "reviewForm": {
+      "requiredFields": "Please fill in all required fields and select a rating.",
+      "commentTooLong": "Comment cannot exceed 2000 characters.",
+      "submitError": "Error submitting review. Please try again.",
+      "thankYou": "Thank you for your review!",
+      "thankYouDesc": "Your review of {hotelName} will be published after verification. Only verified guest reviews are published.",
+      "title": "Share your experience",
+      "subtitle": "Your opinion helps other travelers choose. It will be published after verification.",
+      "yourRating": "Your rating",
+      "rating1": "Poor",
+      "rating2": "Average",
+      "rating3": "Good",
+      "rating4": "Very Good",
+      "rating5": "Excellent",
+      "name": "Name",
+      "namePlaceholder": "What's your name?",
+      "email": "Email",
+      "location": "Location (optional)",
+      "stayDate": "Stay date (optional)",
+      "yourExperience": "Your experience",
+      "commentPlaceholder": "How was the hotel? What stood out?",
+      "submitting": "Submitting...",
+      "submit": "Submit Review"
+    },
+    "reviewFormWithToggle": {
+      "writeReview": "Write a review",
+      "closeForm": "Close form",
+      "toggleButton": "Write a review",
+      "helperText": "Only guests with a completed stay can leave a review."
+    },
+    "roomAmenities": {
+      "wifi": "Fast Wi-Fi",
+      "smartTv": "Smart TV",
+      "ac": "Air Conditioning",
+      "hotWater": "Hot Water",
+      "parking": "Parking",
+      "pool": "Private Pool",
+      "coffee": "Coffee Maker",
+      "safe": "Safe Box",
+      "connectivity": "Connectivity",
+      "entertainment": "Entertainment",
+      "climate": "Climate Control",
+      "bathroom": "Bathroom",
+      "facilities": "Facilities",
+      "kitchen": "Kitchen",
+      "security": "Security",
+      "showAll_one": "Show amenity",
+      "showAll_other": "Show all {count} amenities",
+      "modalTitle": "What does this place offer?",
+      "included": "Included at no cost",
+      "extraCharge": "Extra charge applies"
+    },
+    "heroGallery": {
+      "viewPhoto": "View photo {num} of {hotelName}",
+      "viewAllPhotosAlt": "View all photos",
+      "viewAllPhotosOf": "View all {count} photos of {hotelName}",
+      "viewPhotoNum": "View photo {num}",
+      "prevPhoto": "Previous photo",
+      "nextPhoto": "Next photo",
+      "viewAllPhotos": "View all photos",
+      "photoCount": "{count} photos",
+      "galleryDialog": "Photo gallery",
+      "closeGallery": "Close gallery",
+      "goToPhoto": "Go to photo {num}"
+    },
+    "hotelGallery": {
+      "discover": "Discover {hotelName}",
+      "subtitle": "Before choosing your room, let the place choose you.",
+      "storyCaptions": {
+        "montaña": {
+          "0": { "title": "Where the mountain embraces", "story": "Every sunrise here isn't just light — it's the moment the valley awakens and reminds you why you came." },
+          "1": { "title": "Morning rituals", "story": "The aroma of local coffee blending with fresh mountain air. This is how unforgettable days begin." },
+          "2": { "title": "Sunsets that stay", "story": "There are skies you look at and skies you feel. This one is the latter." },
+          "3": { "title": "A place that finds you", "story": "Not all destinations are chosen. Some call you without you knowing." }
+        },
+        "playa": {
+          "0": { "title": "Salt and infinite horizon", "story": "The sea doesn't ask permission to enter. It sneaks in through the breeze, the sound, the calm that changes your rhythm." },
+          "1": { "title": "Sand beneath your feet", "story": "There are places you feel before stepping into them. This is one of those." },
+          "2": { "title": "Mornings with breeze", "story": "Coffee, salt, and silence. The perfect combination to start anew." },
+          "3": { "title": "Where sky touches water", "story": "The horizon here isn't a line. It's a promise." }
+        },
+        "ciudad": {
+          "0": { "title": "In the heart of it all", "story": "Steps from what matters, yet far enough to truly rest." },
+          "1": { "title": "Corner café", "story": "The best experiences aren't in guidebooks. They're around the corner." },
+          "2": { "title": "Lights that tell stories", "story": "When night falls, the city transforms into a stage made just for you." },
+          "3": { "title": "An urban oasis", "story": "You don't need to go far to find calm. Sometimes it's hidden in the right place." }
+        },
+        "lago": {
+          "0": { "title": "Mirror of water", "story": "The lake doesn't just reflect the sky. It reflects the calm you came looking for." },
+          "1": { "title": "Silence you can taste", "story": "Here, time is measured in gentle waves and cups of coffee with a view." },
+          "2": { "title": "Natural refuge", "story": "Between the water and the forest, there's a place where noise can't reach." },
+          "3": { "title": "Liquid horizon", "story": "Looking at the lake is remembering that some things don't need explanation." }
+        }
+      }
+    },
+    "hotelDetail": {
+      "propertyNotFound": "Property not found",
+      "officialBooking": "Official Booking",
+      "metaDescription": "Discover the experience at {hotelName} located in {location}. Book direct at the best price guaranteed.",
+      "luxuryExperience": "Luxury Experience",
+      "availableRooms": "Available Rooms",
+      "roomsForDates": "{available} of {total} units for your dates",
+      "exploreUnits": "Explore our {count} units"
+    }
+  },
+  "onboarding": {
+    "steps": {
+      "identity": "Identity",
+      "gallery": "Gallery",
+      "type": "Type",
+      "units": "Units",
+      "config": "Config",
+      "activate": "Activate"
+    },
+    "client": {
+      "brand": "HospedaSuite",
+      "subtitle": "Set up your property in 6 simple steps",
+      "loading": "Loading",
+      "connectionError": "Connection Error",
+      "noPropertyLinked": "No property linked to your account was detected.",
+      "connectionErrorMsg": "Connection error.",
+      "retry": "Retry",
+      "back": "Back",
+      "next": "Next",
+      "activate": "Activate"
+    },
+    "hotelIdentity": {
+      "title": "Your Property Identity",
+      "subtitle": "Tell us about your hotel or glamping",
+      "commercialName": "Business Name",
+      "commercialNamePlaceholder": "e.g. Villa Secret Stay",
+      "city": "City",
+      "cityPlaceholder": "e.g. Minca",
+      "location": "Location",
+      "locationPlaceholder": "e.g. Sierra Nevada",
+      "propertyType": "Property Type",
+      "logo": "Logo",
+      "uploadLogo": "Upload Logo",
+      "valid": "✓ All required fields complete",
+      "invalid": "⚠️ Please complete the required fields"
+    },
+    "propertyType": {
+      "title": "Property Type",
+      "subtitle": "This determines the available room templates",
+      "types": {
+        "hotel": "Hotel",
+        "glamping": "Glamping",
+        "cabanas": "Cabins",
+        "hostal": "Hostel",
+        "apartamento": "Apartment"
+      },
+      "descriptions": {
+        "hotel": "Traditional establishment with rooms and full services",
+        "glamping": "Luxury nature experience",
+        "cabanas": "Independent accommodation surrounded by nature",
+        "hostal": "Budget-friendly accommodation with social atmosphere",
+        "apartamento": "Full space with kitchen and home amenities"
+      }
+    },
+    "propertyGallery": {
+      "title": "Your Property Gallery",
+      "subtitle": "Upload 3-8 photos that showcase the best of your space",
+      "uploadPhotos": "Upload Photos",
+      "minMaxHint": "Minimum 3, maximum 8",
+      "valid": "✓ {count} photos uploaded",
+      "invalid": "⚠️ You need at least 3 photos ({count}/3)"
+    },
+    "roomTemplates": {
+      "title": "Your Units",
+      "subtitle": "Choose templates or create custom rooms",
+      "empty": "Empty",
+      "unnamed": "Unnamed",
+      "perNight": "/ night",
+      "units_one": "{count} unit configured",
+      "units_other": "{count} units configured"
+    },
+    "roomDetail": {
+      "namePlaceholder": "Unit name",
+      "priceLabel": "Price",
+      "copPerNight": "COP/night",
+      "descriptionPlaceholder": "Description...",
+      "capacity": "Capacity",
+      "beds": "Beds",
+      "photos": "Photos ({count}/5)",
+      "amenities": "Amenities"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Schedules, policies, and details",
+      "checkIn": "Check-in",
+      "checkOut": "Check-out",
+      "whatsapp": "WhatsApp",
+      "whatsappPlaceholder": "+57 300 123 4567",
+      "cancellationPolicy": "Cancellation Policy",
+      "cancellationPlaceholder": "e.g. Free cancellation up to 48hrs before...",
+      "hotelAmenities": "Hotel Amenities"
+    },
+    "payment": {
+      "title": "Summary & Activation",
+      "subtitle": "Review everything and activate your property",
+      "property": "Property",
+      "unnamed": "Unnamed",
+      "units_one": "{count} unit",
+      "units_other": "{count} units",
+      "amenitiesConfigured": "Configured Amenities",
+      "amenitiesSelected": "{count} amenities selected",
+      "paid": "Payment processed! Activating your property..."
+    },
+    "provisioning": {
+      "activating": "Activating Your Property",
+      "configuring": "Setting up rooms, gallery, and payments...",
+      "success": "All Set!",
+      "redirecting": "Redirecting to dashboard...",
+      "error": "Activation Error",
+      "noTransactionId": "Transaction ID not found",
+      "invalidData": "Invalid data: {message}",
+      "unknownError": "Unknown error",
+      "retry": "Retry"
+    }
+  },
+  "auth": {
+    "login": {
+      "title": "HospedaSuite SaaS",
+      "subtitle": "Secure Access",
+      "emailLabel": "Corporate Email",
+      "emailPlaceholder": "admin@hotel.com",
+      "passwordLabel": "Password",
+      "passwordPlaceholder": "••••••••",
+      "submitButton": "Sign In",
+      "sslFooter": "Protected by military-grade SSL",
+      "invalidCredentials": "Invalid credentials"
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "error": "Error",
+    "retry": "Retry",
+    "back": "Back",
+    "next": "Next",
+    "cancel": "Cancel",
+    "confirm": "Confirm",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "close": "Close"
+  },
+  "onboarding": {
+    "steps": {
+      "identity": "Identity",
+      "gallery": "Gallery",
+      "type": "Type",
+      "units": "Units",
+      "config": "Settings",
+      "activate": "Activate"
+    },
+    "identity": {
+      "title": "Your Property's Identity",
+      "subtitle": "Tell us about your hotel or glamping",
+      "nameLabel": "Business Name",
+      "namePlaceholder": "e.g.: Villa Secret Stay",
+      "cityLabel": "City",
+      "cityPlaceholder": "e.g.: Minca",
+      "locationLabel": "Location",
+      "locationPlaceholder": "e.g.: Sierra Nevada",
+      "propertyTypeLabel": "Property Type",
+      "logoLabel": "Logo",
+      "uploadLogo": "Upload Logo",
+      "valid": "All required fields complete",
+      "invalid": "Please fill in the required fields"
+    },
+    "propertyType": {
+      "title": "Property Type",
+      "subtitle": "This determines the available room templates",
+      "descriptions": {
+        "hotel": "Traditional establishment with rooms and full services",
+        "glamping": "Luxury experience in nature",
+        "cabanas": "Independent accommodation surrounded by nature",
+        "hostal": "Budget accommodation with social atmosphere",
+        "apartamento": "Complete space with kitchen and home amenities"
+      }
+    },
+    "gallery": {
+      "title": "Your Property Gallery",
+      "subtitle": "Upload 3-8 photos that showcase the best of your space",
+      "uploadPhotos": "Upload Photos",
+      "photoRange": "Minimum 3, maximum 8",
+      "valid": "{{count}} photos uploaded",
+      "invalid": "You need at least 3 photos ({{current}}/3)"
+    },
+    "roomTemplates": {
+      "title": "Your Units",
+      "subtitle": "Choose templates or create custom rooms",
+      "empty": "Empty",
+      "configured": "{{count}} unit{{plural}} configured",
+      "noName": "Unnamed",
+      "perNight": "/ night"
+    },
+    "roomDetail": {
+      "namePlaceholder": "Unit name",
+      "priceLabel": "Price",
+      "currencyLabel": "COP/night",
+      "descriptionPlaceholder": "Description...",
+      "capacityLabel": "Capacity",
+      "bedsLabel": "Beds",
+      "photosLabel": "Photos",
+      "amenitiesLabel": "Amenities"
+    },
+    "settings": {
+      "title": "Settings",
+      "subtitle": "Hours, policies and details",
+      "checkInLabel": "Check-in",
+      "checkOutLabel": "Check-out",
+      "whatsappLabel": "WhatsApp",
+      "whatsappPlaceholder": "+57 300 123 4567",
+      "cancellationPolicyLabel": "Cancellation Policy",
+      "cancellationPolicyPlaceholder": "e.g.: Free cancellation up to 48h before...",
+      "hotelAmenitiesLabel": "Hotel Amenities"
+    },
+    "payment": {
+      "title": "Summary & Activation",
+      "subtitle": "Review everything and activate your property",
+      "propertyLabel": "Property",
+      "noName": "No name",
+      "units": "unit{{plural}}",
+      "amenitiesConfigured": "Configured Amenities",
+      "amenitiesCount": "{{count}} amenities selected",
+      "paymentProcessed": "Payment processed! Activating your property...",
+      "paymentFailed": "Payment failed"
+    },
+    "provisioning": {
+      "activating": "Activating Your Property",
+      "configuring": "Setting up rooms, gallery and payments...",
+      "success": "All Set!",
+      "redirecting": "Redirecting to dashboard...",
+      "errorTitle": "Activation Error",
+      "retry": "Retry",
+      "noTransaction": "Transaction ID not found",
+      "invalidData": "Invalid data: {{message}}"
+    }
+  }
+}

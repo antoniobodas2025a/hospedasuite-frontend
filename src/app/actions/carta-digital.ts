@@ -147,10 +147,19 @@ export async function createQRCodeAction(input: Omit<CreateQRCodeInput, 'hotel_i
   const access = await checkCartaDigitalAccess()
   if ('error' in access) return { success: false, error: access.error }
 
-  const result = await createQRCode({ ...input, hotel_id: access.hotelId })
+  // Get hotel slug for QR URL
+  const { getHotelWithPlan } = await import('@/data/hotels')
+  const hotel = await getHotelWithPlan(access.hotelId)
+  const slug = hotel?.slug || 'hotel'
+
+  // Auto-generate QR URL with hotel slug
+  const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'https://hospedasuite.com'
+  const qrData = `${baseUrl}/carta/${slug}?table=${encodeURIComponent(input.table_number)}`
+
+  const result = await createQRCode({ ...input, hotel_id: access.hotelId, qr_data: qrData })
   if (!result.ok) return { success: false, error: result.error }
 
-  return { success: true, code: result.data }
+  return { success: true, code: result.data, hotelSlug: slug }
 }
 
 export async function deleteQRCodeAction(qrId: string) {
@@ -171,6 +180,15 @@ export async function getCartaAnalyticsAction(days: number = 30) {
 
   const analytics = await getMenuAnalytics(access.hotelId, days)
   return { success: true, analytics }
+}
+
+export async function getCartaHotelSlugAction() {
+  const access = await checkCartaDigitalAccess()
+  if ('error' in access) return { success: false, error: access.error }
+
+  const { getHotelWithPlan } = await import('@/data/hotels')
+  const hotel = await getHotelWithPlan(access.hotelId)
+  return { success: true, slug: hotel?.slug || 'hotel' }
 }
 
 // ─── Public (no auth required) ────────────────────────────────

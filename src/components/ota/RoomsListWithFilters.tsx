@@ -6,6 +6,7 @@ import { SlidersHorizontal, Users, CalendarX2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RoomCard from './RoomCard';
 import RoomComparison from './RoomComparison';
+import { useTranslations } from 'next-intl';
 
 interface RoomItem {
   id: string;
@@ -40,6 +41,7 @@ export default function RoomsListWithFilters({
   hotel,
 }: RoomsListWithFiltersProps) {
   const searchParams = useSearchParams();
+  const t = useTranslations();
 
   // Leer filtros de refinamiento de la URL (client-side only)
   const maxPriceParam = searchParams.get('max_price');
@@ -84,17 +86,16 @@ export default function RoomsListWithFilters({
               {availableRooms.length === 0 ? <CalendarX2 size={32} className="text-muted-foreground" /> : <Users size={32} className="text-muted-foreground" />}
             </div>
             <h4 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
-              Inventario Agotado
+              {t('ota.roomsList.inventoryExhausted')}
             </h4>
             <p className="text-muted-foreground max-w-sm mx-auto text-sm mb-6">
-              No encontramos unidades disponibles para estas fechas. Prueba modificando tu estancia.
+              {t('ota.roomsList.inventoryExhaustedDesc')}
             </p>
             {/* Contextual suggestion */}
             {isSearchingDates && (
               <div className="glass-card p-4 max-w-sm">
                 <p className="text-xs text-muted-foreground">
-                  <span className="font-bold text-foreground">Tip:</span> Las fechas entre semana suelen tener mayor disponibilidad.
-                  También puedes contactar al hotel directamente para consultar opciones.
+                  <span className="font-bold text-foreground">{t('ota.roomsList.tipLabel')}:</span> {t('ota.roomsList.tipText')}
                 </p>
               </div>
             )}
@@ -105,10 +106,10 @@ export default function RoomsListWithFilters({
               <SlidersHorizontal size={32} className="text-muted-foreground" />
             </div>
             <h4 className="text-2xl font-bold text-foreground mb-2 tracking-tight">
-              Sin resultados
+              {t('ota.roomsList.noResults')}
             </h4>
             <p className="text-muted-foreground max-w-sm mx-auto text-sm">
-              No hay habitaciones que coincidan con los filtros. Proba ajustando los criterios.
+              {t('ota.roomsList.noResultsDesc')}
             </p>
           </div>
         ) : (

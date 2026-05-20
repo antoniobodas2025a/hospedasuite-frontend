@@ -1,4 +1,6 @@
 import type { Metadata, Viewport } from 'next';
+import { NextIntlClientProvider } from 'next-intl';
+import { getLocale, getMessages } from 'next-intl/server';
 import { Geist } from 'next/font/google';
 import './globals.css';
 import { cn } from "@/lib/utils";
@@ -15,10 +17,6 @@ export const viewport: Viewport = {
   initialScale: 1,
   maximumScale: 1, // 🚨 CRÍTICO: Bloquea el auto-zoom destructivo de Safari en inputs < 16px
   userScalable: false, // Emula el comportamiento de una App Nativa (iOS/Android)
-  themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8fafc' }, // slate-50 (Frosted Pearl)
-    { media: '(prefers-color-scheme: dark)', color: '#09090b' },  // zinc-950 (Deep Glass B2B)
-  ],
   viewportFit: 'cover', // Asegura que el color de fondo pase por debajo del Dynamic Island/Notch
 };
 
@@ -28,20 +26,24 @@ export const metadata: Metadata = {
   description: 'Plataforma de Gestión Hotelera y Motor de Reservas de Vanguardia',
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    // 🛡️ suppressHydrationWarning añadido preventivamente para extensiones o Theme Providers
-    <html lang='es' className={cn("font-sans", geist.variable)} suppressHydrationWarning>
+    <html lang={locale} className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <head>
         <link rel="preconnect" href="https://auaqpomuivfhomlkvhju.supabase.co" />
         <link rel="preconnect" href="https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev" />
       </head>
       <body className={geist.className}>
-        {children}
+        <NextIntlClientProvider locale={locale} messages={messages}>
+          {children}
+        </NextIntlClientProvider>
       </body>
     </html>
   );

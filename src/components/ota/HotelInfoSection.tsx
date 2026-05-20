@@ -1,4 +1,5 @@
 import { MapPin, Clock, ShieldAlert, Navigation, Phone } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 // ============================================================================
 // HOTEL INFO SECTION — Mapa, politicas e instrucciones de llegada
@@ -30,13 +31,14 @@ export default function HotelInfoSection({
   checkOutTime,
   receptionHours,
 }: HotelInfoSectionProps) {
+  const t = useTranslations();
   return (
     <div className="glass-card overflow-hidden">
       {/* Header */}
       <div className="p-6 md:p-8 border-b border-border/40">
         <h2 className="text-xl font-bold text-foreground flex items-center gap-2">
           <MapPin size={20} className="text-brand-500" />
-          Ubicacion y Detalles
+          {t('ota.hotelInfo.locationDetails')}
         </h2>
       </div>
 
@@ -54,7 +56,7 @@ export default function HotelInfoSection({
                 allowFullScreen
                 loading="lazy"
                 referrerPolicy="no-referrer-when-downgrade"
-                title={`Ubicacion de ${hotelName}`}
+                title={`${t('ota.hotelInfo.mapTitle')} ${hotelName}`}
                 className="grayscale-[0.3] hover:grayscale-0 transition-all"
               />
             </div>
@@ -63,7 +65,7 @@ export default function HotelInfoSection({
               <div className="text-center p-4">
                 <MapPin size={32} className="text-muted-foreground/40 mx-auto mb-2" />
                 <p className="text-sm text-muted-foreground font-medium">{location}</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">Mapa no disponible</p>
+                <p className="text-xs text-muted-foreground/60 mt-1">{t('ota.hotelInfo.mapNotAvailable')}</p>
               </div>
             </div>
           ) : null}
@@ -75,7 +77,7 @@ export default function HotelInfoSection({
                 <Navigation size={16} className="text-brand-500" />
               </div>
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Direccion</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('ota.hotelInfo.address')}</p>
                 <p className="text-sm text-foreground/80">{address}</p>
               </div>
             </div>
@@ -88,7 +90,7 @@ export default function HotelInfoSection({
                 <Phone size={16} className="text-secondary" />
               </div>
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Contacto</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('ota.hotelInfo.contact')}</p>
                 <p className="text-sm text-foreground/80">{phone}</p>
               </div>
             </div>
@@ -101,19 +103,19 @@ export default function HotelInfoSection({
           <div>
             <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
               <Clock size={14} />
-              Horarios
+              {t('ota.hotelInfo.schedules')}
             </h3>
             <div className="space-y-2">
               <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-[var(--radius-squircle-lg)]">
-                <span className="text-sm text-muted-foreground">Check-in</span>
+                <span className="text-sm text-muted-foreground">{t('ota.hotelInfo.checkin')}</span>
                 <span className="text-sm font-bold text-foreground">{checkInTime || '15:00'}</span>
               </div>
               <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-[var(--radius-squircle-lg)]">
-                <span className="text-sm text-muted-foreground">Check-out</span>
+                <span className="text-sm text-muted-foreground">{t('ota.hotelInfo.checkout')}</span>
                 <span className="text-sm font-bold text-foreground">{checkOutTime || '13:00'}</span>
               </div>
               <div className="flex justify-between items-center py-2 px-3 bg-muted/50 rounded-[var(--radius-squircle-lg)]">
-                <span className="text-sm text-muted-foreground">Recepcion</span>
+                <span className="text-sm text-muted-foreground">{t('ota.hotelInfo.reception')}</span>
                 <span className="text-sm font-bold text-foreground">{receptionHours || '24/7'}</span>
               </div>
             </div>
@@ -124,7 +126,7 @@ export default function HotelInfoSection({
             <div>
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
                 <ShieldAlert size={14} className="text-warm-500" />
-                Politica de Cancelacion
+                {t('ota.hotelInfo.cancellationPolicy')}
               </h3>
               <div className="p-4 bg-warm-50/50 rounded-[var(--radius-squircle-lg)] border border-warm-100">
                 <p className="text-sm text-muted-foreground leading-relaxed">{cancellationPolicy}</p>
@@ -137,11 +139,11 @@ export default function HotelInfoSection({
             <div>
               <h3 className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
                 <ShieldAlert size={14} className="text-warm-500" />
-                Politica de Cancelacion
+                {t('ota.hotelInfo.cancellationPolicy')}
               </h3>
               <div className="p-4 bg-secondary/10 rounded-[var(--radius-squircle-lg)] border border-secondary/20">
                 <p className="text-sm text-muted-foreground leading-relaxed">
-                  Cancelacion gratuita hasta 48 horas antes del check-in. Despues de ese plazo se cobra la primera noche.
+                  {t('ota.hotelInfo.defaultCancellationPolicy')}
                 </p>
               </div>
             </div>

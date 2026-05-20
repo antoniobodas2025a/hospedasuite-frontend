@@ -14,15 +14,17 @@ import {
   Loader2,
 } from 'lucide-react';
 import HotelCard from './HotelCard';
+import LanguageSwitcher from './LanguageSwitcher';
 import Link from 'next/link';
 import { fetchOTAHotelsAction } from '@/app/actions/ota';
+import { useTranslations } from 'next-intl';
 
 const CATEGORIES = [
-  { id: 'all', label: 'Todo', icon: SlidersHorizontal },
-  { id: 'glamping', label: 'Glamping', icon: Tent },
-  { id: 'hotel', label: 'Hoteles', icon: Building2 },
-  { id: 'cabin', label: 'Cabanas', icon: Home },
-  { id: 'boutique', label: 'Boutique', icon: Castle },
+  { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal },
+  { id: 'glamping', labelKey: 'ota.categories.glamping', icon: Tent },
+  { id: 'hotel', labelKey: 'ota.categories.hotels', icon: Building2 },
+  { id: 'cabin', labelKey: 'ota.categories.cabins', icon: Home },
+  { id: 'boutique', labelKey: 'ota.categories.boutique', icon: Castle },
 ];
 
 interface OTADashboardProps {
@@ -34,6 +36,7 @@ export default function OTADashboard({
   initialHotels,
   initialHasMore = false,
 }: OTADashboardProps) {
+  const t = useTranslations();
   const [hotels, setHotels] = useState(initialHotels);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -126,17 +129,20 @@ export default function OTADashboard({
               </div>
             </div>
             <span className='text-xl font-display font-bold text-foreground tracking-wider'>
-              HOSPEDA<span className='text-brand-500'>SUITE</span>
+              {t('ota.header.brand')}<span className='text-brand-500'>{t('ota.header.brandAccent')}</span>
             </span>
           </div>
 
-          <Link
-            href='/software'
-            className='flex items-center gap-2 text-xs font-bold text-brand-600 bg-brand-50 px-4 py-2 rounded-full hover:bg-brand-100 transition-colors border border-brand-200'
-          >
-            <UserLock size={14} />
-            <span>ACCESO HOTELERO</span>
-          </Link>
+          <div className='flex items-center gap-3'>
+            <LanguageSwitcher />
+            <Link
+              href='/software'
+              className='flex items-center gap-2 text-xs font-bold text-brand-600 bg-brand-50 px-4 py-2 rounded-full hover:bg-brand-100 transition-colors border border-brand-200'
+            >
+              <UserLock size={14} />
+              <span>{t('ota.header.hotelAccess')}</span>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -144,9 +150,9 @@ export default function OTADashboard({
         {/* HERO SECTION */}
         <div className='text-center mb-8'>
           <h1 className='text-4xl md:text-6xl font-display font-bold text-foreground mb-6'>
-            Encuentra tu lugar{' '}
+            {t('ota.hero.title')}{' '}
             <span className='text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-warm-400'>
-              seguro
+              {t('ota.hero.highlight')}
             </span>
           </h1>
         </div>
@@ -161,13 +167,13 @@ export default function OTADashboard({
               </div>
               <input
                 type='text'
-                placeholder='A donde quieres escapar hoy?'
+                placeholder={t('ota.search.placeholder')}
                 className='w-full bg-transparent border-none focus:ring-0 text-foreground placeholder:text-muted-foreground/50 px-4 h-10 outline-none'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
               <button className='bg-foreground text-background px-6 py-2 rounded-full font-medium hover:bg-primary/90 transition-colors'>
-                Buscar
+                {t('ota.search.button')}
               </button>
             </div>
           </div>
@@ -186,7 +192,7 @@ export default function OTADashboard({
               }`}
             >
               <cat.icon size={16} />
-              {cat.label}
+              {t(cat.labelKey)}
             </button>
           ))}
         </div>
@@ -195,7 +201,7 @@ export default function OTADashboard({
         {isSearching ? (
           <div className='flex flex-col items-center justify-center py-20 text-muted-foreground'>
             <Loader2 size={48} className='animate-spin mb-4 text-brand-500' />
-            <p className='font-bold'>Buscando destinos...</p>
+            <p className='font-bold'>{t('ota.loading.searching')}</p>
           </div>
         ) : hotels.length > 0 ? (
           <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
@@ -215,9 +221,9 @@ export default function OTADashboard({
               className='mx-auto mb-4 text-brand-300'
             />
             <h3 className='text-xl font-bold text-muted-foreground'>
-              Sin resultados
+              {t('ota.noResults.title')}
             </h3>
-            <p>Intenta ajustar tu busqueda o limpiar los filtros.</p>
+            <p>{t('ota.noResults.description')}</p>
           </div>
         )}
 
@@ -232,11 +238,11 @@ export default function OTADashboard({
               {isLoadingMore ? (
                 <>
                   <Loader2 size={16} className='animate-spin text-brand-600' />
-                  Cargando destinos...
+                  {t('ota.loading.loadingMore')}
                 </>
               ) : (
                 <>
-                  <Plus size={16} /> Mostrar mas alojamientos
+                  <Plus size={16} /> {t('ota.loadMore')}
                 </>
               )}
             </button>

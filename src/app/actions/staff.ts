@@ -3,6 +3,7 @@
 import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
+import { checkStaffLimit } from '@/data/plan-guard';
 
 const supabaseAdmin = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -13,6 +14,12 @@ export async function createStaffAction(formData: FormData) {
   try {
     const hotel = await getCurrentHotel();
     if (!hotel) throw new Error('No autorizado');
+
+    // ─── Plan Gating: Check staff limit ─────────────────────────
+    const limitCheck = await checkStaffLimit(hotel.id)
+    if (!limitCheck.ok) {
+      return { success: false, error: limitCheck.reason }
+    }
 
     const name = formData.get('name') as string;
     const role = formData.get('role') as string;

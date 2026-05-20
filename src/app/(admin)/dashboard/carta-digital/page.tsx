@@ -22,6 +22,7 @@ import {
   Sparkles, Coffee, Wine, Cake, Soup, Fish, Beef,
   type LucideIcon,
 } from 'lucide-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { cn } from '@/lib/utils'
 import {
   getCategoriesAction,
@@ -36,6 +37,7 @@ import {
   createQRCodeAction,
   deleteQRCodeAction,
   getCartaAnalyticsAction,
+  getCartaHotelSlugAction,
 } from '@/app/actions/carta-digital'
 import type { MenuCategoryDTO, MenuItemDTO, QRCodeDTO } from '@/data/carta-digital'
 
@@ -838,20 +840,21 @@ function QRTab({
   const [showForm, setShowForm] = useState(false)
   const [tableNumber, setTableNumber] = useState('')
   const [saving, setSaving] = useState(false)
-  const [generating, setGenerating] = useState<string | null>(null)
-  const [qrImages, setQrImages] = useState<Record<string, string>>({})
+  const [hotelSlug, setHotelSlug] = useState<string>('hotel')
+
+  useEffect(() => {
+    getCartaHotelSlugAction().then(res => {
+      if (res.success && res.slug) setHotelSlug(res.slug)
+    })
+  }, [])
 
   const handleCreate = async () => {
     if (!tableNumber.trim()) return
     setSaving(true)
     try {
-      // Generate the URL for the QR code
-      const baseUrl = typeof window !== 'undefined' ? window.location.origin : ''
-      const qrData = `${baseUrl}/carta/hotel?table=${encodeURIComponent(tableNumber)}`
-
       const result = await createQRCodeAction({
         table_number: tableNumber.trim(),
-        qr_data: qrData,
+        qr_data: '', // Server action generates the URL
       })
 
       if (result.success) {
@@ -870,17 +873,43 @@ function QRTab({
     onRefresh()
   }
 
-  const generateQRImage = async (qrCode: QRCodeDTO) => {
-    setGenerating(qrCode.id)
-    try {
-      const res = await fetch(`/api/qr/generate?data=${encodeURIComponent(qrCode.qr_data)}`)
-      const data = await res.json()
-      if (data.qrDataUrl) {
-        setQrImages(prev => ({ ...prev, [qrCode.id]: data.qrDataUrl }))
-      }
-    } finally {
-      setGenerating(null)
+  const downloadQR = (qrCode: QRCodeDTO) => {
+    const svgEl = document.getElementById(`qr-${qrCode.id}`)
+    if (!svgEl) return
+
+    const svg = svgEl as unknown as SVGElement
+
+    const svgData = new XMLSerializer().serializeToString(svg)
+    const canvas = document.createElement('canvas')
+    const ctx = canvas.getContext('2d')
+    const img = new Image()
+
+    img.onload = () => {
+      const size = 600
+      canvas.width = size
+      canvas.height = size + 60 // Extra space for label
+
+      // White background
+      ctx!.fillStyle = '#ffffff'
+      ctx!.fillRect(0, 0, canvas.width, canvas.height)
+
+      // QR code
+      ctx!.drawImage(img, 50, 10, size - 100, size - 100)
+
+      // Label
+      ctx!.fillStyle = '#1d1d1f'
+      ctx!.font = 'bold 20px system-ui'
+      ctx!.textAlign = 'center'
+      ctx!.fillText(`Mesa ${qrCode.table_number}`, size / 2, size + 35)
+
+      // Download
+      const link = document.createElement('a')
+      link.download = `qr-mesa-${qrCode.table_number}.png`
+      link.href = canvas.toDataURL('image/png')
+      link.click()
     }
+
+    img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)))
   }
 
   const copyToClipboard = (text: string) => {
@@ -923,6 +952,9 @@ function QRTab({
                   placeholder="Ej: Mesa 1, Habitación 201"
                   onKeyDown={e => e.key === 'Enter' && handleCreate()}
                 />
+                <p className="text-[10px] text-muted-foreground mt-2">
+                  URL: /carta/{hotelSlug}?table={tableNumber || '...'}
+                </p>
               </div>
 
               <div className="flex gap-3 mt-6 pt-4 border-t border-border">
@@ -970,26 +1002,25 @@ function QRTab({
                 </button>
               </div>
 
-              {/* QR Image */}
-              {qrImages[qr.id] ? (
-                <img
-                  src={qrImages[qr.id]}
-                  alt={`QR ${qr.table_number}`}
-                  className="w-full aspect-square bg-white rounded-lg"
+              {/* QR Code rendered with qrcode.react */}
+              <div className="w-full aspect-square bg-white rounded-lg flex items-center justify-center p-4">
+                <QRCodeSVG
+                  id={`qr-${qr.id}`}
+                  value={qr.qr_data}
+                  size={200}
+                  level="M"
+                  includeMargin={false}
                 />
-              ) : (
-                <button
-                  onClick={() => generateQRImage(qr)}
-                  disabled={generating === qr.id}
-                  className="w-full aspect-square bg-muted rounded-lg flex flex-col items-center justify-center text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  <QrCode className="size-8 mb-2" />
-                  <span className="text-xs">{generating === qr.id ? 'Generando...' : 'Generar QR'}</span>
-                </button>
-              )}
+              </div>
 
               {/* Actions */}
               <div className="flex gap-2">
+                <button
+                  onClick={() => downloadQR(qr)}
+                  className="flex-1 py-1.5 text-xs bg-indigo-600/10 hover:bg-indigo-600/20 text-indigo-400 rounded-lg transition-colors flex items-center justify-center gap-1"
+                >
+                  <Download className="size-3" /> Descargar PNG
+                </button>
                 <button
                   onClick={() => copyToClipboard(qr.qr_data)}
                   className="flex-1 py-1.5 text-xs bg-muted hover:bg-accent rounded-lg text-foreground transition-colors flex items-center justify-center gap-1"

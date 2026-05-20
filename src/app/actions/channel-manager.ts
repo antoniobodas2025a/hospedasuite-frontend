@@ -3,10 +3,17 @@
 import { createServerClient } from '@supabase/ssr';
 import { cookies } from 'next/headers';
 import { revalidatePath } from 'next/cache';
+import { checkPlanFeature } from '@/data/plan-guard';
 
 // ============================================================================
 export async function syncChannelManagerAction(hotelId: string) {
   try {
+    // ─── Plan Gating: Channel Manager requires Pro+ ─────────────
+    const featureCheck = await checkPlanFeature(hotelId, 'channel_manager')
+    if (!featureCheck.ok) {
+      return { success: false, error: featureCheck.reason }
+    }
+
     // 🚨 BARRERA ZERO-TRUST: Verificar sesión y permisos ANTES de actuar
     const cookieStore = await cookies();
     const supabaseUser = createServerClient(
@@ -36,114 +43,96 @@ export async function syncChannelManagerAction(hotelId: string) {
       throw new Error('Violación de seguridad: No tiene permisos sobre este hotel.');
     }
 
-    // Pasamos la barrera. Usamos el cliente Admin para el trabajo pesado (Ignora RLS para inserciones masivas).
+    // ─── Use the new sync engine with circuit breaker + jitter + cache ──
+    const { syncHotelOTAs } = await import('@/lib/ical-sync');
     const { supabaseAdmin } = await import('@/lib/supabase-admin');
-    
-    // 📦 IMPORTACIÓN DINÁMICA (Antídoto para Turbopack y e.BigInt)
-    const ical = (await import('node-ical')).default || await import('node-ical');
 
-    // 1. Buscamos habitaciones con URLs de importación configuradas
-    const { data: rooms, error: roomsError } = await supabaseAdmin
+    // Fetch hotel name for alerts
+    const { data: hotelData } = await supabaseAdmin
+      .from('hotels')
+      .select('name')
+      .eq('id', hotelId)
+      .single();
+
+    // Fetch OTA connections for this hotel
+    const { data: rooms } = await supabaseAdmin
       .from('rooms')
-      .select('id, name, ical_import_url')
+      .select('id, name, hotel_id, ical_import_url, ical_export_url, last_ical_sync, ical_sync_status')
       .eq('hotel_id', hotelId)
       .not('ical_import_url', 'is', null);
 
-    if (roomsError) throw new Error('Error al buscar el inventario del hotel.');
-    
     if (!rooms || rooms.length === 0) {
       return { success: true, message: 'No hay enlaces iCal de Booking/Airbnb configurados en las habitaciones.' };
     }
 
-    let importedCount = 0;
+    // Map rooms to OTAConnection format
+    const connections = rooms.map((room: any) => ({
+      id: room.id,
+      hotelId: room.hotel_id,
+      hotelName: hotelData?.name || hotelId,
+      otaName: detectOtaSource(room.ical_import_url),
+      icalUrl: room.ical_import_url,
+      pushUrl: room.ical_export_url || undefined,
+      lastSyncAt: room.last_ical_sync ? new Date(room.last_ical_sync) : null,
+      isActive: room.ical_sync_status !== 'error',
+    }));
 
-    // 🛡️ 2. RESTAURACIÓN DE INTEGRIDAD RELACIONAL (Evita fallos de FK Constraint)
-    // Buscamos o creamos el Huésped Genérico para la OTA
-    let { data: otaGuest } = await supabaseAdmin
-      .from('guests')
-      .select('id')
-      .eq('hotel_id', hotelId)
-      .eq('doc_number', 'OTA-GUEST-000')
-      .single();
+    // Run sync through the new engine (jitter + circuit breaker + cache + alerts)
+    const results = await syncHotelOTAs(hotelId, hotelData?.name || hotelId, connections);
 
-    if (!otaGuest) {
-      const { data: newGuest, error: guestInsertError } = await supabaseAdmin.from('guests').insert([{
-        hotel_id: hotelId,
-        full_name: 'Reserva Externa (Booking/Airbnb)',
-        doc_number: 'OTA-GUEST-000',
-        phone: 'N/A'
-      }]).select('id').single();
-      
-      if (guestInsertError) throw new Error('No se pudo inicializar la entidad puente OTA.');
-      otaGuest = newGuest;
+    // Aggregate results
+    const totalNew = results.reduce((sum, r) => sum + r.eventsNew, 0);
+    const totalCancelled = results.reduce((sum, r) => sum + r.eventsCancelled, 0);
+    const errors = results.filter(r => r.status === 'error').map(r => r.errorMessage);
+
+    // Update room sync status
+    for (const result of results) {
+      await supabaseAdmin
+        .from('rooms')
+        .update({
+          last_ical_sync: new Date().toISOString(),
+          ical_sync_status: result.status === 'error' ? 'error' : 'ok',
+        })
+        .eq('id', result.otaId);
     }
 
-    // 3. Iterar sobre cada habitación de forma secuencial
-    for (const room of rooms) {
-      if (!room.ical_import_url || room.ical_import_url.trim() === '') continue;
-
-      try {
-        // Descargamos y parseamos el calendario de la OTA
-        const events = await ical.async.fromURL(room.ical_import_url);
-
-        for (const event of Object.values(events)) {
-          if (event?.type !== 'VEVENT') continue;
-          const externalId = event.uid;
-          const checkInDate = new Date(event.start);
-          const checkOutDate = new Date(event.end as Date);
-          
-          const checkIn = checkInDate.toISOString().split('T')[0];
-          const checkOut = checkOutDate.toISOString().split('T')[0];
-
-          // Evitamos procesar eventos del pasado
-          const today = new Date().toISOString().split('T')[0];
-          if (checkOut <= today) continue; 
-
-          // Verificamos si esta reserva de OTA ya existe en nuestra base de datos (Deduplicación)
-          const { data: existingBooking } = await supabaseAdmin
-            .from('bookings')
-            .select('id')
-            .eq('external_id', externalId)
-            .single();
-
-          if (!existingBooking) {
-            // 🛡️ Prevenir colisión: Insertamos asegurando el guest_id
-            const { error: insertError } = await supabaseAdmin.from('bookings').insert([{
-              hotel_id: hotelId,
-              room_id: room.id,
-              guest_id: otaGuest.id,
-              check_in: checkIn,
-              check_out: checkOut,
-              status: 'blocked_ota',
-              total_price: 0, 
-              external_id: externalId
-            }]);
-            
-            if (insertError) {
-              console.error(`[SEC-OPS] Fallo de inserción OTA para hab ${room.id}:`, insertError);
-            } else {
-              importedCount++;
-            }
-          }
-        }
-      } catch (icalError) {
-        // Si falla una habitación (ej. URL rota de Airbnb), registramos y continuamos
-        console.error(`[SEC-OPS] Error procesando iCal para la habitación ${room.name}:`, icalError);
-      }
-    }
+    // Log to ota_sync_log
+    const durationMs = results.reduce((sum, r) => sum + r.duration, 0);
+    await supabaseAdmin.from('ota_sync_log').insert({
+      hotel_id: hotelId,
+      rooms_synced: results.length,
+      bookings_created: totalNew,
+      bookings_cancelled: totalCancelled,
+      bookings_unchanged: 0,
+      status: errors.length === 0 ? 'success' : errors.length === results.length ? 'error' : 'partial',
+      error_message: errors.length > 0 ? errors.join('; ') : null,
+      sync_source: 'ical',
+      duration_ms: durationMs,
+    });
 
     // Limpiamos la caché del frontend para que el calendario se actualice al instante
     revalidatePath('/dashboard/calendar');
-    
-    return { 
-      success: true, 
-      message: importedCount > 0 
-        ? `Sincronización exitosa. Se bloquearon ${importedCount} nuevas fechas desde las OTAs.` 
-        : `Inventario sincronizado. No hay nuevas reservas externas.` 
+
+    return {
+      success: true,
+      message: totalNew > 0
+        ? `Sincronización exitosa. Se bloquearon ${totalNew} nuevas fechas desde las OTAs.`
+        : `Inventario sincronizado. No hay nuevas reservas externas.`,
+      bookingsCreated: totalNew,
+      bookingsCancelled: totalCancelled,
+      roomsSynced: results.length,
     };
 
   } catch (error: any) {
     console.error('[SEC-OPS] Error fatal en Channel Manager:', error);
     return { success: false, error: error.message };
   }
+}
+
+function detectOtaSource(url: string): string {
+  const lower = url.toLowerCase();
+  if (lower.includes('booking.com')) return 'booking.com';
+  if (lower.includes('airbnb')) return 'airbnb';
+  if (lower.includes('expedia') || lower.includes('vrbo')) return 'expedia';
+  return 'other_ota';
 }
