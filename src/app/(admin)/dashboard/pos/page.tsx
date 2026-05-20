@@ -3,6 +3,7 @@ import POSPanel from '@/components/dashboard/POSPanel';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import EmptyState from '@/components/ui/EmptyState';
 import PlanGuard from '@/components/auth/PlanGuard';
+import { getHotelMenuItems, getHotelCategories } from '@/data/carta-digital';
 
 export const dynamic = 'force-dynamic';
 
@@ -55,19 +56,19 @@ async function POSPageContent({ hotel }: { hotel: { id: string } }) {
     );
   }
 
-  // 2. Obtener Productos del Menú
-  const { data: initialItems } = await supabase
-    .from('menu_items') 
-    .select('*')
-    .eq('hotel_id', hotel.id)
-    .order('name');
+  // 2. Obtener Productos del Menú (unified DAL)
+  const [initialItems, categories] = await Promise.all([
+    getHotelMenuItems(hotel.id),
+    getHotelCategories(hotel.id),
+  ]);
 
   return (
     <div className='h-full'>
       <POSPanel 
         initialItems={initialItems || []} 
         rooms={rooms || []} 
-        hotelId={hotel.id} 
+        hotelId={hotel.id}
+        categories={categories || []}
       />
     </div>
   );

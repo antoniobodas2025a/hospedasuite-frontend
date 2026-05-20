@@ -33,7 +33,7 @@ export async function createProductAction(payload: ProductPayload) {
       .from('menu_items')
       .insert([{
         name: payload.name.trim(),
-        category: payload.category,
+        category_legacy: payload.category,
         price: payload.price,
         description: payload.description,
         image_emoji: payload.image_emoji || '📦',
@@ -60,7 +60,7 @@ export async function getMenuAction() {
       .from('menu_items')
       .select('*')
       .eq('hotel_id', hotel.id)
-      .order('category', { ascending: true });
+      .order('category_legacy', { ascending: true });
 
     if (error) throw new Error(`DB_ERROR: ${error.message}`);
     return { success: true, data };

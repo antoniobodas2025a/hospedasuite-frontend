@@ -5,29 +5,31 @@ import { motion, AnimatePresence } from 'framer-motion';
 import {
   ShoppingBag, Plus, Coffee, Minus, CreditCard, BedDouble, Search, Utensils, X, Save
 } from 'lucide-react';
-import { usePOS, MenuItem, RoomOption, BookingOption } from '@/hooks/usePOS';
+import { usePOS, POSMenuItem, BookingOption, RoomOption, toPOSItem } from '@/hooks/usePOS';
 import EmptyState from '@/components/ui/EmptyState';
 import { cn } from '@/lib/utils';
+import type { MenuItemDTO, MenuCategoryDTO } from '@/data/carta-digital';
 
 // ==========================================
 // BLOQUE 1: INTERFACES ESTRICTAS
 // ==========================================
 
 interface POSPanelContainerProps {
-  initialItems: MenuItem[];
+  initialItems: MenuItemDTO[];
   rooms: RoomOption[];
   hotelId: string;
+  categories?: MenuCategoryDTO[];
 }
 
 interface POSPanelViewProps {
-  menuItems: MenuItem[];
+  menuItems: POSMenuItem[];
   cart: any[];
   cartTotal: number;
   activeCategory: string;
   setActiveCategory: (cat: string) => void;
   selectedRoomId: string;
   setSelectedRoomId: (id: string) => void;
-  onAddToCart: (item: MenuItem) => void;
+  onAddToCart: (item: POSMenuItem) => void;
   onAdjustQuantity: (id: string, delta: number) => void;
   onCreateOrder: () => void;
   onOpenProductModal: () => void;
@@ -112,7 +114,15 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
                     className='glass-card p-5 flex flex-col items-center gap-4 text-center transition-all group relative overflow-hidden shadow-xl hover:border-indigo-500/30'
                   >
                     <div className="absolute -right-4 -top-4 size-20 bg-indigo-500/5 rounded-full blur-2xl group-hover:bg-indigo-500/10 transition-colors"></div>
-                    <div className='text-5xl group-hover:scale-110 transition-transform duration-500 z-10'>{item.image_emoji}</div>
+                    {item.image_url ? (
+                      <img
+                        src={item.image_url}
+                        alt={item.name}
+                        className='w-16 h-16 rounded-lg object-cover group-hover:scale-110 transition-transform duration-500 z-10'
+                      />
+                    ) : (
+                      <div className='text-5xl group-hover:scale-110 transition-transform duration-500 z-10'>{item.image_emoji}</div>
+                    )}
                     <div className="z-10">
                       <h4 className='font-bold text-foreground text-xs leading-tight mb-2'>{item.name}</h4>
                       <span className='text-[10px] font-mono font-bold text-emerald-400 bg-emerald-500/10 py-1 px-3 rounded-full border border-emerald-500/20'>
@@ -215,13 +225,13 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
 // BLOQUE 3: COMPONENTE CONTENEDOR (Máquina de Estados)
 // ==========================================
 
-export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelContainerProps) {
+export default function POSPanel({ initialItems, rooms, hotelId, categories = [] }: POSPanelContainerProps) {
   const {
     menuItems, cart, addToCart, adjustQuantity, cartTotal,
     selectedRoomId, setSelectedRoomId, createOrder,
     isProductModalOpen, setIsProductModalOpen,
     productForm, setProductForm, createProduct,
-  } = usePOS(initialItems, rooms as BookingOption[], hotelId);
+  } = usePOS(initialItems, rooms as BookingOption[], hotelId, categories);
 
   const [activeCategory, setActiveCategory] = useState('General');
 
@@ -245,7 +255,7 @@ export default function POSPanel({ initialItems, rooms, hotelId }: POSPanelConta
         selectedRoomId={selectedRoomId}
         setSelectedRoomId={setSelectedRoomId}
         onAddToCart={addToCart}
-        onAdjustQuantity={(id: string, delta: number) => adjustQuantity(Number(id), delta)}
+        onAdjustQuantity={(id: string, delta: number) => adjustQuantity(id, delta)}
         onCreateOrder={createOrder}
         onOpenProductModal={() => setIsProductModalOpen(true)}
         rooms={rooms}

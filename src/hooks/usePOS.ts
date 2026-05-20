@@ -2,24 +2,26 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-// 🛡️ REPARACIÓN TOPOLÓGICA: Importación de las Acciones del Ledger Unificado
 import { 
   addServiceChargeAction, 
   processWalkInChargeAction, 
   createProductAction 
 } from '@/app/actions/pos';
+import type { MenuItemDTO, MenuCategoryDTO } from '@/data/carta-digital';
 
-export interface MenuItem {
-  id: number;
+/** POS-adapted menu item — bridges MenuItemDTO with POS needs */
+export interface POSMenuItem {
+  id: string;
   name: string;
   category: string;
   price: number;
   description?: string;
   image_emoji: string;
+  image_url?: string | null;
   is_active: boolean;
 }
 
-export interface CartItem extends MenuItem {
+export interface CartItem extends POSMenuItem {
   quantity: number;
 }
 
@@ -35,19 +37,47 @@ export interface BookingOption {
   guests?: { full_name: string };
 }
 
+const CATEGORIES = ['General', 'Bebidas', 'Comidas', 'Servicios'];
+
+/** Convert MenuItemDTO + categories → POSMenuItem */
+export function toPOSItem(item: MenuItemDTO, categories: MenuCategoryDTO[]): POSMenuItem {
+  const cat = categories.find(c => c.id === item.category_id);
+  const catName = item.category_legacy || cat?.name || 'General';
+  
+  // Map category to one of the known POS categories
+  const mappedCategory = CATEGORIES.find(c => 
+    catName.toLowerCase().includes(c.toLowerCase())
+  ) || 'General';
+
+  return {
+    id: item.id,
+    name: item.name,
+    category: mappedCategory,
+    price: item.price,
+    description: item.description || undefined,
+    image_emoji: item.image_emoji || '🍽️',
+    image_url: item.image_url,
+    is_active: item.is_available,
+  };
+}
+
 export const usePOS = (
-  initialItems: MenuItem[],
+  initialItems: MenuItemDTO[],
   activeBookings: BookingOption[],
   hotelId: string,
+  categories: MenuCategoryDTO[] = [],
 ) => {
   const router = useRouter();
-  const [menuItems, setMenuItems] = useState<MenuItem[]>(initialItems);
+  
+  // Convert DTOs to POS format
+  const posItems = initialItems.map(item => toPOSItem(item, categories));
+  const [menuItems, setMenuItems] = useState<POSMenuItem[]>(posItems);
   const [cart, setCart] = useState<CartItem[]>([]);
   
   const [selectedRoomId, setSelectedRoomId] = useState<string>(''); 
   const [isProductModalOpen, setIsProductModalOpen] = useState(false);
 
-  const [productForm, setProductForm] = useState<Partial<MenuItem>>({
+  const [productForm, setProductForm] = useState<Partial<POSMenuItem>>({
     name: '',
     category: 'General',
     price: 0,
@@ -55,7 +85,7 @@ export const usePOS = (
     description: '',
   });
 
-  const addToCart = (item: MenuItem) => {
+  const addToCart = (item: POSMenuItem) => {
     setCart((prev) => {
       const existing = prev.find((i) => i.id === item.id);
       if (existing) {
@@ -67,11 +97,11 @@ export const usePOS = (
     });
   };
 
-  const removeFromCart = (itemId: number) => {
+  const removeFromCart = (itemId: string) => {
     setCart((prev) => prev.filter((i) => i.id !== itemId));
   };
 
-  const adjustQuantity = (itemId: number, delta: number) => {
+  const adjustQuantity = (itemId: string, delta: number) => {
     setCart((prev) =>
       prev.map((i) => {
         if (i.id === itemId) {
@@ -103,14 +133,10 @@ export const usePOS = (
     try {
       const cartSummary = cart.map(item => `${item.quantity}x ${item.name}`).join(' | ');
 
-      // 🛡️ VECTORIZACIÓN DEL CARRITO PARA TRANSACCIÓN MASIVA (Bulk ACID)
-      // Extraemos los Arrays matemáticos una sola vez para ambas rutas
       const extractedProductIds = cart.map(item => item.id);
       const extractedQuantities = cart.map(item => item.quantity);
 
       if (selectedRoomId === 'walk_in') {
-        
-        // 🛡️ AHORA DEDUCE STOCK ATÓMICAMENTE
         const result = await processWalkInChargeAction({
           amount: cartTotal,
           description: cartSummary,
@@ -122,7 +148,6 @@ export const usePOS = (
         alert('✅ Venta de mostrador (Walk-in) liquidada y stock actualizado.');
         
       } else {
-        
         const targetBooking = activeBookings.find(b => b.id === selectedRoomId);
         if (!targetBooking) throw new Error('Folio huérfano. La reserva destino ya no es válida.');
 

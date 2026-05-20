@@ -47,6 +47,10 @@ export interface MenuItemDTO {
   allergens: string[] | null
   preparation_time_min: number | null
   calories: number | null
+  /** Legacy: category name as string (for POS compatibility) */
+  category_legacy: string | null
+  /** Legacy: emoji fallback (for POS compatibility) */
+  image_emoji: string | null
   created_at: string
   updated_at: string
 }
