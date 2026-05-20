@@ -14,6 +14,9 @@
 -- 1. SAAS_SUBSCRIPTIONS — Tabla central de suscripciones
 -- ============================================================================
 
+-- Enable pgcrypto for gen_random_uuid() (safe: no-op if already exists)
+CREATE EXTENSION IF NOT EXISTS pgcrypto;
+
 -- Create table ONLY if it doesn't exist, using a DO block for full control
 DO $$
 BEGIN
@@ -44,6 +47,9 @@ END $$;
 -- ============================================================================
 -- 2. Idempotencia: agregar columnas faltantes si la tabla existe pero está incompleta
 -- ============================================================================
+
+-- Fix: ensure id column has a default (for tables created without it)
+ALTER TABLE saas_subscriptions ALTER COLUMN id SET DEFAULT gen_random_uuid();
 
 ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS plan_key TEXT;
 ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS status TEXT;
