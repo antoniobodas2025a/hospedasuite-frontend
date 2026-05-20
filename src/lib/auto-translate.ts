@@ -89,6 +89,39 @@ export async function translateRoomData(
 }
 
 /**
+ * Translates menu category data to English.
+ * Called when hotelier saves carta digital category.
+ */
+export async function translateCategoryData(
+  data: {
+    name?: string;
+    description?: string;
+  }
+): Promise<TranslationResult> {
+  try {
+    const fieldsToTranslate: Record<string, string> = {};
+
+    if (data.name) fieldsToTranslate.name = data.name;
+    if (data.description) fieldsToTranslate.description = data.description;
+
+    if (Object.keys(fieldsToTranslate).length === 0) {
+      return { success: true, data: {} };
+    }
+
+    const translated: Record<string, string> = {};
+
+    for (const [key, text] of Object.entries(fieldsToTranslate)) {
+      translated[key] = await translateText(text, 'es', 'en');
+    }
+
+    return { success: true, data: translated };
+  } catch (error) {
+    console.error('[translateCategoryData] Error:', error);
+    return { success: false, error: 'Error al traducir categoría' };
+  }
+}
+
+/**
  * Translates menu item data to English.
  * Called when hotelier saves carta digital items.
  */

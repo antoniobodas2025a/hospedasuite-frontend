@@ -31,6 +31,7 @@ import {
   type CreateQRCodeInput,
 } from '@/data/carta-digital'
 import { revalidatePath, revalidateTag } from 'next/cache'
+import { translateCategoryData, translateMenuData } from '@/lib/auto-translate'
 
 // Cache profile for immediate revalidation
 const CACHE_PROFILE = 'seconds' as const
@@ -61,7 +62,18 @@ export async function createCategoryAction(input: Omit<CreateCategoryInput, 'hot
   const access = await checkCartaDigitalAccess()
   if ('error' in access) return { success: false, error: access.error }
 
-  const result = await createCategory({ ...input, hotel_id: access.hotelId })
+  // Auto-translate to English
+  const translation = await translateCategoryData({
+    name: input.name,
+    description: input.description,
+  })
+
+  const result = await createCategory({
+    ...input,
+    hotel_id: access.hotelId,
+    name_en: translation.success ? translation.data?.name : undefined,
+    description_en: translation.success ? translation.data?.description : undefined,
+  })
   if (!result.ok) return { success: false, error: result.error }
 
   revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
@@ -72,7 +84,25 @@ export async function updateCategoryAction(categoryId: string, updates: Partial<
   const access = await checkCartaDigitalAccess()
   if ('error' in access) return { success: false, error: access.error }
 
-  const result = await updateCategory(categoryId, updates)
+  // Auto-translate if Spanish fields changed
+  let nameEn = updates.name_en
+  let descEn = updates.description_en
+  if (updates.name || updates.description) {
+    const translation = await translateCategoryData({
+      name: updates.name,
+      description: updates.description,
+    })
+    if (translation.success) {
+      if (updates.name) nameEn = translation.data?.name
+      if (updates.description) descEn = translation.data?.description
+    }
+  }
+
+  const result = await updateCategory(categoryId, {
+    ...updates,
+    name_en: nameEn,
+    description_en: descEn,
+  })
   if (!result.ok) return { success: false, error: result.error }
 
   revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
@@ -104,7 +134,18 @@ export async function createMenuItemAction(input: Omit<CreateMenuItemInput, 'hot
   const access = await checkCartaDigitalAccess()
   if ('error' in access) return { success: false, error: access.error }
 
-  const result = await createMenuItem({ ...input, hotel_id: access.hotelId })
+  // Auto-translate to English
+  const translation = await translateMenuData({
+    name: input.name,
+    description: input.description,
+  })
+
+  const result = await createMenuItem({
+    ...input,
+    hotel_id: access.hotelId,
+    name_en: translation.success ? translation.data?.name : undefined,
+    description_en: translation.success ? translation.data?.description : undefined,
+  })
   if (!result.ok) return { success: false, error: result.error }
 
   revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
@@ -115,7 +156,25 @@ export async function updateMenuItemAction(itemId: string, updates: Partial<Omit
   const access = await checkCartaDigitalAccess()
   if ('error' in access) return { success: false, error: access.error }
 
-  const result = await updateMenuItem(itemId, updates)
+  // Auto-translate if Spanish fields changed
+  let nameEn = updates.name_en
+  let descEn = updates.description_en
+  if (updates.name || updates.description) {
+    const translation = await translateMenuData({
+      name: updates.name,
+      description: updates.description,
+    })
+    if (translation.success) {
+      if (updates.name) nameEn = translation.data?.name
+      if (updates.description) descEn = translation.data?.description
+    }
+  }
+
+  const result = await updateMenuItem(itemId, {
+    ...updates,
+    name_en: nameEn,
+    description_en: descEn,
+  })
   if (!result.ok) return { success: false, error: result.error }
 
   revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
