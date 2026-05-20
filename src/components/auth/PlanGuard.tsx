@@ -143,7 +143,7 @@ export default function PlanGuard({
             </Link>
 
             <p className="text-xs text-muted-foreground/60">
-              3 meses gratis en cualquier plan. Cancelá cuando quieras.
+              1 mes gratis en cualquier plan. Cancelá cuando quieras.
             </p>
           </div>
         </div>

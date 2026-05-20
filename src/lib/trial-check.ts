@@ -1,7 +1,7 @@
 /**
  * 🧪 Lógica de Trial — Verificación de período de prueba
  *
- * Centraliza todas las reglas relacionadas con el trial de 90 días.
+ * Centraliza todas las reglas relacionadas con el trial de 30 días.
  * Esto evita que un hotel esté en "trial eterno" sin pagar.
  */
 

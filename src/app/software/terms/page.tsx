@@ -33,7 +33,7 @@ const SECTIONS = [
     content: (
       <>
         <p className="mb-3">
-          HospedaSuite ofrece tres planes de suscripción mensual, todos con 3 meses de prueba gratuita:
+          HospedaSuite ofrece tres planes de suscripción mensual, todos con 1 mes de prueba gratuita:
         </p>
         <ul className="space-y-3 mb-3">
           <li className="flex items-start gap-3">
@@ -69,14 +69,14 @@ const SECTIONS = [
     content: (
       <>
         <p className="mb-3">
-          Todo hotel nuevo recibe <strong>90 días gratis</strong> desde la fecha de registro,
+          Todo hotel nuevo recibe <strong>30 días gratis</strong> desde la fecha de registro,
           sin costo alguno. Durante este período tiene acceso completo a todas las funcionalidades
           del plan contratado.
         </p>
         <p className="mb-3">
-          <strong>Garantía de Extensión:</strong> Si durante los 90 días de prueba el hotel no recibe
+          <strong>Garantía de Extensión:</strong> Si durante los 30 días de prueba el hotel no recibe
           al menos 1 reserva a través de la OTA de HospedaSuite, el período de prueba se extiende
-          automáticamente 3 meses adicionales sin costo.
+          automáticamente 1 mes adicional sin costo.
         </p>
         <p>
           Al finalizar el período de prueba, la suscripción pasa automáticamente a estado activo
@@ -329,9 +329,9 @@ export default function TermsPage() {
                 <Shield size={14} className="text-emerald-600" />
               </div>
               <div>
-                <h3 className="font-semibold text-[#1d1d1f] text-sm mb-1">3 Meses Gratis</h3>
+                <h3 className="font-semibold text-[#1d1d1f] text-sm mb-1">1 Mes Gratis</h3>
                 <p className="text-[13px] text-[#1d1d1f]/60 leading-relaxed">
-                  Probá todo sin pagar nada durante 90 días. Sin tarjeta de crédito.
+                  Probá todo sin pagar nada durante 30 días. Sin tarjeta de crédito.
                 </p>
               </div>
             </div>

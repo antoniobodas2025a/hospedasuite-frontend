@@ -22,21 +22,21 @@ export const SAAS_PLANS: Record<PlanKey, SaasPlan> = {
     label: 'Starter',
     priceCOP: 49_000,
     level: 0,
-    features: ['PMS Core', 'Agenda', 'Inventario', 'Limpieza', 'Huéspedes', 'OTA bilingüe (ES/EN)', '3 meses gratis'],
+    features: ['PMS Core', 'Agenda', 'Inventario', 'Limpieza', 'Huéspedes', 'OTA bilingüe (ES/EN)', '1 mes gratis'],
   },
   pro: {
     key: 'pro',
     label: 'Pro',
     priceCOP: 99_000,
     level: 1,
-    features: ['Todo Starter', 'Channel Manager (iCal)', 'Carta Digital', 'POS', 'Libro Registro', '3 meses gratis'],
+    features: ['Todo Starter', 'Channel Manager (iCal)', 'Carta Digital', 'POS', 'Libro Registro', '1 mes gratis'],
   },
   enterprise: {
     key: 'enterprise',
     label: 'Enterprise',
     priceCOP: 199_000,
     level: 2,
-    features: ['Todo Pro', 'Hasta 30 unidades', '6 OTAs', '15 staff', '20 GB storage', 'Soporte prioritario', '3 meses gratis'],
+    features: ['Todo Pro', 'Hasta 30 unidades', '6 OTAs', '15 staff', '20 GB storage', 'Soporte prioritario', '1 mes gratis'],
   },
 };
 

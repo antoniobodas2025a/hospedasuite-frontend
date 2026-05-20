@@ -127,7 +127,7 @@ export default async function BillingPage() {
                 {status === 'trialing' && trialDaysLeft !== null &&
                   ` — Quedan ${trialDaysLeft} días`}
                 {status === 'trialing' && trialDaysLeft === null &&
-                  ' — Facturación inicia al terminar los 3 meses gratis'}
+                  ' — Facturación inicia al terminar el mes gratis'}
               </p>
             </div>
           </div>

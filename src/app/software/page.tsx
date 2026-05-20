@@ -28,14 +28,14 @@ const TIERS = {
     shortLabel: 'Starter',
     title: 'Starter',
     price: '49.000',
-    description: 'Ideal para arrancar con lo esencial. 3 meses gratis.',
+    description: 'Ideal para arrancar con lo esencial. 1 mes gratis.',
     units: '1-4 unidades',
     features: [
       'PMS Core completo',
       'OTA bilingüe (ES/EN)',
       'Link Directo (WhatsApp + Wompi)',
       'Reviews moderadas',
-      '3 meses gratis',
+      '1 mes gratis',
     ],
     cta: 'Empezar Gratis',
     popular: false,
@@ -198,8 +198,8 @@ export default function App() {
           </h1>
 
           <p className="text-lg sm:text-xl md:text-2xl text-[#1d1d1f]/60 max-w-2xl mx-auto mb-10 font-normal leading-relaxed">
-            PMS + OTA bilingüe + Channel Manager. <strong className="text-[#1d1d1f]/80">3 meses gratis</strong>.<br className="hidden sm:block" />
-            Instalación VIP incluida. Tu suscripción empieza en el mes 4.
+            PMS + OTA bilingüe + Channel Manager. <strong className="text-[#1d1d1f]/80">1 mes gratis</strong>.<br className="hidden sm:block" />
+            Instalación VIP incluida. Tu suscripción empieza en el mes 2.
           </p>
 
           {/* Hick's Law: ONE primary decision */}
@@ -303,7 +303,7 @@ export default function App() {
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-semibold tracking-tight mb-4">
               Empieza gratis hoy.
             </h2>
-            <p className="text-lg text-[#1d1d1f]/50">3 meses gratis en todos los planes. Sin pagos de instalación.</p>
+            <p className="text-lg text-[#1d1d1f]/50">1 mes gratis en todos los planes. Sin pagos de instalación.</p>
           </div>
 
           {/* Tier Selector — Sticky, Miller's Law: 3 options max */}
@@ -373,7 +373,7 @@ export default function App() {
                   </span>
                 </div>
                 <p className="text-[13px] text-[#1d1d1f]/30 mb-10 font-medium">
-                  COP / mes (después de los 3 meses gratis)
+                  COP / mes (después del mes gratis)
                 </p>
 
                 <button
@@ -439,7 +439,7 @@ export default function App() {
             <div className="bg-gradient-to-r from-[#0071e3]/[0.06] to-[#0077ED]/[0.06] rounded-[20px] p-6 border border-[#0071e3]/[0.1]">
               <p className="text-[#1d1d1f]/70 text-[14px] leading-relaxed font-medium">
                 <strong className="text-[#0071e3] block mb-2 text-base">Garantía de Extensión</strong>
-                Prueba HospedaSuite Gratis por 3 Meses. Si en 90 días no te generamos al menos 1 reserva, <strong>te regalamos 3 meses adicionales</strong> hasta que lo logremos.
+                Prueba HospedaSuite Gratis por 1 Mes. Si en 30 días no te generamos al menos 1 reserva, <strong>te regalamos 1 mes adicional</strong> hasta que lo logremos.
               </p>
             </div>
           </div>

@@ -94,7 +94,7 @@ CREATE TRIGGER update_saas_subscriptions_updated_at
 --     WHEN 'standard' THEN 'starter' WHEN 'pro' THEN 'pro'
 --     WHEN 'enterprise' THEN 'enterprise' ELSE 'starter' END,
 --   COALESCE(subscription_status, 'trialing'), created_at,
---   COALESCE(trial_ends_at, created_at + INTERVAL '90 days')
+--   COALESCE(trial_ends_at, created_at + INTERVAL '30 days')
 -- FROM hotels WHERE subscription_status IN ('trialing', 'active');
 
 -- ============================================================================
