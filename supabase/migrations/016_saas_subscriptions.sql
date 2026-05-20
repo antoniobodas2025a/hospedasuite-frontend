@@ -42,6 +42,45 @@ CREATE TABLE IF NOT EXISTS saas_subscriptions (
   CONSTRAINT uq_saas_subscriptions_hotel UNIQUE (hotel_id)
 );
 
+-- Idempotencia: agregar columnas si la tabla ya existe pero le faltan
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS current_period_start TIMESTAMPTZ;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS current_period_end TIMESTAMPTZ;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS cancel_at_period_end BOOLEAN DEFAULT false;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS wompi_customer_id TEXT;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS wompi_payment_source_id TEXT;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS wompi_subscription_id TEXT;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS last_wompi_payment_id TEXT;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS last_wompi_payment_date TIMESTAMPTZ;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS plan_key TEXT;
+ALTER TABLE saas_subscriptions ADD COLUMN IF NOT EXISTS status TEXT;
+
+-- CHECK constraints idempotentes (solo si no existen)
+DO $$
+BEGIN
+  -- plan_key check
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'saas_subscriptions_plan_key_check'
+  ) THEN
+    ALTER TABLE saas_subscriptions ADD CONSTRAINT saas_subscriptions_plan_key_check
+      CHECK (plan_key IN ('starter', 'pro', 'enterprise'));
+  END IF;
+
+  -- status check
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'saas_subscriptions_status_check'
+  ) THEN
+    ALTER TABLE saas_subscriptions ADD CONSTRAINT saas_subscriptions_status_check
+      CHECK (status IN ('trialing', 'active', 'past_due', 'cancelled', 'paused'));
+  END IF;
+
+  -- unique constraint
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint WHERE conname = 'uq_saas_subscriptions_hotel'
+  ) THEN
+    ALTER TABLE saas_subscriptions ADD CONSTRAINT uq_saas_subscriptions_hotel UNIQUE (hotel_id);
+  END IF;
+END $$;
+
 -- Índices para queries frecuentes
 CREATE INDEX IF NOT EXISTS idx_subscriptions_status ON saas_subscriptions(status);
 CREATE INDEX IF NOT EXISTS idx_subscriptions_period_end ON saas_subscriptions(current_period_end);
@@ -50,29 +89,44 @@ CREATE INDEX IF NOT EXISTS idx_subscriptions_plan ON saas_subscriptions(plan_key
 -- RLS: habilitar row-level security
 ALTER TABLE saas_subscriptions ENABLE ROW LEVEL SECURITY;
 
--- Política: hotel solo ve su propia suscripción
-CREATE POLICY "hotels_view_own_subscriptions"
-  ON saas_subscriptions FOR SELECT
-  USING (
-    hotel_id IN (
-      SELECT id FROM hotels WHERE owner_id = auth.uid()
-    )
-  );
+-- Políticas idempotentes
+DO $$
+BEGIN
+  -- hotels_view_own_subscriptions
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'hotels_view_own_subscriptions' AND tablename = 'saas_subscriptions'
+  ) THEN
+    CREATE POLICY "hotels_view_own_subscriptions"
+      ON saas_subscriptions FOR SELECT
+      USING (hotel_id IN (SELECT id FROM hotels WHERE owner_id = auth.uid()));
+  END IF;
 
--- Política: nadie puede modificar suscripciones desde el cliente
-CREATE POLICY "no_client_modify_subscriptions"
-  ON saas_subscriptions FOR INSERT
-  WITH CHECK (false);
+  -- no_client_modify_subscriptions (INSERT)
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'no_client_modify_subscriptions' AND tablename = 'saas_subscriptions'
+  ) THEN
+    CREATE POLICY "no_client_modify_subscriptions"
+      ON saas_subscriptions FOR INSERT WITH CHECK (false);
+  END IF;
 
-CREATE POLICY "no_client_update_subscriptions"
-  ON saas_subscriptions FOR UPDATE
-  USING (false);
+  -- no_client_update_subscriptions
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'no_client_update_subscriptions' AND tablename = 'saas_subscriptions'
+  ) THEN
+    CREATE POLICY "no_client_update_subscriptions"
+      ON saas_subscriptions FOR UPDATE USING (false);
+  END IF;
 
-CREATE POLICY "no_client_delete_subscriptions"
-  ON saas_subscriptions FOR DELETE
-  USING (false);
+  -- no_client_delete_subscriptions
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_policies WHERE policyname = 'no_client_delete_subscriptions' AND tablename = 'saas_subscriptions'
+  ) THEN
+    CREATE POLICY "no_client_delete_subscriptions"
+      ON saas_subscriptions FOR DELETE USING (false);
+  END IF;
+END $$;
 
--- Trigger: actualizar updated_at
+-- Trigger: actualizar updated_at (idempotente)
 CREATE OR REPLACE FUNCTION update_updated_at_column()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -81,6 +135,8 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
+-- Drop existing trigger if it exists, then recreate
+DROP TRIGGER IF EXISTS update_saas_subscriptions_updated_at ON saas_subscriptions;
 CREATE TRIGGER update_saas_subscriptions_updated_at
   BEFORE UPDATE ON saas_subscriptions
   FOR EACH ROW
