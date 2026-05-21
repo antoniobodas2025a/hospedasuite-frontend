@@ -205,3 +205,59 @@ export async function resolveCheckData(
 
   return resolveCheck(data, plan, checkId)
 }
+
+// ─── Go Live Gate ───────────────────────────────────────────────
+
+/** Result of a go-live gate check */
+export interface GoLiveGateResult {
+  /** Whether the hotel is allowed to publish / receive OTA bookings */
+  allowed: boolean
+  /** Human-readable reason when blocked */
+  reason?: string
+  /** Whether Go Live has been explicitly activated by the hotelier */
+  isLive: boolean
+  /** When it was activated (ISO timestamp), if enabled */
+  goLiveAt?: string
+}
+
+/**
+ * Guard that checks whether a hotel has been explicitly activated for public sale.
+ *
+ * Used before OTA publish, public-booking creation, and other post-live features.
+ * Admin-originated bookings (source='admin' or created by staff) bypass this gate.
+ *
+ * @param hotelId - UUID of the hotel to check
+ * @returns GoLiveGateResult with allowed status and reason if blocked
+ */
+export async function checkGoLiveGate(hotelId: string): Promise<GoLiveGateResult> {
+  const supabase = getAdminClient()
+
+  const { data: hotel, error } = await supabase
+    .from('hotels')
+    .select('go_live, go_live_at')
+    .eq('id', hotelId)
+    .maybeSingle()
+
+  if (error || !hotel) {
+    return {
+      allowed: false,
+      reason: 'Hotel no encontrado o error al verificar estado de publicación.',
+      isLive: false,
+    }
+  }
+
+  if (!hotel.go_live) {
+    return {
+      allowed: false,
+      reason:
+        'El hotel aún no ha sido activado para venta pública. Completá todos los requisitos en "Listo para Vender" y hacé clic en "Publicar Hotel".',
+      isLive: false,
+    }
+  }
+
+  return {
+    allowed: true,
+    isLive: true,
+    goLiveAt: hotel.go_live_at ?? undefined,
+  }
+}

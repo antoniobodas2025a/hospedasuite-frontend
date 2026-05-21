@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { getReadinessAction } from '@/app/actions/readiness';
 import ReadinessScore from '@/components/dashboard/ReadinessScore';
 import ReadinessChecklist from '@/components/dashboard/ReadinessChecklist';
+import GoLiveCTA from '@/components/dashboard/GoLiveCTA';
 
 export const dynamic = 'force-dynamic';
 
@@ -26,6 +27,9 @@ export default async function ReadinessPage() {
 
   const { score, completedCount, totalCount, isGoLiveReady, planLabel, items } = result.data;
 
+  // After migration 020, hotels.* includes go_live and go_live_at columns
+  const isAlreadyLive = !!(hotel as Record<string, unknown>).go_live;
+
   return (
     <div className="h-full space-y-10 font-poppins">
       {/* Page header */}
@@ -44,6 +48,16 @@ export default async function ReadinessPage() {
           totalCount={totalCount}
           isGoLiveReady={isGoLiveReady}
           planLabel={planLabel}
+        />
+      </div>
+
+      {/* Go Live CTA */}
+      <div className="flex justify-center">
+        <GoLiveCTA
+          hotelId={hotel.id}
+          isGoLiveReady={isGoLiveReady}
+          isAlreadyLive={isAlreadyLive}
+          items={items}
         />
       </div>
 

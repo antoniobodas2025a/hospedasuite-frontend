@@ -91,6 +91,62 @@ export async function getReadinessAction(
 }
 
 /**
+ * Set the Go Live flag for a hotel — marks it as ready for public sale.
+ *
+ * 1. Auth       — Verify the current user is authenticated and has a hotel
+ * 2. Authorization — Ensure the caller's hotel matches the requested hotelId
+ * 3. Execute    — Update hotels SET go_live=true, go_live_at=now()
+ * 4. Revalidate — Invalidate cached readiness data
+ *
+ * @param hotelId - UUID of the hotel to activate
+ * @returns {success, data: { goLive: boolean, goLiveAt: string }, error} action response
+ */
+export async function setGoLiveAction(
+  hotelId: string,
+): Promise<ActionResponse<{ goLive: boolean; goLiveAt: string }>> {
+  try {
+    // 1. Auth
+    const currentHotel = await getCurrentHotel()
+    if (!currentHotel) {
+      return { success: false, error: 'No autorizado' }
+    }
+
+    // 2. Authorization: caller must own the requested hotel
+    if (currentHotel.id !== hotelId) {
+      return { success: false, error: 'Acceso denegado: el hotel no te pertenece' }
+    }
+
+    // 3. Execute — use admin client to set the flag (bypass RLS)
+    const { createClient } = await import('@supabase/supabase-js')
+    const supabase = createClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.SUPABASE_SERVICE_ROLE_KEY!,
+    )
+
+    const goLiveAt = new Date().toISOString()
+
+    const { error: dbError } = await supabase
+      .from('hotels')
+      .update({ go_live: true, go_live_at: goLiveAt })
+      .eq('id', hotelId)
+
+    if (dbError) {
+      console.error('[Readiness Action] Error en setGoLiveAction:', dbError.message)
+      return { success: false, error: `Error al activar: ${dbError.message}` }
+    }
+
+    // 4. Revalidate
+    revalidateTag(`readiness-${hotelId}`, 'max')
+
+    return { success: true, data: { goLive: true, goLiveAt } }
+  } catch (error: unknown) {
+    const message = getErrorMessage(error)
+    console.error('[Readiness Action] Error en setGoLiveAction:', message)
+    return { success: false, error: message }
+  }
+}
+
+/**
  * Get detailed diagnostic info for a single readiness check.
  *
  * 1. Auth       — Verify the current user is authenticated and has a hotel

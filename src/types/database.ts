@@ -730,9 +730,11 @@ export interface Database {
       trust_badge_1_subtitle?: string
       trust_badge_2_title?: string
       trust_badge_2_subtitle?: string
-      subscription_status?: string
-      billing_cycle_start?: string
-      date_paid?: string
+       subscription_status?: string
+       billing_cycle_start?: string
+       date_paid?: string
+       go_live?: boolean
+       go_live_at?: string
         };
         Insert: {
       id: string
@@ -799,9 +801,11 @@ export interface Database {
       trust_badge_1_subtitle?: string
       trust_badge_2_title?: string
       trust_badge_2_subtitle?: string
-      subscription_status?: string
-      billing_cycle_start?: string
-      date_paid?: string
+       subscription_status?: string
+       billing_cycle_start?: string
+       date_paid?: string
+       go_live?: boolean
+       go_live_at?: string
         };
         Update: {
       id?: string
@@ -868,9 +872,11 @@ export interface Database {
       trust_badge_1_subtitle?: string
       trust_badge_2_title?: string
       trust_badge_2_subtitle?: string
-      subscription_status?: string
-      billing_cycle_start?: string
-      date_paid?: string
+       subscription_status?: string
+       billing_cycle_start?: string
+       date_paid?: string
+       go_live?: boolean
+       go_live_at?: string
         };
         Relationships: [];
       };
