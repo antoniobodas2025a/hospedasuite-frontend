@@ -95,6 +95,8 @@ export default function ReadinessChecklist({
   const grouped = useMemo(() => {
     const groups: Record<string, ReadinessItem[]> = {};
     for (const item of items) {
+      // Skip N/A items — they don't apply to this plan and should not be visible
+      if (item.status === 'na') continue;
       if (!groups[item.category]) groups[item.category] = [];
       groups[item.category].push(item);
     }
