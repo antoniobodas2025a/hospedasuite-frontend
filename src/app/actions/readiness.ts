@@ -79,9 +79,6 @@ export async function getReadinessAction(
     // 3. Execute
     const result = await getReadinessData(hotelId)
 
-    // 4. Revalidate
-    revalidateTag(`readiness-${hotelId}`, 'max')
-
     return { success: true, data: result }
   } catch (error: unknown) {
     const message = getErrorMessage(error)
@@ -180,9 +177,6 @@ export async function resolveCheckAction(
     if (!result) {
       return { success: false, error: `Check "${checkId}" no encontrado o no aplica para este hotel` }
     }
-
-    // 4. Revalidate
-    revalidateTag(`readiness-${hotelId}`, 'max')
 
     return { success: true, data: result }
   } catch (error: unknown) {
