@@ -3,7 +3,9 @@ import { getCurrentHotel } from '@/lib/hotel-context';
 import { redirect } from 'next/navigation';
 import DashboardPanel from '@/components/dashboard/DashboardPanel';
 import OtaSyncWidget from '@/components/dashboard/OtaSyncWidget';
+import ReadinessMiniWidget from '@/components/dashboard/ReadinessMiniWidget';
 import { getOtaSyncStatusAction } from '@/app/actions/ota-sync';
+import { getReadinessAction } from '@/app/actions/readiness';
 
 export const dynamic = 'force-dynamic';
 
@@ -25,7 +27,7 @@ export default async function DashboardPage() {
   endOfDay.setUTCDate(startOfDay.getUTCDate() + 1);
 
   // 2. EJECUCIÓN PARALELA CON DESAMBIGUACIÓN (PGRST201 FIX)
-  const [occRes, dirtyRes, posRes, walkInRes, otaSyncRes] = await Promise.all([
+  const [occRes, dirtyRes, posRes, walkInRes, otaSyncRes, readinessRes] = await Promise.all([
     supabase.from('bookings').select('*', { count: 'exact', head: true }).eq('hotel_id', hotel.id).eq('status', 'checked_in'),
     supabase.from('rooms').select('*', { count: 'exact', head: true }).eq('hotel_id', hotel.id).eq('status', 'dirty'),
 
@@ -45,6 +47,9 @@ export default async function DashboardPage() {
 
     // OTA Sync Status
     getOtaSyncStatusAction(hotel.id),
+
+    // Readiness
+    getReadinessAction(hotel.id),
   ]);
 
   // 3. REDUCCIÓN MATEMÁTICA
@@ -73,6 +78,17 @@ export default async function DashboardPage() {
       )}
 
       <DashboardPanel hotelName={hotel.name} metrics={metrics} />
+
+      {/* Readiness MiniWidget */}
+      {readinessRes.success && readinessRes.data && (
+        <div className="mt-6 max-w-xs">
+          <ReadinessMiniWidget
+            score={readinessRes.data.score}
+            planLabel={readinessRes.data.planLabel}
+            hotelId={hotel.id}
+          />
+        </div>
+      )}
 
       {/* OTA Sync Widget — solo si hay iCal configurado */}
       {otaStatus && (

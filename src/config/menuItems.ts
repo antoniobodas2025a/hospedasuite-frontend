@@ -10,6 +10,7 @@ import {
   BookOpenCheck,
   Megaphone,
   CreditCard,
+  CheckCircle,
   type LucideIcon
 } from 'lucide-react';
 
@@ -63,6 +64,14 @@ export const MENU_GROUPS: MenuGroup[] = [
         icon: Package,
         color: 'text-amber-500',
         bg: 'bg-amber-500/10'
+      },
+      {
+        id: 'readiness',
+        label: 'Listo para Vender',
+        href: '/dashboard/readiness',
+        icon: CheckCircle,
+        color: 'text-emerald-400',
+        bg: 'bg-emerald-400/10'
       },
     ]
   },
