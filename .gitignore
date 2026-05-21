@@ -45,5 +45,10 @@ ehthumbs.db
 *.sln
 *.sw?
 
+# Playwright E2E test artifacts
+test-results/
+playwright-report/
+playwright/.cache/
+
 # Engram AI agent memory
 .engram/
