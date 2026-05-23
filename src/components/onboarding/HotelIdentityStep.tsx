@@ -1,5 +1,6 @@
 'use client';
 
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { UploadCloud, Building2 } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -9,6 +10,7 @@ import { hotelIdentitySchema } from '@/lib/onboarding-schemas';
 export default function HotelIdentityStep() {
   const t = useTranslations('onboarding.identity');
   const { hotelIdentity, updateHotelIdentity, logoPreview, setLogo, setCoverPhoto, validationErrors } = useOnboardingStore();
+  const [isDraggingLogo, setIsDraggingLogo] = useState(false);
 
   const handleFileChange = (type: 'logo' | 'cover', e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -19,15 +21,59 @@ export default function HotelIdentityStep() {
     }
   };
 
+  const handleLogoDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handleLogoDragEnter = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingLogo(true);
+  };
+
+  const handleLogoDragLeave = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingLogo(false);
+  };
+
+  const handleLogoDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDraggingLogo(false);
+    const file = Array.from(e.dataTransfer.files).find(f => f.type.startsWith('image/'));
+    if (file) {
+      const preview = URL.createObjectURL(file);
+      setLogo(file, preview);
+    }
+  };
+
   const isValid = hotelIdentitySchema.safeParse(hotelIdentity).success;
+  const hasErrors = validationErrors.identity || validationErrors['step-1'];
 
   return (
-    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-10 max-w-xl mx-auto">
+    <motion.div
+      initial={{ opacity: 0, y: 20 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 24, mass: 1.0 }}
+      className="space-y-10 max-w-xl mx-auto"
+    >
       <div className="text-center space-y-2">
         <Building2 className="mx-auto text-indigo-400" size={32} />
         <h3 className="text-2xl font-bold text-white">{t('title')}</h3>
         <p className="text-zinc-500 text-sm">{t('subtitle')}</p>
       </div>
+
+      {/* Validation errors */}
+      {hasErrors && (
+        <div className="bg-rose-500/10 border border-rose-500/30 rounded-[var(--radius-squircle-xl)] p-4 space-y-1">
+          <p className="text-rose-400 text-xs font-bold uppercase tracking-wider mb-2">⚠️ Campos requeridos</p>
+          {hasErrors.split(', ').map((err, i) => (
+            <p key={i} className="text-rose-300 text-sm">• {err}</p>
+          ))}
+        </div>
+      )}
 
       <div className="space-y-6">
         <div>
@@ -66,35 +112,25 @@ export default function HotelIdentityStep() {
           </div>
         </div>
 
-        {/* Property Type */}
-        <div>
-          <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">{t('propertyTypeLabel')} *</label>
-          <div className="flex flex-wrap gap-2">
-            {(['hotel', 'glamping', 'cabanas', 'hostal', 'apartamento'] as const).map(type => (
-              <button
-                key={type}
-                onClick={() => updateHotelIdentity({ propertyType: type })}
-                className={`px-4 py-2 rounded-[var(--radius-squircle-lg)] text-xs font-bold uppercase tracking-wider transition-all border ${
-                  hotelIdentity.propertyType === type
-                    ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
-                    : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
-                }`}
-              >
-                {type}
-              </button>
-            ))}
-          </div>
-        </div>
-
         {/* Logo Upload */}
         <div>
           <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">{t('logoLabel')}</label>
-          <label className="flex flex-col items-center justify-center w-full h-40 border-2 border-dashed border-white/10 rounded-[var(--radius-squircle-3xl)] hover:border-indigo-500/40 hover:bg-indigo-500/5 cursor-pointer transition-all group">
+          <label
+            className={`flex flex-col items-center justify-center w-full h-40 border-2 border-dashed rounded-[var(--radius-squircle-3xl)] cursor-pointer transition-all group ${
+              isDraggingLogo
+                ? 'border-indigo-500 bg-indigo-500/10 scale-[1.02]'
+                : 'border-white/10 hover:border-indigo-500/40 hover:bg-indigo-500/5'
+            }`}
+            onDragOver={handleLogoDragOver}
+            onDragEnter={handleLogoDragEnter}
+            onDragLeave={handleLogoDragLeave}
+            onDrop={handleLogoDrop}
+          >
             {logoPreview ? (
               <img src={logoPreview} alt="Logo" className="max-h-full p-4 object-contain" />
             ) : (
               <div className="text-center space-y-3">
-                <UploadCloud className="mx-auto text-zinc-500 group-hover:text-indigo-400 transition-colors" size={28} />
+                <UploadCloud className={`mx-auto transition-colors ${isDraggingLogo ? 'text-indigo-400' : 'text-zinc-500 group-hover:text-indigo-400'}`} size={28} />
                 <p className="text-xs font-bold text-zinc-500 uppercase tracking-widest">{t('uploadLogo')}</p>
               </div>
             )}
