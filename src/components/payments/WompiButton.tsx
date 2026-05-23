@@ -36,6 +36,12 @@ const WompiButton = ({
   onSuccess,
 }: WompiButtonProps) => {
   const [loading, setLoading] = useState(false);
+  const [widgetReady, setWidgetReady] = useState(false);
+
+  // Track when Wompi widget script is loaded
+  const handleScriptLoad = () => {
+    setWidgetReady(true);
+  };
 
   const handlePayment = async () => {
     setLoading(true);
@@ -74,6 +80,12 @@ const WompiButton = ({
     }
 
     // 3. INYECCIÓN DEL IFRAME DE BÓVEDA (PCI-DSS)
+    if (!widgetReady || !window.WidgetCheckout) {
+      alert('⏳ El widget de pago aún se está cargando. Esperá unos segundos e intentá de nuevo.');
+      setLoading(false);
+      return;
+    }
+
     const checkout = new window.WidgetCheckout(widgetConfig);
     
     checkout.open((result) => {
@@ -94,11 +106,12 @@ const WompiButton = ({
       <Script
         src='https://checkout.wompi.co/widget.js'
         strategy='lazyOnload'
+        onLoad={handleScriptLoad}
       />
 
       <button
         onClick={handlePayment}
-        disabled={loading}
+        disabled={loading || !widgetReady}
         className={`w-full py-4 text-white font-bold rounded-[var(--radius-squircle-lg)] shadow-lg transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed ${
           isSubscription 
             ? 'bg-slate-900 hover:bg-slate-800 shadow-slate-900/20' 
@@ -115,9 +128,11 @@ const WompiButton = ({
 
         {loading
           ? 'Conectando con Bóveda...'
-          : isSubscription
-            ? 'Vincular Tarjeta y Activar 90 Días Gratis'
-            : `Pagar $${amount.toLocaleString()} con Wompi`}
+          : !widgetReady
+            ? 'Cargando pasarela...'
+            : isSubscription
+              ? 'Vincular Tarjeta y Activar 90 Días Gratis'
+              : `Pagar $${amount.toLocaleString()} con Wompi`}
       </button>
     </>
   );

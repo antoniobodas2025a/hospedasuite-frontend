@@ -92,6 +92,15 @@ export default function LoginPage() {
         <p className='text-center text-white/20 text-xs mt-8'>
           Protegido por SSL de grado militar
         </p>
+
+        <div className="mt-6 text-center">
+          <p className="text-white/40 text-xs">
+            ¿No tenés cuenta?{' '}
+            <a href="/software/onboarding?plan=pro" className="text-white/70 hover:text-white transition-colors underline underline-offset-4">
+              Empezar 1 mes gratis
+            </a>
+          </p>
+        </div>
       </div>
     </div>
   );

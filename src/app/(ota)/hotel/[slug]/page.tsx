@@ -136,8 +136,12 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
         <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
           <div className="flex items-start gap-4">
             {hotel.logo_url ? (
-              <div className="size-16 md:size-20 rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border bg-card shadow-sm shrink-0">
-                <Image src={hotel.logo_url} alt={`${hotel.name} logo`} fill className="object-cover" sizes="80px" quality={75} />
+              <div className="size-16 md:size-20 rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border bg-card shadow-sm shrink-0 relative p-1.5 flex items-center justify-center">
+                {hotel.logo_url.endsWith('.svg') ? (
+                  <img src={hotel.logo_url} alt={`${hotel.name} logo`} className="max-w-full max-h-full object-contain" />
+                ) : (
+                  <Image src={hotel.logo_url} alt={`${hotel.name} logo`} fill className="object-contain" sizes="80px" quality={75} />
+                )}
               </div>
             ) : (
               <div className="size-16 md:size-20 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-500 to-warm-600 flex items-center justify-center text-primary-foreground font-black text-2xl shadow-sm shrink-0">

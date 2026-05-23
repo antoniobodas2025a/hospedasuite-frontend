@@ -21,29 +21,29 @@ export const getCurrentHotel = cache(async () => {
   }
 
   // 2. Extracción de Contexto Determinista (Multi-Tenant Support)
-  // Permite la coexistencia de múltiples propiedades bajo un mismo owner_id
   const activeTenantId = cookieStore.get('hospeda_active_tenant')?.value;
 
-  // 3. Construcción Dinámica del AST de Consulta
-  let query = supabase.from('hotels').select('*').eq('owner_id', user.id);
+  // 3. Resolución del hotel via tabla staff (fuente de verdad para multi-tenant)
+  // Esto funciona independientemente de owner_id
+  let hotelQuery = supabase
+    .from('staff')
+    .select('hotel_id, hotels(*)')
+    .eq('user_id', user.id);
 
   if (activeTenantId) {
-    // Escenario A: Contexto explícito definido por selección de usuario
-    query = query.eq('id', activeTenantId);
+    hotelQuery = hotelQuery.eq('hotel_id', activeTenantId);
   } else {
-    // Escenario B: Contexto implícito (Fallback al hotel principal por orden de creación)
-    query = query.order('created_at', { ascending: true });
+    hotelQuery = hotelQuery.order('created_at', { ascending: true, foreignTable: 'hotels' });
   }
 
-  // 🚨 PROTECCIÓN FORENSE CONTRA ERRORES DE COERCIÓN JSON
-  // Evita el error "Cannot coerce the result to a single JSON object"
-  // Forzamos la cardinalidad 1:1 a nivel de motor de base de datos
-  const { data: hotel, error: dbError } = await query.limit(1).maybeSingle();
+  const { data: staffRecord, error: staffError } = await hotelQuery.limit(1).maybeSingle();
 
-  if (dbError) {
-    console.error('❌ [HotelContext] Fallo en la capa de datos PostgREST:', dbError.message);
+  if (staffError) {
+    console.error('❌ [HotelContext] Fallo en la capa de datos PostgREST:', staffError.message);
     throw new Error('Inconsistencia crítica en la resolución del Tenant.');
   }
+
+  const hotel = staffRecord?.hotels;
 
   // 4. Manejo de Estado Huérfano y Auto-Sanación
   if (!hotel) {

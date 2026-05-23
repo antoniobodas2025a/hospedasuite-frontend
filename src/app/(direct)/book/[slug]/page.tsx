@@ -36,7 +36,7 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
 
   const { data: rooms, error: roomsError } = await supabase
     .from('rooms')
-    .select('id, hotel_id, name, price, price_per_night, capacity, status, gallery, description')
+    .select('id, hotel_id, name, price, capacity, status, gallery, description')
     .eq('hotel_id', hotel.id)
     .eq('status', 'active')
     .order('price', { ascending: true });
@@ -124,7 +124,7 @@ export default async function HotelShowcasePage({ params, searchParams }: HotelS
             <div className="space-y-6">
               {rooms && rooms.length > 0 ? (
                 rooms.map(room => {
-                  const pricePerNight = Number(room.price || room.price_per_night || 0);
+                  const pricePerNight = Number(room.price || 0);
 
                   return (
                     <div key={room.id} className="bg-card rounded-[var(--radius-squircle-3xl)] p-5 shadow-sm border border-border flex flex-col md:flex-row gap-6 group hover:border-brand-500/30 hover:shadow-lg transition-all duration-300">

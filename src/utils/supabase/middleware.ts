@@ -25,18 +25,24 @@ export async function updateSession(request: NextRequest, initialResponse?: Next
 
   // --- 🛡️ BARRERA 1: RATE LIMITING (Zero-Trust) ---
   const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
-  const ipRecord = ipMap.get(ip);
-
-  if (!ipRecord || now - ipRecord.lastReset > RATE_LIMIT_WINDOW_MS) {
-    ipMap.set(ip, { count: 1, lastReset: now });
+  
+  // Skip rate limiting for localhost in development
+  if (process.env.NODE_ENV !== 'production' && (ip === '::1' || ip === '127.0.0.1' || ip.startsWith('192.168.') || ip.startsWith('10.'))) {
+    // Still proceed without counting
   } else {
-    ipRecord.count += 1;
-    if (ipRecord.count > MAX_REQUESTS_PER_WINDOW) {
-      console.warn(`🚨 [SEC-OPS EDGE] Tráfico anómalo bloqueado. IP: ${ip}`);
-      return new NextResponse(
-        JSON.stringify({ error: 'Too Many Requests', message: 'Detectamos tráfico inusual. Por favor, espera un momento.' }),
-        { status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': '60' } }
-      );
+    const ipRecord = ipMap.get(ip);
+
+    if (!ipRecord || now - ipRecord.lastReset > RATE_LIMIT_WINDOW_MS) {
+      ipMap.set(ip, { count: 1, lastReset: now });
+    } else {
+      ipRecord.count += 1;
+      if (ipRecord.count > MAX_REQUESTS_PER_WINDOW) {
+        console.warn(`🚨 [SEC-OPS EDGE] Tráfico anómalo bloqueado. IP: ${ip}`);
+        return new NextResponse(
+          JSON.stringify({ error: 'Too Many Requests', message: 'Detectamos tráfico inusual. Por favor, espera un momento.' }),
+          { status: 429, headers: { 'Content-Type': 'application/json', 'Retry-After': '60' } }
+        );
+      }
     }
   }
 
