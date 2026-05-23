@@ -4,6 +4,7 @@ import { getTemplateById } from '@/lib/room-templates';
 import {
   hotelIdentitySchema,
   settingsSchema,
+  roomDraftSchema,
   HotelIdentityData,
   RoomDraftData,
   SettingsData,
@@ -81,6 +82,9 @@ export interface OnboardingState {
   setError: (error: string | null) => void;
   setValidationErrors: (errors: Record<string, string>) => void;
   reset: () => void;
+
+  // Step validation — returns { valid: boolean, errors: string[] }
+  validateStep: (step: number) => { valid: boolean; errors: string[] };
 }
 
 const defaultHotelIdentity: HotelIdentityData = {
@@ -139,10 +143,16 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   setLogo: (file, preview) => set({ logoFile: file, logoPreview: preview }),
   setCoverPhoto: (file, preview) => set({ coverPhotoFile: file, coverPhotoPreview: preview }),
 
-  setGalleryImages: (files, previews) => set({
-    galleryFiles: files,
-    galleryPreviews: previews,
-    galleryImages: previews, // URLs for display
+  setGalleryImages: (files, previews) => set((state) => {
+    const maxGallery = 8;
+    const remaining = maxGallery - state.galleryFiles.length;
+    const toAdd = files.slice(0, remaining);
+    const toAddPreviews = previews.slice(0, remaining);
+    return {
+      galleryFiles: [...state.galleryFiles, ...toAdd],
+      galleryPreviews: [...state.galleryPreviews, ...toAddPreviews],
+      galleryImages: [...state.galleryImages, ...toAddPreviews],
+    };
   }),
 
   removeGalleryImage: (index) => set((state) => {
@@ -166,6 +176,12 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
       amenities: template.suggestedAmenities,
       capacity: template.defaultCapacity,
       beds: template.defaultBeds,
+      bedType: 'queen',
+      bathroomType: 'privado',
+      showerType: 'ducha',
+      hotWater: true,
+      roomSize: 'mediano',
+      roomView: 'exterior',
       imageUrls: [],
       imageFiles: [],
       imagePreviews: [],
@@ -183,6 +199,12 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
       amenities: [],
       capacity: 2,
       beds: 1,
+      bedType: 'queen',
+      bathroomType: 'privado',
+      showerType: 'ducha',
+      hotWater: true,
+      roomSize: 'mediano',
+      roomView: 'exterior',
       imageUrls: [],
       imageFiles: [],
       imagePreviews: [],
@@ -219,6 +241,49 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   setIsSubmitting: (value) => set({ isSubmitting: value }),
   setError: (error) => set({ error }),
   setValidationErrors: (errors) => set({ validationErrors: errors }),
+
+  validateStep: (step) => {
+    const errors: string[] = [];
+
+    if (step === 1) {
+      const state = useOnboardingStore.getState();
+      const result = hotelIdentitySchema.safeParse(state.hotelIdentity);
+      if (!result.success) {
+        result.error.issues.forEach(i => errors.push(i.message));
+      }
+    }
+
+    if (step === 2) {
+      const state = useOnboardingStore.getState();
+      if (state.galleryPreviews.length < 3) {
+        errors.push(`Necesitás al menos 3 fotos (tenés ${state.galleryPreviews.length})`);
+      }
+    }
+
+    if (step === 4) {
+      const state = useOnboardingStore.getState();
+      if (state.rooms.length === 0) {
+        errors.push('Necesitás al menos 1 habitación');
+      } else {
+        state.rooms.forEach((room, i) => {
+          const result = roomDraftSchema.safeParse({
+            id: room.id,
+            name: room.name,
+            price: room.price,
+            amenities: room.amenities || [],
+            imageUrls: room.imagePreviews || [],
+          });
+          if (!result.success) {
+            result.error.issues.forEach(issue => {
+              errors.push(`Habitación ${i + 1}: ${issue.message}`);
+            });
+          }
+        });
+      }
+    }
+
+    return { valid: errors.length === 0, errors };
+  },
 
   reset: () => set({
     currentStep: 1,

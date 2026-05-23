@@ -4,7 +4,7 @@ import { z } from 'zod';
 export const hotelIdentitySchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
   city: z.string().min(2, 'La ciudad es requerida'),
-  location: z.string().min(2, 'La ubicación es requerida'),
+  location: z.string().optional(),
   address: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
@@ -30,6 +30,12 @@ export const roomDraftSchema = z.object({
   amenities: z.array(z.string()).default([]),
   capacity: z.number().min(1).optional(),
   beds: z.number().min(1).optional(),
+  bedType: z.enum(['individual', 'doble', 'queen', 'king', 'litera']).optional(),
+  bathroomType: z.enum(['privado', 'compartido', 'en-suite', 'exterior']).optional(),
+  showerType: z.enum(['ducha', 'bañera', 'ambos', 'ninguno']).optional(),
+  hotWater: z.boolean().optional(),
+  roomSize: z.enum(['pequeno', 'mediano', 'grande', 'suite']).optional(),
+  roomView: z.enum(['interior', 'exterior', 'jardin', 'mar', 'montana', 'ciudad']).optional(),
   imageUrls: z.array(z.string()).default([]),
   availabilityRange: z.object({
     from: z.string(),

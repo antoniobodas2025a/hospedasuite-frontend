@@ -48,6 +48,20 @@ export const springGentle = (overrides?: Partial<SpringConfig>): SpringConfig =>
 })
 
 /**
+ * Modal — sheet/modal entrance with gentle overshoot.
+ * Use for: bottom sheets, centered modals, overlay panels.
+ */
+export const springModal = (overrides?: Partial<SpringConfig>): SpringConfig => ({
+  type: 'spring',
+  stiffness: 180,
+  damping: 22,
+  mass: 1.4,
+  restDelta: 0.001,
+  restSpeed: 0.01,
+  ...overrides,
+})
+
+/**
  * Bounce — playful overshoot, energetic feel.
  * Use for: attention-grabbing elements, CTA emphasis, success states.
  */
