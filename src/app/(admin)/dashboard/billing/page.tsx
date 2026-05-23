@@ -195,7 +195,7 @@ export default async function BillingPage() {
             Variable
           </p>
           <p className="text-xs text-muted-foreground mt-1">
-            10% OTA · 3% Upsell · Facturado a fin de mes
+            10% OTA · Facturado a fin de mes
           </p>
         </div>
 

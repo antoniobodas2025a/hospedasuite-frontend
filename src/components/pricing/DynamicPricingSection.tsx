@@ -15,7 +15,7 @@ import { getPricingForPlan, pricingExperiment, type PricingVariant } from '@/fla
 const PLAN_FEATURES = {
   starter: ['Motor de Reservas Básico', 'Calendario Interactivo', 'Gestión de Huéspedes', 'Channel Manager (Manual)'],
   pro: ['Todo lo del Plan Starter', 'Channel Manager Automatizado (iCal)', 'Sincronización con Booking/Airbnb', 'POS (Punto de Venta)'],
-  enterprise: ['Todo lo del Plan Pro', 'Motor de Upselling Inteligente (IA)', 'Reportes Financieros Avanzados', 'Facturación Automática'],
+  enterprise: ['Todo lo del Plan Pro', 'Reportes Financieros Avanzados', 'Facturación Automática'],
 };
 
 const formatPrice = (price: number) => price.toLocaleString('es-CO');

@@ -64,7 +64,7 @@ export default async function SuperAdminPage() {
         </div>
         <div className="bg-white/5 border border-white/10 p-6 rounded-[var(--radius-squircle-2xl)]">
           <div className="p-3 bg-amber-500/10 text-amber-400 w-fit rounded-[var(--radius-squircle-2xl)] mb-4"><TrendingUp size={20} /></div>
-          <p className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1">Comisiones (OTA+Upsell)</p>
+          <p className="text-[11px] font-bold text-white/50 uppercase tracking-widest mb-1">Comisiones OTA</p>
           <h3 className="text-3xl font-display font-bold text-white tracking-tight tabular-nums">${kpis?.globalCommissions.toLocaleString()}</h3>
         </div>
         <div className="bg-emerald-900/40 border border-emerald-500/20 p-6 rounded-[var(--radius-squircle-2xl)] relative overflow-hidden">

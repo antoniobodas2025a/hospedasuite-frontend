@@ -105,7 +105,7 @@ export default async function InvoiceHistoryPage() {
                 </div>
 
                 {/* Breakdown (collapsible detail) */}
-                <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-3 gap-4 text-xs">
+                <div className="mt-3 pt-3 border-t border-border/50 grid grid-cols-2 gap-4 text-xs">
                   <div>
                     <span className="text-muted-foreground">Plan:</span>
                     <span className="ml-2 text-sidebar-foreground font-medium">
@@ -116,12 +116,6 @@ export default async function InvoiceHistoryPage() {
                     <span className="text-muted-foreground">Comisiones OTA:</span>
                     <span className="ml-2 text-sidebar-foreground font-medium">
                       {formatCOP(invoice.otaCommissions)}
-                    </span>
-                  </div>
-                  <div>
-                    <span className="text-muted-foreground">Upsell:</span>
-                    <span className="ml-2 text-sidebar-foreground font-medium">
-                      {formatCOP(invoice.upsellCommissions)}
                     </span>
                   </div>
                 </div>

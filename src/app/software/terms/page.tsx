@@ -102,7 +102,6 @@ const SECTIONS = [
         <ul className="list-disc list-inside space-y-1 mb-3 ml-2">
           <li>El costo del plan de suscripción contratado</li>
           <li>Las comisiones por reservas generadas a través de la OTA (10%)</li>
-          <li>Las comisiones por ventas adicionales automáticas — Upselling (3%)</li>
         </ul>
         <p>
           Las facturas se emiten en pesos colombianos (COP) y se envían al correo electrónico
@@ -137,15 +136,6 @@ const SECTIONS = [
             <span>
               <strong>10% de comisión</strong> sobre reservas generadas a través del motor de
               búsqueda global de HospedaSuite.
-            </span>
-          </li>
-          <li className="flex items-start gap-3">
-            <span className="font-semibold min-w-[120px] text-sm bg-purple-100 text-purple-700 px-2 py-0.5 rounded-full text-center">
-              Upselling IA
-            </span>
-            <span>
-              <strong>3% de comisión</strong> sobre ventas adicionales generadas automáticamente
-              por el motor de upselling inteligente (desayunos, late checkout, servicios extra).
             </span>
           </li>
         </ul>
@@ -376,8 +366,7 @@ export default function TermsPage() {
           <div className="mt-8 pt-6 border-t border-black/5">
             <p className="text-[13px] text-[#1d1d1f]/50 leading-relaxed">
               <strong className="text-[#1d1d1f]/70">Comisiones:</strong> 0% en canales propios
-              (WhatsApp, Link Directo, tu web), 10% en reservas por OTA HospedaSuite, y 3% en
-              ventas adicionales automáticas (Upselling IA). El hotel siempre recibe el 100% del
+              (WhatsApp, Link Directo, tu web) y 10% en reservas por OTA HospedaSuite. El hotel siempre recibe el 100% del
               dinero de las reservas en su Wompi.
             </p>
           </div>

@@ -12,7 +12,7 @@ export interface BillingStatement {
   hotelName: string;
   planName: string;
   subscriptionFee: number;
-  platformFeesTotal: number; // Suma de OTA (10%) + Upsell (3%)
+  platformFeesTotal: number; // Suma de OTA (10%)
   otaCommissionDetails: OtaCommission[]; // Detalle de cada comisión OTA
   totalDue: number;
   bookingsCount: number;
@@ -174,27 +174,8 @@ export async function calculateMonthlyInvoiceAction(
 
     const otaCommissions = otaCommissionDetails.reduce((sum, c) => sum + c.commission, 0);
 
-    // 5. Comisiones Upsell (transacciones de la tabla upsell_transactions en el ciclo)
-    let upsellCommissions = 0;
-    try {
-      const { data: upsellTx, error: upsellError } = await supabaseAdmin
-        .from('upsell_transactions')
-        .select('commission')
-        .eq('hotel_id', hotelId)
-        .gte('created_at', startOfMonth.toISOString());
-
-      if (!upsellError && upsellTx) {
-        upsellCommissions = upsellTx.reduce(
-          (sum: number, t: any) => sum + Number(t.commission || 0),
-          0
-        );
-      }
-    } catch {
-      // Tabla upsell_transactions puede no existir aún — ignoramos silenciosamente
-    }
-
     // 6. Total
-    const total = planCost + otaCommissions + upsellCommissions;
+    const total = planCost + otaCommissions;
 
     const monthNames = [
       'Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
@@ -206,7 +187,7 @@ export async function calculateMonthlyInvoiceAction(
       planCost,
       otaCommissions,
       otaCommissionDetails,
-      upsellCommissions,
+      upsellCommissions: 0, // Deprecated — upselling IA removed
       total,
       currency: 'COP',
       period,
