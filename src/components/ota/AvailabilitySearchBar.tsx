@@ -354,15 +354,17 @@ export default function AvailabilitySearchBar({
       {/* ═══════════════════════════════════════════════════════════ */}
       <AnimatePresence>
         {activeModal && (
-          <>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.15 }}
+            className="fixed inset-0 z-[var(--z-modal)] flex items-end md:items-center md:justify-center"
+          >
             {/* Backdrop overlay — click to close */}
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
+            <div
+              className="absolute inset-0 bg-black/20 backdrop-blur-sm"
               onClick={() => setActiveModal(null)}
-              className="fixed inset-0 z-[var(--z-modal)] bg-black/20 backdrop-blur-sm"
               aria-hidden="true"
             />
 
@@ -372,16 +374,12 @@ export default function AvailabilitySearchBar({
               animate={{ opacity: 1, y: 0 }}
               exit={{ opacity: 0, y: '100%' }}
               transition={springModal()}
-              className="fixed z-[var(--z-modal)] inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center pointer-events-none"
+              className="relative z-10 w-full md:w-auto md:max-w-md md:mx-4 mb-0"
             >
-              <div
-                className="pointer-events-auto w-full md:w-auto md:max-w-md md:mx-4 mb-0"
-                onClick={(e) => e.stopPropagation()}
+              <GlassPanel
+                intensity="heavy"
+                className="md:rounded-[var(--radius-squircle-2xl)] rounded-t-[var(--radius-squircle-2xl)] rounded-b-none md:rounded-b-[var(--radius-squircle-2xl)] bg-background/95 backdrop-blur-3xl ring-1 ring-foreground/10 shadow-2xl"
               >
-                <GlassPanel
-                  intensity="heavy"
-                  className="md:rounded-[var(--radius-squircle-2xl)] rounded-t-[var(--radius-squircle-2xl)] rounded-b-none md:rounded-b-[var(--radius-squircle-2xl)] bg-background/95 backdrop-blur-3xl ring-1 ring-foreground/10 shadow-2xl overflow-hidden"
-                >
                   {/* Mobile drag handle indicator */}
                   <div className="md:hidden flex justify-center pt-3 pb-1">
                     <div className="w-10 h-1 rounded-full bg-foreground/15" />
@@ -525,11 +523,10 @@ export default function AvailabilitySearchBar({
                     </div>
                   )}
                 </GlassPanel>
-              </div>
+              </motion.div>
             </motion.div>
-          </>
-        )}
-      </AnimatePresence>
+          )}
+        </AnimatePresence>
     </div>
   );
 }
