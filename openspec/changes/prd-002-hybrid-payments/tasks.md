@@ -44,10 +44,10 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Admin & Dashboard
 
-- [ ] 3.1 Create `src/app/(super-admin)/admin/payments/pending/page.tsx` — RSC fetching pending/approved/rejected manual_payments with hotel name join
-- [ ] 3.2 Create `src/components/super-admin/ManualPaymentRow.tsx` — per-payment row with hotel name, amount, method, receipt thumbnail preview modal, approve/reject actions
-- [ ] 3.3 Add tabs (Pending / Approved / Rejected) to the super admin payments page with status filtering
-- [ ] 3.4 Add "pending approval" status banner in `src/app/(admin)/dashboard/page.tsx` when `hotel.subscription_status === 'pending_approval'`
+- [x] 3.1 Create `src/app/(super-admin)/admin/payments/pending/page.tsx` — RSC fetching pending/approved/rejected manual_payments with hotel name join
+- [x] 3.2 Create `src/components/super-admin/ManualPaymentRow.tsx` — per-payment row with hotel name, amount, method, receipt thumbnail preview modal, approve/reject actions
+- [x] 3.3 Add tabs (Pending / Approved / Rejected) to the super admin payments page with status filtering
+- [x] 3.4 Add "pending approval" status banner in `src/app/(admin)/dashboard/page.tsx` when `hotel.subscription_status === 'pending_approval'`
 
 ## Phase 4: Testing & Cleanup
 
