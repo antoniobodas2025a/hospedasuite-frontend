@@ -76,8 +76,10 @@ export default function RoomsListWithFilters({
 
   return (
     <>
-      {/* Tabla comparativa — solo si hay 4+ habitaciones */}
-      <RoomComparison rooms={availableRooms} />
+      {/* Tabla comparativa — solo desktop (en mobile es inutilizable) */}
+      <div className="hidden lg:block">
+        <RoomComparison rooms={availableRooms} />
+      </div>
 
       <div id="rooms-section" className="space-y-6">
         {!hasAvailable ? (

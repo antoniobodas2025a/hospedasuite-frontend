@@ -132,11 +132,12 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
       </ErrorBoundary>
 
       {/* Hotel Header */}
-      <div className="max-w-6xl mx-auto px-6 pt-8">
-        <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
-          <div className="flex items-start gap-4">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 sm:pt-8">
+        <div className="flex flex-col gap-3">
+          {/* Row 1: Logo + Name */}
+          <div className="flex items-start gap-3 sm:gap-4">
             {hotel.logo_url ? (
-              <div className="size-16 md:size-20 rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border bg-card shadow-sm shrink-0 relative p-1.5 flex items-center justify-center">
+              <div className="size-12 sm:size-16 md:size-20 rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border bg-card shadow-sm shrink-0 relative p-1.5 flex items-center justify-center">
                 {hotel.logo_url.endsWith('.svg') ? (
                   <img src={hotel.logo_url} alt={`${hotel.name} logo`} className="max-w-full max-h-full object-contain" />
                 ) : (
@@ -144,34 +145,38 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                 )}
               </div>
             ) : (
-              <div className="size-16 md:size-20 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-500 to-warm-600 flex items-center justify-center text-primary-foreground font-black text-2xl shadow-sm shrink-0">
+              <div className="size-12 sm:size-16 md:size-20 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-500 to-warm-600 flex items-center justify-center text-primary-foreground font-black text-xl sm:text-2xl shadow-sm shrink-0">
                 {hotel.name.charAt(0).toUpperCase()}
               </div>
             )}
-            <div>
-              <h1 className="text-3xl md:text-4xl font-black text-foreground tracking-tight mb-2">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl sm:text-3xl md:text-4xl font-black text-foreground tracking-tight mb-1 sm:mb-2">
                 {hotel.name}
               </h1>
-              <div className="flex items-center gap-2 text-muted-foreground text-sm">
-                <MapPin size={16} className="text-brand-500" />
-                {hotel.location}
+              <div className="flex items-center gap-1.5 text-muted-foreground text-xs sm:text-sm">
+                <MapPin size={14} className="text-brand-500 shrink-0" />
+                <span className="truncate">{hotel.location}</span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <LanguageSwitcher />
+
+          {/* Row 2: Badges + Language Switcher (combined, no wrap chaos) */}
+          <div className="flex items-center gap-2 ml-0 sm:ml-[72px] md:ml-[88px]">
             {reviewStats && reviewStats.total > 0 && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-success-muted border border-success-border text-success text-xs font-bold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-muted border border-success-border text-success text-[11px] font-bold">
                 <Star size={12} className="fill-success text-success" />
                 {reviewStats.overall} ({reviewStats.total})
               </span>
             )}
             {hotel.category_badge && (
-              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-warning-muted border border-warning-border text-warning text-xs font-bold">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-muted border border-warning-border text-warning text-[11px] font-bold">
                 <Star size={12} className="fill-warning" />
                 {hotel.category_badge}
               </span>
             )}
+            <div className="ml-auto">
+              <LanguageSwitcher />
+            </div>
           </div>
         </div>
       </div>

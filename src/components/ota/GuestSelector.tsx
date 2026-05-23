@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useCallback } from 'react';
-import { User, Users, Plus, Minus } from 'lucide-react';
+import { User, Users, Plus, Minus, RotateCcw } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
 import { springSnappy, springLayout, springBounce } from '@/lib/mac2026/spring';
@@ -148,6 +148,23 @@ export default function GuestSelector({
           >
             <Plus size={18} strokeWidth={2.5} />
           </motion.button>
+
+          {/* Reset button — visible only when not at minimum */}
+          <AnimatePresence>
+            {value > min && (
+              <motion.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={springSnappy()}
+                onClick={() => onChange(min)}
+                className="size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/30 text-muted-foreground hover:text-foreground hover:bg-muted transition-colors ring-1 ring-foreground/5"
+                aria-label={t('ota.guestSelector.reset')}
+              >
+                <RotateCcw size={14} strokeWidth={2} />
+              </motion.button>
+            )}
+          </AnimatePresence>
         </div>
       </section>
     </div>

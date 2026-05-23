@@ -57,7 +57,8 @@ export default function MobileStickyCta({
     if (checkIn && checkOut) {
       document.querySelector('[id="rooms-section"]')?.scrollIntoView({ behavior: 'smooth' });
     } else {
-      document.querySelector('[id="search-bar"]')?.scrollIntoView({ behavior: 'smooth' });
+      // Scroll to top where the sticky search bar lives
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
 
@@ -68,7 +69,7 @@ export default function MobileStickyCta({
         isVisible ? 'translate-y-0' : 'translate-y-full',
       )}
     >
-      <div className="backdrop-blur-md bg-card/80 border-t border-border/60 shadow-2xl shadow-elev-2 px-4 py-3 safe-area-bottom !rounded-none">
+      <div className="backdrop-blur-2xl bg-background/70 border-t border-white/10 shadow-2xl shadow-elev-2 px-4 py-3 safe-area-bottom !rounded-none">
         <div className="flex items-center justify-between gap-3">
           <div className="flex-1">
             <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{t('ota.mobileCta.from')}</p>
@@ -90,7 +91,7 @@ export default function MobileStickyCta({
               'px-6 py-3.5 rounded-[var(--radius-squircle-lg)] font-bold text-sm flex items-center gap-2 transition-all active:scale-95 shadow-lg',
               checkIn && checkOut
                 ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta'
-                : 'bg-foreground hover:bg-primary text-background shadow-foreground/20',
+                : 'bg-white/10 hover:bg-white/20 text-foreground border border-white/20 shadow-none',
             )}
           >
             <ShieldCheck size={14} />

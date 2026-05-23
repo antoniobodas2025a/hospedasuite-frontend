@@ -2,7 +2,7 @@
 
 import React, { useState, useRef, useEffect, useTransition, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, SlidersHorizontal, User } from 'lucide-react';
+import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, User } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay } from 'date-fns';
@@ -10,7 +10,6 @@ import { cn } from '@/lib/utils';
 import { springSnappy, springLayout, springGentle, springModal, springBounce } from '@/lib/mac2026/spring';
 import { GlassPanel } from '@/components/ui/glass';
 import GuestSelector from '@/components/ota/GuestSelector';
-import RefinementPanel from '@/components/ota/RefinementPanel';
 import 'react-day-picker/dist/style.css';
 
 import { useTranslations, useLocale } from 'next-intl';
@@ -47,26 +46,16 @@ function buildUrl(
     checkin?: Date;
     checkout?: Date;
     guests?: number;
-    maxPrice?: number | null;
-    minBeds?: number | null;
-    selectedAmenities?: string[];
   }
 ): string {
   const p = new URLSearchParams(currentParams.toString());
-  const { checkin, checkout, guests, maxPrice, minBeds, selectedAmenities } = overrides;
+  const { checkin, checkout, guests } = overrides;
 
   if (checkin && checkout) { p.set('checkin', format(checkin, 'yyyy-MM-dd')); p.set('checkout', format(checkout, 'yyyy-MM-dd')); }
   else { p.delete('checkin'); p.delete('checkout'); }
 
   if (guests !== undefined && guests > 0) { p.set('guests', guests.toString()); p.set('min_capacity', guests.toString()); }
   else { p.delete('guests'); p.delete('min_capacity'); }
-
-  if (maxPrice !== null && maxPrice !== undefined) p.set('max_price', maxPrice.toString());
-  else p.delete('max_price');
-  if (minBeds !== null && minBeds !== undefined) p.set('min_beds', minBeds.toString());
-  else p.delete('min_beds');
-  if (selectedAmenities && selectedAmenities.length > 0) p.set('amenities', selectedAmenities.join(','));
-  else p.delete('amenities');
 
   p.delete('showRoom');
   return `?${p.toString()}`;
@@ -90,7 +79,7 @@ export default function AvailabilitySearchBar({
   const navIoRef = useRef<IntersectionObserver | null>(null);
 
   // Active modal: unified — only one modal open at a time
-  const [activeModal, setActiveModal] = useState<'dates' | 'guests' | 'refinement' | null>(null);
+  const [activeModal, setActiveModal] = useState<'dates' | 'guests' | null>(null);
   const [isPending, startTransition] = useTransition();
 
   // Nav sections
@@ -127,11 +116,6 @@ export default function AvailabilitySearchBar({
   // Pending guest selection (not yet applied)
   const [pendingGuests, setPendingGuests] = useState<number>(guests);
 
-  // State: refinement
-  const [maxPrice, setMaxPrice] = useState<number | null>(() => { const p = searchParams.get('max_price'); return p ? Number(p) : null; });
-  const [minBeds, setMinBeds] = useState<number | null>(() => { const b = searchParams.get('min_beds'); return b ? Number(b) : null; });
-  const [selectedAmenities, setSelectedAmenities] = useState<string[]>(() => { const a = searchParams.get('amenities'); return a ? a.split(',').filter(Boolean) : []; });
-
   const today = startOfDay(new Date());
 
   // Sync pending state when modal opens
@@ -142,19 +126,16 @@ export default function AvailabilitySearchBar({
 
   // URL sync
   const pushUrl = useCallback(
-    (overrides?: { checkin?: Date; checkout?: Date; guests?: number; maxPrice?: number | null; minBeds?: number | null; selectedAmenities?: string[] }) => {
+    (overrides?: { checkin?: Date; checkout?: Date; guests?: number }) => {
       const url = buildUrl(searchParams, {
         checkin: overrides?.checkin ?? date?.from ?? undefined,
         checkout: overrides?.checkout ?? date?.to ?? undefined,
         guests: overrides?.guests ?? guests,
-        maxPrice: overrides?.maxPrice ?? maxPrice,
-        minBeds: overrides?.minBeds ?? minBeds,
-        selectedAmenities: overrides?.selectedAmenities ?? selectedAmenities,
       });
       startTransition(() => router.push(url, { scroll: false }));
     },
 
-    [searchParams, date, guests, maxPrice, minBeds, selectedAmenities, router]
+    [searchParams, date, guests, router]
   );
 
   // Handlers: Dates
@@ -191,40 +172,15 @@ export default function AvailabilitySearchBar({
     else pushUrl({ guests: pendingGuests });
   };
 
-  // Handlers: Refinement
-  const handleMaxPriceChange = (v: number | null) => { setMaxPrice(v); pushUrl({ maxPrice: v }); };
-  const handleMinBedsChange = (v: number | null) => { setMinBeds(v); pushUrl({ minBeds: v }); };
-  const handleAmenitiesChange = (v: string[]) => { setSelectedAmenities(v); pushUrl({ selectedAmenities: v }); };
-  const handleClearAllRefinement = () => { setMaxPrice(null); setMinBeds(null); setSelectedAmenities([]); pushUrl({ maxPrice: null, minBeds: null, selectedAmenities: [] }); };
-
   const handleClearAll = () => {
     setDate(undefined); setGuests(1);
-    setMaxPrice(null); setMinBeds(null); setSelectedAmenities([]);
     setActiveModal(null);
     const p = new URLSearchParams(searchParams.toString());
-    ['checkin', 'checkout', 'guests', 'min_capacity', 'max_price', 'min_beds', 'amenities', 'showRoom'].forEach(k => p.delete(k));
+    ['checkin', 'checkout', 'guests', 'min_capacity'].forEach(k => p.delete(k));
     startTransition(() => router.push(`?${p.toString()}`, { scroll: false }));
   };
 
   // Derived
-  const hasActiveFilters = maxPrice !== null || minBeds !== null || selectedAmenities.length > 0;
-  const filterCount = [maxPrice, minBeds, ...selectedAmenities].filter(Boolean).length;
-  const showRefineButton = rooms.length > 0;
-
-  const matchingCount = useMemo(() => {
-    if (!hasActiveFilters) return rooms.length;
-    return rooms.filter((room) => {
-      const price = room.price_per_night || room.price || 0;
-      const beds = room.beds || 0;
-      if (maxPrice !== null && price > maxPrice) return false;
-      if (minBeds !== null && beds < minBeds) return false;
-      if (selectedAmenities.length > 0) {
-        const roomAmenities = room.amenities || [];
-        if (!selectedAmenities.every((a) => roomAmenities.includes(a))) return false;
-      }
-      return true;
-    }).length;
-  }, [rooms, maxPrice, minBeds, selectedAmenities, hasActiveFilters]);
 
   const displayRange = () => {
     if (date?.from) {
@@ -337,30 +293,6 @@ export default function AvailabilitySearchBar({
           </nav>
         )}
       </div>
-
-      {/* REFINE BUTTON */}
-      {showRefineButton && (
-        <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={springGentle()} className="mt-2">
-          <button
-            onClick={() => setActiveModal(activeModal === 'refinement' ? null : 'refinement')}
-            className={cn(
-              'inline-flex items-center gap-2 px-4 py-2 rounded-[var(--radius-squircle-xl)] text-sm font-semibold transition-all',
-              activeModal === 'refinement' || hasActiveFilters ? 'bg-brand-50 text-brand-700 border border-brand-200' : 'bg-card/80 text-muted-foreground border border-border/30 hover:border-brand-300 hover:text-foreground'
-            )}
-            aria-expanded={activeModal === 'refinement'}
-            aria-label={hasActiveFilters ? t('ota.search.refineWithCount', { count: filterCount }) : t('ota.search.refine')}
-          >
-            <SlidersHorizontal size={14} />
-            <span>{t('ota.search.refine')}</span>
-            <AnimatePresence>
-              {hasActiveFilters && (
-                <motion.span initial={{ scale: 0 }} animate={{ scale: 1 }} exit={{ scale: 0 }} transition={{ type: 'spring', stiffness: 500, damping: 15 }}
-                  className="size-5 rounded-full bg-brand-500 text-white flex items-center justify-center text-[10px] font-black">{filterCount}</motion.span>
-              )}
-            </AnimatePresence>
-          </button>
-        </motion.div>
-      )}
 
       {/* ═══════════════════════════════════════════════════════════ */}
       {/* UNIFIED MODAL SYSTEM — backdrop + glass container          */}
@@ -537,25 +469,6 @@ export default function AvailabilitySearchBar({
                           {t('ota.refinement.seeResults', { count: rooms.length > 0 ? rooms.length : 1 })}
                         </motion.button>
                       </div>
-                    </div>
-                  )}
-
-                  {/* ── REFINEMENT MODAL ─────────────────────── */}
-                  {activeModal === 'refinement' && (
-                    <div className="max-h-[85vh] flex flex-col overflow-hidden">
-                      <RefinementPanel
-                        rooms={rooms}
-                        maxPrice={maxPrice}
-                        onMaxPriceChange={handleMaxPriceChange}
-                        minBeds={minBeds}
-                        onMinBedsChange={handleMinBedsChange}
-                        selectedAmenities={selectedAmenities}
-                        onAmenitiesChange={handleAmenitiesChange}
-                        onClearAll={handleClearAllRefinement}
-                        matchingCount={matchingCount}
-                        totalCount={rooms.length}
-                        onClose={() => setActiveModal(null)}
-                      />
                     </div>
                   )}
                 </GlassPanel>

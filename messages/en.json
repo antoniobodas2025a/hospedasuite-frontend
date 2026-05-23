@@ -82,7 +82,8 @@
       "increase": "Increase guests",
       "guest": "{count, plural, one {guest} other {guests}}",
       "quickTitle": "Quick",
-      "fineTitle": "Precision"
+      "fineTitle": "Precision",
+      "reset": "Reset to 1 guest"
     },
     "refinement": {
       "title": "Refine search",

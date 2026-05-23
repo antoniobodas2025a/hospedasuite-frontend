@@ -82,7 +82,8 @@
       "increase": "Aumentar huéspedes",
       "guest": "{count, plural, one {huésped} other {huéspedes}}",
       "quickTitle": "Rápido",
-      "fineTitle": "Ajuste fino"
+      "fineTitle": "Ajuste fino",
+      "reset": "Restablecer a 1 huésped"
     },
     "refinement": {
       "title": "Refinar búsqueda",
