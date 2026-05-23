@@ -28,7 +28,7 @@ export default async function ReadinessPage() {
   const { score, completedCount, totalCount, isGoLiveReady, planLabel, items } = result.data;
 
   // After migration 020, hotels.* includes go_live and go_live_at columns
-  const isAlreadyLive = !!(hotel as Record<string, unknown>).go_live;
+  const isAlreadyLive = !!(hotel as unknown as Record<string, unknown>).go_live;
 
   return (
     <div className="h-full space-y-10 font-poppins">
