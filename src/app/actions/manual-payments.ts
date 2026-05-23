@@ -164,34 +164,23 @@ export async function approveManualPayment(
       })
       .eq('id', manualPaymentId);
 
-    if (updatePaymentError) {
-      return { success: false, error: 'Error al aprobar: ' + updatePaymentError.message };
-    }
+    if (updatePaymentError) throw updatePaymentError;
 
-    // Activar el hotel: status='active', subscription_status='trialing', trial empieza ahora
-    const trialEnds = new Date(Date.now() + 30 * 86400000).toISOString();
-
-    const { error: hotelError } = await supabaseAdmin
+    // Activar hotel completamente
+    const { error: updateHotelError } = await supabaseAdmin
       .from('hotels')
       .update({
+        subscription_status: 'active',
         status: 'active',
-        subscription_status: 'trialing',
-        trial_ends_at: trialEnds,
         is_onboarding_complete: true,
-        onboarding_step: 6,
       })
       .eq('id', payment.hotel_id);
 
-    if (hotelError) {
-      return { success: false, error: 'Pago aprobado pero error al activar hotel: ' + hotelError.message };
-    }
+    if (updateHotelError) throw updateHotelError;
 
-    revalidatePath('/admin/payments/pending');
-    revalidatePath('/admin/dashboard');
     return { success: true };
   } catch (error: any) {
-    console.error('Approve manual payment error:', error.message);
-    return { success: false, error: error.message || 'Error al aprobar el pago' };
+    return { success: false, error: error.message };
   }
 }
 

@@ -81,9 +81,10 @@ export default function ProvisioningStep() {
 
       const result = fullWizardStateSchema.safeParse(wizardState);
       if (!result.success) {
-        console.error('🔍 Validation errors:', result.error.issues.map(i => ({ path: i.path.join('.'), message: i.message })));
+        const errors = result.error.issues.map(i => `• ${i.path.join('.')}: ${i.message}`).join('\n');
+        console.error('🔍 Validation errors:', errors);
         setStatus('error');
-        setErrorMessage(result.error.issues.map(i => `${i.path.join('.')}: ${i.message}`).join('\n'));
+        setErrorMessage(`Campos inválidos:\n${errors}`);
         return;
       }
 
@@ -92,12 +93,8 @@ export default function ProvisioningStep() {
       if (provisioningResult.success) {
         const slug = generateSlug(hotelIdentity.name);
         setHotelSlug(slug);
-
-        if (isManual) {
-          setStatus('pending_approval');
-        } else {
-          setStatus('success');
-        }
+        // Both Wompi and Manual: hotel is published immediately (good faith policy)
+        setStatus('success');
       } else {
         setStatus('error');
         setErrorMessage(provisioningResult.error || t('errorTitle'));
@@ -280,6 +277,19 @@ export default function ProvisioningStep() {
             {copiedField === 'slug' ? <Check size={14} className="text-emerald-400" /> : <Copy size={14} className="text-zinc-400" />}
           </button>
         </div>
+
+        {/* Good faith note for manual payments */}
+        {paymentMethod === 'manual' && (
+          <div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-[var(--radius-squircle-lg)]">
+            <Clock size={14} className="text-amber-400 shrink-0 mt-0.5" />
+            <div>
+              <p className="text-amber-300 text-xs font-bold">Pago en verificación</p>
+              <p className="text-amber-300/80 text-xs mt-1">
+                Tu propiedad ya está publicada. Un administrador verificará tu comprobante de pago. Este proceso suele tomar entre 1 y 24 horas.
+              </p>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Chunk 3: Access links — Ley de Hick: 2 opciones claras, no más */}

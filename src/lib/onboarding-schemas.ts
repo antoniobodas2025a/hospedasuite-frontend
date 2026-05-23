@@ -60,9 +60,9 @@ export const settingsSchema = z.object({
 
 // Step 6: Payment
 export const paymentSchema = z.object({
-  planId: z.string().optional(),
+  planId: z.string().optional().nullable(),
   price: z.number().min(0),
-  transactionId: z.string().optional(),
+  transactionId: z.string().optional().nullable(),
   paymentMethod: z.enum(['wompi', 'manual']).nullable(),
   manualReceiptUrl: z.string().nullable(),
 });

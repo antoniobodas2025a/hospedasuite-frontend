@@ -107,28 +107,28 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     };
 
     if (isManual) {
-      // Manual payment: set hotel to pending_approval, keep as draft
+      // Manual payment: GOOD FAITH — publish immediately, admin verifies later
       const { error: hotelError } = await supabaseAdmin
         .from('hotels')
         .update({
           ...hotelUpdateBase,
-          status: 'draft',
+          status: 'active',
           subscription_status: 'pending_approval',
-          is_onboarding_complete: false,
+          is_onboarding_complete: true,
           onboarding_step: 6,
         })
         .eq('id', hotelId);
 
       if (hotelError) throw hotelError;
 
-      // Register the manual payment record
+      // Register the manual payment record for admin review
       const { error: paymentError } = await supabaseAdmin
         .from('manual_payments')
         .insert({
           hotel_id: hotelId,
           user_id: user.id,
           amount: state.payment.price || 89900,
-          method: 'nequi', // default — user selects in UI but we simplify here
+          method: 'nequi',
           receipt_url: state.payment.manualReceiptUrl || '',
           status: 'pending',
         });
