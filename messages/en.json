@@ -325,6 +325,7 @@
       "units": "Units",
       "config": "Settings",
       "review": "Review",
+      "pay": "Payment",
       "activate": "Activate"
     },
     "identity": {

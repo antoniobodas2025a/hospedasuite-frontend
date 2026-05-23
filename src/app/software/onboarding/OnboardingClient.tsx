@@ -15,6 +15,7 @@ import PropertyTypeStep from '@/components/onboarding/PropertyTypeStep';
 import RoomTemplatesStep from '@/components/onboarding/RoomTemplatesStep';
 import SettingsStep from '@/components/onboarding/SettingsStep';
 import PaymentEditStep from '@/components/onboarding/PaymentEditStep';
+import PaymentStep from '@/components/onboarding/PaymentStep';
 import PaymentReviewStep from '@/components/onboarding/PaymentReviewStep';
 import ProvisioningStep from '@/components/onboarding/ProvisioningStep';
 import AuthStep from '@/components/onboarding/AuthStep';
@@ -30,7 +31,7 @@ export default function OnboardingWizard() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const supabase = createClient();
-  const { currentStep, maxCompletedStep, setCurrentStep, setMaxCompletedStep, setHotelId, setPaymentInfo, paymentTransactionId, validateStep, validationErrors, setValidationErrors } = useOnboardingStore();
+  const { currentStep, maxCompletedStep, setCurrentStep, setMaxCompletedStep, setHotelId, setPaymentInfo, paymentTransactionId, manualReceiptUrl, isProvisioning, validateStep, validationErrors, setValidationErrors } = useOnboardingStore();
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -44,7 +45,8 @@ export default function OnboardingWizard() {
     { number: 4, label: t('onboarding.steps.units') },
     { number: 5, label: t('onboarding.steps.config') },
     { number: 6, label: t('onboarding.steps.review') || 'Revisar' },
-    { number: 7, label: t('onboarding.steps.activate') },
+    { number: 7, label: t('onboarding.steps.pay') || 'Pago' },
+    { number: 8, label: t('onboarding.steps.activate') },
   ];
 
   // Resolve context on mount
@@ -110,7 +112,7 @@ export default function OnboardingWizard() {
   };
 
   const canProceed = currentStep <= maxCompletedStep + 1;
-  const isLastStep = currentStep === 7;
+  const isLastStep = currentStep === 8;
 
   const handleNext = () => {
     // Validate current step before advancing
@@ -128,7 +130,7 @@ export default function OnboardingWizard() {
       return next;
     });
 
-    if (currentStep < 7) {
+    if (currentStep < 8) {
       setMaxCompletedStep(Math.max(maxCompletedStep, currentStep));
       setCurrentStep(currentStep + 1);
     }
@@ -185,8 +187,8 @@ export default function OnboardingWizard() {
     );
   }
 
-  // Step 7 with payment → provisioning
-  if (currentStep === 7 && paymentTransactionId) {
+  // Provisioning — triggered by PaymentReviewStep (step 8) via startProvisioning()
+  if (isProvisioning && (paymentTransactionId || manualReceiptUrl)) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 flex flex-col justify-center py-12 px-4 relative overflow-hidden">
         <div className="fixed top-[-20%] left-[-10%] w-[80%] h-[80%] bg-indigo-600/10 blur-[180px] rounded-full pointer-events-none" />
@@ -223,12 +225,13 @@ export default function OnboardingWizard() {
             {currentStep === 4 && <RoomTemplatesStep key="step4" />}
             {currentStep === 5 && <SettingsStep key="step5" />}
             {currentStep === 6 && <PaymentEditStep key="step6" />}
-            {currentStep === 7 && <PaymentReviewStep key="step7" />}
+            {currentStep === 7 && <PaymentStep key="step7" />}
+            {currentStep === 8 && <PaymentReviewStep key="step8" />}
           </AnimatePresence>
         </div>
 
         {/* Navigation */}
-        {currentStep < 7 && (
+        {currentStep < 9 && (
           <div className="mt-8 space-y-3">
             {/* Step validation errors */}
             {stepErrors[currentStep] && stepErrors[currentStep].length > 0 && (
