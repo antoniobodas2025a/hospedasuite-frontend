@@ -422,7 +422,7 @@ export default function AvailabilitySearchBar({
 
                       {/* Calendar — scrollable */}
                       <div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-3">
-                        <div className="date-picker-b2c">
+                        <div className="modal-calendar">
                           <DayPicker
                             mode="range"
                             selected={pendingDate}

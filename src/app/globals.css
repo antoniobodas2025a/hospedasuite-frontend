@@ -599,6 +599,38 @@
 }
 
 /* ====================================================
+   MODAL CALENDAR — DayPicker inside our modal system
+   (NO position:fixed — that was covering the footer)
+   ==================================================== */
+.modal-calendar .rdp {
+  --rdp-cell-size: 40px;
+  --rdp-accent-color: oklch(0.52 0.18 35);
+  --rdp-background-color: oklch(0.92 0.04 35);
+  --rdp-outline: 2px solid var(--rdp-accent-color);
+  margin: 0 auto;
+  color: oklch(0.32 0.10 28);
+}
+
+.modal-calendar .rdp-day_selected {
+  background-color: var(--rdp-accent-color) !important;
+  color: white !important;
+  font-weight: 700;
+}
+
+.modal-calendar .rdp-day:hover:not(.rdp-day_selected) {
+  background-color: oklch(0.94 0.02 75);
+  border-radius: 12px;
+}
+
+.modal-calendar .rdp-head_cell {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: oklch(0.55 0.03 60);
+  font-weight: 800;
+}
+
+/* ====================================================
    REACT LIGHTBOX — Liquid Glass Theme
    ==================================================== */
 
