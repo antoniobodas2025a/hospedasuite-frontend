@@ -2,10 +2,11 @@ import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
+import type { Hotel } from '@/types';
 
 // Memoización de la solicitud para evitar redundancia de I/O en la misma renderización (RSC)
 // Garantiza que el contexto sea único por ciclo de vida de la solicitud (request lifecycle)
-export const getCurrentHotel = cache(async () => {
+export const getCurrentHotel = cache(async (): Promise<Hotel> => {
   const supabase = await createClient();
   const cookieStore = await cookies();
 
@@ -43,7 +44,7 @@ export const getCurrentHotel = cache(async () => {
     throw new Error('Inconsistencia crítica en la resolución del Tenant.');
   }
 
-  const hotel = staffRecord?.hotels;
+  const hotel = staffRecord?.hotels as Hotel | undefined;
 
   // 4. Manejo de Estado Huérfano y Auto-Sanación
   if (!hotel) {

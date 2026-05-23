@@ -35,9 +35,14 @@ export interface Hotel {
   description?: string;
   logo_url?: string;
   status?: string;
-  subscription_plan?: string;
+  subscription_plan?: 'starter' | 'pro' | 'enterprise' | string;
+  subscription_status?: 'trialing' | 'active' | 'past_due' | 'grace_period' | 'cancelled' | 'pending_approval' | string;
+  trial_ends_at?: string;
+  billing_cycle_start?: string;
+  date_paid?: string;
   wompi_integrity_secret?: string;
   wompi_events_secret?: string;
+  wompi_public_key?: string;
   reviewStats?: ReviewStats;
 }
 

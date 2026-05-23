@@ -47,14 +47,14 @@ export default async function AdminLayout({
         <Sidebar 
           user={plainUser} 
           hotelName={hotel?.name || 'HospedaSuite'}
-          subscriptionPlan={hotel?.subscription_plan || 'starter'}
+          subscriptionPlan={(hotel?.subscription_plan as 'starter' | 'pro' | 'enterprise') || 'starter'}
         />
       </div>
 
       {/* Contenido Principal */}
       <main className='flex-1 flex flex-col min-w-0 overflow-hidden relative bg-background'>
         {/* Nav para Móvil */}
-        <MobileNav subscriptionPlan={hotel?.subscription_plan || 'starter'} />
+        <MobileNav subscriptionPlan={(hotel?.subscription_plan as 'starter' | 'pro' | 'enterprise') || 'starter'} />
         
         {/* ⚠️ Banner de suscripción (si aplica) */}
         <div className="px-4 lg:px-8 pt-4 z-20">
