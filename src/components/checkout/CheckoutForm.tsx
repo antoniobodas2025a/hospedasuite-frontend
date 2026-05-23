@@ -133,8 +133,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     }
   };
 
-  const handlePayment = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handlePayment = async () => {
     setFormError(null);
     setIsSubmitting(true);
 
@@ -230,7 +229,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
         </div>
       </div>
 
-      <form id="checkout-form" onSubmit={handlePayment} className="grid grid-cols-1 lg:grid-cols-12 gap-[var(--space-breath)] items-start">
+      <div id="checkout-form" className="grid grid-cols-1 lg:grid-cols-12 gap-[var(--space-breath)] items-start">
         <div className="lg:col-span-7">
           <AnimatePresence mode="wait">
             {step === 1 ? (
@@ -385,7 +384,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                   <p className="text-sm text-muted-foreground">{formData.email}</p>
                 </div>
 
-                <form id="checkout-form" onSubmit={handlePayment}>
+                <div id="checkout-form-step3">
                   {/* Error feedback */}
                   <AnimatePresence>
                     {formError && (
@@ -412,7 +411,8 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                       <ArrowLeft size={18} /> Volver
                     </motion.button>
                     <motion.button
-                      type="submit"
+                      type="button"
+                      onClick={handlePayment}
                       disabled={isSubmitting}
                       whileTap={{ scale: 0.97 }}
                       transition={springSnappy()}
@@ -422,7 +422,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                       {isSubmitting ? <><Loader2 className="animate-spin" size={20}/> Procesando...</> : <>Pagar Seguro <ArrowRight size={18}/></>}
                     </motion.button>
                   </div>
-                </form>
+                </div>
               </motion.section>
             )}
           </AnimatePresence>
@@ -478,7 +478,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
             )}
           </section>
         </div>
-      </form>
+      </div>
     </motion.div>
   );
 }
