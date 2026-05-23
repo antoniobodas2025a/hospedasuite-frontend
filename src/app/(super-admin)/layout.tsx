@@ -1,6 +1,7 @@
 import React from 'react';
 import '../globals.css';
-import { ShieldCheck } from 'lucide-react';
+import Link from 'next/link';
+import { ShieldCheck, LayoutDashboard, CreditCard } from 'lucide-react';
 
 export default function SuperAdminLayout({
   children,
@@ -36,7 +37,23 @@ export default function SuperAdminLayout({
               Admin <span className='text-blue-400'>OS</span>
             </h1>
           </div>
-          {/* Aquí iría la navegación simple */}
+          {/* Navegación Super Admin */}
+          <nav className='flex flex-col gap-1 mt-4'>
+            <Link
+              href='/admin'
+              className='flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-squircle-lg)] text-white/60 hover:text-white hover:bg-white/5 transition-all text-sm font-medium'
+            >
+              <LayoutDashboard size={18} />
+              <span className='hidden lg:inline'>Centro de Comando</span>
+            </Link>
+            <Link
+              href='/admin/payments/pending'
+              className='flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-squircle-lg)] text-white/60 hover:text-white hover:bg-white/5 transition-all text-sm font-medium'
+            >
+              <CreditCard size={18} />
+              <span className='hidden lg:inline'>Pagos Pendientes</span>
+            </Link>
+          </nav>
           <div className='mt-auto text-xs text-white/30 hidden lg:block'>
             v28.0 SuperUser
           </div>
