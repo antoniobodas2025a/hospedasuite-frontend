@@ -1,7 +1,8 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
-import { revalidatePath } from 'next/cache';
+import { createAdminClient } from '@/utils/supabase/admin';
+import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { FullWizardState } from '@/lib/onboarding-schemas';
 import { checkUnitLimit } from '@/data/plan-guard';
@@ -10,19 +11,62 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
   const supabase = await createClient();
   
   try {
-    // Get current user's hotel_id from staff table
+    // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'No autenticado' };
 
+    // Check if user already has a hotel linked
     const { data: staff } = await supabase
       .from('staff')
       .select('hotel_id')
       .eq('user_id', user.id)
       .maybeSingle();
 
-    if (!staff?.hotel_id) return { success: false, error: 'No se encontró el hotel' };
+    let hotelId = staff?.hotel_id;
 
-    const hotelId = staff.hotel_id;
+    // ─── If no hotel exists yet, CREATE it ────
+    if (!hotelId) {
+      const supabaseAdmin = createAdminClient();
+      
+      const { data: newHotel, error: createError } = await supabaseAdmin
+        .from('hotels')
+        .insert({
+          name: state.hotelIdentity.name,
+          city: state.hotelIdentity.city,
+          location: state.hotelIdentity.location,
+          type: state.hotelIdentity.propertyType,
+          owner_id: user.id,
+          status: 'draft',
+          is_onboarding_complete: false,
+          onboarding_step: 0,
+          subscription_plan: 'starter',
+          subscription_status: 'trialing',
+          trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+        })
+        .select()
+        .single();
+
+      if (createError || !newHotel) {
+        return { success: false, error: 'No se pudo crear el hotel: ' + (createError?.message || 'Error desconocido') };
+      }
+
+      hotelId = newHotel.id;
+
+      // Link user to hotel via staff table
+      const { error: staffError } = await supabaseAdmin
+        .from('staff')
+        .insert({
+          user_id: user.id,
+          hotel_id: hotelId,
+          role: 'admin',
+          name: state.hotelIdentity.name,
+          pin_code: String(Math.floor(100000 + Math.random() * 900000)),
+        });
+
+      if (staffError) {
+        return { success: false, error: 'Error al vincular usuario: ' + staffError.message };
+      }
+    }
 
     // ─── Plan Gating: Check unit limit before creating rooms ────
     const roomCount = state.rooms.length
@@ -31,7 +75,6 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       if (!limitCheck.ok) {
         return { success: false, error: limitCheck.reason }
       }
-      // Also check if adding these rooms would exceed the limit
       if (limitCheck.currentCount + roomCount > limitCheck.maxAllowed) {
         return {
           success: false,
@@ -40,8 +83,9 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       }
     }
 
-    // 1. Update hotel profile
-    const { error: hotelError } = await supabase
+    // 1. Update hotel profile with wizard data
+    const supabaseAdmin = createAdminClient();
+    const { error: hotelError } = await supabaseAdmin
       .from('hotels')
       .update({
         name: state.hotelIdentity.name,
@@ -78,21 +122,28 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       amenities: room.amenities,
       capacity: room.capacity || null,
       beds: room.beds || null,
+      bed_type: room.bedType || null,
+      bathroom_type: room.bathroomType || null,
+      shower_type: room.showerType || null,
+      hot_water: room.hotWater ?? true,
+      room_size: room.roomSize || null,
+      room_view: room.roomView || null,
       gallery: room.imageUrls.map(url => ({ url })),
       availability_range: room.availabilityRange,
-      status: 'available',
+      status: 'active',
       ical_export_token: crypto.randomUUID(),
     }));
 
-    const { error: roomsError } = await supabase
+    const { error: roomsError } = await supabaseAdmin
       .from('rooms')
       .insert(roomsPayload);
 
     if (roomsError) throw roomsError;
 
-    // 3. Revalidate and redirect
-    revalidatePath('/', 'layout');
-    revalidatePath('/dashboard');
+    // 3. Revalidate
+    revalidatePath('/software/onboarding');
+    revalidatePath('/admin/dashboard');
+    revalidateTag(`hotel-${hotelId}`, 'max');
     
     return { success: true };
   } catch (error: any) {
