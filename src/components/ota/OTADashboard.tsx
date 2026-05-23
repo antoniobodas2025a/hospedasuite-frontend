@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   SlidersHorizontal,
@@ -12,20 +12,27 @@ import {
   Search,
   UserLock,
   Loader2,
+  ChevronDown,
 } from 'lucide-react';
 import HotelCard from './HotelCard';
 import LanguageSwitcher from './LanguageSwitcher';
 import Link from 'next/link';
 import { fetchOTAHotelsAction } from '@/app/actions/ota';
 import { useTranslations } from 'next-intl';
+import { springSnappy, springGentle } from '@/lib/mac2026/spring';
+import { preserveSearchParams } from '@/lib/handoff-url';
+import { useSearchParams } from 'next/navigation';
 
 const CATEGORIES = [
-  { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal },
-  { id: 'glamping', labelKey: 'ota.categories.glamping', icon: Tent },
-  { id: 'hotel', labelKey: 'ota.categories.hotels', icon: Building2 },
-  { id: 'cabin', labelKey: 'ota.categories.cabins', icon: Home },
-  { id: 'boutique', labelKey: 'ota.categories.boutique', icon: Castle },
+  { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal, popular: false },
+  { id: 'glamping', labelKey: 'ota.categories.glamping', icon: Tent, popular: true },
+  { id: 'hotel', labelKey: 'ota.categories.hotels', icon: Building2, popular: true },
+  { id: 'cabin', labelKey: 'ota.categories.cabins', icon: Home, popular: false },
+  { id: 'boutique', labelKey: 'ota.categories.boutique', icon: Castle, popular: false },
 ];
+
+const POPULAR_CATEGORIES = CATEGORIES.filter(c => c.popular);
+const OTHER_CATEGORIES = CATEGORIES.filter(c => !c.popular);
 
 interface OTADashboardProps {
   initialHotels: any[];
@@ -37,6 +44,7 @@ export default function OTADashboard({
   initialHasMore = false,
 }: OTADashboardProps) {
   const t = useTranslations();
+  const searchParams = useSearchParams();
   const [hotels, setHotels] = useState(initialHotels);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(initialHasMore);
@@ -44,9 +52,10 @@ export default function OTADashboard({
   const [isSearching, setIsSearching] = useState(false);
   const [activeCategory, setActiveCategory] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
-
+  const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
+  // Debounced search
   useEffect(() => {
     if (activeCategory === 'all' && searchTerm === '' && page === 0 && hotels === initialHotels) return;
 
@@ -82,7 +91,6 @@ export default function OTADashboard({
       if (!ticking) {
         window.requestAnimationFrame(() => {
           const currentScrollY = window.scrollY;
-          // Hide when scrolling down past 80px, show when scrolling up
           if (currentScrollY > 80) {
             setIsHeaderVisible(currentScrollY < lastScrollY);
           } else {
@@ -97,6 +105,13 @@ export default function OTADashboard({
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
+  // Enter key triggers search
+  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === 'Enter') {
+      (e.target as HTMLElement).blur();
+    }
   }, []);
 
   const loadMoreHotels = async () => {
@@ -117,135 +132,216 @@ export default function OTADashboard({
     setIsLoadingMore(false);
   };
 
+  const activeCat = CATEGORIES.find(c => c.id === activeCategory);
+
   return (
     <div className='min-h-screen bg-background flex flex-col font-sans text-foreground'>
-      {/* HEADER */}
-      <header className={`fixed top-0 left-0 right-0 z-50 glass-panel border-b border-border !rounded-none transition-transform duration-300 ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}>
-        <div className='max-w-7xl mx-auto px-4 h-20 flex items-center justify-between'>
-          <div className='flex items-center gap-3'>
-            <div className='relative w-10 h-10'>
-              <div className='w-full h-full bg-brand-600 rounded-[var(--radius-squircle-md)] flex items-center justify-center text-primary-foreground font-bold'>
-                H
-              </div>
+      {/* HEADER — glass-pill, h-14 mobile */}
+      <header
+        className={`fixed top-0 left-0 right-0 z-50 glass-pill border-b border-border/20 !rounded-none transition-transform ${isHeaderVisible ? 'translate-y-0' : '-translate-y-full'}`}
+        style={{ transition: 'transform 0.3s var(--spring-gentle)' }}
+      >
+        <div className='max-w-7xl mx-auto px-4 h-14 flex items-center justify-between'>
+          <div className='flex items-center gap-2.5'>
+            <div className='w-8 h-8 bg-brand-600 rounded-[var(--radius-squircle-md)] flex items-center justify-center text-primary-foreground font-bold text-sm'>
+              H
             </div>
-            <span className='text-xl font-display font-bold text-foreground tracking-wider'>
+            <span className='text-lg font-bold text-foreground tracking-tight'>
               {t('ota.header.brand')}<span className='text-brand-500'>{t('ota.header.brandAccent')}</span>
             </span>
           </div>
 
-          <div className='flex items-center gap-3'>
+          <div className='flex items-center gap-2'>
             <LanguageSwitcher />
             <Link
               href='/software'
-              className='flex items-center gap-2 text-xs font-bold text-brand-600 bg-brand-50 px-4 py-2 rounded-full hover:bg-brand-100 transition-colors border border-brand-200'
+              className='hidden sm:flex items-center gap-1.5 text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1.5 rounded-full hover:bg-brand-100 transition-colors border border-brand-200'
             >
-              <UserLock size={14} />
+              <UserLock size={12} />
               <span>{t('ota.header.hotelAccess')}</span>
             </Link>
           </div>
         </div>
       </header>
 
-      <main className='flex-1 max-w-7xl mx-auto px-4 pt-28 pb-8 w-full'>
-        {/* HERO SECTION */}
-        <div className='text-center mb-8'>
-          <h1 className='text-4xl md:text-6xl font-display font-bold text-foreground mb-6'>
+      <main className='flex-1 max-w-7xl mx-auto px-4 pt-20 pb-8 w-full'>
+        {/* HERO — clean typography, no gradient */}
+        <div className='text-center mb-6 sm:mb-8'>
+          <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight'>
             {t('ota.hero.title')}{' '}
-            <span className='text-transparent bg-clip-text bg-gradient-to-r from-brand-500 to-warm-400'>
+            <span className='text-brand-500'>
               {t('ota.hero.highlight')}
             </span>
           </h1>
         </div>
 
-        {/* SEARCH BAR — sticky: stays below header, moves to top-0 when header hides */}
-        <div className={`sticky z-40 mb-12 transition-[top] duration-300 ${isHeaderVisible ? 'top-20' : 'top-0'}`}>
-          <div className='max-w-2xl mx-auto relative group'>
-            <div className='absolute inset-0 bg-gradient-to-r from-brand-400 to-warm-400 rounded-full blur opacity-20 group-hover:opacity-30 transition-opacity' />
-            <div className='relative bg-card rounded-full shadow-xl flex items-center p-2 border border-border'>
-              <div className='pl-4 text-brand-500'>
-                <Search size={20} />
+        {/* SEARCH BAR — no button, Enter key triggers */}
+        <div className={`sticky z-40 mb-8 sm:mb-12 transition-[top] ${isHeaderVisible ? 'top-14' : 'top-0'}`}
+          style={{ transition: 'top 0.3s var(--spring-gentle)' }}
+        >
+          <div className='max-w-xl mx-auto relative group'>
+            <div className='relative bg-card rounded-[var(--radius-squircle-xl)] shadow-lg flex items-center p-1.5 sm:p-2 border border-border/50 ring-1 ring-foreground/5'>
+              <div className='pl-3 text-muted-foreground'>
+                <Search size={18} />
               </div>
               <input
                 type='text'
                 placeholder={t('ota.search.placeholder')}
-                className='w-full bg-transparent border-none focus:ring-0 text-foreground placeholder:text-muted-foreground/50 px-4 h-10 outline-none'
+                className='w-full bg-transparent border-none focus:ring-0 text-foreground placeholder:text-muted-foreground/50 px-3 h-9 sm:h-10 text-sm sm:text-base outline-none'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={handleKeyDown}
               />
-              <button className='bg-foreground text-background px-6 py-2 rounded-full font-medium hover:bg-primary/90 transition-colors'>
-                {t('ota.search.button')}
-              </button>
+              {/* Glow indicator when searching */}
+              <AnimatePresence>
+                {isSearching && (
+                  <motion.div
+                    initial={{ opacity: 0, scale: 0.8 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.8 }}
+                    transition={springSnappy()}
+                    className='pr-3'
+                  >
+                    <Loader2 size={16} className='text-brand-500 animate-spin' />
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         </div>
 
-        {/* FILTROS DE CATEGORIA */}
-        <div className='flex flex-wrap justify-center gap-3 mb-12'>
-          {CATEGORIES.map((cat) => (
-            <button
-              key={cat.id}
-              onClick={() => setActiveCategory(cat.id)}
-              className={`flex items-center gap-2 px-6 py-3 rounded-full text-sm font-bold transition-all duration-300 ${
-                activeCategory === cat.id
-                  ? 'bg-foreground text-background shadow-lg scale-105'
-                  : 'bg-card text-brand-600 hover:bg-accent border border-border'
+        {/* CATEGORIES — 2 popular pills + chip for rest */}
+        <div className='flex flex-wrap items-center justify-center gap-2 mb-8 sm:mb-12'>
+          {POPULAR_CATEGORIES.map((cat) => {
+            const isActive = activeCategory === cat.id;
+            return (
+              <motion.button
+                key={cat.id}
+                onClick={() => setActiveCategory(cat.id)}
+                whileTap={{ scale: 0.95 }}
+                transition={springSnappy()}
+                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                  isActive
+                    ? 'bg-foreground text-background shadow-md'
+                    : 'bg-card text-muted-foreground hover:text-foreground border border-border/50 hover:border-foreground/20'
+                }`}
+              >
+                <cat.icon size={14} />
+                {t(cat.labelKey)}
+              </motion.button>
+            );
+          })}
+
+          {/* Category chip for "All" + others */}
+          <div className='relative'>
+            <motion.button
+              onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+              whileTap={{ scale: 0.95 }}
+              transition={springSnappy()}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+                activeCategory === 'all' && !isCategoryOpen
+                  ? 'bg-foreground text-background shadow-md'
+                  : 'bg-card text-muted-foreground hover:text-foreground border-border/50 hover:border-foreground/20'
               }`}
             >
-              <cat.icon size={16} />
-              {t(cat.labelKey)}
-            </button>
-          ))}
+              <SlidersHorizontal size={14} />
+              {activeCategory !== 'all' && activeCat ? t(activeCat.labelKey) : t('ota.categories.all')}
+              <ChevronDown size={12} className={`transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
+            </motion.button>
+
+            <AnimatePresence>
+              {isCategoryOpen && (
+                <>
+                  {/* Backdrop */}
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    transition={{ duration: 0.15 }}
+                    className='fixed inset-0 z-40'
+                    onClick={() => setIsCategoryOpen(false)}
+                  />
+                  {/* Dropdown */}
+                  <motion.div
+                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                    transition={springGentle()}
+                    className='absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] shadow-xl p-2 min-w-[180px]'
+                  >
+                    {[...OTHER_CATEGORIES, CATEGORIES.find(c => c.id === 'all')!].map((cat) => {
+                      const isActive = activeCategory === cat.id;
+                      return (
+                        <button
+                          key={cat.id}
+                          onClick={() => { setActiveCategory(cat.id); setIsCategoryOpen(false); }}
+                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-md)] text-sm font-medium transition-colors ${
+                            isActive
+                              ? 'bg-foreground/10 text-foreground'
+                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                          }`}
+                        >
+                          <cat.icon size={14} />
+                          {t(cat.labelKey)}
+                        </button>
+                      );
+                    })}
+                  </motion.div>
+                </>
+              )}
+            </AnimatePresence>
+          </div>
         </div>
 
-        {/* GRID DE HOTELES */}
+        {/* GRID DE HOTELES — gap-4 mobile, gap-8 desktop */}
         {isSearching ? (
           <div className='flex flex-col items-center justify-center py-20 text-muted-foreground'>
-            <Loader2 size={48} className='animate-spin mb-4 text-brand-500' />
-            <p className='font-bold'>{t('ota.loading.searching')}</p>
+            <Loader2 size={40} className='animate-spin mb-3 text-brand-500' />
+            <p className='font-semibold text-sm'>{t('ota.loading.searching')}</p>
           </div>
         ) : hotels.length > 0 ? (
-          <div className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8'>
+          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8'>
             <AnimatePresence mode='popLayout'>
               {hotels.map((hotel) => (
                 <HotelCard
                   key={hotel.id}
                   hotel={hotel}
+                  href={preserveSearchParams(searchParams, `/hotel/${hotel.city_slug}`)}
                 />
               ))}
             </AnimatePresence>
           </div>
         ) : (
-          <div className='text-center py-20 opacity-50'>
-            <Tent
-              size={64}
-              className='mx-auto mb-4 text-brand-300'
-            />
-            <h3 className='text-xl font-bold text-muted-foreground'>
+          <div className='text-center py-20'>
+            <Tent size={48} className='mx-auto mb-4 text-muted-foreground/40' />
+            <h3 className='text-lg font-bold text-muted-foreground mb-1'>
               {t('ota.noResults.title')}
             </h3>
-            <p>{t('ota.noResults.description')}</p>
+            <p className='text-sm text-muted-foreground/70'>{t('ota.noResults.description')}</p>
           </div>
         )}
 
         {/* BOTON CARGAR MAS */}
         {hasMore && !isSearching && (
-          <div className='flex justify-center mt-16 mb-20'>
-            <button
+          <div className='flex justify-center mt-12 sm:mt-16 mb-16 sm:mb-20'>
+            <motion.button
               onClick={loadMoreHotels}
               disabled={isLoadingMore}
-              className='flex items-center gap-2 px-8 py-4 bg-card border border-border rounded-full text-brand-600 font-bold hover:shadow-xl hover:bg-accent transition-all disabled:opacity-50'
+              whileTap={{ scale: 0.97 }}
+              transition={springSnappy()}
+              className='flex items-center gap-2 px-6 py-3 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all disabled:opacity-50'
             >
               {isLoadingMore ? (
                 <>
-                  <Loader2 size={16} className='animate-spin text-brand-600' />
+                  <Loader2 size={14} className='animate-spin text-brand-500' />
                   {t('ota.loading.loadingMore')}
                 </>
               ) : (
                 <>
-                  <Plus size={16} /> {t('ota.loadMore')}
+                  <Plus size={14} /> {t('ota.loadMore')}
                 </>
               )}
-            </button>
+            </motion.button>
           </div>
         )}
       </main>
