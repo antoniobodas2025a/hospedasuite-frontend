@@ -19,11 +19,9 @@
       "stay": "Estadía",
       "selectGuests": "Seleccionar número de huéspedes",
       "guests": "Huéspedes",
-      "guest_one": "huésped",
-      "guest_other": "huéspedes",
       "refine": "Refinar búsqueda",
-      "refineWithCount_one": "Refinar búsqueda ({count} filtro activo)",
-      "refineWithCount_other": "Refinar búsqueda ({count} filtros activos)"
+      "guest": "{count, plural, one {huésped} other {huéspedes}}",
+      "refineWithCount": "{count, plural, one {Refinar búsqueda ({count} filtro activo)} other {Refinar búsqueda ({count} filtros activos)}}"
     },
     "categories": {
       "all": "Todo",
@@ -55,15 +53,11 @@
       "from": "Desde",
       "copPerNight": "COP/noche",
       "datesConfirmed": "Fechas confirmadas",
-      "guest_one": "huésped",
-      "guest_other": "huéspedes",
       "selectDates": "Selecciona tus fechas",
       "selectDatesHint": "Usa la barra de busqueda para ver disponibilidad y precios exactos.",
       "selectDatesFirst": "Selecciona tus fechas primero",
       "selectDatesFirstHint": "Usa la barra de busqueda de arriba para elegir cuando llegas y cuando te vas.",
       "of": "de",
-      "unitsAvailable_one": "unidad disponible",
-      "unitsAvailable_other": "unidades disponibles",
       "onlyOneLeft": "Solo queda 1 disponible",
       "onlyXLeft": "Solo quedan {count} disponibles",
       "noAvailability": "Sin disponibilidad",
@@ -74,7 +68,9 @@
       "bestPriceDesc": "Reserva directo sin comisiones de intermediarios.",
       "instantConfirmation": "Confirmacion inmediata",
       "instantConfirmationDesc": "Tu habitacion se bloquea al instante.",
-      "cancellationPolicy": "Politica de cancelacion"
+      "cancellationPolicy": "Politica de cancelacion",
+      "guest": "{count, plural, one {huésped} other {huéspedes}}",
+      "unitsAvailable": "{count, plural, one {unidad disponible} other {unidades disponibles}}"
     },
     "guestSelector": {
       "label": "Selector de huéspedes",
@@ -82,13 +78,13 @@
       "couple": "Pareja",
       "family": "Familia",
       "group": "Grupo",
-      "guest_one": "huésped",
-      "guest_other": "huéspedes",
       "decrease": "Reducir huéspedes",
-      "increase": "Aumentar huéspedes"
+      "increase": "Aumentar huéspedes",
+      "guest": "{count, plural, one {huésped} other {huéspedes}}"
     },
     "refinement": {
       "title": "Refinar búsqueda",
+      "subtitle": "Ajustá los filtros para encontrar la habitación ideal",
       "clearAllFilters": "Limpiar todos los filtros",
       "clearAll": "Limpiar todo",
       "closePanel": "Cerrar panel de refinamiento",
@@ -100,15 +96,18 @@
       "any": "Cualquiera",
       "minBedsAria": "{count} cama mínima",
       "amenities": "Amenidades",
+      "showMoreAmenities": "Ver más",
+      "showLessAmenities": "Ver menos",
       "roomAvailable": "habitación disponible",
       "roomsAvailable": "habitaciones disponibles",
+      "seeAllRooms": "Ver todas las habitaciones",
       "upTo": "Hasta",
       "removePriceFilter": "Quitar filtro de precio",
       "minShort": "Mín.",
-      "beds_one": "cama",
-      "beds_other": "camas",
       "removeBedsFilter": "Quitar filtro de camas",
-      "removeFilter": "Quitar filtro {label}"
+      "removeFilter": "Quitar filtro {label}",
+      "seeResults": "{count, plural, one {Ver {count} resultado} other {Ver {count} resultados}}",
+      "beds": "{count, plural, one {cama} other {camas}}"
     },
     "whatsapp": {
       "defaultMessage": "Hola! Me interesa reservar en {hotelName}. Podrian darme mas informacion?",
@@ -140,13 +139,12 @@
       "noResultsDesc": "No hay habitaciones que coincidan con los filtros. Proba ajustando los criterios."
     },
     "comparison": {
-      "compare_one": "Comparar {count} habitacion",
-      "compare_other": "Comparar {count} habitaciones",
       "feature": "Caracteristica",
       "capacity": "Capacidad",
       "people": "personas",
       "beds": "Camas",
-      "size": "Tamano"
+      "size": "Tamano",
+      "compare": "{count, plural, one {Comparar {count} habitacion} other {Comparar {count} habitaciones}}"
     },
     "hotelInfo": {
       "locationDetails": "Ubicacion y Detalles",
@@ -165,21 +163,18 @@
       "bestValue": "Mejor Valor",
       "deal": "Oferta",
       "mostPopular": "Mas Popular",
-      "onlyXAvailable_one": "Solo 1 disponible",
-      "onlyXAvailable_other": "Solo {count} disponibles",
       "highDemand": "Alta Demanda",
-      "beds_one": "cama",
-      "beds_other": "camas",
       "fallbackDescription": "Un refugio disenado para aislar el ruido del mundo moderno y reconectar con lo esencial.",
-      "nights_one": "noche",
-      "nights_other": "noches",
       "taxesAndFees": "Impuestos y tasas",
       "copTotal": "COP total",
       "baseRate": "Tarifa Base",
       "copPerNight": "COP/noche",
       "freeCancellation": "Cancelacion Gratuita Disponible",
       "secureRoom": "Asegurar Refugio",
-      "exploreRoom": "Explorar Unidad"
+      "exploreRoom": "Explorar Unidad",
+      "onlyXAvailable": "{count, plural, one {Solo 1 disponible} other {Solo {count} disponibles}}",
+      "beds": "{count, plural, one {cama} other {camas}}",
+      "nights": "{count, plural, one {noche} other {noches}}"
     },
     "showcase": {
       "defineStay": "Defina su Estadia",
@@ -192,11 +187,7 @@
       "premiumService": "Servicio premium garantizado por HospedaSuite.",
       "bookingSummary": "Resumen de Reserva",
       "stay": "Estadia",
-      "nights_one": "noche",
-      "nights_other": "noches",
       "occupancy": "Ocupacion",
-      "guest_one": "huésped",
-      "guest_other": "huéspedes",
       "overCapacity": "Aforo Excedido",
       "overCapacityDesc": "Esta unidad permite maximo {capacity} personas.",
       "overCapacityDescShort": "Maximo {capacity} personas.",
@@ -209,57 +200,9 @@
       "cop": "COP",
       "adjustSearch": "Ajuste la Busqueda",
       "adjust": "Ajuste",
-      "reserve": "Reservar"
-    },
-    "reviews": {
-      "today": "Hoy",
-      "yesterday": "Ayer",
-      "daysAgo": "Hace {count} dias",
-      "weeksAgo": "Hace {count} semanas",
-      "monthsAgo": "Hace {count} meses",
-      "yearsAgo": "Hace {count} ano(s)",
-      "noReviewsYet": "Aun no hay opiniones",
-      "noReviewsDesc": "Se el primero en compartir tu experiencia en {hotelName}. Tu opinion ayuda a otros viajeros a elegir.",
-      "guestReviews": "Opiniones de Huespedes",
-      "verifiedReviews": "{count} resenas verificadas",
-      "ofReviews": "de {count} reviews",
-      "excellent": "Excelente",
-      "veryGood": "Muy bueno",
-      "average": "Regular",
-      "poor": "Malo",
-      "terrible": "Pesimo",
-      "stay": "Estadia",
-      "helpful": "Util"
-    },
-    "reviewForm": {
-      "requiredFields": "Por favor completa todos los campos obligatorios y selecciona una calificacion.",
-      "commentTooLong": "El comentario no puede superar los 2000 caracteres.",
-      "submitError": "Error al enviar la opinion. Intenta de nuevo.",
-      "thankYou": "Gracias por tu opinion!",
-      "thankYouDesc": "Tu resena sobre {hotelName} sera publicada despues de verificacion. Solo opiniones de huespedes verificados son publicadas.",
-      "title": "Comparte tu experiencia",
-      "subtitle": "Tu opinion ayuda a otros viajeros a elegir. Sera publicada despues de verificacion.",
-      "yourRating": "Tu calificacion",
-      "rating1": "Malo",
-      "rating2": "Regular",
-      "rating3": "Bueno",
-      "rating4": "Muy bueno",
-      "rating5": "Excelente",
-      "name": "Nombre",
-      "namePlaceholder": "Como te llamas?",
-      "email": "Email",
-      "location": "Ubicacion (opcional)",
-      "stayDate": "Fecha de estadia (opcional)",
-      "yourExperience": "Tu experiencia",
-      "commentPlaceholder": "Que te parecio el hotel? Que destacarias?",
-      "submitting": "Enviando...",
-      "submit": "Enviar Opinion"
-    },
-    "reviewFormWithToggle": {
-      "writeReview": "Escribir opinion",
-      "closeForm": "Cerrar formulario",
-      "toggleButton": "Escribir una opinion",
-      "helperText": "Solo huespedes con una estadia completada pueden dejar una opinion."
+      "reserve": "Reservar",
+      "nights": "{count, plural, one {noche} other {noches}}",
+      "guest": "{count, plural, one {huésped} other {huéspedes}}"
     },
     "roomAmenities": {
       "wifi": "Wi-Fi Rapido",
@@ -277,11 +220,10 @@
       "facilities": "Instalaciones",
       "kitchen": "Cocina",
       "security": "Seguridad",
-      "showAll_one": "Mostrar la amenidad",
-      "showAll_other": "Mostrar las {count} amenidades",
       "modalTitle": "Que ofrece este lugar?",
       "included": "Incluido sin costo",
-      "extraCharge": "Aplica recargo"
+      "extraCharge": "Aplica recargo",
+      "showAll": "{count, plural, one {Mostrar la amenidad} other {Mostrar las {count} amenidades}}"
     },
     "heroGallery": {
       "viewPhoto": "Ver foto {num} de {hotelName}",
@@ -301,181 +243,79 @@
       "subtitle": "Antes de elegir tu habitacion, deja que el lugar te elija a vos.",
       "storyCaptions": {
         "montaña": {
-          "0": { "title": "Donde la montaña abraza", "story": "Cada amanecer aquí no es solo luz — es el momento en que el valle despierta y te recuerda por qué viniste." },
-          "1": { "title": "Rituales de cada mañana", "story": "El aroma del café local mezclado con el aire fresco de la montaña. Así empiezan los días que no se olvidan." },
-          "2": { "title": "Atardeceres que se quedan", "story": "Hay cielos que se miran y cielos que se sienten. Este es de los segundos." },
-          "3": { "title": "Un lugar que te encuentra", "story": "No todos los destinos se eligen. Algunos te llaman sin que lo sepas." }
+          "0": {
+            "title": "Donde la montaña abraza",
+            "story": "Cada amanecer aquí no es solo luz — es el momento en que el valle despierta y te recuerda por qué viniste."
+          },
+          "1": {
+            "title": "Rituales de cada mañana",
+            "story": "El aroma del café local mezclado con el aire fresco de la montaña. Así empiezan los días que no se olvidan."
+          },
+          "2": {
+            "title": "Atardeceres que se quedan",
+            "story": "Hay cielos que se miran y cielos que se sienten. Este es de los segundos."
+          },
+          "3": {
+            "title": "Un lugar que te encuentra",
+            "story": "No todos los destinos se eligen. Algunos te llaman sin que lo sepas."
+          }
         },
         "playa": {
-          "0": { "title": "Sal y horizonte infinito", "story": "El mar no pide permiso para entrar. Se cuela por la brisa, por el sonido, por la calma que te cambia el ritmo." },
-          "1": { "title": "Arena bajo los pies", "story": "Hay lugares que se sienten antes de pisarlos. Este es uno de esos." },
-          "2": { "title": "Mañanas con brisa", "story": "Café, sal y silencio. La combinación perfecta para empezar de nuevo." },
-          "3": { "title": "Donde el cielo toca el agua", "story": "El horizonte aquí no es una línea. Es una promesa." }
+          "0": {
+            "title": "Sal y horizonte infinito",
+            "story": "El mar no pide permiso para entrar. Se cuela por la brisa, por el sonido, por la calma que te cambia el ritmo."
+          },
+          "1": {
+            "title": "Arena bajo los pies",
+            "story": "Hay lugares que se sienten antes de pisarlos. Este es uno de esos."
+          },
+          "2": {
+            "title": "Mañanas con brisa",
+            "story": "Café, sal y silencio. La combinación perfecta para empezar de nuevo."
+          },
+          "3": {
+            "title": "Donde el cielo toca el agua",
+            "story": "El horizonte aquí no es una línea. Es una promesa."
+          }
         },
         "ciudad": {
-          "0": { "title": "En el corazón de todo", "story": "A pasos de lo que importa, pero lo suficientemente lejos para descansar de verdad." },
-          "1": { "title": "Café de esquina", "story": "Las mejores experiencias no están en las guías. Están en la vuelta de la esquina." },
-          "2": { "title": "Luces que cuentan historias", "story": "Cuando cae la noche, la ciudad se transforma en un escenario hecho para vos." },
-          "3": { "title": "Un oasis urbano", "story": "No hace falta irse lejos para encontrar calma. A veces está escondida en el lugar correcto." }
+          "0": {
+            "title": "En el corazón de todo",
+            "story": "A pasos de lo que importa, pero lo suficientemente lejos para descansar de verdad."
+          },
+          "1": {
+            "title": "Café de esquina",
+            "story": "Las mejores experiencias no están en las guías. Están en la vuelta de la esquina."
+          },
+          "2": {
+            "title": "Luces que cuentan historias",
+            "story": "Cuando cae la noche, la ciudad se transforma en un escenario hecho para vos."
+          },
+          "3": {
+            "title": "Un oasis urbano",
+            "story": "No hace falta irse lejos para encontrar calma. A veces está escondida en el lugar correcto."
+          }
         },
         "lago": {
-          "0": { "title": "Espejo de agua", "story": "El lago no refleja solo el cielo. Refleja la calma que viniste a buscar." },
-          "1": { "title": "Silencio que se saborea", "story": "Acá el tiempo se mide en olas suaves y tazas de café con vista." },
-          "2": { "title": "Refugio natural", "story": "Entre el agua y el bosque, hay un lugar donde el ruido no llega." },
-          "3": { "title": "Horizonte líquido", "story": "Mirar el lago es recordar que hay cosas que no necesitan explicación." }
+          "0": {
+            "title": "Espejo de agua",
+            "story": "El lago no refleja solo el cielo. Refleja la calma que viniste a buscar."
+          },
+          "1": {
+            "title": "Silencio que se saborea",
+            "story": "Acá el tiempo se mide en olas suaves y tazas de café con vista."
+          },
+          "2": {
+            "title": "Refugio natural",
+            "story": "Entre el agua y el bosque, hay un lugar donde el ruido no llega."
+          },
+          "3": {
+            "title": "Horizonte líquido",
+            "story": "Mirar el lago es recordar que hay cosas que no necesitan explicación."
+          }
         }
       }
-    },
-    "hotelDetail": {
-      "propertyNotFound": "Propiedad no encontrada",
-      "officialBooking": "Reserva Oficial",
-      "metaDescription": "Descubre la experiencia en {hotelName} ubicado en {location}. Reserva directa al mejor precio garantizado.",
-      "luxuryExperience": "Experiencia de Lujo",
-      "availableRooms": "Habitaciones Disponibles",
-      "roomsForDates": "{available} de {total} unidades para tus fechas",
-      "exploreUnits": "Explora nuestras {count} unidades"
     }
-  },
-  "onboarding": {
-    "steps": {
-      "identity": "Identidad",
-      "gallery": "Galería",
-      "type": "Tipo",
-      "units": "Unidades",
-      "config": "Config",
-      "activate": "Activar"
-    },
-    "client": {
-      "brand": "HospedaSuite",
-      "subtitle": "Configurá tu propiedad en 6 pasos simples",
-      "loading": "Cargando",
-      "connectionError": "Error de Conexión",
-      "noPropertyLinked": "No se detectó una propiedad vinculada a tu cuenta.",
-      "connectionErrorMsg": "Error de conexión.",
-      "retry": "Reintentar",
-      "back": "Atrás",
-      "next": "Siguiente",
-      "activate": "Activar"
-    },
-    "hotelIdentity": {
-      "title": "Identidad de tu Propiedad",
-      "subtitle": "Contanos sobre tu hotel o glamping",
-      "commercialName": "Nombre Comercial",
-      "commercialNamePlaceholder": "Ej: Villa Secret Stay",
-      "city": "Ciudad",
-      "cityPlaceholder": "Ej: Minca",
-      "location": "Ubicación",
-      "locationPlaceholder": "Ej: Sierra Nevada",
-      "propertyType": "Tipo de Propiedad",
-      "logo": "Logotipo",
-      "uploadLogo": "Subir Logo",
-      "valid": "✓ Todos los campos requeridos completos",
-      "invalid": "⚠️ Completá los campos obligatorios"
-    },
-    "propertyType": {
-      "title": "Tipo de Propiedad",
-      "subtitle": "Esto determina las plantillas de habitaciones disponibles",
-      "types": {
-        "hotel": "Hotel",
-        "glamping": "Glamping",
-        "cabanas": "Cabañas",
-        "hostal": "Hostal",
-        "apartamento": "Apartamento"
-      },
-      "descriptions": {
-        "hotel": "Establecimiento tradicional con habitaciones y servicios completos",
-        "glamping": "Experiencia de lujo en la naturaleza",
-        "cabanas": "Alojamiento independiente rodeado de naturaleza",
-        "hostal": "Alojamiento económico con ambiente social",
-        "apartamento": "Espacio completo con cocina y amenities de hogar"
-      }
-    },
-    "propertyGallery": {
-      "title": "Galería de tu Propiedad",
-      "subtitle": "Subí 3-8 fotos que muestren lo mejor de tu espacio",
-      "uploadPhotos": "Subir Fotos",
-      "minMaxHint": "Mínimo 3, máximo 8",
-      "valid": "✓ {count} fotos subidas",
-      "invalid": "⚠️ Necesitás al menos 3 fotos ({count}/3)"
-    },
-    "roomTemplates": {
-      "title": "Tus Unidades",
-      "subtitle": "Elegí plantillas o creá habitaciones personalizadas",
-      "empty": "Vacía",
-      "unnamed": "Sin nombre",
-      "perNight": "/ noche",
-      "units_one": "{count} unidad configurada",
-      "units_other": "{count} unidades configuradas"
-    },
-    "roomDetail": {
-      "namePlaceholder": "Nombre de la unidad",
-      "priceLabel": "Precio",
-      "copPerNight": "COP/noche",
-      "descriptionPlaceholder": "Descripción...",
-      "capacity": "Capacidad",
-      "beds": "Camas",
-      "photos": "Fotos ({count}/5)",
-      "amenities": "Comodidades"
-    },
-    "settings": {
-      "title": "Configuración",
-      "subtitle": "Horarios, políticas y detalles",
-      "checkIn": "Check-in",
-      "checkOut": "Check-out",
-      "whatsapp": "WhatsApp",
-      "whatsappPlaceholder": "+57 300 123 4567",
-      "cancellationPolicy": "Política de Cancelación",
-      "cancellationPlaceholder": "Ej: Cancelación gratuita hasta 48hs antes...",
-      "hotelAmenities": "Amenities del Hotel"
-    },
-    "payment": {
-      "title": "Resumen y Activación",
-      "subtitle": "Revisá todo y activá tu propiedad",
-      "property": "Propiedad",
-      "unnamed": "Sin nombre",
-      "units_one": "{count} unidad",
-      "units_other": "{count} unidades",
-      "amenitiesConfigured": "Amenities configurados",
-      "amenitiesSelected": "{count} amenities seleccionados",
-      "paid": "¡Pago procesado! Activando tu propiedad..."
-    },
-    "provisioning": {
-      "activating": "Activando tu Propiedad",
-      "configuring": "Configurando habitaciones, galería y pagos...",
-      "success": "¡Todo Listo!",
-      "redirecting": "Redirigiendo al dashboard...",
-      "error": "Error en la Activación",
-      "noTransactionId": "No se encontró el ID de transacción",
-      "invalidData": "Datos inválidos: {message}",
-      "unknownError": "Error desconocido",
-      "retry": "Reintentar"
-    }
-  },
-  "auth": {
-    "login": {
-      "title": "HospedaSuite SaaS",
-      "subtitle": "Acceso Seguro",
-      "emailLabel": "Email Corporativo",
-      "emailPlaceholder": "admin@hotel.com",
-      "passwordLabel": "Contraseña",
-      "passwordPlaceholder": "••••••••",
-      "submitButton": "Iniciar Sesión",
-      "sslFooter": "Protegido por SSL de grado militar",
-      "invalidCredentials": "Credenciales inválidas"
-    }
-  },
-  "common": {
-    "loading": "Cargando...",
-    "error": "Error",
-    "retry": "Reintentar",
-    "back": "Atrás",
-    "next": "Siguiente",
-    "cancel": "Cancelar",
-    "confirm": "Confirmar",
-    "save": "Guardar",
-    "delete": "Eliminar",
-    "edit": "Editar",
-    "close": "Cerrar"
   },
   "onboarding": {
     "steps": {
@@ -517,26 +357,38 @@
       "subtitle": "Subí 3-8 fotos que muestren lo mejor de tu espacio",
       "uploadPhotos": "Subir Fotos",
       "photoRange": "Mínimo 3, máximo 8",
-      "valid": "{{count}} fotos subidas",
-      "invalid": "Necesitás al menos 3 fotos ({{current}}/3)"
+      "valid": "{count} fotos subidas",
+      "invalid": "Necesitás al menos 3 fotos ({current}/3)"
     },
     "roomTemplates": {
       "title": "Tus Unidades",
       "subtitle": "Elegí plantillas o creá habitaciones personalizadas",
       "empty": "Vacía",
-      "configured": "{{count}} unidad{{plural}} configurada{{plural}}",
+      "configured": "{count} unidad{plural} configurada{plural}",
       "noName": "Sin nombre",
       "perNight": "/ noche"
     },
     "roomDetail": {
-      "namePlaceholder": "Nombre de la unidad",
+      "namePlaceholder": "Nombre de la habitación",
       "priceLabel": "Precio",
       "currencyLabel": "COP/noche",
       "descriptionPlaceholder": "Descripción...",
       "capacityLabel": "Capacidad",
       "bedsLabel": "Camas",
       "photosLabel": "Fotos",
-      "amenitiesLabel": "Comodidades"
+      "amenitiesLabel": "Amenidades",
+      "bedTypeLabel": "Tipo de cama",
+      "bathroomLabel": "Tipo de baño",
+      "showerLabel": "Ducha / Bañera",
+      "hotWaterLabel": "Agua caliente",
+      "roomSizeLabel": "Tamaño",
+      "roomViewLabel": "Vista",
+      "bathroomSectionTitle": "Baño y espacio",
+      "hotWaterSectionTitle": "Agua caliente",
+      "photosAmenitiesTitle": "Descripción, fotos y amenities",
+      "uploadPhotosLabel": "Subir fotos",
+      "previewAdmin": "Vista administrador",
+      "previewGuest": "Vista huésped"
     },
     "settings": {
       "title": "Configuración",
@@ -547,18 +399,44 @@
       "whatsappPlaceholder": "+57 300 123 4567",
       "cancellationPolicyLabel": "Política de Cancelación",
       "cancellationPolicyPlaceholder": "Ej: Cancelación gratuita hasta 48hs antes...",
-      "hotelAmenitiesLabel": "Amenities del Hotel"
+      "hotelAmenitiesLabel": "Amenities del Hotel",
+      "draftYourPolicy": "Redactá tu política",
+      "selectAvailable": "Seleccioná las disponibles"
     },
     "payment": {
       "title": "Resumen y Activación",
       "subtitle": "Revisá todo y activá tu propiedad",
       "propertyLabel": "Propiedad",
       "noName": "Sin nombre",
-      "units": "unidad{{plural}}",
+      "units": "unidad{plural}",
       "amenitiesConfigured": "Amenities configurados",
-      "amenitiesCount": "{{count}} amenities seleccionados",
+      "amenitiesCount": "{count} amenities seleccionados",
       "paymentProcessed": "¡Pago procesado! Activando tu propiedad...",
-      "paymentFailed": "Error en el pago"
+      "paymentFailed": "Error en el pago",
+      "cancellationPolicyLabel": "Política de Cancelación",
+      "guestFacingPreview": "Así lo verán los huéspedes",
+      "propertyNamePlaceholder": "Nombre de la propiedad",
+      "cityLabel": "Ciudad",
+      "roomsLabel": "Habitaciones",
+      "startingFrom": "Desde",
+      "cancellationPolicyPlaceholder": "Ej: Cancelación gratuita hasta 48hs antes...",
+      "demoBypass": "⚡ Simular pago (modo demo)",
+      "englishLocaleNote": "Tu página está en inglés — todas las etiquetas coinciden con este idioma",
+      "currencyLabel": "COP/noche",
+      "noPolicySet": "Sin política configurada"
+    },
+    "suggestAmenity": {
+      "suggestLabel": "Sugerir amenidad",
+      "suggestionSent": "¡Sugerencia enviada!",
+      "suggestNewAmenity": "Sugerir nueva amenidad",
+      "amenityNamePlaceholder": "Nombre de la amenidad",
+      "descriptionPlaceholder": "Descripción breve (opcional)",
+      "categoryHotel": "Hotel",
+      "categoryRoom": "Habitación",
+      "categoryBoth": "Ambas",
+      "iconLabel": "Ícono sugerido",
+      "submitSuggestion": "Enviar sugerencia",
+      "successMessage": "Tu sugerencia será revisada y, si es aprobada, estará disponible para todos."
     },
     "provisioning": {
       "activating": "Activando tu Propiedad",
@@ -568,7 +446,96 @@
       "errorTitle": "Error en la Activación",
       "retry": "Reintentar",
       "noTransaction": "No se encontró el ID de transacción",
-      "invalidData": "Datos inválidos: {{message}}"
+      "invalidData": "Datos inválidos: {message}"
     }
+  },
+  "auth": {
+    "login": {
+      "title": "HospedaSuite SaaS",
+      "subtitle": "Acceso Seguro",
+      "emailLabel": "Email Corporativo",
+      "emailPlaceholder": "admin@hotel.com",
+      "passwordLabel": "Contraseña",
+      "passwordPlaceholder": "••••••••",
+      "submitButton": "Iniciar Sesión",
+      "sslFooter": "Protegido por SSL de grado militar",
+      "invalidCredentials": "Credenciales inválidas"
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "error": "Error",
+    "retry": "Reintentar",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "cancel": "Cancelar",
+    "confirm": "Confirmar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "close": "Cerrar"
+  },
+  "reviews": {
+    "today": "Hoy",
+    "yesterday": "Ayer",
+    "daysAgo": "Hace {count} dias",
+    "weeksAgo": "Hace {count} semanas",
+    "monthsAgo": "Hace {count} meses",
+    "yearsAgo": "Hace {count} ano(s)",
+    "noReviewsYet": "Aun no hay opiniones",
+    "noReviewsDesc": "Se el primero en compartir tu experiencia en {hotelName}. Tu opinion ayuda a otros viajeros a elegir.",
+    "guestReviews": "Opiniones de Huespedes",
+    "verifiedReviews": "{count} resenas verificadas",
+    "ofReviews": "de {count} reviews",
+    "excellent": "Excelente",
+    "veryGood": "Muy bueno",
+    "average": "Regular",
+    "poor": "Malo",
+    "terrible": "Pesimo",
+    "stay": "Estadia",
+    "helpful": "Util"
+  },
+  "reviewForm": {
+    "requiredFields": "Por favor completa todos los campos obligatorios y selecciona una calificacion.",
+    "commentTooLong": "El comentario no puede superar los 2000 caracteres.",
+    "submitError": "Error al enviar la opinion. Intenta de nuevo.",
+    "thankYou": "Gracias por tu opinion!",
+    "thankYouDesc": "Tu resena sobre {hotelName} sera publicada despues de verificacion. Solo opiniones de huespedes verificados son publicadas.",
+    "title": "Comparte tu experiencia",
+    "subtitle": "Tu opinion ayuda a otros viajeros a elegir. Sera publicada despues de verificacion.",
+    "yourRating": "Tu calificacion",
+    "rating1": "Malo",
+    "rating2": "Regular",
+    "rating3": "Bueno",
+    "rating4": "Muy bueno",
+    "rating5": "Excelente",
+    "name": "Nombre",
+    "namePlaceholder": "Como te llamas?",
+    "email": "Email",
+    "location": "Ubicacion (opcional)",
+    "stayDate": "Fecha de estadia (opcional)",
+    "yourExperience": "Tu experiencia",
+    "commentPlaceholder": "Que te parecio el hotel? Que destacarias?",
+    "submitting": "Enviando...",
+    "submit": "Enviar Opinion"
+  },
+  "reviewFormWithToggle": {
+    "writeReview": "Escribir opinion",
+    "closeForm": "Cerrar formulario",
+    "toggleButton": "Escribir una opinion",
+    "helperText": "Solo huespedes con una estadia completada pueden dejar una opinion."
+  },
+  "hotelDetail": {
+    "propertyNotFound": "Propiedad no encontrada",
+    "officialBooking": "Reserva Oficial",
+    "metaDescription": "Descubre la experiencia en {hotelName} ubicado en {location}. Reserva directa al mejor precio garantizado.",
+    "luxuryExperience": "Experiencia de Lujo",
+    "availableRooms": "Habitaciones Disponibles",
+    "roomsForDates": "{available} de {total} unidades para tus fechas",
+    "exploreUnits": "Explora nuestras {count} unidades"
+  },
+  "propertyPreview": {
+    "adminView": "Vista administrador",
+    "guestView": "Vista huésped"
   }
 }
