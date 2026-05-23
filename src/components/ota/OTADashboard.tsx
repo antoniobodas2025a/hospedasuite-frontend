@@ -269,7 +269,7 @@ export default function OTADashboard({
                     transition={springGentle()}
                     className='absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] shadow-xl p-2 min-w-[180px]'
                   >
-                    {[...OTHER_CATEGORIES, CATEGORIES.find(c => c.id === 'all')!].map((cat) => {
+                    {OTHER_CATEGORIES.map((cat) => {
                       const isActive = activeCategory === cat.id;
                       return (
                         <button

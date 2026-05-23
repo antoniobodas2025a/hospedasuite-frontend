@@ -389,42 +389,41 @@ export default function AvailabilitySearchBar({
 
                   {/* ── DATES MODAL ──────────────────────────── */}
                   {activeModal === 'dates' && (
-                    <div className="flex flex-col">
-                      {/* Header */}
-                      <div className="flex items-center justify-between px-5 pt-5 sm:px-6 sm:pt-6 pb-3">
-                        <div>
-                          <h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl">
-                            {t('ota.search.stay')}
-                          </h2>
-                          {/* Step indicator */}
-                          <div className="flex items-center gap-1.5 mt-1">
-                            <div className={cn('size-1.5 rounded-full transition-colors', dateStep === 'checkin' ? 'bg-primary' : 'bg-primary/30')} />
-                            <div className={cn('h-px w-4 transition-colors', dateStep !== 'checkin' ? 'bg-primary/30' : 'bg-muted')} />
-                            <div className={cn('size-1.5 rounded-full transition-colors', dateStep === 'checkout' ? 'bg-primary' : dateStep === 'complete' ? 'bg-primary/30' : 'bg-muted')} />
-                            <div className={cn('h-px w-4 transition-colors', dateStep === 'complete' ? 'bg-primary/30' : 'bg-muted')} />
-                            <div className={cn('size-1.5 rounded-full transition-colors', dateStep === 'complete' ? 'bg-primary' : 'bg-muted')} />
-                          </div>
-                          <p className="text-[11px] text-muted-foreground/60 mt-1 tracking-tight">
-                            {dateStep === 'checkin' && t('ota.search.arrival')}
-                            {dateStep === 'checkout' && `${format(pendingDate!.from!, 'dd MMM', { locale: dateLocale })} → ${t('ota.search.departure')}`}
-                            {dateStep === 'complete' && pendingDate?.from && pendingDate?.to && `${format(pendingDate.from, 'dd MMM')} — ${format(pendingDate.to, 'dd MMM')}`}
-                          </p>
+                    <div className="flex flex-col max-h-[85dvh] md:max-h-[80vh] overflow-hidden">
+                      {/* Header — X en esquina superior absoluta */}
+                      <div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-3 shrink-0">
+                        <h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
+                          {t('ota.search.stay')}
+                        </h2>
+                        {/* Step indicator */}
+                        <div className="flex items-center gap-1.5 mt-1">
+                          <div className={cn('size-1.5 rounded-full transition-colors', dateStep === 'checkin' ? 'bg-primary' : 'bg-primary/30')} />
+                          <div className={cn('h-px w-4 transition-colors', dateStep !== 'checkin' ? 'bg-primary/30' : 'bg-muted')} />
+                          <div className={cn('size-1.5 rounded-full transition-colors', dateStep === 'checkout' ? 'bg-primary' : dateStep === 'complete' ? 'bg-primary/30' : 'bg-muted')} />
+                          <div className={cn('h-px w-4 transition-colors', dateStep === 'complete' ? 'bg-primary/30' : 'bg-muted')} />
+                          <div className={cn('size-1.5 rounded-full transition-colors', dateStep === 'complete' ? 'bg-primary' : 'bg-muted')} />
                         </div>
+                        <p className="text-[11px] text-muted-foreground/60 mt-1 tracking-tight">
+                          {dateStep === 'checkin' && t('ota.search.arrival')}
+                          {dateStep === 'checkout' && `${format(pendingDate!.from!, 'dd MMM', { locale: dateLocale })} → ${t('ota.search.departure')}`}
+                          {dateStep === 'complete' && pendingDate?.from && pendingDate?.to && `${format(pendingDate.from, 'dd MMM')} — ${format(pendingDate.to, 'dd MMM')}`}
+                        </p>
 
+                        {/* X button — esquina superior derecha absoluta */}
                         <motion.button
                           onClick={() => setActiveModal(null)}
                           whileHover={{ scale: 1.08 }}
                           whileTap={{ scale: 0.9 }}
                           transition={springSnappy()}
-                          className="size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
+                          className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
                           aria-label={t('common.close')}
                         >
                           <X size={16} strokeWidth={2.5} />
                         </motion.button>
                       </div>
 
-                      {/* Calendar */}
-                      <div className="px-3 sm:px-4 pb-3">
+                      {/* Calendar — scrollable */}
+                      <div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-3">
                         <div className="date-picker-b2c">
                           <DayPicker
                             mode="range"
@@ -444,8 +443,8 @@ export default function AvailabilitySearchBar({
                         </div>
                       </div>
 
-                      {/* Footer: Clear + Confirm */}
-                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 flex items-center gap-3">
+                      {/* Footer: Clear + Confirm — sticky al fondo */}
+                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 flex items-center gap-3 shrink-0">
                         <motion.button
                           onClick={handleClearDates}
                           whileTap={{ scale: 0.95 }}
@@ -478,32 +477,31 @@ export default function AvailabilitySearchBar({
 
                   {/* ── GUESTS MODAL ─────────────────────────── */}
                   {activeModal === 'guests' && (
-                    <div className="flex flex-col">
-                      {/* Header */}
-                      <div className="flex items-center justify-between px-5 pt-5 sm:px-6 sm:pt-6 pb-2">
-                        <div>
-                          <h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl">
-                            {t('ota.search.guests')}
-                          </h2>
-                          <p className="text-xs text-muted-foreground/70 mt-0.5 tracking-tight">
-                            {pendingGuests} {t('ota.search.guest', { count: pendingGuests })}
-                          </p>
-                        </div>
+                    <div className="flex flex-col max-h-[85dvh] md:max-h-[80vh] overflow-hidden">
+                      {/* Header — X en esquina superior absoluta */}
+                      <div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-2 shrink-0">
+                        <h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
+                          {t('ota.search.guests')}
+                        </h2>
+                        <p className="text-xs text-muted-foreground/70 mt-0.5 tracking-tight">
+                          {pendingGuests} {t('ota.search.guest', { count: pendingGuests })}
+                        </p>
 
+                        {/* X button — esquina superior derecha absoluta */}
                         <motion.button
                           onClick={() => setActiveModal(null)}
                           whileHover={{ scale: 1.08 }}
                           whileTap={{ scale: 0.9 }}
                           transition={springSnappy()}
-                          className="size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
+                          className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
                           aria-label={t('common.close')}
                         >
                           <X size={16} strokeWidth={2.5} />
                         </motion.button>
                       </div>
 
-                      {/* Guest Selector — with added padding */}
-                      <div className="px-5 sm:px-6 py-4">
+                      {/* Guest Selector — scrollable */}
+                      <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4">
                         <GuestSelector
                           value={pendingGuests}
                           onChange={handlePendingGuestsChange}
@@ -512,8 +510,8 @@ export default function AvailabilitySearchBar({
                         />
                       </div>
 
-                      {/* Footer: Confirm */}
-                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5">
+                      {/* Footer: Confirm — sticky al fondo */}
+                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 shrink-0">
                         <motion.button
                           onClick={handleConfirmGuests}
                           whileHover={{ scale: 1.015 }}
