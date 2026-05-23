@@ -6,15 +6,15 @@ import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, SlidersHorizontal, 
 import { motion, AnimatePresence } from 'framer-motion';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay } from 'date-fns';
-import { es } from 'date-fns/locale';
 import { cn } from '@/lib/utils';
-import { mac2026Default as springPopover, springSnappy, springLayout, springGentle } from '@/lib/mac2026/spring';
+import { springSnappy, springLayout, springGentle, springModal, springBounce } from '@/lib/mac2026/spring';
 import { GlassPanel } from '@/components/ui/glass';
 import GuestSelector from '@/components/ota/GuestSelector';
 import RefinementPanel from '@/components/ota/RefinementPanel';
 import 'react-day-picker/dist/style.css';
 
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getDateFnsLocale } from '@/lib/date-locale';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -82,15 +82,16 @@ export default function AvailabilitySearchBar({
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations();
+  const appLocale = useLocale();
+  const dateLocale = getDateFnsLocale(appLocale);
   const popoverRef = useRef<HTMLDivElement>(null);
   const datesTriggerRef = useRef<HTMLDivElement>(null);
   const guestsTriggerRef = useRef<HTMLDivElement>(null);
   const navIoRef = useRef<IntersectionObserver | null>(null);
 
-  // Active popover
-  const [activePopover, setActivePopover] = useState<'dates' | 'guests' | null>(null);
+  // Active modal: unified — only one modal open at a time
+  const [activeModal, setActiveModal] = useState<'dates' | 'guests' | 'refinement' | null>(null);
   const [isPending, startTransition] = useTransition();
-  const [popoverPosition, setPopoverPosition] = useState<'below' | 'above'>('below');
 
   // Nav sections
   const [activeSection, setActiveSection] = useState(navSections[0]?.id ?? '');
@@ -118,39 +119,26 @@ export default function AvailabilitySearchBar({
     if (ci && co) { const f = parseISO(ci), t = parseISO(co); if (isValid(f) && isValid(t)) return { from: f, to: t }; }
     return undefined;
   });
+  // Pending date selection (not yet applied)
+  const [pendingDate, setPendingDate] = useState<DateRange | undefined>(date);
 
   // State: guests
   const [guests, setGuests] = useState<number>(() => { const g = searchParams.get('guests'); return g ? Number(g) : 1; });
+  // Pending guest selection (not yet applied)
+  const [pendingGuests, setPendingGuests] = useState<number>(guests);
 
   // State: refinement
   const [maxPrice, setMaxPrice] = useState<number | null>(() => { const p = searchParams.get('max_price'); return p ? Number(p) : null; });
   const [minBeds, setMinBeds] = useState<number | null>(() => { const b = searchParams.get('min_beds'); return b ? Number(b) : null; });
   const [selectedAmenities, setSelectedAmenities] = useState<string[]>(() => { const a = searchParams.get('amenities'); return a ? a.split(',').filter(Boolean) : []; });
-  const [showRefinement, setShowRefinement] = useState(false);
 
   const today = startOfDay(new Date());
 
-  // Click outside -> close popover
+  // Sync pending state when modal opens
   useEffect(() => {
-    function handleClickOutside(event: MouseEvent) {
-      const target = event.target as Node;
-      if (!document.contains(target)) return;
-      if (popoverRef.current && !popoverRef.current.contains(target)) setActivePopover(null);
-    }
-    if (activePopover) document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [activePopover]);
-
-  // Above/below positioning — uses the specific trigger ref for the active popover
-  useEffect(() => {
-    if (!activePopover) return;
-    const trigger = activePopover === 'dates' ? datesTriggerRef.current : guestsTriggerRef.current;
-    if (!trigger) return;
-    const rect = trigger.getBoundingClientRect();
-    const spaceBelow = window.innerHeight - rect.bottom;
-    const popoverHeight = activePopover === 'dates' ? 360 : 280;
-    setPopoverPosition(spaceBelow < popoverHeight && rect.top > spaceBelow ? 'above' : 'below');
-  }, [activePopover]);
+    if (activeModal === 'dates') setPendingDate(date);
+    if (activeModal === 'guests') setPendingGuests(guests);
+  }, [activeModal, date, guests]);
 
   // URL sync
   const pushUrl = useCallback(
@@ -165,33 +153,45 @@ export default function AvailabilitySearchBar({
       });
       startTransition(() => router.push(url, { scroll: false }));
     },
-     
+
     [searchParams, date, guests, maxPrice, minBeds, selectedAmenities, router]
   );
 
-  // Handlers
+  // Handlers: Dates
   const handleSelectDates = (newDate: DateRange | undefined) => {
     if (newDate?.from && newDate?.to) {
-      if (newDate.from.getTime() === newDate.to.getTime()) { setDate({ from: newDate.from, to: undefined }); return; }
-      setDate(newDate);
-      setActivePopover(null);
-      if (guests > 0) pushUrl({ checkin: newDate.from, checkout: newDate.to, guests });
-    } else setDate(newDate);
+      if (newDate.from.getTime() === newDate.to.getTime()) { setPendingDate({ from: newDate.from, to: undefined }); return; }
+      setPendingDate(newDate);
+    } else setPendingDate(newDate);
   };
 
-  const handleClearDates = (e: React.MouseEvent) => {
-    e.stopPropagation();
+  const handleConfirmDates = () => {
+    if (pendingDate?.from && pendingDate?.to) {
+      setDate(pendingDate);
+      setActiveModal(null);
+      if (guests > 0) pushUrl({ checkin: pendingDate.from, checkout: pendingDate.to, guests });
+    }
+  };
+
+  const handleClearDates = () => {
+    setPendingDate(undefined);
     setDate(undefined);
-    setActivePopover(null);
     pushUrl({ checkin: undefined, checkout: undefined });
   };
 
-  const handleGuestsChange = (value: number) => {
-    setGuests(value);
-    if (date?.from && date?.to) pushUrl({ checkin: date.from, checkout: date.to, guests: value });
-    else pushUrl({ guests: value });
+  // Handlers: Guests
+  const handlePendingGuestsChange = (value: number) => {
+    setPendingGuests(value);
   };
 
+  const handleConfirmGuests = () => {
+    setGuests(pendingGuests);
+    setActiveModal(null);
+    if (date?.from && date?.to) pushUrl({ checkin: date.from, checkout: date.to, guests: pendingGuests });
+    else pushUrl({ guests: pendingGuests });
+  };
+
+  // Handlers: Refinement
   const handleMaxPriceChange = (v: number | null) => { setMaxPrice(v); pushUrl({ maxPrice: v }); };
   const handleMinBedsChange = (v: number | null) => { setMinBeds(v); pushUrl({ minBeds: v }); };
   const handleAmenitiesChange = (v: string[]) => { setSelectedAmenities(v); pushUrl({ selectedAmenities: v }); };
@@ -200,7 +200,7 @@ export default function AvailabilitySearchBar({
   const handleClearAll = () => {
     setDate(undefined); setGuests(1);
     setMaxPrice(null); setMinBeds(null); setSelectedAmenities([]);
-    setShowRefinement(false); setActivePopover(null);
+    setActiveModal(null);
     const p = new URLSearchParams(searchParams.toString());
     ['checkin', 'checkout', 'guests', 'min_capacity', 'max_price', 'min_beds', 'amenities', 'showRoom'].forEach(k => p.delete(k));
     startTransition(() => router.push(`?${p.toString()}`, { scroll: false }));
@@ -228,8 +228,8 @@ export default function AvailabilitySearchBar({
 
   const displayRange = () => {
     if (date?.from) {
-      if (!date.to) return format(date.from, "dd 'de' MMM", { locale: es }) + ` — ${t('ota.search.departure')}`;
-      return `${format(date.from, 'dd MMM', { locale: es })} — ${format(date.to, 'dd MMM', { locale: es })}`;
+      if (!date.to) return format(date.from, "dd 'de' MMM", { locale: dateLocale }) + ` — ${t('ota.search.departure')}`;
+      return `${format(date.from, 'dd MMM', { locale: dateLocale })} — ${format(date.to, 'dd MMM', { locale: dateLocale })}`;
     }
     return `${t('ota.search.arrival')} — ${t('ota.search.departure')}`;
   };
@@ -247,6 +247,9 @@ export default function AvailabilitySearchBar({
   const valueClass = (active: boolean) => cn('tracking-tight', sticky ? 'text-sm' : 'text-base', active ? 'text-foreground font-bold' : 'text-muted-foreground font-medium');
   const ios = sticky ? 14 : 18;
 
+  // Date selection progress indicator
+  const dateStep = pendingDate?.from && pendingDate?.to ? 'complete' : pendingDate?.from ? 'checkout' : 'checkin';
+
   return (
     <div className="relative w-full z-[var(--z-dropdown)]" ref={popoverRef}>
       {/* UNIFIED STICKY BAR */}
@@ -256,15 +259,15 @@ export default function AvailabilitySearchBar({
           className={cn(
             'flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[var(--radius-squircle-2xl)] sm:rounded-full transition-all duration-300 w-full lg:w-2/3',
             sticky ? 'p-1.5 sm:p-1' : 'p-2',
-            activePopover ? 'ring-2 ring-ring shadow-xl' : 'hover:border-border hover:shadow-md',
+            activeModal ? 'ring-2 ring-ring shadow-xl' : 'hover:border-border hover:shadow-md',
             isPending && 'opacity-70 pointer-events-none grayscale-[0.2]'
           )}
         >
           {/* ZONE 1: DATES */}
           <div
             ref={datesTriggerRef}
-            onClick={() => !isPending && setActivePopover(activePopover === 'dates' ? null : 'dates')}
-            role="button" aria-expanded={activePopover === 'dates'} aria-label={t('ota.search.selectDates')}
+            onClick={() => !isPending && setActiveModal(activeModal === 'dates' ? null : 'dates')}
+            role="button" aria-expanded={activeModal === 'dates'} aria-label={t('ota.search.selectDates')}
             className={pillBase('rounded-t-[var(--radius-squircle-xl)] sm:rounded-l-full sm:rounded-r-none')}
           >
             <div className={iconCircle}>
@@ -283,7 +286,7 @@ export default function AvailabilitySearchBar({
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0, opacity: 0 }}
                 transition={springSnappy()}
-                onClick={handleClearDates}
+                onClick={(e) => { e.stopPropagation(); handleClearDates(); }}
                 className="size-6 rounded-full flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0 ml-1"
                 aria-label={t('ota.search.clearDates')}
                 title={t('ota.search.clearDates')}
@@ -300,8 +303,8 @@ export default function AvailabilitySearchBar({
           {/* ZONE 2: GUESTS */}
           <div
             ref={guestsTriggerRef}
-            onClick={() => !isPending && setActivePopover(activePopover === 'guests' ? null : 'guests')}
-            role="button" aria-expanded={activePopover === 'guests'} aria-label={t('ota.search.selectGuests')}
+            onClick={() => !isPending && setActiveModal(activeModal === 'guests' ? null : 'guests')}
+            role="button" aria-expanded={activeModal === 'guests'} aria-label={t('ota.search.selectGuests')}
             className={pillBase('rounded-b-[var(--radius-squircle-xl)] sm:rounded-r-full sm:rounded-l-none')}
           >
             <div className={iconCircle}>
@@ -339,12 +342,12 @@ export default function AvailabilitySearchBar({
       {showRefineButton && (
         <motion.div initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={springGentle()} className="mt-2">
           <button
-            onClick={() => setShowRefinement((p) => !p)}
+            onClick={() => setActiveModal(activeModal === 'refinement' ? null : 'refinement')}
             className={cn(
               'inline-flex items-center gap-2 px-4 py-2 rounded-[var(--radius-squircle-xl)] text-sm font-semibold transition-all',
-              showRefinement || hasActiveFilters ? 'bg-brand-50 text-brand-700 border border-brand-200' : 'bg-card/80 text-muted-foreground border border-border/30 hover:border-brand-300 hover:text-foreground'
+              activeModal === 'refinement' || hasActiveFilters ? 'bg-brand-50 text-brand-700 border border-brand-200' : 'bg-card/80 text-muted-foreground border border-border/30 hover:border-brand-300 hover:text-foreground'
             )}
-            aria-expanded={showRefinement}
+            aria-expanded={activeModal === 'refinement'}
             aria-label={hasActiveFilters ? t('ota.search.refineWithCount', { count: filterCount }) : t('ota.search.refine')}
           >
             <SlidersHorizontal size={14} />
@@ -359,70 +362,206 @@ export default function AvailabilitySearchBar({
         </motion.div>
       )}
 
-      {/* REFINEMENT PANEL */}
-      <div className="mt-2">
-        <RefinementPanel
-          rooms={rooms} maxPrice={maxPrice} onMaxPriceChange={handleMaxPriceChange}
-          minBeds={minBeds} onMinBedsChange={handleMinBedsChange}
-          selectedAmenities={selectedAmenities} onAmenitiesChange={handleAmenitiesChange}
-          onClearAll={handleClearAllRefinement} matchingCount={matchingCount} isOpen={showRefinement}
-          onClose={() => setShowRefinement(false)}
-        />
-      </div>
-
-      {/* POPOVERS */}
+      {/* ═══════════════════════════════════════════════════════════ */}
+      {/* UNIFIED MODAL SYSTEM — backdrop + glass container          */}
+      {/* ═══════════════════════════════════════════════════════════ */}
       <AnimatePresence>
-        {/* DATES POPOVER */}
-        {activePopover === 'dates' && (
-          <motion.div
-            initial={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
-            transition={springPopover}
-            style={{
-              position: 'absolute',
-              zIndex: 'var(--z-popover)',
-              ...(popoverPosition === 'above'
-                ? { bottom: '100%', marginBottom: 8 }
-                : { top: '100%', marginTop: 8 }),
-            }}
-            className="date-picker-b2c w-full md:w-auto"
-          >
-            <GlassPanel className="p-4 sm:p-6 ring-1 ring-foreground/5 bg-background/95 backdrop-blur-xl">
-              <DayPicker
-                mode="range" selected={date} onSelect={handleSelectDates}
-                locale={es} numberOfMonths={typeof window !== 'undefined' && window.innerWidth > 768 ? 2 : 1}
-                disabled={{ before: today }} className="text-foreground font-sans"
-                modifiersClassNames={{
-                  selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]',
-                  range_middle: 'bg-brand-50 text-brand-900 rounded-none',
-                  range_start: 'rounded-l-xl rounded-r-none', range_end: 'rounded-r-xl rounded-l-none',
-                }}
-              />
-            </GlassPanel>
-          </motion.div>
-        )}
+        {activeModal && (
+          <>
+            {/* Backdrop overlay — click to close */}
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.15 }}
+              onClick={() => setActiveModal(null)}
+              className="fixed inset-0 z-[var(--z-modal)] bg-black/20 backdrop-blur-sm"
+              aria-hidden="true"
+            />
 
-        {/* GUESTS POPOVER */}
-        {activePopover === 'guests' && (
-          <motion.div
-            initial={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: popoverPosition === 'above' ? 10 : -10, scale: 0.95 }}
-            transition={springGentle()}
-            style={{
-              position: 'absolute',
-              zIndex: 'var(--z-popover)',
-              ...(popoverPosition === 'above'
-                ? { bottom: '100%', marginBottom: 8, right: 0 }
-                : { top: '100%', marginTop: 8, right: 0 }),
-            }}
-            className="w-full sm:w-80"
-          >
-            <GlassPanel className="p-4 ring-1 ring-foreground/5 bg-background/95 backdrop-blur-xl">
-              <GuestSelector value={guests} onChange={handleGuestsChange} min={1} max={20} />
-            </GlassPanel>
-          </motion.div>
+            {/* Modal container — bottom sheet on mobile, centered on desktop */}
+            <motion.div
+              initial={{ opacity: 0, y: '100%' }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: '100%' }}
+              transition={springModal()}
+              className="fixed z-[var(--z-modal)] inset-x-0 bottom-0 md:inset-0 md:flex md:items-center md:justify-center pointer-events-none"
+            >
+              <div
+                className="pointer-events-auto w-full md:w-auto md:max-w-md md:mx-4 mb-0"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <GlassPanel
+                  intensity="heavy"
+                  className="md:rounded-[var(--radius-squircle-2xl)] rounded-t-[var(--radius-squircle-2xl)] rounded-b-none md:rounded-b-[var(--radius-squircle-2xl)] bg-background/95 backdrop-blur-3xl ring-1 ring-foreground/10 shadow-2xl overflow-hidden"
+                >
+                  {/* Mobile drag handle indicator */}
+                  <div className="md:hidden flex justify-center pt-3 pb-1">
+                    <div className="w-10 h-1 rounded-full bg-foreground/15" />
+                  </div>
+
+                  {/* ── DATES MODAL ──────────────────────────── */}
+                  {activeModal === 'dates' && (
+                    <div className="flex flex-col">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-5 pt-5 sm:px-6 sm:pt-6 pb-3">
+                        <div>
+                          <h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl">
+                            {t('ota.search.stay')}
+                          </h2>
+                          {/* Step indicator */}
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <div className={cn('size-1.5 rounded-full transition-colors', dateStep === 'checkin' ? 'bg-primary' : 'bg-primary/30')} />
+                            <div className={cn('h-px w-4 transition-colors', dateStep !== 'checkin' ? 'bg-primary/30' : 'bg-muted')} />
+                            <div className={cn('size-1.5 rounded-full transition-colors', dateStep === 'checkout' ? 'bg-primary' : dateStep === 'complete' ? 'bg-primary/30' : 'bg-muted')} />
+                            <div className={cn('h-px w-4 transition-colors', dateStep === 'complete' ? 'bg-primary/30' : 'bg-muted')} />
+                            <div className={cn('size-1.5 rounded-full transition-colors', dateStep === 'complete' ? 'bg-primary' : 'bg-muted')} />
+                          </div>
+                          <p className="text-[11px] text-muted-foreground/60 mt-1 tracking-tight">
+                            {dateStep === 'checkin' && t('ota.search.arrival')}
+                            {dateStep === 'checkout' && `${format(pendingDate!.from!, 'dd MMM', { locale: dateLocale })} → ${t('ota.search.departure')}`}
+                            {dateStep === 'complete' && pendingDate?.from && pendingDate?.to && `${format(pendingDate.from, 'dd MMM')} — ${format(pendingDate.to, 'dd MMM')}`}
+                          </p>
+                        </div>
+
+                        <motion.button
+                          onClick={() => setActiveModal(null)}
+                          whileHover={{ scale: 1.08 }}
+                          whileTap={{ scale: 0.9 }}
+                          transition={springSnappy()}
+                          className="size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
+                          aria-label={t('common.close')}
+                        >
+                          <X size={16} strokeWidth={2.5} />
+                        </motion.button>
+                      </div>
+
+                      {/* Calendar */}
+                      <div className="px-3 sm:px-4 pb-3">
+                        <div className="date-picker-b2c">
+                          <DayPicker
+                            mode="range"
+                            selected={pendingDate}
+                            onSelect={handleSelectDates}
+                            locale={dateLocale}
+                            numberOfMonths={1}
+                            disabled={{ before: today }}
+                            className="text-foreground font-sans"
+                            modifiersClassNames={{
+                              selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]',
+                              range_middle: 'bg-brand-50 text-brand-900 rounded-none',
+                              range_start: 'rounded-l-xl rounded-r-none',
+                              range_end: 'rounded-r-xl rounded-l-none',
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Footer: Clear + Confirm */}
+                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 flex items-center gap-3">
+                        <motion.button
+                          onClick={handleClearDates}
+                          whileTap={{ scale: 0.95 }}
+                          transition={springSnappy()}
+                          className="px-4 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted transition-colors ring-1 ring-foreground/5"
+                        >
+                          {t('ota.search.clearDates')}
+                        </motion.button>
+                        <motion.button
+                          onClick={handleConfirmDates}
+                          disabled={!pendingDate?.from || !pendingDate?.to}
+                          whileHover={pendingDate?.from && pendingDate?.to ? { scale: 1.015 } : {}}
+                          whileTap={pendingDate?.from && pendingDate?.to ? { scale: 0.97 } : {}}
+                          transition={springBounce()}
+                          className={cn(
+                            'flex-1 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight transition-all ring-1',
+                            pendingDate?.from && pendingDate?.to
+                              ? 'bg-primary text-primary-foreground shadow-lg ring-primary/20 hover:shadow-xl'
+                              : 'bg-muted/40 text-muted-foreground/50 ring-foreground/5 cursor-not-allowed'
+                          )}
+                        >
+                          {pendingDate?.from && pendingDate?.to
+                            ? t('ota.refinement.seeResults', { count: rooms.length > 0 ? rooms.length : 1 })
+                            : t('ota.search.selectDates')
+                          }
+                        </motion.button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── GUESTS MODAL ─────────────────────────── */}
+                  {activeModal === 'guests' && (
+                    <div className="flex flex-col">
+                      {/* Header */}
+                      <div className="flex items-center justify-between px-5 pt-5 sm:px-6 sm:pt-6 pb-2">
+                        <div>
+                          <h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl">
+                            {t('ota.search.guests')}
+                          </h2>
+                          <p className="text-xs text-muted-foreground/70 mt-0.5 tracking-tight">
+                            {pendingGuests} {t('ota.search.guest', { count: pendingGuests })}
+                          </p>
+                        </div>
+
+                        <motion.button
+                          onClick={() => setActiveModal(null)}
+                          whileHover={{ scale: 1.08 }}
+                          whileTap={{ scale: 0.9 }}
+                          transition={springSnappy()}
+                          className="size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
+                          aria-label={t('common.close')}
+                        >
+                          <X size={16} strokeWidth={2.5} />
+                        </motion.button>
+                      </div>
+
+                      {/* Guest Selector — with added padding */}
+                      <div className="px-5 sm:px-6 py-4">
+                        <GuestSelector
+                          value={pendingGuests}
+                          onChange={handlePendingGuestsChange}
+                          min={1}
+                          max={20}
+                        />
+                      </div>
+
+                      {/* Footer: Confirm */}
+                      <div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5">
+                        <motion.button
+                          onClick={handleConfirmGuests}
+                          whileHover={{ scale: 1.015 }}
+                          whileTap={{ scale: 0.97 }}
+                          transition={springBounce()}
+                          className="w-full py-3.5 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight bg-primary text-primary-foreground shadow-lg ring-1 ring-primary/20 hover:shadow-xl transition-all"
+                        >
+                          {t('ota.refinement.seeResults', { count: rooms.length > 0 ? rooms.length : 1 })}
+                        </motion.button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* ── REFINEMENT MODAL ─────────────────────── */}
+                  {activeModal === 'refinement' && (
+                    <div className="max-h-[85vh] flex flex-col overflow-hidden">
+                      <RefinementPanel
+                        rooms={rooms}
+                        maxPrice={maxPrice}
+                        onMaxPriceChange={handleMaxPriceChange}
+                        minBeds={minBeds}
+                        onMinBedsChange={handleMinBedsChange}
+                        selectedAmenities={selectedAmenities}
+                        onAmenitiesChange={handleAmenitiesChange}
+                        onClearAll={handleClearAllRefinement}
+                        matchingCount={matchingCount}
+                        totalCount={rooms.length}
+                        onClose={() => setActiveModal(null)}
+                      />
+                    </div>
+                  )}
+                </GlassPanel>
+              </div>
+            </motion.div>
+          </>
         )}
       </AnimatePresence>
     </div>

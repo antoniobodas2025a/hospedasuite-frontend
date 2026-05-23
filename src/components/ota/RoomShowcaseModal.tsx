@@ -9,12 +9,12 @@ import {
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { format, parseISO } from 'date-fns';
-import { es } from 'date-fns/locale';
 import type { Room, GalleryItem } from '@/types';
 import { GlassCard } from '@/components/ui/glass';
 import RoomGallery from './RoomGallery';
 import { getRoomAmenityById } from '@/lib/amenity-registry';
-import { useTranslations } from 'next-intl';
+import { useTranslations, useLocale } from 'next-intl';
+import { getDateFnsLocale } from '@/lib/date-locale';
 
 interface HotelForModal {
   slug: string;
@@ -45,6 +45,8 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   const router = useRouter();
   const searchParams = useSearchParams();
   const t = useTranslations();
+  const appLocale = useLocale();
+  const dateLocale = getDateFnsLocale(appLocale);
   
   const roomId = searchParams.get('showRoom');
   const checkIn = searchParams.get('checkin');
@@ -199,7 +201,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                           <Clock size={10} /> {t('ota.showcase.stay')}
                         </p>
                         <p className="text-sm font-bold text-foreground">
-                          {format(dateFrom, "dd MMM", { locale: es })} — {format(dateTo, "dd MMM", { locale: es })}
+                          {format(dateFrom, "dd MMM", { locale: dateLocale })} — {format(dateTo, "dd MMM", { locale: dateLocale })}
                         </p>
                       </div>
                       <div className="px-3 py-1.5 glass-card !rounded-[var(--radius-squircle-lg)]">
@@ -361,7 +363,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                     <div>
                       <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 flex items-center gap-1"><Clock size={10} /> {t('ota.showcase.stay')}</p>
                       <p className="text-sm font-bold text-foreground">
-                        {format(dateFrom, "dd MMM", { locale: es })} — {format(dateTo, "dd MMM", { locale: es })}
+                        {format(dateFrom, "dd MMM", { locale: dateLocale })} — {format(dateTo, "dd MMM", { locale: dateLocale })}
                       </p>
                     </div>
                     <div className="px-3 py-1.5 glass-card !rounded-[var(--radius-squircle-lg)]">
@@ -391,7 +393,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                           onClick={() => { closeModal(); window.scrollTo({ top: 0, behavior: 'smooth' }); }}
                           className="text-[10px] font-bold underline underline-offset-2 hover:text-destructive/70 transition-colors"
                         >
-                          Ajustar huéspedes
+                          {t('ota.showcase.adjustGuests')}
                         </button>
                         {hotel.rooms && hotel.rooms.some((r) => Number(r.capacity ?? 0) > Number(room.capacity ?? 0)) && (
                           <button
