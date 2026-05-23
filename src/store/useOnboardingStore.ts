@@ -8,6 +8,7 @@ import {
   HotelIdentityData,
   RoomDraftData,
   SettingsData,
+  PaymentMethod,
 } from '@/lib/onboarding-schemas';
 
 export interface RoomDraft extends RoomDraftData {
@@ -43,11 +44,14 @@ export interface OnboardingState {
   paymentPlan: string | null;
   paymentPrice: number;
   paymentTransactionId: string | null;
+  paymentMethod: PaymentMethod | null;
+  manualReceiptUrl: string | null;
 
   // State
   isSubmitting: boolean;
   error: string | null;
   validationErrors: Record<string, string>;
+  isProvisioning: boolean;
 
   // Actions
   setCurrentStep: (step: number) => void;
@@ -76,11 +80,14 @@ export interface OnboardingState {
   // Step 6 actions
   setPaymentInfo: (plan: string | null, price: number) => void;
   setPaymentTransactionId: (id: string | null) => void;
+  setPaymentMethod: (method: PaymentMethod | null) => void;
+  setManualReceiptUrl: (url: string | null) => void;
 
   // General
   setIsSubmitting: (value: boolean) => void;
   setError: (error: string | null) => void;
   setValidationErrors: (errors: Record<string, string>) => void;
+  startProvisioning: () => void;
   reset: () => void;
 
   // Step validation — returns { valid: boolean, errors: string[] }
@@ -122,10 +129,13 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   paymentPlan: null,
   paymentPrice: 89900,
   paymentTransactionId: null,
+  paymentMethod: null,
+  manualReceiptUrl: null,
 
   isSubmitting: false,
   error: null,
   validationErrors: {},
+  isProvisioning: false,
 
   setCurrentStep: (step) => set({ currentStep: step }),
   setMaxCompletedStep: (step) => set({ maxCompletedStep: step }),
@@ -237,10 +247,13 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 
   setPaymentInfo: (plan, price) => set({ paymentPlan: plan, paymentPrice: price }),
   setPaymentTransactionId: (id) => set({ paymentTransactionId: id }),
+  setPaymentMethod: (method) => set({ paymentMethod: method }),
+  setManualReceiptUrl: (url) => set({ manualReceiptUrl: url }),
 
   setIsSubmitting: (value) => set({ isSubmitting: value }),
   setError: (error) => set({ error }),
   setValidationErrors: (errors) => set({ validationErrors: errors }),
+  startProvisioning: () => set({ isProvisioning: true }),
 
   validateStep: (step) => {
     const errors: string[] = [];
@@ -301,8 +314,11 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
     paymentPlan: null,
     paymentPrice: 89900,
     paymentTransactionId: null,
+    paymentMethod: null,
+    manualReceiptUrl: null,
     isSubmitting: false,
     error: null,
     validationErrors: {},
+    isProvisioning: false,
   }),
 }));

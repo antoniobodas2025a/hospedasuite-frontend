@@ -63,6 +63,8 @@ export const paymentSchema = z.object({
   planId: z.string().optional(),
   price: z.number().min(0),
   transactionId: z.string().optional(),
+  paymentMethod: z.enum(['wompi', 'manual']).nullable(),
+  manualReceiptUrl: z.string().nullable(),
 });
 
 // Full wizard state schema (for provisioning)
@@ -78,4 +80,5 @@ export type HotelIdentityData = z.infer<typeof hotelIdentitySchema>;
 export type RoomDraftData = z.infer<typeof roomDraftSchema>;
 export type SettingsData = z.infer<typeof settingsSchema>;
 export type PaymentData = z.infer<typeof paymentSchema>;
+export type PaymentMethod = NonNullable<PaymentData['paymentMethod']>;
 export type FullWizardState = z.infer<typeof fullWizardStateSchema>;
