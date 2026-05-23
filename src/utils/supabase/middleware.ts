@@ -90,18 +90,13 @@ export async function updateSession(request: NextRequest, initialResponse?: Next
 
   const path = request.nextUrl.pathname;
 
-  // Normalizar path: quitar prefijo de locale (/en, /es) para auth checks
-  const normalizedPath = path.replace(/^\/(en|es)(\/|$)/, '/');
-
   // 🛡️ 1. Protección Básica: Invitados no pueden entrar a zonas seguras
-  if ((normalizedPath.startsWith('/dashboard') || normalizedPath.startsWith('/admin')) && !user) {
-    // Preservar el locale prefix si existe
-    const localePrefix = path.match(/^\/(en|es)/)?.[0] ?? '';
-    return NextResponse.redirect(new URL(`${localePrefix}/login`, request.url));
+  if ((path.startsWith('/dashboard') || path.startsWith('/admin')) && !user) {
+    return NextResponse.redirect(new URL('/login', request.url));
   }
 
   // 🛡️ 2. Protección Avanzada: Zero-Trust para rutas Super Admin
-  if (normalizedPath.startsWith('/admin') && user) {
+  if (path.startsWith('/admin') && user) {
     // Consultamos la tabla de roles usando el cliente de SSR (Respeta RLS)
     const { data: roleData, error: roleError } = await supabase
       .from('user_roles')
@@ -117,9 +112,8 @@ export async function updateSession(request: NextRequest, initialResponse?: Next
   }
 
   // 🔄 Redirigir si ya está logueado e intenta ir al login
-  if (normalizedPath.startsWith('/login') && user) {
-     const localePrefix = path.match(/^\/(en|es)/)?.[0] ?? '';
-     return NextResponse.redirect(new URL(`${localePrefix}/dashboard`, request.url));
+  if (path.startsWith('/login') && user) {
+     return NextResponse.redirect(new URL('/dashboard', request.url));
   }
 
   return supabaseResponse;

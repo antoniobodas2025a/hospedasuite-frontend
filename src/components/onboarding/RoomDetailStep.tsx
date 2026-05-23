@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, BedDouble, Bath, Maximize2, ChevronDown, ChevronUp, Droplets, ShowerHead, Mountain, Eye, EyeOff } from 'lucide-react';
+import { UploadCloud, BedDouble, Bath, Maximize2, ChevronDown, ChevronUp, Droplets, ShowerHead, Mountain, Eye, EyeOff, Plus } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useOnboardingStore, RoomDraft } from '@/store/useOnboardingStore';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
@@ -105,6 +105,7 @@ type RoomSectionId = 'essentials' | 'bathroom' | 'details';
 export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) {
   const t = useTranslations('onboarding.roomDetail');
   const { setRoomImages } = useOnboardingStore();
+  const [isDragging, setIsDragging] = useState(false);
   const [openSections, setOpenSections] = useState<Record<RoomSectionId, boolean>>({
     essentials: true,
     bathroom: false,
@@ -115,11 +116,26 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
     setOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = Array.from(e.target.files || []);
+  const processFiles = (files: File[]) => {
     if (files.length === 0) return;
-    const previews = files.map(f => URL.createObjectURL(f));
-    setRoomImages(room.id, files, previews);
+    const remaining = 5 - room.imagePreviews.length;
+    if (remaining <= 0) return;
+    const toAdd = files.slice(0, remaining);
+    const previews = toAdd.map(f => URL.createObjectURL(f));
+    setRoomImages(room.id, [...room.imageFiles, ...toAdd], [...room.imagePreviews, ...previews]);
+  };
+
+  const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
+    processFiles(Array.from(e.target.files || []));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
+  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation(); setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    processFiles(files);
   };
 
   const toggleAmenity = (amenityId: string) => {
@@ -301,18 +317,44 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           />
         </div>
 
-        {/* Photos */}
+        {/* Photos — Drag & Drop */}
         <div>
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('photosLabel')} ({room.imagePreviews.length}/5)</p>
           {room.imagePreviews.length > 0 ? (
-            <div className="flex gap-2 overflow-x-auto pb-2">
+            <div
+              className="grid grid-cols-5 gap-2"
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               {room.imagePreviews.map((src, i) => (
-                <img key={i} src={src} alt="" className="h-14 w-20 object-cover rounded-[var(--radius-squircle-md)] border border-white/10 shrink-0" />
+                <div key={i} className="relative group aspect-[4/3]">
+                  <img src={src} alt="" className="w-full h-full object-cover rounded-[var(--radius-squircle-md)] border border-white/10" />
+                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-[var(--radius-squircle-md)]" />
+                </div>
               ))}
+              {room.imagePreviews.length < 5 && (
+                <label className={`flex flex-col items-center justify-center aspect-[4/3] border-2 border-dashed rounded-[var(--radius-squircle-md)] cursor-pointer transition-all ${
+                  isDragging ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/10 hover:border-indigo-500/40'
+                }`}>
+                  <Plus size={16} className="text-zinc-500" />
+                  <input type="file" multiple accept="image/*" className="hidden" onChange={handleImages} />
+                </label>
+              )}
             </div>
           ) : (
-            <label className="flex items-center justify-center w-full h-20 border border-dashed border-white/10 rounded-[var(--radius-squircle-lg)] hover:border-indigo-500/40 cursor-pointer">
-              <UploadCloud className="text-zinc-600" size={18} />
+            <label
+              className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-[var(--radius-squircle-lg)] cursor-pointer transition-all ${
+                isDragging ? 'border-indigo-500 bg-indigo-500/10 scale-[1.01]' : 'border-white/10 hover:border-indigo-500/40'
+              }`}
+              onDragOver={handleDragOver}
+              onDragEnter={handleDragEnter}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
+              <UploadCloud className={`mb-1 transition-colors ${isDragging ? 'text-indigo-400' : 'text-zinc-600'}`} size={20} />
+              <p className="text-[10px] text-zinc-500 font-medium">{isDragging ? 'Soltá las fotos acá' : 'Arrastrá fotos acá o hacé clic'}</p>
               <input type="file" multiple accept="image/*" className="hidden" onChange={handleImages} />
             </label>
           )}

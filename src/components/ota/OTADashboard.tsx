@@ -111,7 +111,7 @@ export default function OTADashboard({
       setPage(nextPage);
       setHasMore(response.hasMore);
     } else {
-      alert('Error cargando mas alojamientos.');
+      alert(t('hotelDetail.errorLoadingMore'));
     }
 
     setIsLoadingMore(false);

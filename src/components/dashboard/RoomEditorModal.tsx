@@ -33,6 +33,7 @@ interface RoomEditorModalProps {
 export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomEditorModalProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
   const [newImageUrl, setNewImageUrl] = useState(''); 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -58,6 +59,33 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
     setValue('amenities', exists 
       ? currentAmenities.filter((id: string) => id !== amenityId) 
       : [...currentAmenities, amenityId], { shouldDirty: true });
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(true); };
+  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); setIsDragging(false); };
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault(); e.stopPropagation(); setIsDragging(false);
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length === 0) return;
+    
+    setIsUploadingMedia(true);
+    try {
+      const newGallery: { url: string; blurDataURL?: string }[] = [];
+      for (const file of files) {
+        const formData = new FormData();
+        formData.set('file', file);
+        const result = await uploadOptimizedImageAction(formData, 'rooms');
+        if (!result.success) throw new Error(result.error || 'Upload failed');
+        newGallery.push({ url: result.url, blurDataURL: result.blurDataURL });
+      }
+      setValue('gallery', [...currentGallery, ...newGallery], { shouldDirty: true });
+    } catch (error: any) {
+      console.error("[CRITICAL] Falla en la carga multimedia:", error);
+      alert(`Error al subir archivo: ${error.message || 'Verifique conexión y bucket'}`);
+    } finally {
+      setIsUploadingMedia(false);
+    }
   };
 
   const handleFileUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -169,9 +197,21 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                   <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Galería Visual (WebP)</h3>
                   <div className="space-y-4">
                     <input type="file" accept="image/*" multiple className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
-                    <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploadingMedia} className="w-full bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 border-dashed rounded-[var(--radius-squircle-lg)] py-4 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2">
-                      {isUploadingMedia ? <><Loader2 className="size-4 animate-spin" /> Procesando...</> : <><UploadCloud className="size-4" /> Subir desde el Equipo</>}
-                    </button>
+                    <div 
+                      className={cn(
+                        "w-full border border-dashed rounded-[var(--radius-squircle-lg)] py-4 text-[10px] font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 cursor-pointer",
+                        isDragging 
+                          ? "bg-rose-500/20 border-rose-500 scale-[1.01]" 
+                          : "bg-rose-500/10 hover:bg-rose-500/20 border-rose-500/30"
+                      )}
+                      onClick={() => fileInputRef.current?.click()}
+                      onDragOver={handleDragOver}
+                      onDragEnter={handleDragEnter}
+                      onDragLeave={handleDragLeave}
+                      onDrop={handleDrop}
+                    >
+                      {isUploadingMedia ? <><Loader2 className="size-4 animate-spin" /> Procesando...</> : <><UploadCloud className="size-4" /> {isDragging ? 'Soltá las fotos acá' : 'Subir desde el Equipo'}</>}
+                    </div>
 
                     <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
                       {currentGallery.map((img: any, i: number) => (

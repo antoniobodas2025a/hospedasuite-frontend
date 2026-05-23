@@ -1,6 +1,6 @@
 import type { Metadata, Viewport } from 'next';
 import { NextIntlClientProvider } from 'next-intl';
-import { getLocale, getMessages } from 'next-intl/server';
+import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import { Geist } from 'next/font/google';
 import './globals.css';
 import { cn } from "@/lib/utils";
@@ -20,11 +20,14 @@ export const viewport: Viewport = {
   viewportFit: 'cover', // Asegura que el color de fondo pase por debajo del Dynamic Island/Notch
 };
 
-// Contrato de Metadatos Base
-export const metadata: Metadata = {
-  title: 'HospedaSuite',
-  description: 'Plataforma de Gestión Hotelera y Motor de Reservas de Vanguardia',
-};
+// Dynamic Metadata per locale
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('common.metadata');
+  return {
+    title: t('title'),
+    description: t('description'),
+  };
+}
 
 export default async function RootLayout({
   children,

@@ -1,6 +1,7 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import { Calistoga } from 'next/font/google';
+import { getTranslations } from 'next-intl/server';
 import '../globals.css';
 
 const calistoga = Calistoga({
@@ -9,13 +10,16 @@ const calistoga = Calistoga({
   variable: '--font-calistoga',
 });
 
-export const metadata: Metadata = {
-  title: 'Motor de Reservas Seguro',
-  robots: {
-    index: false,
-    follow: true,
-  },
-};
+export async function generateMetadata(): Promise<Metadata> {
+  const t = await getTranslations('common.metadata');
+  return {
+    title: t('title'),
+    robots: {
+      index: false,
+      follow: true,
+    },
+  };
+}
 
 export default function DirectLayout({
   children,

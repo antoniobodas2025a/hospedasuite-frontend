@@ -61,7 +61,7 @@ export default function GuestSelector({
       {/* Chunk 1: Quick presets (Ley de Miller — 4 items max) */}
       <section>
         <SectionHeader
-          title="Rápido"
+          title={t('ota.guestSelector.quickTitle')}
           subtitle={matchedPreset ? t(matchedPreset.labelKey) : undefined}
         />
         <div className="flex items-center gap-2 px-1">
@@ -101,7 +101,7 @@ export default function GuestSelector({
       {/* Chunk 2: Precision counter */}
       <section>
         <SectionHeader
-          title="Ajuste fino"
+          title={t('ota.guestSelector.fineTitle')}
           subtitle={`${min}–${max} ${t('ota.guestSelector.guest', { count: max })}`}
         />
         <div className="flex items-center justify-center gap-4 px-1">

@@ -130,18 +130,47 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
     );
   };
 
-  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
+  const processFiles = async (files: File[], target: 'hero' | 'covers' | 'gallery') => {
+    if (files.length === 0) return;
     setIsSaving(true);
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const result = await uploadOptimizedImageAction(formData, 'covers');
-      if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
-      setValue('cover_photo_url', result.url);
-      setCoverPhotoPreview(result.url);
-      setImageBlurMeta(prev => ({ ...prev, cover_photo_blur: result.blurDataURL }));
+      if (target === 'hero') {
+        const file = files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+        const result = await uploadOptimizedImageAction(formData, 'hero');
+        if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
+        setValue('main_image_url', result.url);
+        setMainImagePreview(result.url);
+        setImageBlurMeta(prev => ({ ...prev, main_image_blur: result.blurDataURL }));
+      } else if (target === 'covers') {
+        const file = files[0];
+        const formData = new FormData();
+        formData.append('file', file);
+        const result = await uploadOptimizedImageAction(formData, 'covers');
+        if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
+        setValue('cover_photo_url', result.url);
+        setCoverPhotoPreview(result.url);
+        setImageBlurMeta(prev => ({ ...prev, cover_photo_blur: result.blurDataURL }));
+      } else if (target === 'gallery') {
+        const newUrls: string[] = [...galleryPreviews];
+        const remaining = 8 - newUrls.length;
+        const toProcess = files.slice(0, remaining);
+        for (const file of toProcess) {
+          const formData = new FormData();
+          formData.append('file', file);
+          const result = await uploadOptimizedImageAction(formData, 'gallery');
+          if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
+          newUrls.push(result.url);
+          const blurURL = result.blurDataURL ?? '';
+          setImageBlurMeta(prev => ({
+            ...prev,
+            gallery_blurs: [...prev.gallery_blurs, { url: result.url, blur: blurURL }]
+          }));
+        }
+        setGalleryPreviews(newUrls);
+        setValue('gallery_urls', newUrls);
+      }
     } catch (error: any) {
       alert('Error al subir imagen: ' + error.message);
     } finally {
@@ -149,56 +178,41 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
     }
   };
 
+  const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    await processFiles([file], 'covers');
+  };
+
   const handleMainImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (!file) return;
-    setIsSaving(true);
-    try {
-      const formData = new FormData();
-      formData.append('file', file);
-      const result = await uploadOptimizedImageAction(formData, 'hero');
-      if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
-      setValue('main_image_url', result.url);
-      setMainImagePreview(result.url);
-      setImageBlurMeta(prev => ({ ...prev, main_image_blur: result.blurDataURL }));
-    } catch (error: any) {
-      alert('Error al subir imagen (Hero): ' + error.message);
-    } finally {
-      setIsSaving(false);
-    }
+    await processFiles([file], 'hero');
   };
 
   const handleGalleryUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = event.target.files;
     if (!files || files.length === 0) return;
-    setIsSaving(true);
-    try {
-      const newUrls: string[] = [...galleryPreviews];
-      for (const file of Array.from(files)) {
-        const formData = new FormData();
-        formData.append('file', file);
-        const result = await uploadOptimizedImageAction(formData, 'gallery');
-        if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
-        newUrls.push(result.url);
-        const blurURL = result.blurDataURL ?? '';
-        setImageBlurMeta(prev => ({
-          ...prev,
-          gallery_blurs: [...prev.gallery_blurs, { url: result.url, blur: blurURL }]
-        }));
-      }
-      setGalleryPreviews(newUrls);
-      setValue('gallery_urls', newUrls);
-    } catch (error: any) {
-      alert('Error al subir galería: ' + error.message);
-    } finally {
-      setIsSaving(false);
-    }
+    await processFiles(Array.from(files), 'gallery');
   };
 
   const removeGalleryImage = (index: number) => {
     const updated = galleryPreviews.filter((_, i) => i !== index);
     setGalleryPreviews(updated);
     setValue('gallery_urls', updated);
+    setImageBlurMeta(prev => ({
+      ...prev,
+      gallery_blurs: prev.gallery_blurs.filter((_, i) => i !== index)
+    }));
+  };
+
+  const handleDragOver = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleDragEnter = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleDragLeave = (e: React.DragEvent) => { e.preventDefault(); e.stopPropagation(); };
+  const handleDrop = async (e: React.DragEvent, target: 'hero' | 'covers' | 'gallery') => {
+    e.preventDefault(); e.stopPropagation();
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    await processFiles(files, target);
   };
 
   const handleCreateStaff = async (e: React.FormEvent) => {
@@ -369,8 +383,14 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                     <div>
                       <h4 className="text-sm font-bold mb-3 flex items-center gap-2"><UploadCloud className="text-indigo-400" size={16} /> Foto Hero</h4>
                       <p className="text-[10px] text-muted-foreground mb-3 uppercase tracking-widest">Imagen principal del hotel en la pagina publica</p>
-                      <div className="relative w-full h-48 bg-background rounded-[var(--radius-squircle-3xl)] border-2 border-dashed border-border overflow-hidden group">
-                        {mainImagePreview ? <img src={mainImagePreview} alt="Hero" className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" /> : <div className="flex flex-col h-full items-center justify-center opacity-20"><UploadCloud size={40}/><span className="text-[9px] mt-2 font-bold uppercase">Click para subir</span></div>}
+                      <div 
+                        className="relative w-full h-48 bg-background rounded-[var(--radius-squircle-3xl)] border-2 border-dashed border-border overflow-hidden group"
+                        onDragOver={handleDragOver}
+                        onDragEnter={handleDragEnter}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, 'hero')}
+                      >
+                        {mainImagePreview ? <img src={mainImagePreview} alt="Hero" className="w-full h-full object-cover opacity-70 group-hover:opacity-100 transition-opacity" /> : <div className="flex flex-col h-full items-center justify-center opacity-20"><UploadCloud size={40}/><span className="text-[9px] mt-2 font-bold uppercase">Click o arrastrá acá</span></div>}
                         <input type="file" accept="image/*" onChange={handleMainImageUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
                     </div>
@@ -378,7 +398,13 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                     {/* COVER PHOTO */}
                     <div>
                       <h4 className="text-sm font-bold mb-3 flex items-center gap-2"><UploadCloud className="text-sky-400" size={16} /> Foto Secundaria</h4>
-                      <div className="relative w-full h-40 bg-background rounded-[var(--radius-squircle-3xl)] border-2 border-dashed border-border overflow-hidden group">
+                      <div 
+                        className="relative w-full h-40 bg-background rounded-[var(--radius-squircle-3xl)] border-2 border-dashed border-border overflow-hidden group"
+                        onDragOver={handleDragOver}
+                        onDragEnter={handleDragEnter}
+                        onDragLeave={handleDragLeave}
+                        onDrop={(e) => handleDrop(e, 'covers')}
+                      >
                         {coverPhotoPreview ? <img src={coverPhotoPreview} alt="C" className="w-full h-full object-cover opacity-60 group-hover:opacity-100 transition-opacity" /> : <div className="flex h-full items-center justify-center opacity-20"><UploadCloud size={40}/></div>}
                         <input type="file" accept="image/*" onChange={handleFileUpload} className="absolute inset-0 opacity-0 cursor-pointer" />
                       </div>
@@ -401,7 +427,13 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                         </div>
                       )}
                       {galleryPreviews.length < 8 && (
-                        <label className="flex flex-col items-center justify-center w-full h-20 bg-background border-2 border-dashed border-border rounded-[var(--radius-squircle-2xl)] cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group">
+                        <label 
+                          className="flex flex-col items-center justify-center w-full h-20 bg-background border-2 border-dashed border-border rounded-[var(--radius-squircle-2xl)] cursor-pointer hover:border-emerald-500/40 hover:bg-emerald-500/5 transition-all group"
+                          onDragOver={handleDragOver}
+                          onDragEnter={handleDragEnter}
+                          onDragLeave={handleDragLeave}
+                          onDrop={(e) => handleDrop(e, 'gallery')}
+                        >
                           <Plus className="text-muted-foreground group-hover:text-emerald-400 mb-1" size={18} />
                           <span className="text-[9px] text-muted-foreground font-bold uppercase">Agregar fotos</span>
                           <input type="file" accept="image/*" multiple onChange={handleGalleryUpload} className="hidden" />

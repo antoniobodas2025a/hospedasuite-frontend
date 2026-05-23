@@ -141,7 +141,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
               type="email"
               value={guestEmail}
               onChange={(e) => setGuestEmail(e.target.value)}
-              placeholder="tu@email.com"
+              placeholder={t('reviewForm.emailPlaceholder')}
               className="w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
               required
             />
@@ -158,7 +158,7 @@ export default function ReviewForm({ hotelId, hotelName }: ReviewFormProps) {
             type="text"
             value={guestLocation}
             onChange={(e) => setGuestLocation(e.target.value)}
-            placeholder="Bogota, Colombia"
+            placeholder={t('reviewForm.locationPlaceholder')}
             className="w-full px-4 py-3 rounded-[var(--radius-squircle-lg)] bg-muted border border-border text-foreground placeholder:text-muted-foreground/50 text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/40 focus:border-brand-500/60 transition-all"
           />
         </div>

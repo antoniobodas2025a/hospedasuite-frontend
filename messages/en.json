@@ -80,7 +80,9 @@
       "group": "Group",
       "decrease": "Decrease guests",
       "increase": "Increase guests",
-      "guest": "{count, plural, one {guest} other {guests}}"
+      "guest": "{count, plural, one {guest} other {guests}}",
+      "quickTitle": "Quick",
+      "fineTitle": "Precision"
     },
     "refinement": {
       "title": "Refine search",
@@ -315,6 +317,11 @@
           }
         }
       }
+    },
+    "roomGallery": {
+      "viewImage": "View image {index}",
+      "viewGallery": "View gallery of {name}",
+      "photoCount": "{count, plural, one {photo} other {photos}}"
     }
   },
   "onboarding": {
@@ -479,7 +486,14 @@
     "save": "Save",
     "delete": "Delete",
     "edit": "Edit",
-    "close": "Close"
+    "close": "Close",
+    "errorTitle": "Something went wrong",
+    "errorDesc": "This component could not load correctly.",
+    "tryAgain": "Try again",
+    "metadata": {
+      "title": "HospedaSuite — Hotel Management Software",
+      "description": "All-in-one platform for hotel management: reservations, channel manager, POS and direct booking."
+    }
   },
   "reviews": {
     "today": "Today",
@@ -523,7 +537,9 @@
     "yourExperience": "Your experience",
     "commentPlaceholder": "How was the hotel? What stood out?",
     "submitting": "Submitting...",
-    "submit": "Submit Review"
+    "submit": "Submit Review",
+    "emailPlaceholder": "you@email.com",
+    "locationPlaceholder": "Bogota, Colombia"
   },
   "reviewFormWithToggle": {
     "writeReview": "Write a review",
@@ -538,7 +554,11 @@
     "luxuryExperience": "Luxury Experience",
     "availableRooms": "Available Rooms",
     "roomsForDates": "{available} of {total} units for your dates",
-    "exploreUnits": "Explore our {count} units"
+    "exploreUnits": "Explore our {count} units",
+    "navRooms": "Rooms",
+    "navReviews": "Reviews",
+    "navLocation": "Location",
+    "errorLoadingMore": "Error loading more properties."
   },
   "propertyPreview": {
     "adminView": "Admin view",

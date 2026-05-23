@@ -92,9 +92,9 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
 
   // StickySubNav sections
   const navSections = [
-    { id: 'rooms-section', label: 'Habitaciones' },
-    { id: 'reviews-section', label: 'Opiniones' },
-    { id: 'info-section', label: 'Ubicacion' },
+    { id: 'rooms-section', label: t('navRooms') },
+    { id: 'reviews-section', label: t('navReviews') },
+    { id: 'info-section', label: t('navLocation') },
   ];
 
   // Modal data optimization: pass minimal data when closed

@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useCallback, Suspense, useMemo } from 'react';
+import { useTranslations } from 'next-intl';
 import Image from 'next/image';
 import dynamic from 'next/dynamic';
 import type { GalleryItem } from '@/types';
@@ -45,6 +46,7 @@ function SortableThumbnail({
   onClick: (i: number) => void;
   isDragging: boolean;
 }) {
+  const t = useTranslations();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging: isSortableDragging } = useSortable({
     id: `thumb-${realIndex}`,
   });
@@ -66,7 +68,7 @@ function SortableThumbnail({
         type="button"
         onClick={() => onClick(realIndex)}
         className="absolute inset-0 w-full h-full"
-        aria-label={`Ver imagen ${realIndex + 1}`}
+        aria-label={t('ota.roomGallery.viewImage', { index: realIndex + 1 })}
       >
         <Image
           src={getImageSizeUrl(img.url, 'thumb')}
@@ -107,6 +109,7 @@ interface RoomGalleryProps {
 }
 
 export default function RoomGallery({ images, roomName, onClose, variant = 'inline', blurDataURL }: RoomGalleryProps) {
+  const t = useTranslations();
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(0);
   const [galleryImages, setGalleryImages] = useState<GalleryItem[]>(images);
@@ -205,7 +208,7 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
               setOpen(true);
             }}
             className="relative block h-[260px] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
-            aria-label={`Ver galería de ${roomName}`}
+            aria-label={t('ota.roomGallery.viewGallery', { name: roomName })}
           >
             <Image
               src={galleryImages[0]?.url ?? ''}
@@ -235,7 +238,7 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
                   <circle cx="9" cy="9" r="2" />
                   <path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
                 </svg>
-                {galleryImages.length} foto{galleryImages.length !== 1 ? 's' : ''}
+                {t('ota.roomGallery.photoCount', { count: galleryImages.length })}
               </span>
             </div>
           </button>

@@ -1,23 +1,26 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Globe } from 'lucide-react';
 
 export default function LanguageSwitcher() {
+  const router = useRouter();
   const [currentLocale, setCurrentLocale] = useState('es');
 
   useEffect(() => {
-    // Leer cookie actual
     const match = document.cookie.match(/(?:^|;\s*)NEXT_LOCALE=([^;]*)/);
     setCurrentLocale(match?.[1] || 'es');
   }, []);
 
   const switchLanguage = (locale: 'es' | 'en') => {
-    // Guardar cookie
+    if (locale === currentLocale) return;
+    // Set cookie
     document.cookie = `NEXT_LOCALE=${locale}; path=/; max-age=31536000; SameSite=Lax`;
     setCurrentLocale(locale);
-    // Recargar para aplicar el nuevo idioma
-    window.location.reload();
+    // Soft re-render: server re-reads cookie → loads new messages → client re-renders
+    // No page reload, no scroll loss, no asset re-download
+    router.refresh();
   };
 
   return (

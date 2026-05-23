@@ -80,7 +80,9 @@
       "group": "Grupo",
       "decrease": "Reducir huéspedes",
       "increase": "Aumentar huéspedes",
-      "guest": "{count, plural, one {huésped} other {huéspedes}}"
+      "guest": "{count, plural, one {huésped} other {huéspedes}}",
+      "quickTitle": "Rápido",
+      "fineTitle": "Ajuste fino"
     },
     "refinement": {
       "title": "Refinar búsqueda",
@@ -315,6 +317,11 @@
           }
         }
       }
+    },
+    "roomGallery": {
+      "viewImage": "Ver imagen {index}",
+      "viewGallery": "Ver galería de {name}",
+      "photoCount": "{count, plural, one {foto} other {fotos}}"
     }
   },
   "onboarding": {
@@ -479,7 +486,14 @@
     "save": "Guardar",
     "delete": "Eliminar",
     "edit": "Editar",
-    "close": "Cerrar"
+    "close": "Cerrar",
+    "errorTitle": "Algo salió mal",
+    "errorDesc": "Este componente no pudo cargarse correctamente.",
+    "tryAgain": "Reintentar",
+    "metadata": {
+      "title": "HospedaSuite — Software para Hoteles",
+      "description": "Plataforma integral para gestión hotelera: reservas, channel manager, POS y reservas directas."
+    }
   },
   "reviews": {
     "today": "Hoy",
@@ -523,7 +537,9 @@
     "yourExperience": "Tu experiencia",
     "commentPlaceholder": "Que te parecio el hotel? Que destacarias?",
     "submitting": "Enviando...",
-    "submit": "Enviar Opinion"
+    "submit": "Enviar Opinion",
+    "emailPlaceholder": "tu@email.com",
+    "locationPlaceholder": "Bogotá, Colombia"
   },
   "reviewFormWithToggle": {
     "writeReview": "Escribir opinion",
@@ -538,7 +554,11 @@
     "luxuryExperience": "Experiencia de Lujo",
     "availableRooms": "Habitaciones Disponibles",
     "roomsForDates": "{available} de {total} unidades para tus fechas",
-    "exploreUnits": "Explora nuestras {count} unidades"
+    "exploreUnits": "Explora nuestras {count} unidades",
+    "navRooms": "Habitaciones",
+    "navReviews": "Opiniones",
+    "navLocation": "Ubicación",
+    "errorLoadingMore": "Error cargando más alojamientos."
   },
   "propertyPreview": {
     "adminView": "Vista administrador",
