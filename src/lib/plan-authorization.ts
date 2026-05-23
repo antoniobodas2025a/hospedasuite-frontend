@@ -13,7 +13,7 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export interface AuthorizationResult {
   allowed: boolean;
-  reason?: 'missing_plan' | 'past_due' | 'cancelled' | 'trial_expired';
+  reason?: 'missing_plan' | 'past_due' | 'cancelled' | 'trial_expired' | 'pending_approval';
   currentPlan?: string;
   status?: string;
 }
@@ -67,6 +67,12 @@ export async function checkPlanAccess(
 
   if (hotel.subscription_status === 'past_due') {
     return { allowed: false, reason: 'past_due', currentPlan: hotel.subscription_plan, status: hotel.subscription_status };
+  }
+
+  // pending_approval: pago manual registrado, esperando aprobación.
+  // Se permite acceso mientras tanto (el hotelier ya pagó).
+  if (hotel.subscription_status === 'pending_approval') {
+    // Procede al check de plan level normalmente
   }
 
   // 2. Verificar trial expirado

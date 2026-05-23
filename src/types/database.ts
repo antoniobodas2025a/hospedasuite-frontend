@@ -10,6 +10,48 @@ export type Json =
 export interface Database {
   public: {
     Tables: {
+      manual_payments: {
+        Row: {
+      id: string
+      hotel_id: string
+      user_id: string
+      amount: number
+      method: 'nequi' | 'daviplata'
+      status: 'pending' | 'approved' | 'rejected'
+      receipt_url: string
+      rejection_reason?: string
+      created_at?: string
+      approved_at?: string
+      approved_by?: string
+        };
+        Insert: {
+      id: string
+      hotel_id: string
+      user_id: string
+      amount: number
+      method: 'nequi' | 'daviplata'
+      status: 'pending' | 'approved' | 'rejected'
+      receipt_url: string
+      rejection_reason?: string
+      created_at?: string
+      approved_at?: string
+      approved_by?: string
+        };
+        Update: {
+      id?: string
+      hotel_id?: string
+      user_id?: string
+      amount?: number
+      method?: 'nequi' | 'daviplata'
+      status?: 'pending' | 'approved' | 'rejected'
+      receipt_url?: string
+      rejection_reason?: string
+      created_at?: string
+      approved_at?: string
+      approved_by?: string
+        };
+        Relationships: [];
+      };
       billing_invoices: {
         Row: {
       id: string

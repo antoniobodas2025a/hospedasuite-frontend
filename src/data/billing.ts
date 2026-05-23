@@ -22,7 +22,7 @@ export interface SubscriptionDTO {
   id: string
   hotel_id: string
   plan_key: PlanKey
-  status: 'trialing' | 'active' | 'past_due' | 'cancelled' | 'paused'
+  status: 'trialing' | 'active' | 'past_due' | 'cancelled' | 'paused' | 'pending_approval'
   current_period_start: string
   current_period_end: string
   cancel_at_period_end: boolean
