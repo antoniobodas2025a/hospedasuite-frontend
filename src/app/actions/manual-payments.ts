@@ -1,0 +1,317 @@
+'use server';
+
+import { createClient } from '@/utils/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
+import { revalidatePath } from 'next/cache';
+
+// ============================================================================
+// 1. SUBIR COMPROBANTE DE PAGO MANUAL
+// ============================================================================
+export async function uploadManualPaymentReceipt(
+  formData: FormData
+): Promise<{ success: boolean; url?: string; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'No autenticado' };
+
+    const file = formData.get('file') as File;
+    if (!file) return { success: false, error: 'No se recibió ningún archivo.' };
+
+    // Validar tipo de archivo
+    const allowedTypes = ['image/jpeg', 'image/png', 'image/webp', 'application/pdf'];
+    if (!allowedTypes.includes(file.type)) {
+      return { success: false, error: 'Solo se permiten imágenes (JPEG, PNG, WebP) o PDF.' };
+    }
+
+    // Validar tamaño (5 MB)
+    if (file.size > 5 * 1024 * 1024) {
+      return { success: false, error: 'El archivo no puede superar los 5 MB.' };
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+    const path = `${user.id}/${Date.now()}-${sanitizedName}`;
+
+    const { error: uploadError } = await supabaseAdmin.storage
+      .from('manual-payment-receipts')
+      .upload(path, buffer, {
+        contentType: file.type,
+        cacheControl: '31536000',
+        upsert: false,
+      });
+
+    if (uploadError) {
+      console.error('Upload receipt error:', uploadError);
+      return { success: false, error: 'Error al subir el comprobante. Intentalo de nuevo.' };
+    }
+
+    const { data: urlData } = supabaseAdmin.storage
+      .from('manual-payment-receipts')
+      .getPublicUrl(path);
+
+    return { success: true, url: urlData.publicUrl };
+  } catch (error: any) {
+    console.error('Manual payment upload error:', error.message);
+    return { success: false, error: error.message || 'Error al subir el comprobante' };
+  }
+}
+
+// ============================================================================
+// 2. CREAR REGISTRO DE PAGO MANUAL
+// ============================================================================
+export async function createManualPayment(payload: {
+  hotel_id: string;
+  amount: number;
+  method: 'nequi' | 'daviplata';
+  receipt_url: string;
+}): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'No autenticado' };
+
+    // Validaciones
+    if (!payload.hotel_id) return { success: false, error: 'hotel_id es requerido' };
+    if (!payload.amount || payload.amount <= 0) return { success: false, error: 'El monto debe ser mayor a 0' };
+    if (!['nequi', 'daviplata'].includes(payload.method)) {
+      return { success: false, error: 'Método inválido. Usá nequi o daviplata.' };
+    }
+    if (!payload.receipt_url) return { success: false, error: 'El comprobante es requerido' };
+
+    // Insertar manual_payment
+    const { error: insertError } = await supabaseAdmin
+      .from('manual_payments')
+      .insert({
+        hotel_id: payload.hotel_id,
+        user_id: user.id,
+        amount: payload.amount,
+        method: payload.method,
+        receipt_url: payload.receipt_url,
+        status: 'pending',
+      });
+
+    if (insertError) {
+      console.error('Create manual payment error:', insertError);
+      return { success: false, error: 'Error al registrar el pago: ' + insertError.message };
+    }
+
+    // Actualizar hotel a pending_approval
+    const { error: hotelError } = await supabaseAdmin
+      .from('hotels')
+      .update({ subscription_status: 'pending_approval', status: 'draft' })
+      .eq('id', payload.hotel_id);
+
+    if (hotelError) {
+      console.error('Update hotel status error:', hotelError);
+      // No fallar — el pago ya está registrado, solo el estado del hotel no se actualizó
+    }
+
+    revalidatePath('/software/onboarding');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Create manual payment error:', error.message);
+    return { success: false, error: error.message || 'Error al registrar el pago' };
+  }
+}
+
+// ============================================================================
+// 3. APROBAR PAGO MANUAL (SUPER-ADMIN)
+// ============================================================================
+export async function approveManualPayment(
+  manualPaymentId: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'No autenticado' };
+
+    // Verificar rol de super-admin
+    const { data: roleData } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!roleData || roleData.role !== 'super_admin') {
+      return { success: false, error: 'No autorizado. Solo super-admins pueden aprobar pagos.' };
+    }
+
+    // Obtener el manual_payment
+    const { data: payment, error: paymentError } = await supabaseAdmin
+      .from('manual_payments')
+      .select('id, hotel_id, status')
+      .eq('id', manualPaymentId)
+      .single();
+
+    if (paymentError || !payment) {
+      return { success: false, error: 'Pago no encontrado.' };
+    }
+
+    if (payment.status !== 'pending') {
+      return { success: false, error: `El pago ya fue ${payment.status === 'approved' ? 'aprobado' : 'rechazado'}.` };
+    }
+
+    // Aprobar: actualizar manual_payment + hotel
+    const now = new Date().toISOString();
+
+    const { error: updatePaymentError } = await supabaseAdmin
+      .from('manual_payments')
+      .update({
+        status: 'approved',
+        approved_at: now,
+        approved_by: user.id,
+      })
+      .eq('id', manualPaymentId);
+
+    if (updatePaymentError) {
+      return { success: false, error: 'Error al aprobar: ' + updatePaymentError.message };
+    }
+
+    // Activar el hotel: status='active', subscription_status='trialing', trial empieza ahora
+    const trialEnds = new Date(Date.now() + 30 * 86400000).toISOString();
+
+    const { error: hotelError } = await supabaseAdmin
+      .from('hotels')
+      .update({
+        status: 'active',
+        subscription_status: 'trialing',
+        trial_ends_at: trialEnds,
+        is_onboarding_complete: true,
+        onboarding_step: 6,
+      })
+      .eq('id', payment.hotel_id);
+
+    if (hotelError) {
+      return { success: false, error: 'Pago aprobado pero error al activar hotel: ' + hotelError.message };
+    }
+
+    revalidatePath('/admin/payments/pending');
+    revalidatePath('/admin/dashboard');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Approve manual payment error:', error.message);
+    return { success: false, error: error.message || 'Error al aprobar el pago' };
+  }
+}
+
+// ============================================================================
+// 4. RECHAZAR PAGO MANUAL (SUPER-ADMIN)
+// ============================================================================
+export async function rejectManualPayment(
+  manualPaymentId: string,
+  reason: string
+): Promise<{ success: boolean; error?: string }> {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'No autenticado' };
+
+    // Verificar rol de super-admin
+    const { data: roleData } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!roleData || roleData.role !== 'super_admin') {
+      return { success: false, error: 'No autorizado. Solo super-admins pueden rechazar pagos.' };
+    }
+
+    if (!reason || reason.trim().length === 0) {
+      return { success: false, error: 'Debés proporcionar un motivo de rechazo.' };
+    }
+
+    // Obtener el manual_payment
+    const { data: payment, error: paymentError } = await supabaseAdmin
+      .from('manual_payments')
+      .select('id, status')
+      .eq('id', manualPaymentId)
+      .single();
+
+    if (paymentError || !payment) {
+      return { success: false, error: 'Pago no encontrado.' };
+    }
+
+    if (payment.status !== 'pending') {
+      return { success: false, error: `El pago ya fue ${payment.status === 'approved' ? 'aprobado' : 'rechazado'}.` };
+    }
+
+    // Rechazar
+    const { error: updateError } = await supabaseAdmin
+      .from('manual_payments')
+      .update({
+        status: 'rejected',
+        rejection_reason: reason.trim(),
+      })
+      .eq('id', manualPaymentId);
+
+    if (updateError) {
+      return { success: false, error: 'Error al rechazar: ' + updateError.message };
+    }
+
+    revalidatePath('/admin/payments/pending');
+    return { success: true };
+  } catch (error: any) {
+    console.error('Reject manual payment error:', error.message);
+    return { success: false, error: error.message || 'Error al rechazar el pago' };
+  }
+}
+
+// ============================================================================
+// 5. LISTAR PAGOS PENDIENTES (SUPER-ADMIN)
+// ============================================================================
+export async function getPendingManualPayments(filter?: 'pending' | 'approved' | 'rejected') {
+  try {
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return { success: false, error: 'No autenticado' };
+
+    // Verificar rol de super-admin
+    const { data: roleData } = await supabaseAdmin
+      .from('user_roles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!roleData || roleData.role !== 'super_admin') {
+      return { success: false, error: 'No autorizado.' };
+    }
+
+    let query = supabaseAdmin
+      .from('manual_payments')
+      .select(`
+        id,
+        hotel_id,
+        user_id,
+        amount,
+        method,
+        status,
+        receipt_url,
+        rejection_reason,
+        created_at,
+        approved_at,
+        approved_by,
+        hotels!inner(name, city, email)
+      `)
+      .order('created_at', { ascending: false });
+
+    if (filter && filter !== 'pending') {
+      query = query.eq('status', filter);
+    } else {
+      // Default: solo pendientes
+      query = query.eq('status', 'pending');
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      return { success: false, error: 'Error al consultar pagos: ' + error.message };
+    }
+
+    return { success: true, data };
+  } catch (error: any) {
+    console.error('Get pending payments error:', error.message);
+    return { success: false, error: error.message || 'Error al consultar pagos' };
+  }
+}
