@@ -1,8 +1,8 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, CheckCircle2, AlertCircle, ExternalLink, LayoutDashboard, Globe, Copy, Check } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { Building2, CheckCircle2, AlertCircle, ExternalLink, LayoutDashboard, Globe, Copy, Check, Clock, ArrowRight } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
@@ -17,11 +17,22 @@ function generateSlug(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
+type ProvisioningStatus = 'provisioning' | 'success' | 'pending_approval' | 'error';
+
 export default function ProvisioningStep() {
   const t = useTranslations('onboarding.provisioning');
   const router = useRouter();
-  const { hotelIdentity, galleryPreviews, rooms, settings, paymentTransactionId, reset } = useOnboardingStore();
-  const [status, setStatus] = useState<'provisioning' | 'success' | 'error'>('provisioning');
+  const {
+    hotelIdentity,
+    galleryPreviews,
+    rooms,
+    settings,
+    paymentTransactionId,
+    paymentMethod,
+    manualReceiptUrl,
+    reset,
+  } = useOnboardingStore();
+  const [status, setStatus] = useState<ProvisioningStatus>('provisioning');
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hotelSlug, setHotelSlug] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -34,7 +45,10 @@ export default function ProvisioningStep() {
 
   useEffect(() => {
     async function provision() {
-      if (!paymentTransactionId) {
+      const isManual = paymentMethod === 'manual';
+      const hasPayment = isManual ? !!manualReceiptUrl : !!paymentTransactionId;
+
+      if (!hasPayment) {
         setStatus('error');
         setErrorMessage(t('noTransaction'));
         return;
@@ -60,6 +74,8 @@ export default function ProvisioningStep() {
           planId: undefined,
           price: 89900,
           transactionId: paymentTransactionId,
+          paymentMethod: paymentMethod,
+          manualReceiptUrl: manualReceiptUrl,
         },
       };
 
@@ -72,11 +88,16 @@ export default function ProvisioningStep() {
       }
 
       const provisioningResult = await executeOnboardingProvisioning(result.data);
-      
+
       if (provisioningResult.success) {
         const slug = generateSlug(hotelIdentity.name);
         setHotelSlug(slug);
-        setStatus('success');
+
+        if (isManual) {
+          setStatus('pending_approval');
+        } else {
+          setStatus('success');
+        }
       } else {
         setStatus('error');
         setErrorMessage(provisioningResult.error || t('errorTitle'));
@@ -84,7 +105,7 @@ export default function ProvisioningStep() {
     }
 
     provision();
-  }, [paymentTransactionId]);
+  }, []);
 
   // --------------------------------------------------------------------------
   // PROVISIONING STATE
@@ -127,7 +148,82 @@ export default function ProvisioningStep() {
   }
 
   // --------------------------------------------------------------------------
-  // SUCCESS STATE — Mac 2026: Progressive disclosure, single decision per screen
+  // PENDING APPROVAL STATE — Manual payment, waiting for admin
+  // --------------------------------------------------------------------------
+  if (status === 'pending_approval') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ type: 'spring', stiffness: 300, damping: 24 }}
+        className="py-12 space-y-10 max-w-lg mx-auto"
+      >
+        {/* Status icon */}
+        <div className="text-center space-y-4">
+          <motion.div
+            initial={{ scale: 0 }}
+            animate={{ scale: 1 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 20, delay: 0.2 }}
+            className="relative w-20 h-20 mx-auto"
+          >
+            <div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl" />
+            <div className="relative w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+              <Clock className="text-amber-400" size={36} />
+            </div>
+          </motion.div>
+          <h3 className="text-2xl font-black text-white tracking-tight">
+            Pago pendiente de aprobación
+          </h3>
+          <p className="text-zinc-400 text-sm">
+            {hotelIdentity.name} fue guardada. Tu propiedad se activará cuando el pago sea verificado.
+          </p>
+        </div>
+
+        {/* Info card */}
+        <div className="glass-card p-6 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-brand-500 to-warm-600 flex items-center justify-center text-white font-black text-lg shrink-0">
+              {hotelIdentity.name.charAt(0).toUpperCase()}
+            </div>
+            <div className="min-w-0">
+              <p className="text-white font-bold text-sm truncate">{hotelIdentity.name}</p>
+              <p className="text-zinc-500 text-xs">{hotelIdentity.city}</p>
+            </div>
+          </div>
+
+          <div className="border-t border-white/5 pt-4 space-y-3">
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">Próximos pasos</p>
+            <ol className="text-zinc-400 text-xs space-y-2 list-decimal list-inside">
+              <li>Un administrador revisará tu comprobante de pago</li>
+              <li>Recibirás un email cuando el pago sea aprobado</li>
+              <li>Una vez aprobado, tu propiedad se activará automáticamente</li>
+            </ol>
+          </div>
+
+          <div className="flex items-center gap-2 p-3 bg-amber-500/10 border border-amber-500/20 rounded-[var(--radius-squircle-lg)]">
+            <Clock size={14} className="text-amber-400 shrink-0" />
+            <p className="text-amber-300 text-xs">
+              Este proceso suele tomar entre 1 y 24 horas. Si tenés urgencia, contactanos por WhatsApp.
+            </p>
+          </div>
+        </div>
+
+        {/* Dashboard button */}
+        <motion.button
+          whileTap={{ scale: 0.98 }}
+          onClick={() => { reset(); router.push('/admin/dashboard'); }}
+          className="w-full flex items-center justify-center gap-2 p-4 bg-indigo-600 text-white font-bold rounded-[var(--radius-squircle-xl)] hover:bg-indigo-500 transition-colors shadow-lg shadow-indigo-600/20"
+        >
+          <LayoutDashboard size={16} />
+          Ir al Dashboard
+          <ArrowRight size={14} />
+        </motion.button>
+      </motion.div>
+    );
+  }
+
+  // --------------------------------------------------------------------------
+  // SUCCESS STATE — Wompi payment, immediate activation
   // Chunk 1: Confirmation + Hotel identity
   // Chunk 2: Access links (OTA page + Dashboard)
   // Chunk 3: Credentials (email used for auth)
@@ -189,7 +285,7 @@ export default function ProvisioningStep() {
       {/* Chunk 3: Access links — Ley de Hick: 2 opciones claras, no más */}
       <div className="space-y-3">
         <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest text-center">Acceso rápido</p>
-        
+
         <motion.button
           whileTap={{ scale: 0.98 }}
           onClick={() => { reset(); router.push(hotelUrl); }}

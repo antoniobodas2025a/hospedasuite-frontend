@@ -85,32 +85,73 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
 
     // 1. Update hotel profile with wizard data
     const supabaseAdmin = createAdminClient();
-    const { error: hotelError } = await supabaseAdmin
-      .from('hotels')
-      .update({
-        name: state.hotelIdentity.name,
-        city: state.hotelIdentity.city,
-        location: state.hotelIdentity.location,
-        address: state.hotelIdentity.address || null,
-        phone: state.hotelIdentity.phone || null,
-        email: state.hotelIdentity.email || null,
-        description: state.hotelIdentity.description || null,
-        category: state.hotelIdentity.category || null,
-        type: state.hotelIdentity.propertyType,
-        gallery_urls: state.galleryImages,
-        amenities: state.settings.amenities,
-        check_in_time: state.settings.checkInTime || '15:00',
-        check_out_time: state.settings.checkOutTime || '11:00',
-        cancellation_policy: state.settings.cancellationPolicy || null,
-        whatsapp_number: state.settings.whatsappNumber || null,
-        google_maps_url: state.settings.googleMapsUrl || null,
-        status: 'active',
-        is_onboarding_complete: true,
-        onboarding_step: 6,
-      })
-      .eq('id', hotelId);
+    const isManual = state.payment.paymentMethod === 'manual';
 
-    if (hotelError) throw hotelError;
+    const hotelUpdateBase = {
+      name: state.hotelIdentity.name,
+      city: state.hotelIdentity.city,
+      location: state.hotelIdentity.location,
+      address: state.hotelIdentity.address || null,
+      phone: state.hotelIdentity.phone || null,
+      email: state.hotelIdentity.email || null,
+      description: state.hotelIdentity.description || null,
+      category: state.hotelIdentity.category || null,
+      type: state.hotelIdentity.propertyType,
+      gallery_urls: state.galleryImages,
+      amenities: state.settings.amenities,
+      check_in_time: state.settings.checkInTime || '15:00',
+      check_out_time: state.settings.checkOutTime || '11:00',
+      cancellation_policy: state.settings.cancellationPolicy || null,
+      whatsapp_number: state.settings.whatsappNumber || null,
+      google_maps_url: state.settings.googleMapsUrl || null,
+    };
+
+    if (isManual) {
+      // Manual payment: set hotel to pending_approval, keep as draft
+      const { error: hotelError } = await supabaseAdmin
+        .from('hotels')
+        .update({
+          ...hotelUpdateBase,
+          status: 'draft',
+          subscription_status: 'pending_approval',
+          is_onboarding_complete: false,
+          onboarding_step: 6,
+        })
+        .eq('id', hotelId);
+
+      if (hotelError) throw hotelError;
+
+      // Register the manual payment record
+      const { error: paymentError } = await supabaseAdmin
+        .from('manual_payments')
+        .insert({
+          hotel_id: hotelId,
+          user_id: user.id,
+          amount: state.payment.price || 89900,
+          method: 'nequi', // default — user selects in UI but we simplify here
+          receipt_url: state.payment.manualReceiptUrl || '',
+          status: 'pending',
+        });
+
+      if (paymentError) {
+        console.error('Manual payment record error:', paymentError);
+      }
+    } else {
+      // Wompi (or default): activate immediately
+      const { error: hotelError } = await supabaseAdmin
+        .from('hotels')
+        .update({
+          ...hotelUpdateBase,
+          status: 'active',
+          subscription_status: 'trialing',
+          trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+          is_onboarding_complete: true,
+          onboarding_step: 6,
+        })
+        .eq('id', hotelId);
+
+      if (hotelError) throw hotelError;
+    }
 
     // 2. Insert rooms
     const roomsPayload = state.rooms.map(room => ({

@@ -13,6 +13,7 @@ import PropertyTypeStep from '@/components/onboarding/PropertyTypeStep';
 import RoomTemplatesStep from '@/components/onboarding/RoomTemplatesStep';
 import SettingsStep from '@/components/onboarding/SettingsStep';
 import PaymentEditStep from '@/components/onboarding/PaymentEditStep';
+import PaymentStep from '@/components/onboarding/PaymentStep';
 import PaymentReviewStep from '@/components/onboarding/PaymentReviewStep';
 import ProvisioningStep from '@/components/onboarding/ProvisioningStep';
 
@@ -42,7 +43,8 @@ export default function DemoOnboarding() {
   const router = useRouter();
   const {
     currentStep, maxCompletedStep, setCurrentStep, setMaxCompletedStep,
-    setPaymentInfo, setPaymentTransactionId, paymentTransactionId,
+    setPaymentInfo, setPaymentTransactionId, paymentTransactionId, isProvisioning,
+    manualReceiptUrl,
     updateHotelIdentity, updateSettings, addRoomFromTemplate,
   } = useOnboardingStore();
 
@@ -56,7 +58,8 @@ export default function DemoOnboarding() {
     { number: 4, label: t('onboarding.steps.units') },
     { number: 5, label: t('onboarding.steps.config') },
     { number: 6, label: t('onboarding.steps.review') || 'Revisar' },
-    { number: 7, label: t('onboarding.steps.activate') },
+    { number: 7, label: t('onboarding.steps.pay') || 'Pago' },
+    { number: 8, label: t('onboarding.steps.activate') },
   ];
 
   // Seed demo data on mount
@@ -72,14 +75,14 @@ export default function DemoOnboarding() {
     addRoomFromTemplate('hotel', 'suite');
 
     // Mark all steps as completable for free navigation
-    setMaxCompletedStep(7);
+    setMaxCompletedStep(8);
     setCurrentStep(1);
 
     setIsSeeded(true);
   }, [isSeeded]);
 
   const handleNext = () => {
-    if (currentStep < 7) {
+    if (currentStep < 8) {
       setCurrentStep(currentStep + 1);
     }
   };
@@ -149,8 +152,8 @@ export default function DemoOnboarding() {
     );
   }
 
-  // Step 7 with payment → provisioning (demo bypass)
-  if (currentStep === 7 && paymentTransactionId) {
+  // Provisioning — triggered by PaymentReviewStep (step 8) via startProvisioning()
+  if (isProvisioning && (paymentTransactionId || manualReceiptUrl)) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 flex flex-col justify-center py-12 px-4 relative overflow-hidden">
         <div className="fixed top-[-20%] left-[-10%] w-[80%] h-[80%] bg-indigo-600/10 blur-[180px] rounded-full pointer-events-none" />
@@ -195,12 +198,13 @@ export default function DemoOnboarding() {
             {currentStep === 4 && <RoomTemplatesStep key="step4" />}
             {currentStep === 5 && <SettingsStep key="step5" />}
             {currentStep === 6 && <PaymentEditStep key="step6" />}
-            {currentStep === 7 && <PaymentReviewStep key="step7" />}
+            {currentStep === 7 && <PaymentStep key="step7" />}
+            {currentStep === 8 && <PaymentReviewStep key="step8" />}
           </AnimatePresence>
         </div>
 
         {/* Navigation */}
-        {currentStep < 7 && (
+        {currentStep < 9 && (
           <div className="mt-8 space-y-3">
             <div className="flex gap-4">
               {currentStep > 1 && (
