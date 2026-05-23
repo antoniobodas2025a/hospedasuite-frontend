@@ -14,7 +14,8 @@ import PropertyGalleryStep from '@/components/onboarding/PropertyGalleryStep';
 import PropertyTypeStep from '@/components/onboarding/PropertyTypeStep';
 import RoomTemplatesStep from '@/components/onboarding/RoomTemplatesStep';
 import SettingsStep from '@/components/onboarding/SettingsStep';
-import PaymentStep from '@/components/onboarding/PaymentStep';
+import PaymentEditStep from '@/components/onboarding/PaymentEditStep';
+import PaymentReviewStep from '@/components/onboarding/PaymentReviewStep';
 import ProvisioningStep from '@/components/onboarding/ProvisioningStep';
 import AuthStep from '@/components/onboarding/AuthStep';
 
@@ -42,7 +43,8 @@ export default function OnboardingWizard() {
     { number: 3, label: t('onboarding.steps.type') },
     { number: 4, label: t('onboarding.steps.units') },
     { number: 5, label: t('onboarding.steps.config') },
-    { number: 6, label: t('onboarding.steps.activate') },
+    { number: 6, label: t('onboarding.steps.review') || 'Revisar' },
+    { number: 7, label: t('onboarding.steps.activate') },
   ];
 
   // Resolve context on mount
@@ -108,7 +110,7 @@ export default function OnboardingWizard() {
   };
 
   const canProceed = currentStep <= maxCompletedStep + 1;
-  const isLastStep = currentStep === 6;
+  const isLastStep = currentStep === 7;
 
   const handleNext = () => {
     // Validate current step before advancing
@@ -126,7 +128,7 @@ export default function OnboardingWizard() {
       return next;
     });
 
-    if (currentStep < 6) {
+    if (currentStep < 7) {
       setMaxCompletedStep(Math.max(maxCompletedStep, currentStep));
       setCurrentStep(currentStep + 1);
     }
@@ -183,8 +185,8 @@ export default function OnboardingWizard() {
     );
   }
 
-  // Step 6 with payment → provisioning
-  if (currentStep === 6 && paymentTransactionId) {
+  // Step 7 with payment → provisioning
+  if (currentStep === 7 && paymentTransactionId) {
     return (
       <div className="min-h-screen bg-[#0a0a0a] text-zinc-100 flex flex-col justify-center py-12 px-4 relative overflow-hidden">
         <div className="fixed top-[-20%] left-[-10%] w-[80%] h-[80%] bg-indigo-600/10 blur-[180px] rounded-full pointer-events-none" />
@@ -206,7 +208,7 @@ export default function OnboardingWizard() {
             <Building2 className="text-indigo-400" size={28} />
           </div>
           <h2 className="text-3xl font-black tracking-tight text-white uppercase tracking-widest">HospedaSuite</h2>
-          <p className="text-zinc-500 text-sm mt-2">Configurá tu propiedad en 6 pasos simples</p>
+          <p className="text-zinc-500 text-sm mt-2">Configurá tu propiedad en 7 pasos simples</p>
         </div>
 
         {/* Step Indicator */}
@@ -220,12 +222,13 @@ export default function OnboardingWizard() {
             {currentStep === 3 && <PropertyTypeStep key="step3" />}
             {currentStep === 4 && <RoomTemplatesStep key="step4" />}
             {currentStep === 5 && <SettingsStep key="step5" />}
-            {currentStep === 6 && <PaymentStep key="step6" />}
+            {currentStep === 6 && <PaymentEditStep key="step6" />}
+            {currentStep === 7 && <PaymentReviewStep key="step7" />}
           </AnimatePresence>
         </div>
 
         {/* Navigation */}
-        {currentStep < 6 && (
+        {currentStep < 7 && (
           <div className="mt-8 space-y-3">
             {/* Step validation errors */}
             {stepErrors[currentStep] && stepErrors[currentStep].length > 0 && (

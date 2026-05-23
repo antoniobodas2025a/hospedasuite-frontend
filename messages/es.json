@@ -324,6 +324,7 @@
       "type": "Tipo",
       "units": "Unidades",
       "config": "Config",
+      "review": "Revisar",
       "activate": "Activar"
     },
     "identity": {
@@ -406,6 +407,10 @@
     "payment": {
       "title": "Resumen y Activación",
       "subtitle": "Revisá todo y activá tu propiedad",
+      "editTitle": "Revisar Configuración",
+      "editSubtitle": "Verificá que todo esté como querés",
+      "reviewTitle": "Vista Previa y Pago",
+      "reviewSubtitle": "Así verán los huéspedes tu propiedad",
       "propertyLabel": "Propiedad",
       "noName": "Sin nombre",
       "units": "unidad{plural}",

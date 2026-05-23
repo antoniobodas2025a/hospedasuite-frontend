@@ -324,6 +324,7 @@
       "type": "Type",
       "units": "Units",
       "config": "Settings",
+      "review": "Review",
       "activate": "Activate"
     },
     "identity": {
@@ -406,6 +407,10 @@
     "payment": {
       "title": "Summary & Activation",
       "subtitle": "Review everything and activate your property",
+      "editTitle": "Review Configuration",
+      "editSubtitle": "Verify everything looks right",
+      "reviewTitle": "Preview & Payment",
+      "reviewSubtitle": "How guests will see your property",
       "propertyLabel": "Property",
       "noName": "No name",
       "units": "unit{plural}",
