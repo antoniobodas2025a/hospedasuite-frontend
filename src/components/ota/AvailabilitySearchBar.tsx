@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState, useRef, useEffect, useTransition, useMemo, useCallback } from 'react';
+import React, { useState, useRef, useEffect, useTransition, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
-import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, User } from 'lucide-react';
+import { Calendar as CalendarIcon, X, Loader2, CheckCircle2, User, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay } from 'date-fns';
@@ -17,16 +17,6 @@ import { getDateFnsLocale } from '@/lib/date-locale';
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
-interface RoomItem {
-  id: string;
-  name: string;
-  price: number;
-  price_per_night?: number;
-  capacity?: number;
-  beds?: number;
-  amenities?: string[];
-}
-
 interface NavSection {
   id: string;
   label: string;
@@ -34,7 +24,6 @@ interface NavSection {
 
 interface AvailabilitySearchBarProps {
   sticky?: boolean;
-  rooms?: RoomItem[];
   navSections?: NavSection[];
 }
 
@@ -65,7 +54,6 @@ function buildUrl(
 
 export default function AvailabilitySearchBar({
   sticky = false,
-  rooms = [],
   navSections = [],
 }: AvailabilitySearchBarProps) {
   const router = useRouter();
@@ -210,11 +198,79 @@ export default function AvailabilitySearchBar({
     <div className="relative w-full z-[var(--z-dropdown)]" ref={popoverRef}>
       {/* UNIFIED STICKY BAR */}
       <div className="flex flex-col lg:flex-row lg:items-center gap-2 lg:gap-3">
-        {/* SEARCH PILL — 2/3 width */}
+        {/* ═══ MOBILE: Single CTA when NO dates selected (Progressive Disclosure Step 1) ═══ */}
+        {!date?.from && (
+          <motion.button
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={springGentle()}
+            onClick={() => !isPending && setActiveModal('dates')}
+            className="sm:hidden flex items-center justify-center gap-3 w-full px-5 py-3.5 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm active:scale-[0.98] transition-transform"
+            aria-label={t('ota.search.selectDates')}
+          >
+            {isPending ? <Loader2 size={20} className="text-brand-600 animate-spin" />
+              : <CalendarIcon size={20} className="text-brand-600" />}
+            <span className="text-base font-bold text-foreground tracking-tight">{t('ota.search.chooseDates')}</span>
+            <ChevronRight size={18} className="text-muted-foreground" />
+          </motion.button>
+        )}
+
+        {/* ═══ MOBILE: Compact pill when dates ARE selected ═══ */}
+        {date?.from && (
+          <div className="sm:hidden flex items-center bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm overflow-hidden">
+            {/* Dates zone — triggers dates modal */}
+            <div
+              onClick={() => !isPending && setActiveModal(activeModal === 'dates' ? null : 'dates')}
+              role="button" aria-expanded={activeModal === 'dates'} aria-label={t('ota.search.selectDates')}
+              className="flex-1 flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
+            >
+              <div className="rounded-full bg-brand-50 flex items-center justify-center shrink-0 size-8">
+                {date?.from && date?.to ? <CheckCircle2 size={14} className="text-secondary" />
+                  : <CalendarIcon size={14} className="text-brand-600" />}
+              </div>
+              <div className="flex flex-col min-w-0">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('ota.search.stay')}</span>
+                <span className="text-sm text-foreground font-bold tracking-tight truncate">{displayRange()}</span>
+              </div>
+              {/* Clear dates */}
+              <motion.button
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0, opacity: 0 }}
+                transition={springSnappy()}
+                onClick={(e) => { e.stopPropagation(); handleClearDates(); }}
+                className="size-5 rounded-full flex items-center justify-center hover:bg-destructive/10 hover:text-destructive transition-colors shrink-0 ml-1"
+                aria-label={t('ota.search.clearDates')}
+              >
+                <X size={10} strokeWidth={2.5} />
+              </motion.button>
+            </div>
+
+            {/* Divider */}
+            <div className="w-px h-8 bg-border/50 shrink-0" />
+
+            {/* Guests zone — triggers guests modal */}
+            <div
+              onClick={() => !isPending && setActiveModal(activeModal === 'guests' ? null : 'guests')}
+              role="button" aria-expanded={activeModal === 'guests'} aria-label={t('ota.search.selectGuests')}
+              className="flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors shrink-0"
+            >
+              <div className="rounded-full bg-brand-50 flex items-center justify-center shrink-0 size-8">
+                <User size={14} className="text-brand-600" />
+              </div>
+              <div className="flex flex-col">
+                <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">{t('ota.search.guests')}</span>
+                <span className="text-sm text-foreground font-bold tracking-tight">{guestLabel}</span>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ═══ DESKTOP: Full two-zone pill (always visible) ═══ */}
         <div
           className={cn(
-            'flex flex-col sm:flex-row items-stretch sm:items-center bg-card rounded-[var(--radius-squircle-2xl)] sm:rounded-full transition-all duration-300 w-full lg:w-2/3',
-            sticky ? 'p-1.5 sm:p-1' : 'p-2',
+            'hidden sm:flex flex-row items-center bg-card rounded-full transition-all duration-300 lg:w-2/3',
+            sticky ? 'p-1' : 'p-2',
             activeModal ? 'ring-2 ring-ring shadow-xl' : 'hover:border-border hover:shadow-md',
             isPending && 'opacity-70 pointer-events-none grayscale-[0.2]'
           )}
@@ -224,7 +280,7 @@ export default function AvailabilitySearchBar({
             ref={datesTriggerRef}
             onClick={() => !isPending && setActiveModal(activeModal === 'dates' ? null : 'dates')}
             role="button" aria-expanded={activeModal === 'dates'} aria-label={t('ota.search.selectDates')}
-            className={pillBase('rounded-t-[var(--radius-squircle-xl)] sm:rounded-l-full sm:rounded-r-none')}
+            className={pillBase('rounded-l-full rounded-r-none')}
           >
             <div className={iconCircle}>
               {isPending ? <Loader2 size={ios} className="text-brand-600 animate-spin" />
@@ -253,15 +309,14 @@ export default function AvailabilitySearchBar({
           </div>
 
           {/* DIVIDER */}
-          <div className={cn('bg-border mx-0 sm:mx-2 hidden sm:block', sticky ? 'h-px w-full sm:w-px sm:h-8' : 'h-px w-full sm:w-px sm:h-10')} />
-          <div className={cn('bg-muted mx-0 sm:mx-2 block sm:hidden my-1', sticky ? 'h-px w-full sm:h-6' : 'h-px w-full sm:h-8')} />
+          <div className={cn('bg-border mx-2 hidden sm:block', sticky ? 'h-px w-px h-8' : 'h-px w-px h-10')} />
 
           {/* ZONE 2: GUESTS */}
           <div
             ref={guestsTriggerRef}
             onClick={() => !isPending && setActiveModal(activeModal === 'guests' ? null : 'guests')}
             role="button" aria-expanded={activeModal === 'guests'} aria-label={t('ota.search.selectGuests')}
-            className={pillBase('rounded-b-[var(--radius-squircle-xl)] sm:rounded-r-full sm:rounded-l-none')}
+            className={pillBase('rounded-r-full rounded-l-none')}
           >
             <div className={iconCircle}>
               <User size={ios} className="text-brand-600" />
@@ -413,7 +468,7 @@ export default function AvailabilitySearchBar({
                           )}
                         >
                           {pendingDate?.from && pendingDate?.to
-                            ? t('ota.refinement.seeResults', { count: rooms.length > 0 ? rooms.length : 1 })
+                            ? t('ota.search.confirmDates')
                             : t('ota.search.selectDates')
                           }
                         </motion.button>
@@ -466,7 +521,7 @@ export default function AvailabilitySearchBar({
                           transition={springBounce()}
                           className="w-full py-3.5 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight bg-primary text-primary-foreground shadow-lg ring-1 ring-primary/20 hover:shadow-xl transition-all"
                         >
-                          {t('ota.refinement.seeResults', { count: rooms.length > 0 ? rooms.length : 1 })}
+                          {t('ota.search.confirmGuests')}
                         </motion.button>
                       </div>
                     </div>
