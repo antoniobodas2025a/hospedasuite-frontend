@@ -207,16 +207,15 @@ function RoomCardInner({
               {room.description || t('ota.roomCard.fallbackDescription')}
             </p>
 
-            {/* Micro-Storytelling de Amenidades */}
+            {/* Amenidades — Mac 2026: label escaneable, no marketing prose */}
             <div className="flex flex-wrap gap-2 mb-6">
-              {room.amenities?.slice(0, 2).map((amenity: any, idx: number) => {
+              {room.amenities?.slice(0, 4).map((amenity: any, idx: number) => {
                 const id = typeof amenity === 'string' ? amenity : amenity.id;
                 const entry = getRoomAmenityById(id);
-                if (!entry.storyTitle) return null;
                 const Icon = entry.icon;
                 return (
-                  <div key={idx} className="flex items-center gap-1.5 bg-brand-50/50 text-brand-700 border border-brand-100/50 px-2.5 py-1 rounded-[var(--radius-squircle-md)] text-xs font-medium">
-                    <Icon size={14} /> {entry.storyTitle}
+                  <div key={idx} className="flex items-center gap-1.5 bg-muted/60 text-muted-foreground border border-border/40 px-2.5 py-1 rounded-[var(--radius-squircle-md)] text-xs font-medium">
+                    <Icon size={14} /> {entry.label}
                   </div>
                 );
               })}
