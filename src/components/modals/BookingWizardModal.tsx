@@ -75,7 +75,7 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
   }, [bookingForm.type, isEditing]);
 
   return (
-    <div className='fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl'>
+    <div className='fixed inset-0 z-[calc(var(--z-modal)+1)] flex items-center justify-center p-4 bg-black/80 backdrop-blur-xl'>
       <motion.div 
         initial={{ scale: 0.95, opacity: 0, y: 20 }}
         animate={{ scale: 1, opacity: 1, y: 0 }}

@@ -4,11 +4,12 @@ import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, Menu, X, Calculator, Home } from 'lucide-react';
+import { Calendar, Menu, X, Calculator, Home, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { springGentle, springSnappy } from '@/lib/mac2026/spring';
 import ShiftReportModal from '@/components/modals/ShiftReportModal';
 import { MENU_ITEMS, type MenuItem as MenuItemType } from '@/config/menuItems';
+import { logout } from '@/app/actions/auth';
 
 interface MobileNavViewProps {
   isVisible: boolean;
@@ -18,6 +19,7 @@ interface MobileNavViewProps {
   onToggleMenu: () => void;
   onOpenShiftModal: () => void;
   onRevealDock: () => void;
+  onLogout: () => void;
 }
 
 interface MobileNavProps {
@@ -35,7 +37,8 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
   menuItems,
   onToggleMenu,
   onOpenShiftModal,
-  onRevealDock
+  onRevealDock,
+  onLogout
 }) => {
   return (
     <nav className="md:hidden">
@@ -131,17 +134,28 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
                 ))}
               </div>
               
-              <div className="mt-2 pt-4 border-t border-border">
-                <motion.button 
-                  onClick={onOpenShiftModal} 
-                  className="flex items-center justify-center gap-3 w-full p-4 rounded-[var(--radius-squircle-lg)] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-sm transition-all"
-                  whileTap={{ scale: 0.98 }}
-                  transition={springSnappy()}
-                >
-                  <Calculator className="size-5 stroke-[1.5]" />
-                  Cierre de Turno Operativo
-                </motion.button>
-              </div>
+                <div className="mt-2 pt-4 border-t border-border">
+                  <motion.button 
+                    onClick={onOpenShiftModal} 
+                    className="flex items-center justify-center gap-3 w-full p-4 rounded-[var(--radius-squircle-lg)] bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 font-bold text-sm transition-all"
+                    whileTap={{ scale: 0.98 }}
+                    transition={springSnappy()}
+                  >
+                    <Calculator className="size-5 stroke-[1.5]" />
+                    Cierre de Turno
+                  </motion.button>
+                  
+                  {/* Logout — Mac 2026: destructive action, subtle affordance */}
+                  <motion.button 
+                    onClick={() => { onToggleMenu(); onLogout(); }} 
+                    className="flex items-center justify-center gap-3 w-full p-4 rounded-[var(--radius-squircle-lg)] text-rose-400/70 hover:text-rose-400 hover:bg-rose-500/5 border border-transparent hover:border-rose-500/10 font-bold text-sm transition-all mt-2"
+                    whileTap={{ scale: 0.98 }}
+                    transition={springSnappy()}
+                  >
+                    <LogOut className="size-5 stroke-[1.5]" />
+                    Finalizar Sesión
+                  </motion.button>
+                </div>
             </motion.div>
           </>
         )}
@@ -161,6 +175,14 @@ export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavPro
   const lastScrollYRef = useRef(0);
   const tickingRef = useRef(false);
   const pathname = usePathname();
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+    } catch (error) {
+      console.error('Error durante la terminación de sesión:', error);
+    }
+  };
 
   // Smart dock visibility: hide on scroll down, show on scroll up or at top
   useEffect(() => {
@@ -233,6 +255,7 @@ export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavPro
           setShowMenu(false);
           setIsShiftModalOpen(true);
         }}
+        onLogout={handleLogout}
       />
 
       <ShiftReportModal 
