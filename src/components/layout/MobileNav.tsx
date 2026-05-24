@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -17,6 +17,7 @@ interface MobileNavViewProps {
   menuItems: MenuItemType[];
   onToggleMenu: () => void;
   onOpenShiftModal: () => void;
+  onRevealDock: () => void;
 }
 
 interface MobileNavProps {
@@ -33,15 +34,25 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
   activePath,
   menuItems,
   onToggleMenu,
-  onOpenShiftModal
+  onOpenShiftModal,
+  onRevealDock
 }) => {
   return (
     <nav className="md:hidden">
+      {/* Edge-tap zone: when dock is hidden, tap bottom edge to reveal */}
+      {!isVisible && !showMenu && (
+        <div
+          className="fixed inset-x-0 bottom-0 h-12 z-[calc(var(--z-sticky)-1)]"
+          onClick={onRevealDock}
+          aria-hidden="true"
+        />
+      )}
+
       {/* Dock Inferior — Liquid Glass 2.0 + Spring Physics */}
       <motion.div
         initial={false}
         animate={{ y: isVisible ? 0 : 100, opacity: isVisible ? 1 : 0 }}
-        transition={springGentle()}
+        transition={{ type: 'spring', stiffness: 300, damping: 30, mass: 0.8 }}
         className="fixed inset-x-4 bottom-6 z-[var(--z-sticky)]"
       >
         <div className="glass-panel shadow-2xl shadow-black/50 rounded-[var(--radius-squircle-2xl)] p-2 flex items-center justify-between ring-1 ring-inset ring-border">
@@ -146,26 +157,48 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
 export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
-  const [lastScrollY, setLastScrollY] = useState(0);
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
+  const lastScrollYRef = useRef(0);
+  const tickingRef = useRef(false);
   const pathname = usePathname();
 
-  // Detección de Scroll para ocultar/mostrar Dock
+  // Smart dock visibility: hide on scroll down, show on scroll up or at top
   useEffect(() => {
     const handleScroll = () => {
-      if (showMenu) return; 
-      const currentScrollY = window.scrollY;
-      if (currentScrollY > lastScrollY && currentScrollY > 50) {
-        setIsVisible(false);
-      } else {
-        setIsVisible(true);
-      }
-      setLastScrollY(currentScrollY);
+      if (showMenu || tickingRef.current) return;
+      tickingRef.current = true;
+
+      requestAnimationFrame(() => {
+        const currentScrollY = window.scrollY;
+        const lastScrollY = lastScrollYRef.current;
+
+        // Always show at top of page
+        if (currentScrollY < 20) {
+          setIsVisible(true);
+        }
+        // Scrolling down → hide
+        else if (currentScrollY > lastScrollY + 8) {
+          setIsVisible(false);
+        }
+        // Scrolling up → show
+        else if (currentScrollY < lastScrollY - 8) {
+          setIsVisible(true);
+        }
+
+        lastScrollYRef.current = currentScrollY;
+        tickingRef.current = false;
+      });
     };
 
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
-  }, [lastScrollY, showMenu]);
+  }, [showMenu]);
+
+  // Show dock on route change (user needs navigation context)
+  useEffect(() => {
+    setIsVisible(true);
+    lastScrollYRef.current = 0;
+  }, [pathname]);
 
   // Bloqueo de Scroll del body en Mobile-First
   useEffect(() => {
@@ -195,6 +228,7 @@ export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavPro
         activePath={pathname}
         menuItems={visibleMenuItems}
         onToggleMenu={() => setShowMenu(!showMenu)}
+        onRevealDock={() => setIsVisible(true)}
         onOpenShiftModal={() => {
           setShowMenu(false);
           setIsShiftModalOpen(true);
