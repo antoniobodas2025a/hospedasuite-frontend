@@ -217,7 +217,7 @@ export async function createBookingAction(data: BookingPayload) {
       source: 'server-action',
     });
 
-    await (emitEvent as any)('cache.invalidate', {
+    await emitEvent('cache.invalidate', {
       paths: ['/dashboard/calendar'],
       tags: [`bookings-${currentHotel.id}`],
     }, {
@@ -276,7 +276,7 @@ export async function cancelBookingAction(bookingId: string) {
       source: 'server-action',
     });
 
-    await (emitEvent as any)('cache.invalidate', {
+    await emitEvent('cache.invalidate', {
       paths: ['/dashboard/calendar'],
       tags: [`bookings-${currentHotel.id}`],
     }, {

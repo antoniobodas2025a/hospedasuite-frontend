@@ -114,7 +114,5 @@ export async function emitCacheInvalidation(
   paths: string[] = [],
   tags: string[] = []
 ): Promise<void> {
-  // cache.invalidate is NOT in the 21 schemas yet — added in PR 2
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  await (emitEvent as any)('cache.invalidate', { paths, tags });
+  await emitEvent('cache.invalidate', { paths, tags });
 }

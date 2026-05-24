@@ -45,7 +45,7 @@ export async function updateRoomStatusAction(roomId: string, newStatus: RoomStat
       source: 'server-action',
     });
 
-    await (emitEvent as any)('cache.invalidate', {
+    await emitEvent('cache.invalidate', {
       paths: ['/dashboard', '/dashboard/calendar'],
       tags: [`rooms-${hotel.id}`],
     }, {

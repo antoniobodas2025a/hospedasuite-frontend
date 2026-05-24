@@ -237,6 +237,16 @@ export const PlanDowngradeRequestedEventSchema = z.object({
   metadata: EventMetadataSchema,
 });
 
+// ── Cache Invalidation Event (PR 2) ─────────────────────────────
+export const CacheInvalidateEventSchema = z.object({
+  type: z.literal('cache.invalidate'),
+  payload: z.object({
+    paths: z.array(z.string()).default([]),
+    tags: z.array(z.string()).default([]),
+  }),
+  metadata: EventMetadataSchema,
+});
+
 // ── Union type of all event schemas ─────────────────────────────
 export const AllEventSchemas = z.discriminatedUnion('type', [
   BookingCreatedEventSchema,
@@ -260,6 +270,7 @@ export const AllEventSchemas = z.discriminatedUnion('type', [
   TrialExpiredEventSchema,
   TrialExpiringSoonEventSchema,
   PlanDowngradeRequestedEventSchema,
+  CacheInvalidateEventSchema,
 ]);
 
 export type AnyEvent = z.infer<typeof AllEventSchemas>;
