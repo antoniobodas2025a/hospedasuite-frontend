@@ -51,7 +51,7 @@ export default async function CalendarPage() {
   })) || []) as unknown as import('@/hooks/useCalendar').Booking[];
 
   return (
-    <div className='h-full'>
+    <div>
       <CalendarPanel rooms={rooms} initialBookings={formattedBookings} hotelId={hotel.id} />
     </div>
   );

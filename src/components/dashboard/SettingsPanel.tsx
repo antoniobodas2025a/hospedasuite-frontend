@@ -293,15 +293,16 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
           </h2>
           <p className="text-muted-foreground text-sm mt-[var(--space-focus)] font-lora italic">Administración operativa del tenant.</p>
         </div>
-        <div className="flex bg-background/60 p-2 rounded-[var(--radius-squircle-3xl)] border border-border gap-2">
+        <div className="flex bg-background/60 p-1.5 rounded-[var(--radius-squircle-3xl)] border border-border gap-1.5">
           {[{ id: 'general', label: 'Operación', icon: Building }, { id: 'ota', label: 'Perfil OTA', icon: Globe }, { id: 'staff', label: 'Equipo', icon: Users }].map((tab) => (
-            <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)} className={cn("flex-1 px-8 py-4 rounded-[var(--radius-squircle-xl)] text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 border", activeTab === tab.id ? "bg-indigo-600 text-white border-indigo-400 shadow-lg" : "bg-transparent text-muted-foreground border-transparent hover:text-foreground")}>
-              <tab.icon size={18} /> {tab.label}
+            <button key={tab.id} onClick={() => setActiveTab(tab.id as typeof activeTab)} className={cn("flex-1 min-w-0 px-2 py-3 md:px-6 md:py-4 rounded-[var(--radius-squircle-xl)] text-[10px] md:text-xs font-bold uppercase tracking-widest transition-all flex items-center justify-center gap-2 border", activeTab === tab.id ? "bg-indigo-600 text-white border-indigo-400 shadow-lg" : "bg-transparent text-muted-foreground border-transparent hover:text-foreground")}>
+              <tab.icon size={18} className="shrink-0" />
+              <span className="hidden md:inline truncate">{tab.label}</span>
             </button>
           ))}
           {/* Advanced mode toggle — Mac 2026: complexity layers */}
-          <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className={cn("px-4 py-4 rounded-[var(--radius-squircle-xl)] text-xs font-bold uppercase tracking-widest transition-all border flex items-center gap-2", showAdvanced ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-transparent text-muted-foreground border-transparent hover:text-muted-foreground")}>
-            <Settings2 size={18} />
+          <button type="button" onClick={() => setShowAdvanced(!showAdvanced)} className={cn("px-2 md:px-4 py-3 md:py-4 rounded-[var(--radius-squircle-xl)] text-xs font-bold uppercase tracking-widest transition-all border flex items-center justify-center gap-2 shrink-0", showAdvanced ? "bg-amber-500/10 text-amber-400 border-amber-500/20" : "bg-transparent text-muted-foreground border-transparent hover:text-muted-foreground")}>
+            <Settings2 size={18} className="shrink-0" />
           </button>
         </div>
       </div>
@@ -815,7 +816,7 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
         </motion.section>
       )}
 
-      <div className="fixed bottom-10 left-0 right-0 px-8 z-50 pointer-events-none">
+      <div className="fixed bottom-28 left-0 right-0 px-8 z-[var(--z-overlay)] pointer-events-none">
         <div className="max-w-7xl mx-auto flex justify-center lg:justify-end">
           <button form="master-settings-form" type="submit" disabled={isSaving || isCleaning} className="pointer-events-auto bg-indigo-600 hover:bg-indigo-500 text-white px-12 py-6 rounded-[var(--radius-squircle-3xl)] font-bold shadow-cta hover:scale-105 active:scale-95 transition-all flex items-center gap-4 disabled:opacity-50 ring-1 ring-border">
             {isSaving ? <RefreshCcw className="animate-spin" size={24}/> : <Save size={24}/>}

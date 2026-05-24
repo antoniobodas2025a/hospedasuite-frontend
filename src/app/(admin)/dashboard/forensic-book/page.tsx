@@ -34,7 +34,7 @@ async function ForensicBookContent({ hotel }: { hotel: { id: string } }) {
   if (error) console.error('Error fetching forensic book:', error);
 
   return (
-    <div className='h-full'>
+    <div>
       <ForensicBookPanel initialData={entries || []} />
     </div>
   );

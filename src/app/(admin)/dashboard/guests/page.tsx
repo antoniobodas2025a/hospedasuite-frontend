@@ -18,7 +18,7 @@ export default async function GuestsPage() {
     .limit(100);
 
   return (
-    <div className='h-full'>
+    <div>
       {/* 👇 CORRECCIÓN: Pasamos el hotelId al panel */}
       <GuestsPanel initialGuests={guests || []} hotelId={hotel.id} />
     </div>

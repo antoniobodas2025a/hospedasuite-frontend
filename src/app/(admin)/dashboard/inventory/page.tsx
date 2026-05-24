@@ -29,7 +29,7 @@ export default async function InventoryPage() {
   }
 
   return (
-    <div className='h-full animate-in fade-in duration-700'>
+    <div className='animate-in fade-in duration-700'>
       {/* 🛡️ INYECCIÓN DE CONTRATO: Enviamos initialRooms al cliente */}
       <InventoryPanel initialRooms={rooms || []} hotelId={hotel.id} />
     </div>

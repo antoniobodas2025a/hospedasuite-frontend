@@ -63,7 +63,7 @@ async function POSPageContent({ hotel }: { hotel: { id: string } }) {
   ]);
 
   return (
-    <div className='h-full'>
+    <div>
       <POSPanel 
         initialItems={initialItems || []} 
         rooms={rooms || []} 

@@ -31,7 +31,7 @@ export default async function ReadinessPage() {
   const isAlreadyLive = !!(hotel as unknown as Record<string, unknown>).go_live;
 
   return (
-    <div className="h-full space-y-10 font-poppins">
+    <div className="space-y-10 font-poppins">
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-bold text-foreground">Listo para Vender</h1>

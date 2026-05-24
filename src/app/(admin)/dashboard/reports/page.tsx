@@ -53,7 +53,7 @@ async function ReportsContent({ hotel }: { hotel: { id: string } }) {
   }));
 
   return (
-    <div className='h-full'>
+    <div>
       <ReportsPanel sales={formattedSales} />
     </div>
   );

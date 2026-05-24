@@ -69,7 +69,7 @@ export default async function BillingPage() {
     : null;
 
   return (
-    <div className="h-full space-y-[var(--space-breath)]">
+    <div className="space-y-[var(--space-breath)]">
       {/* Page Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>

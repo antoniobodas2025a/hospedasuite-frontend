@@ -35,7 +35,7 @@ export default async function SettingsPage() {
 
     // 3. Renderizamos el panel blindado
     return (
-      <div className="h-full">
+      <div className="w-full">
         <SettingsPanel 
           initialData={hotelResponse.data || {}} 
           initialStaff={staffResponse.data || []} 

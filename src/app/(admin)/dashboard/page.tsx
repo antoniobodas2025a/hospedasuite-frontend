@@ -80,7 +80,7 @@ export default async function DashboardPage() {
   const isCancelled = hotel.subscription_status === 'cancelled';
 
   return (
-    <div className="h-full">
+    <div className="space-y-6">
       {/* Dynamic Payment Lifecycle Banners */}
       {isPendingApproval && daysUntilDeadline !== null && daysUntilDeadline > 2 && (
         <div className="mb-6 p-6 bg-amber-500/5 border border-amber-500/20 rounded-[var(--radius-squircle-2xl)] relative overflow-hidden">

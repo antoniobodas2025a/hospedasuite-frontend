@@ -32,7 +32,7 @@ async function MarketingContent({ hotel }: { hotel: { id: string } }) {
     .order('created_at', { ascending: false });
 
   return (
-    <div className='h-full'>
+    <div>
       <CRMBoard initialLeads={leads || []} />
     </div>
   );
