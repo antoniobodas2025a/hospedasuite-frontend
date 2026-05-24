@@ -3,9 +3,6 @@
 import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getCurrentHotel } from '@/lib/hotel-context';
-import sharp from 'sharp';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { r2Client, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2-client';
 
 // ============================================================================
 // 🛠️ ACCIÓN 1: CONFIGURACIÓN BÁSICA Y FINANCIERA (Recuperada y Blindada)
@@ -154,99 +151,7 @@ export async function updateHotelProfileAction(hotelId: string, formData: any) {
 
 
 // ============================================================================
-// 📸 ACCIÓN 3: UPLOAD DE IMÁGENES MULTI-TAMAÑO CON SHARP
-// ============================================================================
-
-/**
- * Genera 3 tamaños + blur placeholder para cada imagen subida.
- *
- * - Thumb: 256px (listados, thumbnails)
- * - Card:  640px (cards, previews)
- * - Full:  1920px (hero, lightbox)
- * - Blur:  20×20px base64 WebP (placeholder LQIP)
- *
- * Retorna URLs con sufijos: _thumb.webp, _card.webp, _full.webp
- */
-export async function uploadOptimizedImageAction(
-  formData: FormData,
-  folder: 'hero' | 'covers' | 'gallery' | 'rooms' = 'gallery'
-) {
-  try {
-    const currentHotel = await getCurrentHotel();
-    if (!currentHotel) {
-      throw new Error('No se pudo verificar la propiedad del hotel.');
-    }
-
-    const file = formData.get('file') as File;
-    if (!file) {
-      throw new Error('No se recibió ningún archivo.');
-    }
-
-    if (!file.type.startsWith('image/')) {
-      throw new Error('El archivo debe ser una imagen.');
-    }
-
-    if (file.size > 20 * 1024 * 1024) {
-      throw new Error('La imagen no puede superar los 20MB.');
-    }
-
-    const buffer = Buffer.from(await file.arrayBuffer());
-    const image = sharp(buffer);
-    const metadata = await image.metadata();
-
-    // Generar 3 tamaños
-    const [thumb, card, full] = await Promise.all([
-      image.clone().resize(256, 256, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 50, effort: 6 }).toBuffer(),
-      image.clone().resize(640, 640, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 75, effort: 6 }).toBuffer(),
-      image.clone().resize(1920, 1080, { fit: 'inside', withoutEnlargement: true }).webp({ quality: 80, effort: 6 }).toBuffer(),
-    ]);
-
-    // Generar blur placeholder (20×20px)
-    const blurBuffer = await image.clone().resize(20, 20, { fit: 'inside' }).webp({ quality: 50 }).toBuffer();
-    const blurDataURL = `data:image/webp;base64,${blurBuffer.toString('base64')}`;
-
-    // Subir los 3 tamaños a R2
-    const baseName = `${currentHotel.id}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}`;
-
-    await Promise.all([
-      r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: `${baseName}_thumb.webp`, Body: thumb, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000' })),
-      r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: `${baseName}_card.webp`, Body: card, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000' })),
-      r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: `${baseName}_full.webp`, Body: full, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000' })),
-    ]);
-
-    // Construir URLs públicas directamente
-    const thumbUrl = `${R2_PUBLIC_URL}/${baseName}_thumb.webp`;
-    const cardUrl = `${R2_PUBLIC_URL}/${baseName}_card.webp`;
-    const fullUrl = `${R2_PUBLIC_URL}/${baseName}_full.webp`;
-
-    const originalKB = (file.size / 1024).toFixed(0);
-    const fullKB = (full.length / 1024).toFixed(0);
-    const cardKB = (card.length / 1024).toFixed(0);
-    const thumbKB = (thumb.length / 1024).toFixed(0);
-
-    console.log(`📸 Multi-size: ${originalKB}KB → full:${fullKB}KB, card:${cardKB}KB, thumb:${thumbKB}KB`);
-
-    return {
-      success: true,
-      url: fullUrl, // URL principal (full) para compatibilidad
-      urls: {
-        thumb: thumbUrl,
-        card: cardUrl,
-        full: fullUrl,
-      },
-      blurDataURL,
-      stats: { originalKB, fullKB, cardKB, thumbKB },
-    };
-
-  } catch (error: any) {
-    console.error('🔥 Error optimizando imagen:', error);
-    return { success: false, error: error.message || 'Error al procesar la imagen' };
-  }
-}
-
-
-// ============================================================================
-// ⚡ ACCIÓN 4: PRESIGNED URL PARA UPLOAD DIRECTO (NUEVA ARQUITECTURA)
+// ⚡ ACCIÓN 3: PRESIGNED URL PARA UPLOAD DIRECTO
 // ============================================================================
 
 /**

@@ -172,18 +172,6 @@ export function getImageSizeUrl(baseUrl: string, _size: ImageSize): string {
 }
 
 /**
- * Quita cualquier sufijo de tamaño (_thumb, _card, _full) de una URL.
- * Útil como fallback cuando la versión redimensionada no existe en el bucket.
- *
- * @param url - URL completa de la imagen
- * @returns URL sin sufijo de tamaño (versión original)
- */
-export function stripSizeSuffix(url: string): string {
-  if (!url) return '';
-  return url.replace(/_(thumb|card|full)\.(webp|jpg|png|jpeg)/i, '.$1');
-}
-
-/**
  * Extrae el blurDataURL de una URL si está almacenado como query param.
  * Para imágenes nuevas, el blurDataURL se genera al subir y se pasa
  * como prop separado. Esta función es un fallback para casos edge.
@@ -205,21 +193,3 @@ export type ImageBlurMeta = {
   cover_photo_blur?: string;
   gallery_blurs?: { url: string; blur: string }[];
 };
-
-// ─── SrcSet builder ─────────────────────────────────────────────────
-
-/**
- * Construye un string srcSet con los 3 tamaños para <img srcSet>.
- *
- * Formato: "thumb_url 256w, card_url 640w, full_url 1920w"
- *
- * @param baseUrl - URL base de la imagen (generalmente la versión full)
- * @returns String srcSet listo para usar en un atributo srcSet
- */
-export function buildSrcSet(baseUrl: string): string {
-  if (!baseUrl) return '';
-  const thumb = getImageSizeUrl(baseUrl, 'thumb');
-  const card = getImageSizeUrl(baseUrl, 'card');
-  const full = getImageSizeUrl(baseUrl, 'full');
-  return `${thumb} 256w, ${card} 640w, ${full} 1920w`;
-}
