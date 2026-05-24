@@ -10,7 +10,8 @@ import {
   ChevronDown, ChevronUp, Image as ImageIcon, Settings2, UtensilsCrossed,
   type LucideIcon
 } from 'lucide-react';
-import { saveSettingsAction, updateHotelProfileAction, uploadOptimizedImageAction } from '@/app/actions/settings';
+import { saveSettingsAction, updateHotelProfileAction, getPresignedUploadUrlAction } from '@/app/actions/settings';
+import { compressImage, generateBlurDataURL, uploadToR2 } from '@/lib/upload-utils';
 import { createStaffAction, deleteStaffAction } from '@/app/actions/staff';
 import { executeCleanSlateAction } from '@/app/actions/seeding';
 import { useRouter } from 'next/navigation';
@@ -130,42 +131,53 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
     );
   };
 
+  // ─── Direct upload pipeline: compress → presign → upload → blur ──────────
   const processFiles = async (files: File[], target: 'hero' | 'covers' | 'gallery') => {
     if (files.length === 0) return;
     setIsSaving(true);
     try {
       if (target === 'hero') {
         const file = files[0];
-        const formData = new FormData();
-        formData.append('file', file);
-        const result = await uploadOptimizedImageAction(formData, 'hero');
-        if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
-        setValue('main_image_url', result.url);
-        setMainImagePreview(result.url);
-        setImageBlurMeta(prev => ({ ...prev, main_image_blur: result.blurDataURL }));
+        const compressed = await compressImage(file);
+        const presign = await getPresignedUploadUrlAction('hero', file.name, 'image/webp');
+        if (!presign.success || !presign.uploadUrl || !presign.publicUrl) throw new Error(presign.error || 'Sin URL presignada');
+        await uploadToR2(presign.uploadUrl, compressed);
+        const blurDataURL = await generateBlurDataURL(compressed);
+        setValue('main_image_url', presign.publicUrl);
+        setMainImagePreview(presign.publicUrl);
+        setImageBlurMeta(prev => ({ ...prev, main_image_blur: blurDataURL }));
       } else if (target === 'covers') {
         const file = files[0];
-        const formData = new FormData();
-        formData.append('file', file);
-        const result = await uploadOptimizedImageAction(formData, 'covers');
-        if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
-        setValue('cover_photo_url', result.url);
-        setCoverPhotoPreview(result.url);
-        setImageBlurMeta(prev => ({ ...prev, cover_photo_blur: result.blurDataURL }));
+        const compressed = await compressImage(file);
+        const presign = await getPresignedUploadUrlAction('covers', file.name, 'image/webp');
+        if (!presign.success || !presign.uploadUrl || !presign.publicUrl) throw new Error(presign.error || 'Sin URL presignada');
+        await uploadToR2(presign.uploadUrl, compressed);
+        const blurDataURL = await generateBlurDataURL(compressed);
+        setValue('cover_photo_url', presign.publicUrl);
+        setCoverPhotoPreview(presign.publicUrl);
+        setImageBlurMeta(prev => ({ ...prev, cover_photo_blur: blurDataURL }));
       } else if (target === 'gallery') {
         const newUrls: string[] = [...galleryPreviews];
         const remaining = 8 - newUrls.length;
         const toProcess = files.slice(0, remaining);
-        for (const file of toProcess) {
-          const formData = new FormData();
-          formData.append('file', file);
-          const result = await uploadOptimizedImageAction(formData, 'gallery');
-          if (!result.success || !result.url) throw new Error(result.error || 'Sin URL');
-          newUrls.push(result.url);
-          const blurURL = result.blurDataURL ?? '';
+
+        // Parallel uploads for gallery
+        const results = await Promise.all(
+          toProcess.map(async (file) => {
+            const compressed = await compressImage(file);
+            const presign = await getPresignedUploadUrlAction('gallery', file.name, 'image/webp');
+            if (!presign.success || !presign.uploadUrl || !presign.publicUrl) throw new Error(presign.error || 'Sin URL presignada');
+            await uploadToR2(presign.uploadUrl, compressed);
+            const blurDataURL = await generateBlurDataURL(compressed);
+            return { url: presign.publicUrl, blurDataURL };
+          })
+        );
+
+        for (const { url, blurDataURL } of results) {
+          newUrls.push(url);
           setImageBlurMeta(prev => ({
             ...prev,
-            gallery_blurs: [...prev.gallery_blurs, { url: result.url, blur: blurURL }]
+            gallery_blurs: [...prev.gallery_blurs, { url, blur: blurDataURL }]
           }));
         }
         setGalleryPreviews(newUrls);

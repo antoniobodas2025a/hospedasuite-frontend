@@ -243,3 +243,43 @@ export async function uploadOptimizedImageAction(
     return { success: false, error: error.message || 'Error al procesar la imagen' };
   }
 }
+
+
+// ============================================================================
+// ⚡ ACCIÓN 4: PRESIGNED URL PARA UPLOAD DIRECTO (NUEVA ARQUITECTURA)
+// ============================================================================
+
+/**
+ * Genera una URL presignada para que el browser suba directo a R2.
+ * El servidor solo autentica y firma — no toca el archivo.
+ *
+ * Uso:
+ *   1. Client llama a esta acción con { folder, fileName, contentType }
+ *   2. Server devuelve { uploadUrl, publicUrl }
+ *   3. Client hace PUT directo a uploadUrl con el archivo comprimido
+ *   4. Client usa publicUrl para mostrar la imagen
+ */
+export async function getPresignedUploadUrlAction(
+  folder: 'hero' | 'covers' | 'gallery' | 'rooms',
+  fileName: string,
+  contentType: string = 'image/webp'
+) {
+  try {
+    const currentHotel = await getCurrentHotel();
+    if (!currentHotel) {
+      return { success: false, error: 'No autenticado' };
+    }
+
+    const { getPresignedUploadUrl } = await import('@/lib/r2-client');
+    const { R2_PUBLIC_URL } = await import('@/lib/r2-client');
+
+    const key = `${currentHotel.id}/${folder}/${Date.now()}-${fileName.replace(/[^a-zA-Z0-9._-]/g, '_')}`;
+    const uploadUrl = await getPresignedUploadUrl(key, contentType);
+    const publicUrl = `${R2_PUBLIC_URL}/${key}`;
+
+    return { success: true, uploadUrl, publicUrl, key };
+  } catch (error: any) {
+    console.error('🔥 Error generando presigned URL:', error);
+    return { success: false, error: error.message || 'Error al generar URL de subida' };
+  }
+}

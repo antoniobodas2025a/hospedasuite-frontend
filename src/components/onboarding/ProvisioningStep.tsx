@@ -7,7 +7,8 @@ import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { executeOnboardingProvisioning } from '@/app/actions/onboarding';
-import { uploadOnboardingImageAction } from '@/app/actions/onboarding-upload';
+import { getPresignedOnboardingUrlAction } from '@/app/actions/onboarding-upload';
+import { compressImage, uploadToR2 } from '@/lib/upload-utils';
 import { fullWizardStateSchema } from '@/lib/onboarding-schemas';
 
 function generateSlug(name: string): string {
@@ -57,8 +58,8 @@ export default function ProvisioningStep() {
         return;
       }
 
-      // ─── FASE 0: SUBIR IMÁGENES ────────────────────────────────
-      // Reemplaza blob:// URLs por URLs públicas de Supabase Storage
+      // ─── FASE 0: SUBIR IMÁGENES (PARALELO CON PRESIGNED URLs) ─
+      // Reemplaza blob:// URLs por URLs públicas de R2
       setStatus('uploading');
       
       const allFiles: { type: 'gallery' | 'room'; id: string; file: File }[] = [];
@@ -70,39 +71,53 @@ export default function ProvisioningStep() {
 
       // Recolectar archivos de habitaciones
       rooms.forEach(room => {
-        room.imageFiles.forEach((file, i) => {
+        room.imageFiles.forEach((file) => {
           allFiles.push({ type: 'room', id: room.id, file });
         });
       });
 
-      const uploadedUrls: Record<string, string[]> = { gallery: [], [rooms[0]?.id || '']: [] };
       const roomUrlMap: Record<string, string[]> = {};
+      const galleryUrls: string[] = [];
       
       setUploadProgress({ current: 0, total: allFiles.length });
 
-      for (let i = 0; i < allFiles.length; i++) {
-        const item = allFiles[i];
-        const fd = new FormData();
-        fd.append('file', item.file);
-        
-        const result = await uploadOnboardingImageAction(fd);
-        
-        if (result.success && result.url) {
-          if (item.type === 'gallery') {
-            uploadedUrls.gallery.push(result.url);
-          } else {
-            if (!roomUrlMap[item.id]) roomUrlMap[item.id] = [];
-            roomUrlMap[item.id].push(result.url);
-          }
+      // Upload paralelo con tracking de progreso
+      const uploadSingle = async (item: typeof allFiles[0]) => {
+        const compressed = await compressImage(item.file);
+        const presign = await getPresignedOnboardingUrlAction(item.file.name, 'image/webp');
+        if (!presign.success || !presign.uploadUrl || !presign.publicUrl) {
+          throw new Error(presign.error || 'Sin URL presignada');
         }
+        await uploadToR2(presign.uploadUrl, compressed);
+        return { type: item.type, id: item.id, url: presign.publicUrl };
+      };
+
+      // Procesar en batches de 3 para no saturar la red
+      const batchSize = 3;
+      let completed = 0;
+      
+      for (let i = 0; i < allFiles.length; i += batchSize) {
+        const batch = allFiles.slice(i, i + batchSize);
+        const results = await Promise.allSettled(batch.map(uploadSingle));
         
-        setUploadProgress({ current: i + 1, total: allFiles.length });
+        for (const result of results) {
+          if (result.status === 'fulfilled') {
+            if (result.value.type === 'gallery') {
+              galleryUrls.push(result.value.url);
+            } else {
+              if (!roomUrlMap[result.value.id]) roomUrlMap[result.value.id] = [];
+              roomUrlMap[result.value.id].push(result.value.url);
+            }
+          }
+          completed++;
+          setUploadProgress({ current: completed, total: allFiles.length });
+        }
       }
 
       // ─── FASE 1: CONSTRUIR ESTADO CON URLs REALES ──────────────
       const wizardState = {
         hotelIdentity,
-        galleryImages: uploadedUrls.gallery.length > 0 ? uploadedUrls.gallery : galleryPreviews,
+        galleryImages: galleryUrls.length > 0 ? galleryUrls : galleryPreviews,
         rooms: rooms.map(r => ({
           id: r.id,
           name: r.name,

@@ -9,7 +9,8 @@ import * as z from 'zod';
 type RoomFormValues = z.input<typeof RoomSchema>;
 import { saveRoomAction } from '@/app/actions/inventory';
 import { motion } from 'framer-motion';
-import { uploadOptimizedImageAction } from '@/app/actions/settings';
+import { getPresignedUploadUrlAction } from '@/app/actions/settings';
+import { compressImage, generateBlurDataURL, uploadToR2 } from '@/lib/upload-utils';
 import { cn } from '@/lib/utils';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 import {
@@ -71,15 +72,18 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
     
     setIsUploadingMedia(true);
     try {
-      const newGallery: { url: string; blurDataURL?: string }[] = [];
-      for (const file of files) {
-        const formData = new FormData();
-        formData.set('file', file);
-        const result = await uploadOptimizedImageAction(formData, 'rooms');
-        if (!result.success) throw new Error(result.error || 'Upload failed');
-        newGallery.push({ url: result.url, blurDataURL: result.blurDataURL });
-      }
-      setValue('gallery', [...currentGallery, ...newGallery], { shouldDirty: true });
+      // Parallel uploads
+      const results = await Promise.all(
+        files.map(async (file) => {
+          const compressed = await compressImage(file);
+          const presign = await getPresignedUploadUrlAction('rooms', file.name, 'image/webp');
+          if (!presign.success || !presign.uploadUrl || !presign.publicUrl) throw new Error(presign.error || 'Sin URL presignada');
+          await uploadToR2(presign.uploadUrl, compressed);
+          const blurDataURL = await generateBlurDataURL(compressed);
+          return { url: presign.publicUrl, blurDataURL };
+        })
+      );
+      setValue('gallery', [...currentGallery, ...results], { shouldDirty: true });
     } catch (error: any) {
       console.error("[CRITICAL] Falla en la carga multimedia:", error);
       alert(`Error al subir archivo: ${error.message || 'Verifique conexión y bucket'}`);
@@ -94,26 +98,18 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
     
     setIsUploadingMedia(true);
     try {
-      const newGallery: { url: string; blurDataURL?: string }[] = [];
-
-      for (let i = 0; i < files.length; i++) {
-        const file = files[i];
-        const formData = new FormData();
-        formData.set('file', file);
-        
-        const result = await uploadOptimizedImageAction(formData, 'rooms');
-        
-        if (!result.success) {
-          throw new Error(result.error || 'Upload failed');
-        }
-        
-        newGallery.push({
-          url: result.url,
-          blurDataURL: result.blurDataURL,
-        });
-      }
-
-      setValue('gallery', [...currentGallery, ...newGallery], { shouldDirty: true });
+      // Parallel uploads
+      const results = await Promise.all(
+        Array.from(files).map(async (file) => {
+          const compressed = await compressImage(file);
+          const presign = await getPresignedUploadUrlAction('rooms', file.name, 'image/webp');
+          if (!presign.success || !presign.uploadUrl || !presign.publicUrl) throw new Error(presign.error || 'Sin URL presignada');
+          await uploadToR2(presign.uploadUrl, compressed);
+          const blurDataURL = await generateBlurDataURL(compressed);
+          return { url: presign.publicUrl, blurDataURL };
+        })
+      );
+      setValue('gallery', [...currentGallery, ...results], { shouldDirty: true });
     } catch (error: any) {
       console.error("[CRITICAL] Falla en la carga multimedia:", error);
       alert(`Error al subir archivo: ${error.message || 'Verifique conexión y bucket'}`);
