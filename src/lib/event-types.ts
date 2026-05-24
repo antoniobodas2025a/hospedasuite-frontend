@@ -298,6 +298,7 @@ export const EVENT_TYPES = {
   TRIAL_EXPIRED: 'trial.expired',
   TRIAL_EXPIRING_SOON: 'trial.expiring_soon',
   PLAN_DOWNGRADE_REQUESTED: 'plan.downgrade_requested',
+  CACHE_INVALIDATE: 'cache.invalidate',
 } as const;
 
 export type EventType = (typeof EVENT_TYPES)[keyof typeof EVENT_TYPES];

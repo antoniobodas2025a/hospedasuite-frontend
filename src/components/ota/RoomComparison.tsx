@@ -20,6 +20,7 @@ interface RoomComparisonProps {
     price_per_night?: number;
     capacity?: number;
     beds?: number;
+    bed_type?: string;
     amenities?: string[];
     description?: string;
     size_sqm?: number;
