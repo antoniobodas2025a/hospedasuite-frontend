@@ -78,8 +78,8 @@ export default function RoomComparison({ rooms }: RoomComparisonProps) {
                     <Bed size={14} /> {t('ota.comparison.beds')}
                   </td>
                   {rooms.map((room) => (
-                    <td key={room.id} className="text-center py-3 px-4 text-foreground font-bold">
-                      {room.beds || '-'}
+                    <td key={room.id} className="text-center py-3 px-4 text-foreground font-bold text-sm">
+                      {room.bed_type || (room.beds ? `${room.beds}` : '-')}
                     </td>
                   ))}
                 </tr>

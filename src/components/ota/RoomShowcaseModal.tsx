@@ -25,9 +25,17 @@ interface HotelForModal {
 // GlassCard imported from @/components/ui/glass (design system, theme-aware)
 
 // ============================================================================
-// AMENITY GLASS
+// AMENITY GLASS — Desktop: icon + title + story. Mobile: icon-only chip.
 // ============================================================================
-function AmenityGlass({ icon: Icon, title, story }: { icon: React.ElementType; title: string; story: string }) {
+function AmenityGlass({ icon: Icon, title, story, compact }: { icon: React.ElementType; title: string; story: string; compact?: boolean }) {
+  if (compact) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-1.5 p-3 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-brand-500/5 to-warm-400/5 border border-brand-500/10 transition-all hover:from-brand-500/10 hover:to-warm-400/10">
+        <Icon size={20} className="text-brand-500" strokeWidth={1.5} />
+        <p className="text-[10px] font-semibold text-foreground text-center leading-tight line-clamp-1">{title}</p>
+      </div>
+    );
+  }
   return (
     <div className="group flex gap-3 p-3 rounded-[var(--radius-squircle-lg)] transition-all duration-300 hover:bg-white/40 hover:shadow-md hover:shadow-brand-500/5">
       <div className="shrink-0 size-10 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center transition-all group-hover:from-brand-500/20 group-hover:to-warm-400/20 group-hover:scale-105">
@@ -159,7 +167,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                   </p>
                 </div>
 
-                {/* Amenidades con Glass Cards */}
+                {/* Amenidades con Glass Cards — Desktop: full detail */}
                 {room.amenities && room.amenities.length > 0 && (
                   <GlassCard className="p-5">
                     <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
@@ -325,26 +333,28 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                 </p>
               </div>
 
-              {/* Amenidades */}
+              {/* Amenidades — Mobile: icon grid (compact). Desktop: full detail below. */}
               {room.amenities && room.amenities.length > 0 && (
                 <GlassCard className="p-4">
                   <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-3 flex items-center gap-2">
                     <span className="size-1.5 rounded-full bg-brand-400" />
                     {t('ota.showcase.amenities')}
                   </h3>
-                  <div className="grid grid-cols-1 gap-1">
+                  {/* Mobile: compact icon grid */}
+                  <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
                     {room.amenities.map((amenity: string | { id: string; details?: string }, idx: number) => {
                       const id = typeof amenity === 'string' ? amenity : amenity.id;
-                        const entry = getRoomAmenityById(id);
-                        const template = entry.storyTitle
-                          ? { icon: entry.icon, title: entry.storyTitle, story: entry.storyDescription || t('ota.showcase.premiumService') }
-                          : { icon: entry.icon, title: entry.label.toUpperCase(), story: t('ota.showcase.premiumService') };
+                      const entry = getRoomAmenityById(id);
+                      const template = entry.storyTitle
+                        ? { icon: entry.icon, title: entry.storyTitle }
+                        : { icon: entry.icon, title: entry.label };
                       return (
                         <AmenityGlass
                           key={idx}
                           icon={template.icon}
                           title={template.title}
-                          story={template.story}
+                          story=""
+                          compact
                         />
                       );
                     })}
