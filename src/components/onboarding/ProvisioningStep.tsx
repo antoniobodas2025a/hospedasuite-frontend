@@ -2,11 +2,12 @@
 
 import { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Building2, CheckCircle2, AlertCircle, ExternalLink, LayoutDashboard, Globe, Copy, Check, Clock, ArrowRight } from 'lucide-react';
+import { Building2, CheckCircle2, AlertCircle, ExternalLink, LayoutDashboard, Globe, Copy, Check, Clock, ArrowRight, UploadCloud } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useRouter } from 'next/navigation';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { executeOnboardingProvisioning } from '@/app/actions/onboarding';
+import { uploadOnboardingImageAction } from '@/app/actions/onboarding-upload';
 import { fullWizardStateSchema } from '@/lib/onboarding-schemas';
 
 function generateSlug(name: string): string {
@@ -17,7 +18,7 @@ function generateSlug(name: string): string {
     .replace(/^-|-$/g, '');
 }
 
-type ProvisioningStatus = 'provisioning' | 'success' | 'pending_approval' | 'error';
+type ProvisioningStatus = 'uploading' | 'provisioning' | 'success' | 'pending_approval' | 'error';
 
 export default function ProvisioningStep() {
   const t = useTranslations('onboarding.provisioning');
@@ -25,6 +26,7 @@ export default function ProvisioningStep() {
   const {
     hotelIdentity,
     galleryPreviews,
+    galleryFiles,
     rooms,
     settings,
     paymentTransactionId,
@@ -33,6 +35,7 @@ export default function ProvisioningStep() {
     reset,
   } = useOnboardingStore();
   const [status, setStatus] = useState<ProvisioningStatus>('provisioning');
+  const [uploadProgress, setUploadProgress] = useState({ current: 0, total: 0 });
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [hotelSlug, setHotelSlug] = useState<string | null>(null);
   const [copiedField, setCopiedField] = useState<string | null>(null);
@@ -54,9 +57,52 @@ export default function ProvisioningStep() {
         return;
       }
 
+      // ─── FASE 0: SUBIR IMÁGENES ────────────────────────────────
+      // Reemplaza blob:// URLs por URLs públicas de Supabase Storage
+      setStatus('uploading');
+      
+      const allFiles: { type: 'gallery' | 'room'; id: string; file: File }[] = [];
+      
+      // Recolectar archivos de galería
+      galleryFiles.forEach((file, i) => {
+        allFiles.push({ type: 'gallery', id: `gallery-${i}`, file });
+      });
+
+      // Recolectar archivos de habitaciones
+      rooms.forEach(room => {
+        room.imageFiles.forEach((file, i) => {
+          allFiles.push({ type: 'room', id: room.id, file });
+        });
+      });
+
+      const uploadedUrls: Record<string, string[]> = { gallery: [], [rooms[0]?.id || '']: [] };
+      const roomUrlMap: Record<string, string[]> = {};
+      
+      setUploadProgress({ current: 0, total: allFiles.length });
+
+      for (let i = 0; i < allFiles.length; i++) {
+        const item = allFiles[i];
+        const fd = new FormData();
+        fd.append('file', item.file);
+        
+        const result = await uploadOnboardingImageAction(fd);
+        
+        if (result.success && result.url) {
+          if (item.type === 'gallery') {
+            uploadedUrls.gallery.push(result.url);
+          } else {
+            if (!roomUrlMap[item.id]) roomUrlMap[item.id] = [];
+            roomUrlMap[item.id].push(result.url);
+          }
+        }
+        
+        setUploadProgress({ current: i + 1, total: allFiles.length });
+      }
+
+      // ─── FASE 1: CONSTRUIR ESTADO CON URLs REALES ──────────────
       const wizardState = {
         hotelIdentity,
-        galleryImages: galleryPreviews,
+        galleryImages: uploadedUrls.gallery.length > 0 ? uploadedUrls.gallery : galleryPreviews,
         rooms: rooms.map(r => ({
           id: r.id,
           name: r.name,
@@ -66,7 +112,7 @@ export default function ProvisioningStep() {
           amenities: r.amenities,
           capacity: r.capacity,
           beds: r.beds,
-          imageUrls: r.imagePreviews,
+          imageUrls: roomUrlMap[r.id] || r.imagePreviews,
           availabilityRange: null,
         })),
         settings,
@@ -78,6 +124,9 @@ export default function ProvisioningStep() {
           manualReceiptUrl: manualReceiptUrl,
         },
       };
+
+      // ─── FASE 2: VALIDAR Y PROVISIONAR ─────────────────────────
+      setStatus('provisioning');
 
       const result = fullWizardStateSchema.safeParse(wizardState);
       if (!result.success) {
@@ -103,6 +152,36 @@ export default function ProvisioningStep() {
 
     provision();
   }, []);
+
+  // --------------------------------------------------------------------------
+  // UPLOADING STATE
+  // --------------------------------------------------------------------------
+  if (status === 'uploading') {
+    const pct = uploadProgress.total > 0 ? Math.round((uploadProgress.current / uploadProgress.total) * 100) : 0;
+    return (
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="py-24 text-center space-y-8">
+        <div className="relative w-24 h-24 mx-auto">
+          <div className="absolute inset-0 border-t-2 border-cyan-500 rounded-full animate-spin" />
+          <UploadCloud className="absolute inset-0 m-auto text-cyan-400/60" size={32} />
+        </div>
+        <div className="space-y-4">
+          <h3 className="text-xl font-bold text-white uppercase tracking-widest">Subiendo imágenes</h3>
+          <p className="text-zinc-500 text-xs font-mono">
+            {uploadProgress.current} de {uploadProgress.total}
+          </p>
+          <div className="w-64 mx-auto h-2 bg-zinc-800 rounded-full overflow-hidden">
+            <motion.div
+              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500"
+              initial={{ width: 0 }}
+              animate={{ width: `${pct}%` }}
+              transition={{ duration: 0.3 }}
+            />
+          </div>
+          <p className="text-zinc-600 text-xs font-mono">{pct}%</p>
+        </div>
+      </motion.div>
+    );
+  }
 
   // --------------------------------------------------------------------------
   // PROVISIONING STATE
