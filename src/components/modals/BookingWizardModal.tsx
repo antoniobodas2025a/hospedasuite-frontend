@@ -7,10 +7,9 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { 
   X, User, Calendar, BedDouble, ShieldCheck, 
   Trash2, Save, CreditCard, Hash, 
-  Sparkles, Moon, Hammer, ScanBarcode, AlertTriangle, Check, ArrowRight, ArrowLeft
+  Sparkles, Moon, Hammer, AlertTriangle, Check, ArrowRight, ArrowLeft
 } from 'lucide-react';
 import { calculateStayPrice } from '@/utils/supabase/pricing';
-import ScannerModal from './ScannerModal';
 import { cn } from '@/lib/utils';
 import { BookingForm } from '@/hooks/useCalendar';
 import { desaturateFeedback, springSnappy, springGentle } from '@/lib/mac2026/spring';
@@ -40,12 +39,9 @@ interface BookingWizardModalProps {
 
 const BookingWizardModalView: React.FC<BookingWizardModalProps & {
   pricingDetails: PricingDetails;
-  showScanner: boolean;
-  setShowScanner: (v: boolean) => void;
-  handleScanSuccess: (data: any) => void;
 }> = ({
   bookingForm, setBookingForm, availableRoomsList, handleCreateBooking,
-  onDelete, onClose, pricingDetails, showScanner, setShowScanner, handleScanSuccess
+  onDelete, onClose, pricingDetails
 }) => {
   const router = useRouter(); 
   const isEditing = !!bookingForm.id;
@@ -249,14 +245,9 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
               {/* STEP 3: Huesped (booking only) */}
               {step === 3 && !isMaintenance && (
                 <motion.div key="step3" initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: -20 }} transition={springGentle()} className='space-y-[var(--space-focus)]'>
-                  <div className='flex justify-between items-center'>
-                    <h4 className='text-[10px] font-bold text-zinc-500 uppercase tracking-ultra flex items-center gap-2'>
-                      <User size={14} className="text-emerald-500" /> Identidad del Huesped
-                    </h4>
-                    <button type="button" onClick={() => setShowScanner(true)} className='p-2 bg-indigo-500/10 text-indigo-400 hover:bg-indigo-500/20 rounded-[var(--radius-squircle-md)] border border-indigo-500/20 transition-all flex items-center gap-2 text-[10px] font-bold uppercase'>
-                      <ScanBarcode size={14} /> Scan OCR
-                    </button>
-                  </div>
+                  <h4 className='text-[10px] font-bold text-zinc-500 uppercase tracking-ultra flex items-center gap-2'>
+                    <User size={14} className="text-emerald-500" /> Identidad del Huesped
+                  </h4>
                   <p className="text-sm text-zinc-500">Ingresa los datos del huesped principal.</p>
                   <div className='space-y-3'>
                     <div className='relative'>
@@ -373,10 +364,6 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
             </button>
           </div>
         </div>
-
-        {showScanner && (
-          <ScannerModal onScanSuccess={handleScanSuccess} onClose={() => setShowScanner(false)} />
-        )}
       </motion.div>
     </div>
   );
@@ -384,7 +371,6 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
 
 export default function BookingWizardModal(props: BookingWizardModalProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const [showScanner, setShowScanner] = useState(false);
   const [pricingDetails, setPricingDetails] = useState<PricingDetails>({
     totalNights: 0, weekendNights: 0, weekdayNights: 0, totalPrice: 0
   });
@@ -428,20 +414,12 @@ export default function BookingWizardModal(props: BookingWizardModalProps) {
     }
   }, [props.bookingForm.roomId, props.bookingForm.checkIn, props.bookingForm.checkOut, props.bookingForm.type, props.availableRoomsList, props.setBookingForm]);
 
-  const handleScanSuccess = (data: any) => {
-    props.setBookingForm({ ...props.bookingForm, guestName: data.fullName || props.bookingForm.guestName, guestDoc: data.docNumber || props.bookingForm.guestDoc });
-    setShowScanner(false);
-  };
-
   if (!isMounted) return null;
 
   return createPortal(
     <BookingWizardModalView 
       {...props}
       pricingDetails={pricingDetails}
-      showScanner={showScanner}
-      setShowScanner={setShowScanner}
-      handleScanSuccess={handleScanSuccess}
     />,
     document.body
   );
