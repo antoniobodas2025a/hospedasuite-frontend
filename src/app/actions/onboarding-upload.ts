@@ -1,14 +1,15 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
-import { supabaseAdmin } from '@/lib/supabase-admin';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { r2Client, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2-client';
 import sharp from 'sharp';
 
 /**
- * Sube una imagen de onboarding a Supabase Storage con compresión.
+ * Sube una imagen de onboarding a R2 (Cloudflare) con compresión.
  * 
  * Usa userId en lugar de hotelId porque el hotel aún no existe.
- * Genera 3 tamaños (thumb, card, full) y devuelve la URL completa.
+ * Genera 3 tamaños (thumb, card, full) y devuelve la URL pública.
  */
 export async function uploadOnboardingImageAction(
   formData: FormData
@@ -44,24 +45,20 @@ export async function uploadOnboardingImageAction(
     const ext = file.name.split('.').pop() || 'jpg';
     const baseName = `onboarding/${user.id}/${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
-    // Subir los 3 tamaños
+    // Subir los 3 tamaños a R2
     const uploads = await Promise.all([
-      supabaseAdmin.storage.from('hotel-media').upload(`${baseName}_thumb.webp`, thumb, { contentType: 'image/webp', cacheControl: '31536000' }),
-      supabaseAdmin.storage.from('hotel-media').upload(`${baseName}_card.webp`, card, { contentType: 'image/webp', cacheControl: '31536000' }),
-      supabaseAdmin.storage.from('hotel-media').upload(`${baseName}_full.webp`, full, { contentType: 'image/webp', cacheControl: '31536000' }),
+      r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: `${baseName}_thumb.webp`, Body: thumb, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000' })),
+      r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: `${baseName}_card.webp`, Body: card, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000' })),
+      r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: `${baseName}_full.webp`, Body: full, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000' })),
     ]);
 
-    for (const { error } of uploads) {
-      if (error) throw error;
-    }
+    // URL pública de la versión full
+    const publicUrl = `${R2_PUBLIC_URL}/${baseName}_full.webp`;
 
-    // Obtener URL pública de la versión full
-    const { data: urlData } = supabaseAdmin.storage.from('hotel-media').getPublicUrl(`${baseName}_full.webp`);
-
-    return { success: true, url: urlData.publicUrl };
+    return { success: true, url: publicUrl };
 
   } catch (error: any) {
-    console.error('🔥 Error subiendo imagen de onboarding:', error);
+    console.error('🔥 Error subiendo imagen de onboarding a R2:', error);
     return { success: false, error: error.message || 'Error al procesar la imagen' };
   }
 }

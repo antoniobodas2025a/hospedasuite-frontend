@@ -4,6 +4,8 @@ import { revalidatePath } from 'next/cache';
 import { z } from 'zod';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import sharp from 'sharp';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { r2Client, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2-client';
 
 // ============================================================================
 // 🛠️ ACCIÓN 1: CONFIGURACIÓN BÁSICA Y FINANCIERA (Recuperada y Blindada)
@@ -203,24 +205,19 @@ export async function uploadOptimizedImageAction(
     const blurBuffer = await image.clone().resize(20, 20, { fit: 'inside' }).webp({ quality: 50 }).toBuffer();
     const blurDataURL = `data:image/webp;base64,${blurBuffer.toString('base64')}`;
 
-    // Subir los 3 tamaños
-    const { supabaseAdmin } = await import('@/lib/supabase-admin');
+    // Subir los 3 tamaños a R2
     const baseName = `${currentHotel.id}/${folder}/${Date.now()}-${Math.random().toString(36).substring(7)}`;
 
-    const uploads = await Promise.all([
-      supabaseAdmin.storage.from('hotel-media').upload(`${baseName}_thumb.webp`, thumb, { contentType: 'image/webp', cacheControl: '31536000', upsert: false }),
-      supabaseAdmin.storage.from('hotel-media').upload(`${baseName}_card.webp`, card, { contentType: 'image/webp', cacheControl: '31536000', upsert: false }),
-      supabaseAdmin.storage.from('hotel-media').upload(`${baseName}_full.webp`, full, { contentType: 'image/webp', cacheControl: '31536000', upsert: false }),
+    await Promise.all([
+      r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: `${baseName}_thumb.webp`, Body: thumb, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000' })),
+      r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: `${baseName}_card.webp`, Body: card, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000' })),
+      r2Client.send(new PutObjectCommand({ Bucket: R2_BUCKET, Key: `${baseName}_full.webp`, Body: full, ContentType: 'image/webp', CacheControl: 'public, max-age=31536000' })),
     ]);
 
-    for (const { error } of uploads) {
-      if (error) throw error;
-    }
-
-    // Obtener URLs públicas
-    const { data: thumbUrl } = supabaseAdmin.storage.from('hotel-media').getPublicUrl(`${baseName}_thumb.webp`);
-    const { data: cardUrl } = supabaseAdmin.storage.from('hotel-media').getPublicUrl(`${baseName}_card.webp`);
-    const { data: fullUrl } = supabaseAdmin.storage.from('hotel-media').getPublicUrl(`${baseName}_full.webp`);
+    // Construir URLs públicas directamente
+    const thumbUrl = `${R2_PUBLIC_URL}/${baseName}_thumb.webp`;
+    const cardUrl = `${R2_PUBLIC_URL}/${baseName}_card.webp`;
+    const fullUrl = `${R2_PUBLIC_URL}/${baseName}_full.webp`;
 
     const originalKB = (file.size / 1024).toFixed(0);
     const fullKB = (full.length / 1024).toFixed(0);
@@ -231,11 +228,11 @@ export async function uploadOptimizedImageAction(
 
     return {
       success: true,
-      url: fullUrl.publicUrl, // URL principal (full) para compatibilidad
+      url: fullUrl, // URL principal (full) para compatibilidad
       urls: {
-        thumb: thumbUrl.publicUrl,
-        card: cardUrl.publicUrl,
-        full: fullUrl.publicUrl,
+        thumb: thumbUrl,
+        card: cardUrl,
+        full: fullUrl,
       },
       blurDataURL,
       stats: { originalKB, fullKB, cardKB, thumbKB },
