@@ -6,6 +6,7 @@ import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { FullWizardState } from '@/lib/onboarding-schemas';
 import { checkUnitLimit } from '@/data/plan-guard';
+import { generateUniqueSlug } from '@/lib/slug';
 
 export async function executeOnboardingProvisioning(state: FullWizardState): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
@@ -28,10 +29,21 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     if (!hotelId) {
       const supabaseAdmin = createAdminClient();
       
+      // Generate unique slug for the hotel
+      const slug = await generateUniqueSlug(state.hotelIdentity.name, async (s) => {
+        const { data } = await supabaseAdmin
+          .from('hotels')
+          .select('id')
+          .eq('slug', s)
+          .maybeSingle();
+        return !!data;
+      });
+      
       const { data: newHotel, error: createError } = await supabaseAdmin
         .from('hotels')
         .insert({
           name: state.hotelIdentity.name,
+          slug,
           city: state.hotelIdentity.city,
           location: state.hotelIdentity.location,
           type: state.hotelIdentity.propertyType,
@@ -87,8 +99,28 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     const supabaseAdmin = createAdminClient();
     const isManual = state.payment.paymentMethod === 'manual';
 
+    // Ensure hotel has a slug (for hotels created before this fix)
+    const { data: existingHotel } = await supabaseAdmin
+      .from('hotels')
+      .select('slug')
+      .eq('id', hotelId)
+      .maybeSingle();
+
+    let hotelSlug = existingHotel?.slug;
+    if (!hotelSlug) {
+      hotelSlug = await generateUniqueSlug(state.hotelIdentity.name, async (s) => {
+        const { data } = await supabaseAdmin
+          .from('hotels')
+          .select('id')
+          .eq('slug', s)
+          .maybeSingle();
+        return !!data;
+      });
+    }
+
     const hotelUpdateBase = {
       name: state.hotelIdentity.name,
+      slug: hotelSlug,
       city: state.hotelIdentity.city,
       location: state.hotelIdentity.location,
       address: state.hotelIdentity.address || null,
@@ -184,6 +216,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     // 3. Revalidate
     revalidatePath('/software/onboarding');
     revalidatePath('/admin/dashboard');
+    revalidatePath(`/hotel/${hotelSlug}`);
     revalidateTag(`hotel-${hotelId}`, 'max');
     
     return { success: true };
