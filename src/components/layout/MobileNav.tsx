@@ -4,7 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Calendar, ScanBarcode, Menu, X, Calculator, Home, LucideIcon } from 'lucide-react';
+import { Calendar, Menu, X, Calculator, Home } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { springGentle, springSnappy } from '@/lib/mac2026/spring';
 import ShiftReportModal from '@/components/modals/ShiftReportModal';
@@ -17,11 +17,9 @@ interface MobileNavViewProps {
   menuItems: MenuItemType[];
   onToggleMenu: () => void;
   onOpenShiftModal: () => void;
-  onOpenScanner?: () => void;
 }
 
 interface MobileNavProps {
-  onOpenScanner?: () => void;
   subscriptionPlan?: 'starter' | 'pro' | 'enterprise';
 }
 
@@ -35,8 +33,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
   activePath,
   menuItems,
   onToggleMenu,
-  onOpenShiftModal,
-  onOpenScanner
+  onOpenShiftModal
 }) => {
   return (
     <nav className="md:hidden">
@@ -45,11 +42,11 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
         initial={false}
         animate={{ y: isVisible ? 0 : 100, opacity: isVisible ? 1 : 0 }}
         transition={springGentle()}
-        className="fixed inset-x-4 bottom-6 z-50"
+        className="fixed inset-x-4 bottom-6 z-[var(--z-sticky)]"
       >
         <div className="glass-panel shadow-2xl shadow-black/50 rounded-[var(--radius-squircle-2xl)] p-2 flex items-center justify-between ring-1 ring-inset ring-border">
           
-          {/* Botón Home / Quick Access */}
+          {/* Botón Home */}
           <Link href="/dashboard" className={cn(
             "p-4 rounded-[var(--radius-squircle-lg)] transition-all active:scale-90",
             activePath === '/dashboard' ? "text-brand-400 bg-brand-500/10" : "text-muted-foreground hover:text-sidebar-foreground"
@@ -65,18 +62,8 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
             <Calendar className="size-6 stroke-[1.5]" />
           </Link>
 
-          {/* Botón Scanner - Centro de Acción */}
-          <motion.button 
-            onClick={() => {
-              if (showMenu) onToggleMenu();
-              onOpenScanner?.();
-            }}
-            className="p-4 rounded-[var(--radius-squircle-lg)] bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 transition-transform"
-            whileTap={{ scale: 0.95 }}
-            transition={springSnappy()}
-          >
-            <ScanBarcode className="size-6 stroke-[1.5]" />
-          </motion.button>
+          {/* Espaciador central */}
+          <div className="flex-1" />
 
           {/* Botón Trigger de Menú Expansivo */}
           <motion.button
@@ -104,7 +91,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
               exit={{ opacity: 0 }}
               transition={{ duration: 0.2 }}
               onClick={onToggleMenu}
-              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[calc(var(--z-overlay)-1)]"
             />
             
             <motion.div
@@ -112,7 +99,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={springGentle({ stiffness: 200, damping: 25, mass: 1.2 })}
-              className="fixed inset-x-4 bottom-28 z-50 glass-panel shadow-2xl overflow-hidden flex flex-col max-h-[70vh]"
+              className="fixed inset-x-4 bottom-28 z-[var(--z-overlay)] glass-panel shadow-2xl overflow-hidden flex flex-col max-h-[60vh]"
             >
               <div className="grid grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-1 pb-4">
                 {menuItems.map((item) => (
@@ -156,7 +143,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
 // BLOQUE 3: COMPONENTE CONTENEDOR
 // ==========================================
 
-export default function MobileNav({ onOpenScanner, subscriptionPlan = 'starter' }: MobileNavProps) {
+export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(0);
@@ -212,7 +199,6 @@ export default function MobileNav({ onOpenScanner, subscriptionPlan = 'starter' 
           setShowMenu(false);
           setIsShiftModalOpen(true);
         }}
-        onOpenScanner={onOpenScanner}
       />
 
       <ShiftReportModal 
