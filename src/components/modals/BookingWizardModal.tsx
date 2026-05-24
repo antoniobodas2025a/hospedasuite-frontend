@@ -102,13 +102,13 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
         {/* Step Indicator */}
         <div className="px-8 py-4 border-b border-white/5 bg-zinc-900/20">
           <div className="flex items-center justify-center gap-3">
-            {/* Type toggle — always visible */}
+            {/* Type toggle — always visible, P1: ≥44px tap targets */}
             <div className='bg-zinc-950/80 p-1 rounded-[var(--radius-squircle-md)] flex border border-white/5'>
-              <button type="button" onClick={() => { setBookingForm({...bookingForm, type: 'booking', roomId: ''}); if (!isEditing) setStep(1); }} className={cn("px-4 py-1.5 rounded-[var(--radius-squircle-sm)] text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5", !isMaintenance ? "bg-zinc-800 text-zinc-100" : "text-zinc-600 hover:text-zinc-400")}>
-                <User className="size-3" /> Huesped
+              <button type="button" onClick={() => { setBookingForm({...bookingForm, type: 'booking', roomId: ''}); if (!isEditing) setStep(1); }} className={cn("px-3 py-2.5 rounded-[var(--radius-squircle-sm)] text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 min-h-[44px]", !isMaintenance ? "bg-zinc-800 text-zinc-100" : "text-zinc-600 hover:text-zinc-400")}>
+                <User className="size-3" /> <span className="hidden sm:inline">Huesped</span><span className="sm:hidden">H</span>
               </button>
-              <button type="button" onClick={() => { setBookingForm({...bookingForm, type: 'maintenance', roomId: ''}); if (!isEditing) setStep(1); }} className={cn("px-4 py-1.5 rounded-[var(--radius-squircle-sm)] text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5", isMaintenance ? "bg-amber-500/20 text-amber-400" : "text-zinc-600 hover:text-zinc-400")}>
-                <Hammer className="size-3" /> Mant.
+              <button type="button" onClick={() => { setBookingForm({...bookingForm, type: 'maintenance', roomId: ''}); if (!isEditing) setStep(1); }} className={cn("px-3 py-2.5 rounded-[var(--radius-squircle-sm)] text-[10px] font-bold uppercase tracking-wider transition-all flex items-center gap-1.5 min-h-[44px]", isMaintenance ? "bg-amber-500/20 text-amber-400" : "text-zinc-600 hover:text-zinc-400")}>
+                <Hammer className="size-3" /> <span className="hidden sm:inline">Mant.</span><span className="sm:hidden">M</span>
               </button>
             </div>
 
@@ -287,33 +287,50 @@ const BookingWizardModalView: React.FC<BookingWizardModalProps & {
             </AnimatePresence>
           </div>
 
-          {/* Right Panel: Pricing — always visible */}
-          <div className='lg:col-span-5'>
+          {/* Right Panel: Pricing — sticky on mobile, side panel on desktop */}
+          <div className='lg:col-span-5 lg:static lg:order-none order-first'>
             <AnimatePresence mode="wait">
               {!isMaintenance ? (
                 <motion.div key="pricing" initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} exit={{ opacity: 0, x: 20 }} className="space-y-[var(--space-breath)]">
-                  <div className='bg-indigo-600/10 border border-indigo-500/20 p-[var(--space-breath)] rounded-[var(--radius-squircle-3xl)] relative overflow-hidden ring-1 ring-indigo-500/10'>
-                    <h4 className='text-[10px] font-bold text-indigo-400 uppercase tracking-ultra flex items-center gap-2 mb-6'>
-                      <CreditCard size={14} /> Auditoria Financiera
-                    </h4>
-                    <div className='space-y-3 mb-8 font-mono text-xs'>
-                      <div className='flex justify-between text-zinc-400'>
-                        <span>Noches Estandar:</span>
-                        <span className='text-zinc-100 font-bold'>{pricingDetails.weekdayNights}</span>
-                      </div>
-                      <div className='flex justify-between text-emerald-400/70'>
-                        <span>Noches Fin de Sem.:</span>
-                        <span className='text-emerald-400 font-bold'>{pricingDetails.weekendNights}</span>
-                      </div>
-                    </div>
-                    <div className='flex justify-between items-end'>
+                  {/* Mobile: compact sticky price bar */}
+                  <div className='lg:hidden sticky top-0 z-10'>
+                    <div className='bg-indigo-600/10 border border-indigo-500/20 p-4 rounded-[var(--radius-squircle-xl)] flex items-center justify-between'>
                       <div>
-                        <span className='text-[10px] font-bold text-indigo-300 uppercase tracking-widest block mb-1'>Obligacion Total</span>
-                        <span className='text-4xl font-bold text-indigo-400 tracking-tighter tabular-nums'>
+                        <span className='text-[9px] font-bold text-indigo-300 uppercase tracking-widest block'>Total</span>
+                        <span className='text-xl font-bold text-indigo-400 tracking-tighter tabular-nums'>
                           ${pricingDetails.totalPrice.toLocaleString()}
                         </span>
                       </div>
-                      <Moon className="size-8 text-indigo-500/20" strokeWidth={1} />
+                      <span className='text-[10px] text-zinc-500 font-mono'>
+                        {pricingDetails.totalNights} {pricingDetails.totalNights === 1 ? 'noche' : 'noches'}
+                      </span>
+                    </div>
+                  </div>
+                  {/* Desktop: full audit panel */}
+                  <div className='hidden lg:block'>
+                    <div className='bg-indigo-600/10 border border-indigo-500/20 p-[var(--space-breath)] rounded-[var(--radius-squircle-3xl)] relative overflow-hidden ring-1 ring-indigo-500/10'>
+                      <h4 className='text-[10px] font-bold text-indigo-400 uppercase tracking-ultra flex items-center gap-2 mb-6'>
+                        <CreditCard size={14} /> Auditoria Financiera
+                      </h4>
+                      <div className='space-y-3 mb-8 font-mono text-xs'>
+                        <div className='flex justify-between text-zinc-400'>
+                          <span>Noches Estandar:</span>
+                          <span className='text-zinc-100 font-bold'>{pricingDetails.weekdayNights}</span>
+                        </div>
+                        <div className='flex justify-between text-emerald-400/70'>
+                          <span>Noches Fin de Sem.:</span>
+                          <span className='text-emerald-400 font-bold'>{pricingDetails.weekendNights}</span>
+                        </div>
+                      </div>
+                      <div className='flex justify-between items-end'>
+                        <div>
+                          <span className='text-[10px] font-bold text-indigo-300 uppercase tracking-widest block mb-1'>Obligacion Total</span>
+                          <span className='text-4xl font-bold text-indigo-400 tracking-tighter tabular-nums'>
+                            ${pricingDetails.totalPrice.toLocaleString()}
+                          </span>
+                        </div>
+                        <Moon className="size-8 text-indigo-500/20" strokeWidth={1} />
+                      </div>
                     </div>
                   </div>
                 </motion.div>

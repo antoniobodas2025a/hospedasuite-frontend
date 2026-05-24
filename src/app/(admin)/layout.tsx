@@ -69,7 +69,8 @@ export default async function AdminLayout({
         </div>
         
         {/* Área de Renderizado de Hijos (Paneles) */}
-        <div className='flex-1 overflow-y-auto p-4 pb-48 md:pb-16 lg:p-8 custom-scrollbar relative z-10'>
+        {/* P1: pb-28 replaces pb-48 — dock is at bottom-6, not bottom-0. Saves ~80px viewport on mobile. */}
+        <div className='flex-1 overflow-y-auto p-4 pb-28 md:pb-16 lg:p-8 custom-scrollbar relative z-10'>
           {children}
         </div>
       </main>

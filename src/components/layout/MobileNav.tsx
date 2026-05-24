@@ -8,14 +8,20 @@ import { Calendar, Menu, X, Calculator, Home, LogOut } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { springGentle, springSnappy } from '@/lib/mac2026/spring';
 import ShiftReportModal from '@/components/modals/ShiftReportModal';
-import { MENU_ITEMS, type MenuItem as MenuItemType } from '@/config/menuItems';
+import { MENU_GROUPS, type MenuItem as MenuItemType } from '@/config/menuItems';
 import { logout } from '@/app/actions/auth';
+
+interface MenuGroup {
+  id: string;
+  label: string;
+  items: MenuItemType[];
+}
 
 interface MobileNavViewProps {
   isVisible: boolean;
   showMenu: boolean;
   activePath: string;
-  menuItems: MenuItemType[];
+  menuGroups: MenuGroup[];
   onToggleMenu: () => void;
   onOpenShiftModal: () => void;
   onRevealDock: () => void;
@@ -34,7 +40,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
   isVisible,
   showMenu,
   activePath,
-  menuItems,
+  menuGroups,
   onToggleMenu,
   onOpenShiftModal,
   onRevealDock,
@@ -113,24 +119,34 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
               animate={{ y: 0, opacity: 1 }}
               exit={{ y: '100%', opacity: 0 }}
               transition={springGentle({ stiffness: 200, damping: 25, mass: 1.2 })}
-              className="fixed inset-x-4 bottom-28 z-[var(--z-overlay)] glass-panel shadow-2xl overflow-hidden flex flex-col max-h-[60vh]"
+              className="fixed inset-x-4 bottom-28 z-[var(--z-overlay)] glass-panel shadow-2xl overflow-hidden flex flex-col max-h-[70vh]"
             >
-              <div className="grid grid-cols-2 gap-3 overflow-y-auto custom-scrollbar pr-1 pb-4">
-                {menuItems.map((item) => (
-                    <Link 
-                    key={item.id} 
-                    href={item.href} 
-                    onClick={onToggleMenu} 
-                    className={cn(
-                      "flex items-center gap-3 p-4 rounded-[var(--radius-squircle-lg)] border transition-all active:scale-95 group",
-                      activePath === item.href 
-                        ? "bg-brand-500/10 border-brand-500/20 text-brand-400" 
-                        : "bg-muted border-border text-sidebar-foreground/70 hover:text-sidebar-foreground"
-                    )}
-                  >
-                    <item.icon className={cn("size-5 stroke-[1.5]", item.color)} /> 
-                    <span className="text-xs font-semibold tracking-wide truncate">{item.label}</span>
-                  </Link>
+              {/* Grouped menu — Mac 2026: Ley de Miller, ≤5 chunks por grupo */}
+              <div className="overflow-y-auto custom-scrollbar px-4 pt-4 pb-2 space-y-4">
+                {menuGroups.map(group => (
+                  <div key={group.id}>
+                    <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2 mb-2">
+                      {group.label}
+                    </h3>
+                    <div className="grid grid-cols-2 gap-3">
+                      {group.items.map(item => (
+                        <Link 
+                          key={item.id} 
+                          href={item.href} 
+                          onClick={onToggleMenu} 
+                          className={cn(
+                            "flex items-center gap-3 p-4 rounded-[var(--radius-squircle-lg)] border transition-all active:scale-95 group",
+                            activePath === item.href 
+                              ? "bg-brand-500/10 border-brand-500/20 text-brand-400" 
+                              : "bg-muted border-border text-sidebar-foreground/70 hover:text-sidebar-foreground"
+                          )}
+                        >
+                          <item.icon className={cn("size-5 stroke-[1.5]", item.color)} /> 
+                          <span className="text-xs font-semibold tracking-wide truncate">{item.label}</span>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
                 ))}
               </div>
               
@@ -222,6 +238,22 @@ export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavPro
     lastScrollYRef.current = 0;
   }, [pathname]);
 
+  // Hide dock when any modal is open — prevents z-index conflicts
+  // Mac 2026: modals use z-[calc(var(--z-modal)+N)], dock is z-sticky(200)
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      // Check for modal-level z-index elements on body
+      const hasOpenModal = Array.from(document.body.children).some(el => {
+        const style = window.getComputedStyle(el);
+        const zIndex = parseInt(style.zIndex, 10);
+        return zIndex >= 300 && style.position === 'fixed';
+      });
+      if (hasOpenModal) setIsVisible(false);
+    });
+    observer.observe(document.body, { childList: true, subtree: false });
+    return () => observer.disconnect();
+  }, []);
+
   // Bloqueo de Scroll del body en Mobile-First
   useEffect(() => {
     if (showMenu) {
@@ -235,12 +267,16 @@ export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavPro
     };
   }, [showMenu]);
 
-  // Filtra ítems de menú según el plan (gating por suscripción)
+  // Filtra grupos e ítems según el plan (gating por suscripción)
+  // Mac 2026: Ley de Miller — 4 chunks semánticos de ≤4 items cada uno
   const planLevel = { starter: 0, pro: 1, enterprise: 2 } as const;
   const currentLevel = planLevel[subscriptionPlan];
-  const visibleMenuItems = MENU_ITEMS.filter(item =>
-    !item.minPlan || currentLevel >= (planLevel[item.minPlan] ?? 0)
-  );
+  const visibleMenuGroups = MENU_GROUPS.map(group => ({
+    ...group,
+    items: group.items.filter(item =>
+      !item.minPlan || currentLevel >= (planLevel[item.minPlan] ?? 0)
+    )
+  })).filter(g => g.items.length > 0);
 
   return (
     <>
@@ -248,7 +284,7 @@ export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavPro
         isVisible={isVisible}
         showMenu={showMenu}
         activePath={pathname}
-        menuItems={visibleMenuItems}
+        menuGroups={visibleMenuGroups}
         onToggleMenu={() => setShowMenu(!showMenu)}
         onRevealDock={() => setIsVisible(true)}
         onOpenShiftModal={() => {
