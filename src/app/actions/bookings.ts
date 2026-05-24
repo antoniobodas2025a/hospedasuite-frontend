@@ -345,7 +345,19 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
     const checkOut = new Date(`${payload.checkout}T12:00:00Z`);
     const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
 
-    const verifiedTotal = room.price * nights;
+    // Price coherence: use payload.amount (includes IVA 19%) instead of
+    // recalculating room.price * nights (which excludes IVA).
+    // This ensures the DB total matches what the user actually pays via Wompi.
+    // Verification: payload.amount should be within 25% of base rate to catch manipulation.
+    const baseRate = room.price * nights;
+    const maxExpected = Math.round(baseRate * 1.25); // base + 19% IVA + small buffer
+    const minExpected = Math.round(baseRate * 0.95); // small discount tolerance
+
+    if (payload.amount > maxExpected || payload.amount < minExpected) {
+      throw new Error('Monto verificado no coincide con tarifa de la unidad.');
+    }
+
+    const verifiedTotal = payload.amount;
     
     let guestId = null;
     const { data: existingGuest } = await supabaseAdmin

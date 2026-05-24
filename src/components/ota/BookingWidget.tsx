@@ -68,8 +68,10 @@ export default function BookingWidget({
   }
 
   const roomPrice = selectedRoom ? (selectedRoom.price_per_night || selectedRoom.price) : minPrice;
-  const totalPrice = nights > 0 ? roomPrice * nights : roomPrice;
-  const taxes = Math.round(totalPrice * 0.19);
+  // Mac 2026: Price coherence — IVA included to match RoomCard, Showcase, and Checkout
+  const subtotal = nights > 0 ? roomPrice * nights : roomPrice;
+  const taxes = Math.round(subtotal * 0.19);
+  const totalPrice = subtotal + taxes;
 
   const handleReserve = () => {
     if (!checkIn || !checkOut) {
@@ -110,7 +112,7 @@ export default function BookingWidget({
               </div>
               {nights > 1 && (
                 <p className="text-xs text-primary-foreground/70 mt-1">
-                  ${roomPrice.toLocaleString()} x {nights} {t('ota.booking.nights')} + {t('ota.booking.taxes')}
+                  ${roomPrice.toLocaleString()} x {nights} {t('ota.booking.nights')} + IVA
                 </p>
               )}
             </>

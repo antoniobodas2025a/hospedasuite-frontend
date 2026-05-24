@@ -102,7 +102,10 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   const dateTo = parseISO(checkOut);
   const nights = Math.max(1, Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 3600 * 24)));
   const basePrice = room.price_per_night || room.price || 0;
-  const totalPrice = basePrice * nights;
+  // Mac 2026: Price coherence — IVA 19% included to match RoomCard and CheckoutForm
+  const subtotal = basePrice * nights;
+  const taxes = Math.round(subtotal * 0.19);
+  const totalPrice = subtotal + taxes;
   const isOverCapacity = defaultGuests > Number(room.capacity ?? 0);
 
   const handleCheckout = () => {
