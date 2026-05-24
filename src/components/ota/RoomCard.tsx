@@ -11,6 +11,26 @@ import { getRoomAmenityById } from '@/lib/amenity-registry';
 import { getImageSizeUrl } from '@/lib/image-config';
 import { useTranslations } from 'next-intl';
 
+// ============================================================================
+// BED TYPE FORMATTER — DB values → human-readable labels
+// Migration 022 stores: individual, doble, queen, king, litera
+// Users need to understand: "1 Cama Individual" vs "1 Cama Doble" vs "2 Camas Queen"
+// ============================================================================
+
+function formatBedType(bedType: string | undefined, beds: number): string {
+  if (!bedType) return `${beds} Cama${beds > 1 ? 's' : ''}`;
+  const labels: Record<string, string> = {
+    individual: `${beds} Cama Individual`,
+    doble: `${beds} Cama Doble`,
+    queen: `${beds} Cama Queen`,
+    king: `${beds} Cama King`,
+    litera: `${beds} Litera${beds > 1 ? 's' : ''}`,
+  };
+  // Handle composite types like "King + Sofá cama", "2 Queen + 2 Individual"
+  if (bedType.includes('+') || bedType.includes(',')) return bedType;
+  return labels[bedType.toLowerCase()] || bedType;
+}
+
 interface RoomCardProps {
   room: any;
   hotelSlug: string;
@@ -197,7 +217,7 @@ function RoomCardInner({
               </span>
               {room.beds && room.beds > 0 && (
                 <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
-                  <Bed size={12} /> {room.bed_type || `${room.beds} ${t('ota.roomCard.beds', { count: room.beds })}`}
+                  <Bed size={12} /> {formatBedType(room.bed_type, room.beds)}
                 </span>
               )}
             </div>

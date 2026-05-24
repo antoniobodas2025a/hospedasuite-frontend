@@ -6,6 +6,23 @@ import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 import { useTranslations } from 'next-intl';
 
 // ============================================================================
+// BED TYPE FORMATTER — same logic as RoomCard for coherence
+// ============================================================================
+
+function formatBedType(bedType: string | undefined, beds: number): string {
+  if (!bedType) return `${beds}`;
+  const labels: Record<string, string> = {
+    individual: `${beds} Ind.`,
+    doble: `${beds} Doble`,
+    queen: `${beds} Queen`,
+    king: `${beds} King`,
+    litera: `${beds} Litera`,
+  };
+  if (bedType.includes('+') || bedType.includes(',')) return bedType;
+  return labels[bedType.toLowerCase()] || bedType;
+}
+
+// ============================================================================
 // ROOM COMPARISON TABLE — Tabla comparativa de habitaciones
 //
 // Muestra una tabla lado a lado para comparar amenidades, precio y capacidad.
@@ -80,7 +97,7 @@ export default function RoomComparison({ rooms }: RoomComparisonProps) {
                   </td>
                   {rooms.map((room) => (
                     <td key={room.id} className="text-center py-3 px-4 text-foreground font-bold text-sm">
-                      {room.bed_type || (room.beds ? `${room.beds}` : '-')}
+                      {formatBedType(room.bed_type, room.beds || 0)}
                     </td>
                   ))}
                 </tr>

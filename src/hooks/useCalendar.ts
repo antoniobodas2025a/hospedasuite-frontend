@@ -24,13 +24,11 @@ export interface BookingForm {
   guestName: string;
   guestDoc: string;
   guestPhone: string;
+  guestEmail?: string;
   roomId: string;
   checkIn: string;
   checkOut: string;
-  adults: number;
-  children: number;
   price: number;
-  guestEmail?: string;
   source?: 'direct' | 'ota' | 'admin';
 }
 
@@ -63,7 +61,7 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
     type: 'booking', guestName: '', guestDoc: '', guestPhone: '', roomId: '',
     checkIn: new Date().toISOString().split('T')[0],
     checkOut: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-    adults: 1, children: 0, price: 0,
+    price: 0,
   });
 
   // ========================================================================
@@ -124,8 +122,6 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
       roomId: booking.room_id,
       checkIn: booking.check_in,
       checkOut: booking.check_out,
-      adults: 1,
-      children: 0,
       price: booking.total_price,
     });
     setShowBookingModal(true);
@@ -137,7 +133,7 @@ export const useCalendar = (initialRooms: any[], initialBookings: any[], hotelId
       type: 'booking', guestName: '', guestDoc: '', guestPhone: '', roomId: '',
       checkIn: new Date().toISOString().split('T')[0],
       checkOut: new Date(Date.now() + 86400000).toISOString().split('T')[0],
-      adults: 1, children: 0, price: 0,
+      price: 0,
     });
     setShowBookingModal(true);
   }, []);

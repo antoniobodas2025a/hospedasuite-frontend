@@ -68,7 +68,11 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     .filter(opt => selectedUpsells.includes(opt.id))
     .reduce((sum, opt) => sum + opt.price, 0);
 
-  const grandTotal = basePrice + upsellsTotal;
+  // Mac 2026: Price coherence with RoomCard — IVA 19% included in total
+  // so consumer sees the same price everywhere on the OTA
+  const subtotal = basePrice + upsellsTotal;
+  const taxes = Math.round(subtotal * 0.19);
+  const grandTotal = subtotal + taxes;
 
   // Persist state to sessionStorage on every change
   useEffect(() => {
@@ -435,6 +439,11 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                     <p className="font-bold">${upsellsTotal.toLocaleString()}</p>
                   </div>
                 )}
+                {/* IVA breakdown — Mac 2026: price coherence with RoomCard */}
+                <div className="flex justify-between items-start text-background/40">
+                  <p className="text-xs">IVA (19%)</p>
+                  <p className="text-xs font-bold">${taxes.toLocaleString()}</p>
+                </div>
               </div>
               <div className="flex justify-between items-end mb-8">
                 <p className="text-background/60">Total a Pagar</p>
