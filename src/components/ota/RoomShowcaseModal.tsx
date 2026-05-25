@@ -226,7 +226,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                       <div>
                         <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">{t('ota.showcase.occupancy')}</p>
                         <p className="text-sm font-bold text-foreground">
-                          {defaultGuests} {t('ota.showcase.guest', { count: defaultGuests })}
+                          {defaultGuests} {t('ota.showcase.guest', { count: defaultGuests })} (Capacidad máx: {room.capacity ?? 0})
                         </p>
                       </div>
                       <Users size={16} className="text-muted-foreground/40" />
@@ -389,7 +389,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                     <div>
                       <p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1">{t('ota.showcase.occupancy')}</p>
                       <p className="text-sm font-bold text-foreground">
-                        {defaultGuests} {t('ota.showcase.guest', { count: defaultGuests })}
+                        {defaultGuests} {t('ota.showcase.guest', { count: defaultGuests })} (Capacidad máx: {room.capacity ?? 0})
                       </p>
                     </div>
                     <Users size={16} className="text-muted-foreground/40" />

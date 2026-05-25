@@ -56,6 +56,9 @@ export default function BookingWidget({
   const selectedRoomId = searchParams.get('showRoom');
   const selectedRoom = selectedRoomId ? activeRooms.find(r => r.id === selectedRoomId) : null;
 
+  // Hide widget when RoomShowcaseModal is open
+  if (selectedRoomId) return null;
+
   // Guest count from guests filter
   const guestsParam = searchParams.get('guests');
   const guestCount = guestsParam ? Number(guestsParam) : null;
@@ -85,6 +88,7 @@ export default function BookingWidget({
     params.set('showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
     params.set('checkin', checkIn);
     params.set('checkout', checkOut);
+    if (guestsParam) params.set('guests', guestsParam);
     router.push(`?${params.toString()}`, { scroll: false });
   };
 

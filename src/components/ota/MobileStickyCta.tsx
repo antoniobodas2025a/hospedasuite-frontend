@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
 
@@ -28,6 +29,10 @@ export default function MobileStickyCta({
   checkOut,
 }: MobileStickyCtaProps) {
   const t = useTranslations();
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const guests = searchParams.get('guests');
+  const showRoom = searchParams.get('showRoom');
   const [isVisible, setIsVisible] = useState(false);
   const visibleRef = useRef(false);
 
@@ -53,14 +58,24 @@ export default function MobileStickyCta({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Hide sticky CTA when RoomShowcaseModal is open
+  if (showRoom) return null;
+
   const handleReserve = () => {
     if (checkIn && checkOut) {
+      // Navigate to rooms section with guests preserved in URL
+      const params = new URLSearchParams(searchParams.toString());
+      if (guests) params.set('guests', guests);
+      router.push(`?${params.toString()}`, { scroll: false });
       document.querySelector('[id="rooms-section"]')?.scrollIntoView({ behavior: 'smooth' });
     } else {
       // Scroll to top where the sticky search bar lives
       window.scrollTo({ top: 0, behavior: 'smooth' });
     }
   };
+
+  // Mac 2026: Price coherence — IVA 19% included in displayed price
+  const displayPrice = Math.round(minPrice * 1.19);
 
   return (
     <div
@@ -74,7 +89,7 @@ export default function MobileStickyCta({
           <div className="flex-1">
             <p className="text-[10px] font-bold text-muted-foreground/60 uppercase tracking-widest">{t('ota.mobileCta.from')}</p>
             <div className="flex items-baseline gap-1">
-              <p className="text-2xl font-black text-foreground">${minPrice.toLocaleString()}</p>
+              <p className="text-2xl font-black text-foreground">${displayPrice.toLocaleString()}</p>
               <span className="text-xs text-muted-foreground font-medium">{t('ota.mobileCta.copPerNight')}</span>
             </div>
             {availableCount > 0 && availableCount <= 2 && (

@@ -3,6 +3,7 @@
 import React, { useRef, useEffect, useState } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { motion, useInView } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } from 'lucide-react';
@@ -45,6 +46,9 @@ interface RoomCardProps {
 }
 
 export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
+  const searchParams = useSearchParams();
+  const guests = searchParams.get('guests');
+
   const coverImage = Array.isArray(room.gallery) && room.gallery.length > 0
     ? (typeof room.gallery[0] === 'string' ? room.gallery[0] : (room.gallery[0] as GalleryItem).url || '')
     : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
@@ -75,6 +79,7 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
   queryParams.set('showRoom', room.id);
   if (checkIn) queryParams.set('checkin', checkIn);
   if (checkOut) queryParams.set('checkout', checkOut);
+  if (guests) queryParams.set('guests', guests);
 
   const destinationUrl = `?${queryParams.toString()}`;
 
@@ -230,7 +235,7 @@ function RoomCardInner({
 
             {/* Amenidades — Mac 2026: label escaneable, no marketing prose */}
             <div className="flex flex-wrap gap-2 mb-6">
-              {room.amenities?.slice(0, 4).map((amenity: any, idx: number) => {
+              {room.amenities?.slice(0, 4).map((amenity: string | { id: string }, idx: number) => {
                 const id = typeof amenity === 'string' ? amenity : amenity.id;
                 const entry = getRoomAmenityById(id);
                 if (!entry) return null;
