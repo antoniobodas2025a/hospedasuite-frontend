@@ -1,24 +1,8 @@
 'use server'
 
-import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { generateUniqueSlug } from '@/lib/slug';
-
-/**
- * 🛡️ CONFIGURACIÓN DE SEGURIDAD NIVEL 0
- * Cliente Admin para bypass de RLS y gestión de Auth (Service Role).
- * Deshabilitamos persistSession para entornos Serverless Edge.
- */
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  {
-    auth: {
-      autoRefreshToken: false,
-      persistSession: false
-    }
-  }
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 /**
  * ACCIÓN 1: Crear nuevo Hotel y Usuario Dueño (Transacción Atómica con Rollback)

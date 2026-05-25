@@ -1,26 +1,9 @@
 'use server';
-import { createClient } from '@supabase/supabase-js';
 import { revalidateTag } from 'next/cache';
-
-const getSupabaseAdmin = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '';
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || '';
-
-  return createClient(
-    supabaseUrl,
-    supabaseKey,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-      },
-    },
-  );
-};
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function getPendingReviewsAction() {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
 
     const { data, error } = await supabaseAdmin
       .from('reviews')
@@ -43,7 +26,6 @@ export async function getPendingReviewsAction() {
 
 export async function approveReviewAction(reviewId: string) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
 
     // Get hotel_id before updating so we can revalidate
     const { data: review } = await supabaseAdmin
@@ -77,7 +59,6 @@ export async function approveReviewAction(reviewId: string) {
 
 export async function rejectReviewAction(reviewId: string) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
 
     const { data: review } = await supabaseAdmin
       .from('reviews')

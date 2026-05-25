@@ -1,7 +1,7 @@
 'use server';
 
-import { createClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // Definimos la interfaz de entrada
 interface LeadInput {
@@ -13,11 +13,6 @@ interface LeadInput {
 
 // 1. Acción para CREAR un nuevo Lead
 export async function createLeadAction(lead: LeadInput) {
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-
   try {
     const { data, error } = await supabaseAdmin
       .from('hunted_leads')
@@ -39,11 +34,6 @@ export async function updateLeadStatusAction(
   leadId: number,
   newStatus: string,
 ) {
-  const supabaseAdmin = createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!,
-  );
-
   try {
     const { error } = await supabaseAdmin
       .from('hunted_leads')

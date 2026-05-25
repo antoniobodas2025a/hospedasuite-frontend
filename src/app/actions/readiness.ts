@@ -114,15 +114,11 @@ export async function setGoLiveAction(
     }
 
     // 3. Execute — use admin client to set the flag (bypass RLS)
-    const { createClient } = await import('@supabase/supabase-js')
-    const supabase = createClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.SUPABASE_SERVICE_ROLE_KEY!,
-    )
+    const { supabaseAdmin } = await import('@/lib/supabase-admin')
 
     const goLiveAt = new Date().toISOString()
 
-    const { error: dbError } = await supabase
+    const { error: dbError } = await supabaseAdmin
       .from('hotels')
       .update({ go_live: true, go_live_at: goLiveAt })
       .eq('id', hotelId)

@@ -1,14 +1,8 @@
 'use server';
 
-import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
-
-// 🛡️ Cliente Administrativo (Ignora RLS, por tanto, la seguridad DEBE estar en el código)
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // CONTRATO ESTRICTO DE DATOS
 export interface GuestPayload {

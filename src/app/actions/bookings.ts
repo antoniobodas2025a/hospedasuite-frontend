@@ -1,17 +1,11 @@
 'use server';
 
-import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { cookies } from 'next/headers';
 import { isTemporalCollision, type PostgresError } from '@/lib/booking-helpers';
 import { emitEvent } from '@/lib/events';
-
-// 🛡️ CLIENTE PRIVILEGIADO GLOBAL (Admin Tier)
-const supabaseAdmin = createSupabaseClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // ==========================================
 // BLOQUE 1: INTERFACES Y CONTRATOS

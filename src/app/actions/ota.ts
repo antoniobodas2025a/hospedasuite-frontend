@@ -1,24 +1,6 @@
 'use server';
-import { createClient } from '@supabase/supabase-js';
 import type { Room } from '@/types';
-
-// 🚨 FIX QA CRÍTICO: Patrón Factory + Sanitización de Variables (.trim)
-// Esto evita que espacios invisibles en el .env rompan el motor fetch de Node.js
-const getSupabaseAdmin = () => {
-  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim() || '';
-  const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY?.trim() || '';
-
-  return createClient(
-    supabaseUrl,
-    supabaseKey,
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false
-      }
-    }
-  );
-};
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 export async function fetchOTAHotelsAction(
   page: number = 0, 
@@ -27,7 +9,6 @@ export async function fetchOTAHotelsAction(
   search: string = ''
 ) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
     
     const from = page * limit;
     const to = from + limit - 1;
@@ -82,7 +63,6 @@ export async function fetchOTAHotelsAction(
  */
 export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string, checkOut?: string) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
 
     // 1. Traemos SOLO los datos del hotel base
     const { data: hotel, error } = await supabaseAdmin
@@ -223,7 +203,6 @@ export async function submitReviewAction(submission: ReviewSubmission) {
 
     const { hotelId, guestName, guestEmail, guestLocation, rating, comment, stayDate } = validated.data;
 
-    const supabaseAdmin = getSupabaseAdmin();
 
     // 2. Spam auto-detection
     const spamCheck = detectSpam(comment, guestName);
@@ -295,7 +274,6 @@ export async function submitReviewAction(submission: ReviewSubmission) {
 
 export async function getApprovedReviewsAction(hotelId: string) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
 
     const { data, error } = await supabaseAdmin
       .from('reviews')
@@ -319,7 +297,6 @@ export async function getApprovedReviewsAction(hotelId: string) {
 
 export async function getReviewStatsAction(hotelId: string) {
   try {
-    const supabaseAdmin = getSupabaseAdmin();
 
     const { data, error } = await supabaseAdmin
       .from('reviews')

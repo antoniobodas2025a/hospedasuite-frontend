@@ -1,13 +1,8 @@
 'use server';
 
-import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
-
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 /**
  * 🛡️ INYECTOR SINTÉTICO V3 (POLIMÓRFICO + HIGH DENSITY)

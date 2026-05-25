@@ -1,19 +1,10 @@
 'use server';
 
 import { createClient } from '@/utils/supabase/server';
-import { createClient as createAdminClient } from '@supabase/supabase-js';
 import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { cookies } from 'next/headers';
-
-// ------------------------------------------------------------------
-// 🛡️ HERRAMIENTAS FORENSES Y DE ADMINISTRADOR
-// ------------------------------------------------------------------
-
-const supabaseAdmin = createAdminClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!
-);
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 async function getActiveStaff() {
   try {
