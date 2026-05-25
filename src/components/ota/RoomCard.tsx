@@ -10,28 +10,14 @@ import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } f
 import { cn } from '@/lib/utils';
 import { getRoomAmenityById } from '@/lib/amenity-registry';
 import { getImageSizeUrl } from '@/lib/image-config';
+import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
-// Migration 022 stores: individual, doble, queen, king, litera
-// Users need to understand: "1 Cama Individual" vs "1 Cama Doble" vs "2 Camas Queen"
+// Extracted to src/lib/room-helpers.ts for sharing with RoomComparison
 // ============================================================================
-
-function formatBedType(bedType: string | undefined, beds: number): string {
-  if (!bedType) return `${beds} Cama${beds > 1 ? 's' : ''}`;
-  const labels: Record<string, string> = {
-    individual: `${beds} Cama Individual`,
-    doble: `${beds} Cama Doble`,
-    queen: `${beds} Cama Queen`,
-    king: `${beds} Cama King`,
-    litera: `${beds} Litera${beds > 1 ? 's' : ''}`,
-  };
-  // Handle composite types like "King + Sofá cama", "2 Queen + 2 Individual"
-  if (bedType.includes('+') || bedType.includes(',')) return bedType;
-  return labels[bedType.toLowerCase()] || bedType;
-}
 
 interface RoomCardProps {
   room: Partial<Room> & { id: string; name: string; cover_image_blur?: string };
