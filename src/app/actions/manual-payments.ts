@@ -3,9 +3,11 @@
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { revalidatePath } from 'next/cache';
+import { PutObjectCommand } from '@aws-sdk/client-s3';
+import { r2Client, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2-client';
 
 // ============================================================================
-// 1. SUBIR COMPROBANTE DE PAGO MANUAL
+// 1. SUBIR COMPROBANTE DE PAGO MANUAL (R2 — zero egress cost)
 // ============================================================================
 export async function uploadManualPaymentReceipt(
   formData: FormData
@@ -31,26 +33,18 @@ export async function uploadManualPaymentReceipt(
 
     const buffer = Buffer.from(await file.arrayBuffer());
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
-    const path = `${user.id}/${Date.now()}-${sanitizedName}`;
+    const key = `receipts/${user.id}/${Date.now()}-${sanitizedName}`;
 
-    const { error: uploadError } = await supabaseAdmin.storage
-      .from('manual-payment-receipts')
-      .upload(path, buffer, {
-        contentType: file.type,
-        cacheControl: '31536000',
-        upsert: false,
-      });
+    await r2Client.send(new PutObjectCommand({
+      Bucket: R2_BUCKET,
+      Key: key,
+      Body: buffer,
+      ContentType: file.type,
+      CacheControl: 'public, max-age=31536000',
+    }));
 
-    if (uploadError) {
-      console.error('Upload receipt error:', uploadError);
-      return { success: false, error: 'Error al subir el comprobante. Intentalo de nuevo.' };
-    }
-
-    const { data: urlData } = supabaseAdmin.storage
-      .from('manual-payment-receipts')
-      .getPublicUrl(path);
-
-    return { success: true, url: urlData.publicUrl };
+    const publicUrl = `${R2_PUBLIC_URL}/${key}`;
+    return { success: true, url: publicUrl };
   } catch (error: any) {
     console.error('Manual payment upload error:', error.message);
     return { success: false, error: error.message || 'Error al subir el comprobante' };
