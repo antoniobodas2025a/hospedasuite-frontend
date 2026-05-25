@@ -472,3 +472,41 @@ export async function processCheckInAction(bookingId: string) {
     return { success: false, error: message };
   }
 }
+
+/**
+ * Verifica el estado real de una reserva para la página de éxito.
+ * Previene que usuarios vean "éxito" falso con IDs inventados.
+ */
+export async function verifyBookingAction(bookingId: string) {
+  try {
+    if (!bookingId) return { success: false, error: 'No se proporcionó ID de reserva' };
+
+    const { data: booking, error } = await supabaseAdmin
+      .from('bookings')
+      .select('id, status, total_price, check_in, check_out, source, guests(full_name, email), rooms(name), hotels(name, slug)')
+      .eq('id', bookingId)
+      .single();
+
+    if (error || !booking) {
+      return { success: false, error: 'Reserva no encontrada', status: 'not_found' };
+    }
+
+    return {
+      success: true,
+      booking: {
+        id: booking.id,
+        status: booking.status,
+        totalPrice: booking.total_price,
+        checkIn: booking.check_in,
+        checkOut: booking.check_out,
+        guestName: (booking.guests as any[])?.[0]?.full_name,
+        guestEmail: (booking.guests as any[])?.[0]?.email,
+        roomName: (booking.rooms as any[])?.[0]?.name,
+        hotelName: (booking.hotels as any[])?.[0]?.name,
+        hotelSlug: (booking.hotels as any[])?.[0]?.slug,
+      },
+    };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
+  }
+}

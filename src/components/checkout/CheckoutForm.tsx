@@ -142,7 +142,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
       return;
     }
 
-    const redirectUrl = `${window.location.origin}/book/success`;
+    const redirectUrl = `${window.location.origin}/book/success?id=${result.bookingId}`;
 
     const wompiUrl = new URL('https://checkout.wompi.co/p/');
     wompiUrl.searchParams.append('public-key', cleanPublicKey);
