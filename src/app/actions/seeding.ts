@@ -107,7 +107,7 @@ export async function executeCleanSlateAction(hotelId: string) {
       .select('id')
       .eq('hotel_id', hotelId);
 
-    const bookingIds = bookings?.map(b => b.id) || [];
+    const bookingIds = bookings?.map((b: any) => b.id) || [];
 
     if (bookingIds.length > 0) {
       // 1. Borrar transacciones financieras y consumos vinculados

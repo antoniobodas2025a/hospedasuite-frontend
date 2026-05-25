@@ -228,7 +228,7 @@ export async function getShiftReportAction() {
 
     const summary = { cash: 0, transfer: 0, wompi: 0, total: 0, staffName: staff?.name || 'Administrador General' };
 
-    payments?.forEach(p => {
+    payments?.forEach((p: any) => {
       if (p.method === 'cash') summary.cash += p.amount;
       if (p.method === 'transfer') summary.transfer += p.amount;
       if (p.method === 'wompi') summary.wompi += p.amount;

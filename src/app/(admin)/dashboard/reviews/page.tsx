@@ -50,7 +50,7 @@ export default async function AdminReviewsPage() {
         </div>
       ) : (
         <div className="space-y-4">
-          {reviews.map((review) => {
+          {reviews.map((review: any) => {
             const hotelsData = review.hotels as { name: string }[] | { name: string } | null;
             const hotelName = Array.isArray(hotelsData)
               ? hotelsData[0]?.name

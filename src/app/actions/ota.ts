@@ -33,7 +33,7 @@ export async function fetchOTAHotelsAction(
       throw new Error(error.message);
     }
 
-    const otaHotels = hotels?.map(h => {
+    const otaHotels = hotels?.map((h: any) => {
       const roomPrices = h.rooms?.map((r: { price: number }) => r.price) || [];
       return {
         id: h.id, 
@@ -329,11 +329,11 @@ export async function getReviewStatsAction(hotelId: string) {
       };
     }
 
-    const sum = reviews.reduce((acc, r) => acc + r.rating, 0);
+    const sum = reviews.reduce((acc: number, r: any) => acc + r.rating, 0);
     const overall = Math.round((sum / total) * 10) / 10;
 
     const breakdown = { 5: 0, 4: 0, 3: 0, 2: 0, 1: 0 };
-    reviews.forEach((r) => {
+    reviews.forEach((r: any) => {
       breakdown[r.rating as keyof typeof breakdown]++;
     });
 

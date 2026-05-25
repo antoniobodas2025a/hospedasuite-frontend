@@ -147,7 +147,7 @@ export async function deleteHotelAction(hotelId: string, ownerId: string | null 
       .select('id')
       .eq('hotel_id', hotelId);
     
-    const bookingIds = bookings?.map(b => b.id) || [];
+    const bookingIds = bookings?.map((b: any) => b.id) || [];
 
     // Purga de Ledger Financiero
     if (bookingIds.length > 0) {
