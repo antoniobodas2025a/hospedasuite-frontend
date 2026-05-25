@@ -139,7 +139,9 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     };
 
     if (isManual) {
-      // Manual payment: GOOD FAITH — publish immediately, admin verifies later
+      // Manual payment (Nequi/Daviplata): GOOD FAITH policy
+      // Hotel publishes immediately. Admin verifies payment later via dashboard.
+      // If payment is invalid, admin can deactivate the hotel.
       const { error: hotelError } = await supabaseAdmin
         .from('hotels')
         .update({
