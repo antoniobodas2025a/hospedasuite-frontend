@@ -344,7 +344,19 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                 </h3>
                 <div className="space-y-6">
                   <input {...register('wompi_public_key')} type="password" placeholder="Public Key" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
-                  <input {...register('wompi_integrity_secret')} type="password" placeholder="Integrity Secret" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                      <input {...register('wompi_integrity_secret')} type="password" placeholder="Integrity Secret (Checkout)" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+                      <p className="text-[10px] text-muted-foreground mt-1">Para firma de checkout</p>
+                    </div>
+                    <div>
+                      <input {...register('wompi_events_secret')} type="password" placeholder="Events Secret (Webhook)" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+                      <p className="text-[10px] text-muted-foreground mt-1">Para verificar webhooks</p>
+                    </div>
+                  </div>
+                  <p className="text-[11px] text-warning/80 bg-warning/5 border border-warning/20 rounded-[var(--radius-squircle-md)] p-3">
+                    ⚠️ Ambos secretos son obligatorios. Se obtienen en Wompi → Desarrollo → API Keys (son valores distintos).
+                  </p>
                 </div>
               </div>
             </motion.div>

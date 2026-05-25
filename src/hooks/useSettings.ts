@@ -17,6 +17,7 @@ export interface HotelSettings {
   logo_url: string;
   wompi_public_key?: string;
   wompi_integrity_secret?: string;
+  wompi_events_secret?: string;
 }
 
 export const useSettings = (initialData: HotelSettings) => {

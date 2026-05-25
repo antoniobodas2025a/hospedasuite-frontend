@@ -18,6 +18,7 @@ export interface HotelSettings {
   primary_color: string;
   wompi_public_key?: string;
   wompi_integrity_secret?: string;
+  wompi_events_secret?: string;
 }
 
 export async function saveSettingsAction(settings: HotelSettings) {
@@ -41,6 +42,7 @@ export async function saveSettingsAction(settings: HotelSettings) {
         primary_color: settings.primary_color,
         wompi_public_key: settings.wompi_public_key,
         wompi_integrity_secret: settings.wompi_integrity_secret,
+        wompi_events_secret: settings.wompi_events_secret,
       })
       .eq('id', settings.id);
 
