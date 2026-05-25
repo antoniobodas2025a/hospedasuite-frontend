@@ -49,6 +49,8 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
       amenities: initialData?.amenities || [],
       gallery: initialData?.gallery || [],
       ical_import_url: initialData?.ical_import_url || '',
+      bed_type: initialData?.bed_type || undefined,
+      beds: initialData?.beds || undefined,
     }
   });
 
@@ -171,6 +173,22 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                       <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
                         <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Aforo</label>
                         <input type="number" {...register('capacity', { valueAsNumber: true })} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
+                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Tipo de Cama</label>
+                        <select {...register('bed_type')} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono">
+                          <option value="">—</option>
+                          <option value="sencilla">Sencilla</option>
+                          <option value="doble">Doble</option>
+                          <option value="queen">Queen</option>
+                          <option value="king">King</option>
+                        </select>
+                      </div>
+                      <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
+                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Camas</label>
+                        <input type="number" {...register('beds', { valueAsNumber: true })} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono" min={1} max={10} />
                       </div>
                     </div>
                   </div>

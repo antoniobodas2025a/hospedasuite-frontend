@@ -31,7 +31,9 @@ export async function saveRoomAction(hotelId: string, data: any, roomId?: string
       gallery: Array.isArray(data.gallery) ? data.gallery : [], // Persistencia de URLs WebP
       amenities: Array.isArray(data.amenities) ? data.amenities : [],
       ical_import_url: data.ical_import_url || null,
-      size_sqm: data.size_sqm ? Number(data.size_sqm) : null
+      size_sqm: data.size_sqm ? Number(data.size_sqm) : null,
+      bed_type: data.bed_type || null,
+      beds: data.beds ? Number(data.beds) : null
     };
 
     if (roomId) {

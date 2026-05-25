@@ -95,7 +95,7 @@ export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string
         console.warn("⚠️ RPC get_available_rooms no disponible, usando fallback:", rpcError.message);
         const { data: fallbackRooms } = await supabaseAdmin
           .from('rooms')
-          .select('id, name, capacity, beds, price, status, gallery, amenities, size_sqm')
+          .select('id, name, capacity, beds, bed_type, price, status, gallery, amenities, size_sqm')
           .eq('hotel_id', hotel.id)
           .neq('status', 'maintenance');
         finalRooms = fallbackRooms || [];
@@ -106,10 +106,10 @@ export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string
       // 3. Fallback: Si el usuario entra al hotel sin fechas, mostramos el catálogo activo
       const { data: allRooms } = await supabaseAdmin
         .from('rooms')
-        .select('id, name, capacity, beds, price, status, gallery, amenities, size_sqm')
+        .select('id, name, capacity, beds, bed_type, price, status, gallery, amenities, size_sqm')
         .eq('hotel_id', hotel.id)
         .neq('status', 'maintenance');
-
+       
       finalRooms = allRooms || [];
     }
 
