@@ -1,4 +1,4 @@
-import { Wifi, Car, Waves, Coffee, Star, Snowflake, Tv, Dumbbell, Utensils, Wine, Bath, Mountain, Palmtree, Shield, Phone, CreditCard, Luggage, Key, Flame, Sun, Droplets, BedDouble, Wind, ShowerHead } from 'lucide-react';
+import { Wifi, Car, Waves, Coffee, Snowflake, Tv, Dumbbell, Utensils, Wine, Bath, Mountain, Palmtree, Shield, Phone, CreditCard, Luggage, Key, Flame, Sun, Droplets, BedDouble, Wind, ShowerHead, HelpCircle } from 'lucide-react';
 
 // ============================================================================
 // AMENITY REGISTRY — Fuente unica de verdad para amenidades del hotel
@@ -38,10 +38,8 @@ export const AMENITY_REGISTRY: Record<string, AmenityDefinition> = {
   keyless_entry: { id: 'keyless_entry', label: 'Check-in Digital', icon: Key },
 };
 
-export const DEFAULT_AMENITY = { id: 'default', label: 'Amenidad', icon: Star };
-
-export function getAmenityById(id: string): AmenityDefinition {
-  return AMENITY_REGISTRY[id] || DEFAULT_AMENITY;
+export function getAmenityById(id: string): AmenityDefinition | null {
+  return AMENITY_REGISTRY[id] || null;
 }
 
 export function getAmenityLabel(id: string): string {
@@ -49,7 +47,7 @@ export function getAmenityLabel(id: string): string {
 }
 
 export function getAmenityIcon(id: string): React.ElementType {
-  return AMENITY_REGISTRY[id]?.icon || DEFAULT_AMENITY.icon;
+  return AMENITY_REGISTRY[id]?.icon || HelpCircle;
 }
 
 // ============================================================================
@@ -159,8 +157,6 @@ export const ROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
   },
 };
 
-export const DEFAULT_ROOM_AMENITY: RoomAmenityDefinition = { id: 'default', label: 'Amenidad', icon: Star };
-
 export function getRoomAmenityById(id: string): RoomAmenityDefinition | null {
   const entry = ROOM_AMENITY_REGISTRY[id];
   if (!entry) {
@@ -177,5 +173,5 @@ export function getRoomAmenityLabel(id: string): string {
 }
 
 export function getRoomAmenityIcon(id: string): React.ElementType {
-  return ROOM_AMENITY_REGISTRY[id]?.icon || DEFAULT_ROOM_AMENITY.icon;
+  return ROOM_AMENITY_REGISTRY[id]?.icon || HelpCircle;
 }
