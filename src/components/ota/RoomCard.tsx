@@ -122,6 +122,7 @@ function RoomCardInner({
   return (
     <motion.div
       ref={ref}
+      data-testid="room-card"
       className="group/card will-change-transform"
       initial={{ opacity: 0, y: 24 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
