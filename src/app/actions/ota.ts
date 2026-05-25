@@ -91,11 +91,17 @@ export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string
       });
 
       if (rpcError) {
-        console.error("🚨 Error en Motor RPC:", rpcError.message);
-        throw new Error(rpcError.message);
+        // Fallback: Si el RPC no existe (migraciones no corridas), usar query directa
+        console.warn("⚠️ RPC get_available_rooms no disponible, usando fallback:", rpcError.message);
+        const { data: fallbackRooms } = await supabaseAdmin
+          .from('rooms')
+          .select('id, name, capacity, beds, price, status, gallery, amenities, size_sqm')
+          .eq('hotel_id', hotel.id)
+          .neq('status', 'maintenance');
+        finalRooms = fallbackRooms || [];
+      } else {
+        finalRooms = availableRooms || [];
       }
-
-      finalRooms = availableRooms || [];
     } else {
       // 3. Fallback: Si el usuario entra al hotel sin fechas, mostramos el catálogo activo
       const { data: allRooms } = await supabaseAdmin
