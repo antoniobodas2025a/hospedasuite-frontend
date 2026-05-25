@@ -53,7 +53,7 @@ export type RoomStatus = 'clean' | 'dirty' | 'occupied' | 'maintenance' | 'activ
 
 export interface Room {
   id: string;
-  hotel_id: string;
+  hotel_id?: string;
   name: string;
   type?: string;
   price: number;
@@ -64,6 +64,9 @@ export interface Room {
   gallery?: GalleryItem[];
   amenities?: string[];
   size_sqm?: number;
+  bed_type?: string;
+  beds?: number;
+  price_per_night?: number;
   ical_import_url?: string;
   ical_export_token?: string;
   last_ical_sync?: string;

@@ -181,6 +181,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                       {room.amenities.map((amenity: string | { id: string; details?: string }, idx: number) => {
                         const id = typeof amenity === 'string' ? amenity : amenity.id;
                         const entry = getRoomAmenityById(id);
+                        if (!entry) return null;
                         const template = entry.storyTitle
                           ? { icon: entry.icon, title: entry.storyTitle, story: entry.storyDescription || t('ota.showcase.premiumService') }
                           : { icon: entry.icon, title: entry.label.toUpperCase(), story: t('ota.showcase.premiumService') };
@@ -345,12 +346,13 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
                   </h3>
                   {/* Mobile: compact icon grid */}
                   <div className="grid grid-cols-4 sm:grid-cols-6 gap-2">
-                    {room.amenities.map((amenity: string | { id: string; details?: string }, idx: number) => {
-                      const id = typeof amenity === 'string' ? amenity : amenity.id;
-                      const entry = getRoomAmenityById(id);
-                      const template = entry.storyTitle
-                        ? { icon: entry.icon, title: entry.storyTitle }
-                        : { icon: entry.icon, title: entry.label };
+                      {room.amenities.map((amenity: string | { id: string; details?: string }, idx: number) => {
+                        const id = typeof amenity === 'string' ? amenity : amenity.id;
+                        const entry = getRoomAmenityById(id);
+                        if (!entry) return null;
+                        const template = entry.storyTitle
+                          ? { icon: entry.icon, title: entry.storyTitle }
+                          : { icon: entry.icon, title: entry.label };
                       return (
                         <AmenityGlass
                           key={idx}

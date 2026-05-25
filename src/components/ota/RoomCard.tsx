@@ -10,6 +10,7 @@ import { cn } from '@/lib/utils';
 import { getRoomAmenityById } from '@/lib/amenity-registry';
 import { getImageSizeUrl } from '@/lib/image-config';
 import { useTranslations } from 'next-intl';
+import type { Room, GalleryItem } from '@/types';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
@@ -32,12 +33,12 @@ function formatBedType(bedType: string | undefined, beds: number): string {
 }
 
 interface RoomCardProps {
-  room: any;
+  room: Partial<Room> & { id: string; name: string; cover_image_blur?: string };
   hotelSlug: string;
   checkIn?: string | null;
   checkOut?: string | null;
   isSearchingDates: boolean;
-  allRooms?: any[];
+  allRooms?: (Partial<Room> & { id: string; name: string; cover_image_blur?: string })[];
   totalRooms?: number;
   availableCount?: number;
   hotel?: { cancellation_policy?: string | null };
@@ -45,7 +46,7 @@ interface RoomCardProps {
 
 export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
   const coverImage = Array.isArray(room.gallery) && room.gallery.length > 0
-    ? (room.gallery[0].url || room.gallery[0])
+    ? (typeof room.gallery[0] === 'string' ? room.gallery[0] : (room.gallery[0] as GalleryItem).url || '')
     : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
 
   let nights = 1;
@@ -64,7 +65,7 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
   const avgPrice = allPrices.length > 0 ? Math.round(allPrices.reduce((a, b) => a + b, 0) / allPrices.length) : 0;
   const isBestValue = basePrice === minPrice && allRooms.length > 1;
   const isGreatDeal = avgPrice > 0 && basePrice <= avgPrice * 0.8 && !isBestValue;
-  const isPopular = room.capacity >= 4;
+  const isPopular = (room.capacity ?? 0) >= 4;
 
   const availabilityRatio = totalRooms > 0 ? availableCount / totalRooms : 1;
   const isLowStock = isSearchingDates && availabilityRatio <= 0.33;
@@ -232,6 +233,7 @@ function RoomCardInner({
               {room.amenities?.slice(0, 4).map((amenity: any, idx: number) => {
                 const id = typeof amenity === 'string' ? amenity : amenity.id;
                 const entry = getRoomAmenityById(id);
+                if (!entry) return null;
                 const Icon = entry.icon;
                 return (
                   <div key={idx} className="flex items-center gap-1.5 bg-muted/60 text-muted-foreground border border-border/40 px-2.5 py-1 rounded-[var(--radius-squircle-md)] text-xs font-medium">

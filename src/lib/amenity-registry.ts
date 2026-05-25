@@ -161,8 +161,15 @@ export const ROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
 
 export const DEFAULT_ROOM_AMENITY: RoomAmenityDefinition = { id: 'default', label: 'Amenidad', icon: Star };
 
-export function getRoomAmenityById(id: string): RoomAmenityDefinition {
-  return ROOM_AMENITY_REGISTRY[id] || DEFAULT_ROOM_AMENITY;
+export function getRoomAmenityById(id: string): RoomAmenityDefinition | null {
+  const entry = ROOM_AMENITY_REGISTRY[id];
+  if (!entry) {
+    if (process.env.NODE_ENV === 'development') {
+      console.warn(`[amenity-registry] Unknown room amenity ID: "${id}". Skipping render.`);
+    }
+    return null;
+  }
+  return entry;
 }
 
 export function getRoomAmenityLabel(id: string): string {
