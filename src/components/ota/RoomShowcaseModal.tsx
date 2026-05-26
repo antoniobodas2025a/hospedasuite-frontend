@@ -8,6 +8,7 @@ import {
   Info, ClipboardList, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { extendSearchParams } from '@/lib/handoff-url';
 import { calculateTotalWithTax, DEFAULT_TAX_RATE } from '@/lib/pricing';
 import { format, parseISO } from 'date-fns';
 import type { Room, GalleryItem } from '@/types';
@@ -112,11 +113,13 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 
   const handleCheckout = () => {
     if (isOverCapacity) return;
-    const params = new URLSearchParams();
+    // Preserve existing params (location, category, filters) and add checkout params
+    const params = new URLSearchParams(searchParams.toString());
     params.set('room', room.id!);
     params.set('checkin', checkIn);
     params.set('checkout', checkOut);
     params.set('guests', defaultGuests.toString());
+    params.delete('showRoom'); // Remove modal param when going to checkout
     router.push(`/book/${hotel.slug}/checkout?${params.toString()}`);
   };
 

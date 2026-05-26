@@ -1,7 +1,7 @@
 import { getHotelDetailsBySlugAction, getReviewStatsAction } from '@/app/actions/ota';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
-import { MapPin, Star } from 'lucide-react';
+import { MapPin, Star, Search, X } from 'lucide-react';
 import type { Metadata } from 'next';
 import { Suspense } from 'react';
 import { RoomShowcaseModal } from '@/components/ota/RoomShowcaseModal';
@@ -20,6 +20,7 @@ import { SectionHeader } from '@/components/ui/glass';
 import { ErrorBoundary } from '@/components/ota/ErrorBoundary';
 import LanguageSwitcher from '@/components/ota/LanguageSwitcher';
 import { getTranslations } from 'next-intl/server';
+import { SearchContextBanner } from '@/components/ota/SearchContextBanner';
 
 // Incremental Static Regeneration — 60s cache for inventory balance
 export const revalidate = 60;
@@ -108,6 +109,17 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
     ? Math.min(...allActiveRooms.map((r: any) => r.price_per_night || r.price || 0))
     : 0;
 
+  // Build search context for banner
+  const searchContext = {
+    location: (resolvedSearchParams?.location as string) || null,
+    checkin: checkin || null,
+    checkout: checkout || null,
+    guests: guests ? Number(guests) : null,
+    category: (resolvedSearchParams?.category as string) || null,
+    search: (resolvedSearchParams?.search as string) || null,
+  };
+  const hasSearchContext = !!(searchContext.location || searchContext.checkin || searchContext.category || searchContext.search);
+
   return (
     <main className="min-h-screen bg-background text-foreground pb-24 font-sans selection:bg-brand-500/30">
 
@@ -190,6 +202,13 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
           />
         </div>
       </div>
+
+      {/* Search Context Banner — shows when user arrives from homepage with search filters */}
+      {hasSearchContext && (
+        <Suspense fallback={null}>
+          <SearchContextBanner context={searchContext} />
+        </Suspense>
+      )}
 
       {/* Main Content */}
       <div className="max-w-6xl mx-auto px-6 pt-8">

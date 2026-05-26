@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   SlidersHorizontal,
@@ -17,11 +17,11 @@ import {
 import HotelCard from './HotelCard';
 import LanguageSwitcher from './LanguageSwitcher';
 import Link from 'next/link';
+import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { fetchOTAHotelsAction } from '@/app/actions/ota';
 import { useTranslations } from 'next-intl';
 import { springSnappy, springGentle } from '@/lib/mac2026/spring';
 import { preserveSearchParams } from '@/lib/handoff-url';
-import { useSearchParams } from 'next/navigation';
 
 const CATEGORIES = [
   { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal, popular: false },
@@ -44,24 +44,50 @@ export default function OTADashboard({
   initialHasMore = false,
 }: OTADashboardProps) {
   const t = useTranslations();
+  const router = useRouter();
+  const pathname = usePathname();
   const searchParams = useSearchParams();
+  const isInitialized = useRef(false);
+
+  // Initialize from URL params (survives refresh, back navigation, shared links)
+  const urlCategory = searchParams.get('category') || 'all';
+  const urlSearch = searchParams.get('search') || '';
+  const locationParam = searchParams.get('location') || '';
+
   const [hotels, setHotels] = useState(initialHotels);
   const [page, setPage] = useState(0);
   const [hasMore, setHasMore] = useState(initialHasMore);
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [searchTerm, setSearchTerm] = useState('');
+  const [activeCategory, setActiveCategory] = useState(urlCategory);
+  const [searchTerm, setSearchTerm] = useState(urlSearch);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
-  // Location filter from URL params (set by AvailabilitySearchBar)
-  const locationParam = searchParams.get('location') || '';
-
-  // Debounced search
+  // Sync category and searchTerm to URL (debounced for search, immediate for category)
   useEffect(() => {
-    if (activeCategory === 'all' && searchTerm === '' && locationParam === '' && page === 0 && hotels === initialHotels) return;
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+    // Skip initial sync — URL is already correct on mount
+  }, []);
 
+  const syncToUrl = useCallback((updates: { category?: string; search?: string }) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (updates.category !== undefined) {
+      if (updates.category === 'all') params.delete('category');
+      else params.set('category', updates.category);
+    }
+    if (updates.search !== undefined) {
+      if (updates.search === '') params.delete('search');
+      else params.set('search', updates.search);
+    }
+    const query = params.toString();
+    const url = query ? `${pathname}?${query}` : pathname;
+    router.replace(url, { scroll: false });
+  }, [searchParams, pathname, router]);
+
+  // Debounced search effect
+  useEffect(() => {
     let isMounted = true;
 
     const delayDebounceFn = setTimeout(async () => {
@@ -110,19 +136,13 @@ export default function OTADashboard({
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  // Enter key triggers search
-  const handleKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter') {
-      (e.target as HTMLElement).blur();
-    }
-  }, []);
-
   const loadMoreHotels = async () => {
     if (isLoadingMore) return;
     setIsLoadingMore(true);
 
     const nextPage = page + 1;
-    const response = await fetchOTAHotelsAction(nextPage, 24, activeCategory, searchTerm);
+    // FIX: pass locationParam to preserve location filter on pagination
+    const response = await fetchOTAHotelsAction(nextPage, 24, activeCategory, searchTerm, locationParam);
 
     if (response.success) {
       setHotels((prev) => [...prev, ...response.data]);
@@ -193,7 +213,13 @@ export default function OTADashboard({
                 className='w-full bg-transparent border-none focus:ring-0 text-foreground placeholder:text-muted-foreground/50 px-3 h-9 sm:h-10 text-sm sm:text-base outline-none'
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                onKeyDown={handleKeyDown}
+                onBlur={() => syncToUrl({ search: searchTerm })}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    (e.target as HTMLElement).blur();
+                    syncToUrl({ search: searchTerm });
+                  }
+                }}
               />
               {/* Glow indicator when searching */}
               <AnimatePresence>
@@ -220,7 +246,10 @@ export default function OTADashboard({
             return (
               <motion.button
                 key={cat.id}
-                onClick={() => setActiveCategory(cat.id)}
+                onClick={() => {
+                  setActiveCategory(cat.id);
+                  syncToUrl({ category: cat.id });
+                }}
                 whileTap={{ scale: 0.95 }}
                 transition={springSnappy()}
                 className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
@@ -277,7 +306,11 @@ export default function OTADashboard({
                       return (
                         <button
                           key={cat.id}
-                          onClick={() => { setActiveCategory(cat.id); setIsCategoryOpen(false); }}
+                          onClick={() => {
+                            setActiveCategory(cat.id);
+                            setIsCategoryOpen(false);
+                            syncToUrl({ category: cat.id });
+                          }}
                           className={`w-full flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-md)] text-sm font-medium transition-colors ${
                             isActive
                               ? 'bg-foreground/10 text-foreground'

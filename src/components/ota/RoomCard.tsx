@@ -8,6 +8,7 @@ import { motion, useInView } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { extendSearchParams } from '@/lib/handoff-url';
 import { getRoomAmenityById } from '@/lib/amenity-registry';
 import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
@@ -62,8 +63,8 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
   const isLowStock = isSearchingDates && availabilityRatio <= 0.33;
   const isAlmostGone = isSearchingDates && availableCount <= 2 && availableCount > 0;
 
-  const queryParams = new URLSearchParams();
-  queryParams.set('showRoom', room.id);
+  // Preserve existing params (location, category, filters) and add room selection
+  let queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
   if (checkIn) queryParams.set('checkin', checkIn);
   if (checkOut) queryParams.set('checkout', checkOut);
   if (guests) queryParams.set('guests', guests);

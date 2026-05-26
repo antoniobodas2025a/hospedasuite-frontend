@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { preserveSearchParams, extendSearchParams } from '@/lib/handoff-url';
 import { calculateTotalWithTax, DEFAULT_TAX_RATE } from '@/lib/pricing';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
@@ -87,11 +88,8 @@ export default function BookingWidget({
     }
     setShowDateError(false);
 
-    const params = new URLSearchParams();
-    params.set('showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
-    params.set('checkin', checkIn);
-    params.set('checkout', checkOut);
-    if (guestsParam) params.set('guests', guestsParam);
+    // Preserve existing params (location, category, filters) and add room selection
+    const params = extendSearchParams(searchParams, 'showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
