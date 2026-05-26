@@ -28,7 +28,7 @@ interface RoomsListWithFiltersProps {
   checkin?: string | null;
   checkout?: string | null;
   isSearchingDates: boolean;
-  hotel?: { cancellation_policy?: string | null };
+  hotel?: { cancellation_policy?: string | null; tax_rate?: number };
 }
 
 export default function RoomsListWithFilters({

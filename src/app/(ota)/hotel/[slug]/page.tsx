@@ -216,7 +216,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                   checkin={checkin ?? null}
                   checkout={checkout ?? null}
                   isSearchingDates={isSearchingDates}
-                  hotel={{ cancellation_policy: hotel.cancellation_policy }}
+                  hotel={{ cancellation_policy: hotel.cancellation_policy, tax_rate: hotel.tax_rate }}
                 />
               </div>
             </div>
@@ -255,6 +255,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
               checkOut={checkout ?? null}
               cancellationPolicy={hotel.cancellation_policy}
               totalRooms={(hotel.rooms || []).length}
+              taxRate={hotel.tax_rate}
             />
           </aside>
         </div>
@@ -266,6 +267,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
         availableCount={availableRooms.length}
         checkIn={checkin ?? null}
         checkOut={checkout ?? null}
+        taxRate={hotel.tax_rate}
       />
     </main>
   );

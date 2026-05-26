@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
+import { calculateTotalWithTax } from '@/lib/pricing';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
 import { useTranslations } from 'next-intl';
@@ -31,6 +32,7 @@ interface BookingWidgetProps {
   checkOut?: string | null;
   cancellationPolicy?: string | null;
   totalRooms?: number;
+  taxRate?: number;
 }
 
 export default function BookingWidget({
@@ -40,6 +42,7 @@ export default function BookingWidget({
   checkOut,
   cancellationPolicy,
   totalRooms,
+  taxRate,
 }: BookingWidgetProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -71,10 +74,10 @@ export default function BookingWidget({
   }
 
   const roomPrice = selectedRoom ? (selectedRoom.price_per_night || selectedRoom.price) : minPrice;
-  // Mac 2026: Price coherence — IVA included to match RoomCard, Showcase, and Checkout
+  // Price coherence: use hotel's tax_rate for all displays
   const subtotal = nights > 0 ? roomPrice * nights : roomPrice;
-  const taxes = Math.round(subtotal * 0.19);
-  const totalPrice = subtotal + taxes;
+  const totalPrice = calculateTotalWithTax(subtotal, taxRate);
+  const hasTax = (taxRate ?? 0.19) > 0;
 
   const handleReserve = () => {
     if (!checkIn || !checkOut) {
@@ -116,7 +119,7 @@ export default function BookingWidget({
               </div>
               {nights > 1 && (
                 <p className="text-xs text-primary-foreground/70 mt-1">
-                  ${roomPrice.toLocaleString()} x {nights} {t('ota.booking.nights')} + IVA
+                  ${roomPrice.toLocaleString()} x {nights} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
                 </p>
               )}
             </>

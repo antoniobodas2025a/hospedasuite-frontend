@@ -8,6 +8,7 @@ import {
   Info, ClipboardList, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { calculateTotalWithTax } from '@/lib/pricing';
 import { format, parseISO } from 'date-fns';
 import type { Room, GalleryItem } from '@/types';
 import { GlassCard } from '@/components/ui/glass';
@@ -20,6 +21,7 @@ interface HotelForModal {
   slug: string;
   name?: string;
   rooms?: Array<Partial<Room> & { price_per_night?: number }>;
+  tax_rate?: number;
 }
 
 // GlassCard imported from @/components/ui/glass (design system, theme-aware)
@@ -102,10 +104,9 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   const dateTo = parseISO(checkOut);
   const nights = Math.max(1, Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 3600 * 24)));
   const basePrice = room.price_per_night || room.price || 0;
-  // Mac 2026: Price coherence — IVA 19% included to match RoomCard and CheckoutForm
+  // Price coherence: use hotel's tax_rate for all displays
   const subtotal = basePrice * nights;
-  const taxes = Math.round(subtotal * 0.19);
-  const totalPrice = subtotal + taxes;
+  const totalPrice = calculateTotalWithTax(subtotal, hotel.tax_rate);
   const isOverCapacity = defaultGuests > Number(room.capacity ?? 0);
 
   const handleCheckout = () => {

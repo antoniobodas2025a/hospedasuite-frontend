@@ -13,6 +13,7 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
+import { calculateTotalWithTax } from '@/lib/pricing';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
@@ -28,7 +29,7 @@ interface RoomCardProps {
   allRooms?: (Partial<Room> & { id: string; name: string; cover_image_blur?: string })[];
   totalRooms?: number;
   availableCount?: number;
-  hotel?: { cancellation_policy?: string | null };
+  hotel?: { cancellation_policy?: string | null; tax_rate?: number };
 }
 
 export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
@@ -47,8 +48,7 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
   }
   const basePrice = room.price_per_night || room.price || 0;
   const displayPrice = isSearchingDates ? (basePrice * nights) : basePrice;
-  const taxes = Math.round(displayPrice * 0.19);
-  const totalPrice = displayPrice + taxes;
+  const totalPrice = calculateTotalWithTax(displayPrice, hotel?.tax_rate);
 
   const allPrices = allRooms.map((r) => r.price_per_night || r.price || 0).filter((p) => p > 0);
   const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
@@ -89,7 +89,6 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
       coverImage={coverImage}
       displayPrice={displayPrice}
       basePrice={basePrice}
-      taxes={taxes}
       totalPrice={totalPrice}
       nights={nights}
     />
@@ -100,12 +99,12 @@ function RoomCardInner({
   room, hotelSlug, checkIn, checkOut, isSearchingDates,
   allRooms, totalRooms, availableCount, hotel, isBestValue, isGreatDeal,
   isPopular, isAlmostGone, isLowStock, destinationUrl, coverImage,
-  displayPrice, basePrice, taxes, totalPrice, nights,
+  displayPrice, basePrice, totalPrice, nights,
 }: RoomCardProps & {
   isBestValue: boolean; isGreatDeal: boolean; isPopular: boolean;
   isAlmostGone: boolean; isLowStock: boolean; destinationUrl: string;
   coverImage: string; displayPrice: number; basePrice: number;
-  taxes: number; totalPrice: number; nights: number;
+  totalPrice: number; nights: number;
 }) {
   const t = useTranslations();
   const ref = useRef(null);
@@ -244,7 +243,6 @@ function RoomCardInner({
                     <p className="text-xs text-muted-foreground">
                       <span className="font-bold text-foreground">${basePrice.toLocaleString()}</span> x {nights} {t('ota.roomCard.nights', { count: nights })}
                     </p>
-                    <p className="text-xs text-muted-foreground/60">+ {t('ota.roomCard.taxesAndFees')}: ${taxes.toLocaleString()}</p>
                   <div className="flex items-end gap-2 pt-1">
                     <p className="text-3xl font-mono font-bold text-secondary leading-none">
                       ${totalPrice.toLocaleString()}

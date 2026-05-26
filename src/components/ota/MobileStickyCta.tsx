@@ -4,6 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
+import { calculateTotalWithTax } from '@/lib/pricing';
 import { useTranslations } from 'next-intl';
 
 // ============================================================================
@@ -20,6 +21,7 @@ interface MobileStickyCtaProps {
   availableCount: number;
   checkIn?: string | null;
   checkOut?: string | null;
+  taxRate?: number;
 }
 
 export default function MobileStickyCta({
@@ -27,6 +29,7 @@ export default function MobileStickyCta({
   availableCount,
   checkIn,
   checkOut,
+  taxRate,
 }: MobileStickyCtaProps) {
   const t = useTranslations();
   const router = useRouter();
@@ -74,8 +77,8 @@ export default function MobileStickyCta({
     }
   };
 
-  // Mac 2026: Price coherence — IVA 19% included in displayed price
-  const displayPrice = Math.round(minPrice * 1.19);
+  // Mac 2026: Price coherence — use hotel's tax_rate, default 0.19
+  const displayPrice = calculateTotalWithTax(minPrice, taxRate);
 
   return (
     <div
