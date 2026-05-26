@@ -56,6 +56,7 @@ export const settingsSchema = z.object({
   cancellationPolicy: z.string().optional(),
   whatsappNumber: z.string().optional(),
   googleMapsUrl: z.string().url('URL inválida').optional().or(z.literal('')),
+  taxRate: z.number().min(0).max(0.19).default(0.19),
 });
 
 // Step 6: Payment

@@ -105,6 +105,7 @@ const defaultSettings: SettingsData = {
   amenities: [],
   checkInTime: '15:00',
   checkOutTime: '11:00',
+  taxRate: 0.19,
 };
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({

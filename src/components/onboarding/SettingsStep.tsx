@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, ChevronDown, ChevronUp, Clock, MessageCircle, Shield, Sparkles } from 'lucide-react';
+import { Settings, ChevronDown, ChevronUp, Clock, MessageCircle, Shield, Sparkles, Banknote } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
@@ -13,7 +13,7 @@ const springs = {
   medium: { type: 'spring' as const, stiffness: 300, damping: 24, mass: 1.0 },
 };
 
-type Section = 'hours' | 'policy' | 'amenities' | null;
+type Section = 'hours' | 'policy' | 'amenities' | 'tax' | null;
 
 export default function SettingsStep() {
   const t = useTranslations('onboarding.settings');
@@ -122,6 +122,44 @@ export default function SettingsStep() {
               </motion.button>
             );
           })}
+        </div>
+      </SectionCard>
+
+      {/* Section 4: Régimen Tributario */}
+      <SectionCard
+        icon={Banknote}
+        title="Régimen Tributario"
+        isOpen={openSection === 'tax'}
+        onToggle={() => toggleSection('tax')}
+      >
+        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-3">
+          Seleccioná tu régimen fiscal
+        </p>
+        <div className="grid grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => updateSettings({ taxRate: 0 })}
+            className={`p-4 rounded-[var(--radius-squircle-lg)] border text-left transition-all ${
+              settings.taxRate === 0
+                ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
+                : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
+            }`}
+          >
+            <p className="text-sm font-bold text-white">Simplificado</p>
+            <p className="text-[10px] text-zinc-500 mt-1">Sin IVA en precios</p>
+          </button>
+          <button
+            type="button"
+            onClick={() => updateSettings({ taxRate: 0.19 })}
+            className={`p-4 rounded-[var(--radius-squircle-lg)] border text-left transition-all ${
+              settings.taxRate === 0.19
+                ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
+                : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
+            }`}
+          >
+            <p className="text-sm font-bold text-white">Ordinario</p>
+            <p className="text-[10px] text-zinc-500 mt-1">IVA 19% incluido</p>
+          </button>
         </div>
       </SectionCard>
     </motion.div>
