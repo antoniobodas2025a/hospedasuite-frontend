@@ -6,6 +6,7 @@ import { cookies } from 'next/headers';
 import { isTemporalCollision, type PostgresError } from '@/lib/booking-helpers';
 import { emitEvent } from '@/lib/events';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { DEFAULT_TAX_RATE } from '@/lib/pricing';
 
 // ==========================================
 // BLOQUE 1: INTERFACES Y CONTRATOS
@@ -339,12 +340,21 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
     const checkOut = new Date(`${payload.checkout}T12:00:00Z`);
     const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
 
-    // Price coherence: use payload.amount (includes IVA 19%) instead of
+    // Price coherence: use payload.amount (includes IVA from tax_rate) instead of
     // recalculating room.price * nights (which excludes IVA).
     // This ensures the DB total matches what the user actually pays via Wompi.
-    // Verification: payload.amount should be within 25% of base rate to catch manipulation.
+    // Verification: adaptive buffer based on hotel's tax_rate.
     const baseRate = room.price * nights;
-    const maxExpected = Math.round(baseRate * 1.25); // base + 19% IVA + small buffer
+
+    // Fetch hotel tax_rate for adaptive verification
+    const { data: hotelData } = await supabaseAdmin
+      .from('hotels')
+      .select('tax_rate')
+      .eq('id', room.hotel_id)
+      .single();
+
+    const hotelTaxRate = hotelData?.tax_rate ?? DEFAULT_TAX_RATE;
+    const maxExpected = Math.round(baseRate * (1 + hotelTaxRate) * 1.05); // adaptive buffer: wider with tax
     const minExpected = Math.round(baseRate * 0.95); // small discount tolerance
 
     if (payload.amount > maxExpected || payload.amount < minExpected) {
