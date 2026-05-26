@@ -29,7 +29,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
 
   const { data: hotel, error: hotelError } = await supabase
     .from('hotels')
-    .select('id, name, primary_color, cancellation_policy, location, main_image_url')
+    .select('id, name, primary_color, cancellation_policy, location, main_image_url, tax_rate')
     .eq('slug', slug)
     .single();
 
@@ -79,6 +79,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
           nights={nights}
           basePrice={basePrice}
           isOta={isOta}
+          taxRate={hotel.tax_rate}
         />
 
       </div>

@@ -5,6 +5,7 @@ import { ShieldCheck, ArrowRight, ArrowLeft, User, Mail, Phone, CreditCard, Load
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPendingBookingAction } from '@/app/actions/bookings';
 import { Hotel, Room } from '@/types';
+import { calculateTaxAmount, DEFAULT_TAX_RATE } from '@/lib/pricing';
 import { shakeHaptic, desaturateFeedback, springSnappy, springGentle } from '@/lib/mac2026/spring';
 
 interface CheckoutFormProps {
@@ -15,6 +16,7 @@ interface CheckoutFormProps {
   nights: number;
   basePrice: number;
   isOta: boolean;
+  taxRate?: number;
 }
 
 /**
@@ -39,7 +41,7 @@ function hashBookingKey(roomId: string, checkIn: string, checkOut: string): stri
  *
  * Upsells removed (R5): never had a revenue backend, zero revenue impact.
  */
-export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, basePrice, isOta }: CheckoutFormProps) {
+export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, basePrice, isOta, taxRate }: CheckoutFormProps) {
   const storageKey = hashBookingKey(room.id, checkIn, checkOut);
 
   const [step, setStep] = useState<1 | 2>(() => {
@@ -65,10 +67,12 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
   });
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Mac 2026: Price coherence with RoomCard — IVA 19% included in total
+  // Price coherence: use hotel's tax_rate for all displays
   const subtotal = basePrice;
-  const taxes = Math.round(subtotal * 0.19);
+  const effectiveRate = taxRate ?? DEFAULT_TAX_RATE;
+  const taxes = calculateTaxAmount(subtotal, taxRate);
   const grandTotal = subtotal + taxes;
+  const hasTax = effectiveRate > 0;
 
   // Persist state to sessionStorage on every change (booking-scoped key)
   useEffect(() => {
@@ -335,11 +339,13 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                   </div>
                   <p className="font-bold">${basePrice.toLocaleString()}</p>
                 </div>
-                {/* IVA breakdown — Mac 2026: price coherence with RoomCard */}
-                <div className="flex justify-between items-start text-background/40">
-                  <p className="text-xs">IVA (19%)</p>
-                  <p className="text-xs font-bold">${taxes.toLocaleString()}</p>
-                </div>
+                {/* IVA breakdown — conditional on tax_rate */}
+                {hasTax && (
+                  <div className="flex justify-between items-start text-background/40">
+                    <p className="text-xs">IVA ({(effectiveRate * 100).toFixed(0)}%)</p>
+                    <p className="text-xs font-bold">${taxes.toLocaleString()}</p>
+                  </div>
+                )}
               </div>
               <div className="flex justify-between items-end mb-8">
                 <p className="text-background/60">Total a Pagar</p>
