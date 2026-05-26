@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { Upload, CheckCircle2, ExternalLink, Image, FileText, AlertCircle, Loader2 } from 'lucide-react';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { uploadManualPaymentReceipt } from '@/app/actions/manual-payments';
+import imageCompression from 'browser-image-compression';
 
 const NEQUI_NUMBER = '3213795015';
 const DAVIPLATA_NUMBER = '3213795015';
@@ -22,21 +23,51 @@ export default function ManualPaymentCard() {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Preview local
-    setPreviewUrl(URL.createObjectURL(file));
     setUploadError(null);
     setUploading(true);
 
-    const formData = new FormData();
-    formData.append('file', file);
+    try {
+      let fileToUpload: File = file;
 
-    const result = await uploadManualPaymentReceipt(formData);
-    setUploading(false);
+      // Compress images client-side before upload
+      if (file.type.startsWith('image/')) {
+        setPreviewUrl(URL.createObjectURL(file));
+        const compressed = await imageCompression(file, {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1920,
+          useWebWorker: true,
+          fileType: 'image/webp',
+        });
+        fileToUpload = new File([compressed], file.name.replace(/\.[^.]+$/, '.webp'), { type: 'image/webp' });
+      } else if (file.type === 'application/pdf') {
+        // PDF validation: max 4MB
+        if (file.size > 4 * 1024 * 1024) {
+          setUploadError('El PDF supera los 4MB. Usá una herramienta de compresión como ilovepdf.com');
+          setUploading(false);
+          return;
+        }
+        setPreviewUrl(URL.createObjectURL(file));
+      } else {
+        setUploadError('Formato no soportado. Usá JPEG, PNG, WebP o PDF.');
+        setUploading(false);
+        return;
+      }
 
-    if (result.success && result.url) {
-      setManualReceiptUrl(result.url);
-    } else {
-      setUploadError(result.error || 'Error al subir el comprobante.');
+      const formData = new FormData();
+      formData.append('file', fileToUpload);
+
+      const result = await uploadManualPaymentReceipt(formData);
+      setUploading(false);
+
+      if (result.success && result.url) {
+        setManualReceiptUrl(result.url);
+      } else {
+        setUploadError(result.error || 'Error al subir el comprobante.');
+        setPreviewUrl(null);
+      }
+    } catch (error: any) {
+      setUploading(false);
+      setUploadError(error.message || 'Error al procesar el archivo.');
       setPreviewUrl(null);
     }
   };
@@ -95,13 +126,13 @@ export default function ManualPaymentCard() {
             {uploading ? (
               <>
                 <Loader2 className="animate-spin text-indigo-400" size={24} />
-                <span className="text-xs">Subiendo comprobante...</span>
+                <span className="text-xs">Comprimiendo y subiendo...</span>
               </>
             ) : (
               <>
                 <Upload size={24} />
                 <span className="text-sm">Subir comprobante de pago</span>
-                <span className="text-[10px] text-zinc-600">JPEG, PNG, WebP o PDF — máx. 5 MB</span>
+                <span className="text-[10px] text-zinc-600">JPEG, PNG, WebP o PDF — máx. 4MB (imágenes se comprimen auto)</span>
               </>
             )}
           </button>
@@ -162,9 +193,9 @@ export default function ManualPaymentCard() {
         )}
       </div>
 
-      {/* WhatsApp link */}
+      {/* WhatsApp bypass - good faith policy */}
       <a
-        href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hola%2C%20adjunto%20comprobante%20de%20pago%20de%20HospedaSuite`}
+        href={`https://wa.me/${WHATSAPP_NUMBER}?text=Hola%2C%20adjunto%20comprobante%20de%20pago%20de%20HospedaSuite%20(${methodLabel}%20${phoneNumber})`}
         target="_blank"
         rel="noopener noreferrer"
         className="w-full flex items-center justify-center gap-2 p-4 bg-emerald-500/10 border border-emerald-500/30 rounded-[var(--radius-squircle-xl)] text-emerald-400 font-bold text-sm hover:bg-emerald-500/20 transition-all group"

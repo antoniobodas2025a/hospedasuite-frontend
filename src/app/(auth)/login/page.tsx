@@ -2,11 +2,12 @@
 
 import { login } from '@/app/actions/auth';
 import { useState } from 'react';
-import { Loader2, ShieldCheck } from 'lucide-react';
+import { Loader2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
 export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
 
   async function handleSubmit(formData: FormData) {
     setLoading(true);
@@ -71,13 +72,24 @@ export default function LoginPage() {
             <label className='text-xs font-bold text-white/50 uppercase ml-1'>
               Contraseña
             </label>
-            <input
-              name='password'
-              type='password'
-              required
-              placeholder='••••••••'
-              className='w-full bg-black/40 border border-white/10 rounded-[var(--radius-squircle-lg)] p-4 text-white outline-none focus:border-blue-500/50 focus:bg-black/60 transition-all'
-            />
+            <div className='relative'>
+              <input
+                name='password'
+                type={showPassword ? 'text' : 'password'}
+                required
+                placeholder='••••••••'
+                className='w-full bg-black/40 border border-white/10 rounded-[var(--radius-squircle-lg)] p-4 pr-12 text-white outline-none focus:border-blue-500/50 focus:bg-black/60 transition-all'
+              />
+              <button
+                type='button'
+                tabIndex={0}
+                onClick={() => setShowPassword(!showPassword)}
+                className='absolute right-3 top-1/2 -translate-y-1/2 text-white/40 hover:text-white/70 transition-colors p-1'
+                aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+              >
+                {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+              </button>
+            </div>
           </div>
 
           <button
