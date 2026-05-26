@@ -6,7 +6,8 @@ export async function fetchOTAHotelsAction(
   page: number = 0, 
   limit: number = 24, 
   category: string = 'all', 
-  search: string = ''
+  search: string = '',
+  location: string = ''
 ) {
   try {
     
@@ -24,6 +25,10 @@ export async function fetchOTAHotelsAction(
 
     if (search) {
       query = query.or(`name.ilike.%${search}%,location.ilike.%${search}%`);
+    }
+
+    if (location) {
+      query = query.or(`city.ilike.%${location}%,location.ilike.%${location}%,address.ilike.%${location}%`);
     }
 
     const { data: hotels, error } = await query.range(from, to);

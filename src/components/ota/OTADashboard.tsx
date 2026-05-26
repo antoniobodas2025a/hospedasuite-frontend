@@ -55,16 +55,19 @@ export default function OTADashboard({
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
+  // Location filter from URL params (set by AvailabilitySearchBar)
+  const locationParam = searchParams.get('location') || '';
+
   // Debounced search
   useEffect(() => {
-    if (activeCategory === 'all' && searchTerm === '' && page === 0 && hotels === initialHotels) return;
+    if (activeCategory === 'all' && searchTerm === '' && locationParam === '' && page === 0 && hotels === initialHotels) return;
 
     let isMounted = true;
 
     const delayDebounceFn = setTimeout(async () => {
       setIsSearching(true);
 
-      const response = await fetchOTAHotelsAction(0, 24, activeCategory, searchTerm);
+      const response = await fetchOTAHotelsAction(0, 24, activeCategory, searchTerm, locationParam);
 
       if (isMounted) {
         if (response.success) {
@@ -80,7 +83,7 @@ export default function OTADashboard({
       isMounted = false;
       clearTimeout(delayDebounceFn);
     };
-  }, [searchTerm, activeCategory]);
+  }, [searchTerm, activeCategory, locationParam]);
 
   // Scroll handler: hide header on scroll down, show on scroll up
   useEffect(() => {
