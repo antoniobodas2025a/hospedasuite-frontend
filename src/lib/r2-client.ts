@@ -18,6 +18,7 @@ const endpoint = process.env.R2_ENDPOINT || 'https://dummy.r2.cloudflarestorage.
 export const r2Client = new S3Client({
   region: 'auto',
   endpoint,
+  forcePathStyle: true, // Required for R2 — disables AWS credential format validation
   credentials: {
     accessKeyId,
     secretAccessKey,
