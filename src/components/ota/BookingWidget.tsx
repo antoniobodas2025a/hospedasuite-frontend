@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { calculateTotalWithTax } from '@/lib/pricing';
+import { calculateTotalWithTax, DEFAULT_TAX_RATE } from '@/lib/pricing';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
 import { useTranslations } from 'next-intl';
@@ -76,8 +76,8 @@ export default function BookingWidget({
   const roomPrice = selectedRoom ? (selectedRoom.price_per_night || selectedRoom.price) : minPrice;
   // Price coherence: use hotel's tax_rate for all displays
   const subtotal = nights > 0 ? roomPrice * nights : roomPrice;
-  const totalPrice = calculateTotalWithTax(subtotal, taxRate);
-  const hasTax = (taxRate ?? 0.19) > 0;
+  const effectiveRate = taxRate ?? DEFAULT_TAX_RATE;
+  const { total: totalPrice, hasTax } = calculateTotalWithTax(subtotal, effectiveRate);
 
   const handleReserve = () => {
     if (!checkIn || !checkOut) {

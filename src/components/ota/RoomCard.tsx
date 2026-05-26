@@ -13,7 +13,7 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
-import { calculateTotalWithTax } from '@/lib/pricing';
+import { calculateTotalWithTax, DEFAULT_TAX_RATE } from '@/lib/pricing';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
@@ -48,7 +48,8 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
   }
   const basePrice = room.price_per_night || room.price || 0;
   const displayPrice = isSearchingDates ? (basePrice * nights) : basePrice;
-  const totalPrice = calculateTotalWithTax(displayPrice, hotel?.tax_rate);
+  const taxRate = hotel?.tax_rate ?? DEFAULT_TAX_RATE;
+  const { total: totalPrice, tax: taxes, hasTax } = calculateTotalWithTax(displayPrice, taxRate);
 
   const allPrices = allRooms.map((r) => r.price_per_night || r.price || 0).filter((p) => p > 0);
   const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;

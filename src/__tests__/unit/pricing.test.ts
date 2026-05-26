@@ -135,26 +135,32 @@ describe('calculateTaxAmount', () => {
 });
 
 describe('calculateTotalWithTax', () => {
-  it('con taxRate 0.19: 100000 → 119000', () => {
-    expect(calculateTotalWithTax(100000, 0.19)).toBe(119000);
+  it('con taxRate 0.19: 100000 → total=119000', () => {
+    const result = calculateTotalWithTax(100000, 0.19);
+    expect(result.total).toBe(119000);
+    expect(result.hasTax).toBe(true);
   });
 
-  it('con taxRate 0 (simplificado): 100000 → 100000', () => {
-    expect(calculateTotalWithTax(100000, 0)).toBe(100000);
+  it('con taxRate 0 (simplificado): 100000 → total=100000', () => {
+    const result = calculateTotalWithTax(100000, 0);
+    expect(result.total).toBe(100000);
+    expect(result.hasTax).toBe(false);
   });
 
   it('con taxRate undefined: usa DEFAULT_TAX_RATE (0.19)', () => {
-    expect(calculateTotalWithTax(100000)).toBe(119000);
+    const result = calculateTotalWithTax(100000);
+    expect(result.total).toBe(119000);
   });
 
   it('con números grandes: 1000000 * 1.19 = 1190000', () => {
-    expect(calculateTotalWithTax(1000000, 0.19)).toBe(1190000);
+    const result = calculateTotalWithTax(1000000, 0.19);
+    expect(result.total).toBe(1190000);
   });
 
   it('con basePrice 0: siempre retorna 0', () => {
-    expect(calculateTotalWithTax(0, 0)).toBe(0);
-    expect(calculateTotalWithTax(0, 0.19)).toBe(0);
-    expect(calculateTotalWithTax(0)).toBe(0);
+    expect(calculateTotalWithTax(0, 0).total).toBe(0);
+    expect(calculateTotalWithTax(0, 0.19).total).toBe(0);
+    expect(calculateTotalWithTax(0).total).toBe(0);
   });
 });
 
@@ -238,13 +244,13 @@ describe('Adaptive verification buffer', () => {
   });
 
   it('una noche con IVA: acepta el monto justo con IVA', () => {
-    const montoCliente = calculateTotalWithTax(100000, 0.19); // 119000
+    const montoCliente = calculateTotalWithTax(100000, 0.19).total; // 119000
     expect(montoCliente).toBeLessThanOrEqual(maxExpected(100000, 1, 0.19));
     expect(montoCliente).toBeGreaterThanOrEqual(minExpected(100000, 1));
   });
 
   it('una noche sin IVA: acepta el monto justo', () => {
-    const montoCliente = calculateTotalWithTax(100000, 0); // 100000
+    const montoCliente = calculateTotalWithTax(100000, 0).total; // 100000
     expect(montoCliente).toBeLessThanOrEqual(maxExpected(100000, 1, 0));
     expect(montoCliente).toBeGreaterThanOrEqual(minExpected(100000, 1));
   });

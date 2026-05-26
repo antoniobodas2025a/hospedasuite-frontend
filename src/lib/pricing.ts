@@ -1,54 +1,68 @@
-// ============================================================================
-// PRICING — Single Source of Truth for tax calculations
-//
-// All price displays MUST use these functions. No direct 0.19/1.19 literals
-// in component code. Thread hotel.tax_rate through props.
-// ============================================================================
+/**
+ * 💰 Pricing Utilities — Single Source of Truth
+ *
+ * Pure functions for tax and price calculations.
+ * Eliminates hardcoded 0.19/1.19 across the codebase.
+ *
+ * Colombia tax context:
+ * - Régimen Simplificado: tax_rate = 0 (most glampings/boutique hotels)
+ * - Régimen Ordinario: tax_rate = 0.19 (hotels with IVA registration)
+ */
 
 export const DEFAULT_TAX_RATE = 0.19;
 
 /**
- * Calculates the tax amount for a given base price.
- * Defaults to DEFAULT_TAX_RATE (0.19) when taxRate is undefined (NULL in DB).
- *
- * @example calculateTaxAmount(100000, 0.19) // → 19000
- * @example calculateTaxAmount(100000)        // → 19000 (default)
- * @example calculateTaxAmount(100000, 0)     // → 0
+ * Calculates tax amount for a given subtotal and tax rate.
  */
-export function calculateTaxAmount(basePrice: number, taxRate?: number): number {
-  const rate = taxRate ?? DEFAULT_TAX_RATE;
-  return Math.round(basePrice * rate);
+export function calculateTaxAmount(subtotal: number, taxRate: number = DEFAULT_TAX_RATE): number {
+  return Math.round(subtotal * taxRate);
 }
 
 /**
- * Calculates the total price including tax.
- * Defaults to DEFAULT_TAX_RATE (0.19) when taxRate is undefined (NULL in DB).
- *
- * @example calculateTotalWithTax(100000, 0.19) // → 119000
- * @example calculateTotalWithTax(100000)        // → 119000 (default)
- * @example calculateTotalWithTax(100000, 0)     // → 100000
+ * Calculates total price with tax breakdown.
+ * Returns an object with subtotal, tax, total, and hasTax flag.
  */
-export function calculateTotalWithTax(basePrice: number, taxRate?: number): number {
-  const rate = taxRate ?? DEFAULT_TAX_RATE;
-  return Math.round(basePrice * (1 + rate));
+export function calculateTotalWithTax(
+  basePrice: number,
+  taxRate: number = DEFAULT_TAX_RATE
+): {
+  subtotal: number;
+  tax: number;
+  total: number;
+  hasTax: boolean;
+} {
+  const subtotal = basePrice;
+  const tax = calculateTaxAmount(subtotal, taxRate);
+  return { subtotal, tax, total: subtotal + tax, hasTax: taxRate > 0 };
 }
 
 /**
- * Calculates a complete price breakdown for a multi-night stay.
- * Returns subtotal (base * nights), tax amount, total with tax, and hasTax flag.
- *
- * @example calculatePrice(100000, 3, 0.19) // → { subtotal: 300000, tax: 57000, total: 357000, hasTax: true }
- * @example calculatePrice(100000, 3, 0)    // → { subtotal: 300000, tax: 0, total: 300000, hasTax: false }
+ * Calculates price for multiple nights with tax breakdown.
+ * Alias for calculateTotalWithTax with nights multiplier.
  */
 export function calculatePrice(
   basePrice: number,
   nights: number,
-  taxRate?: number,
-): { subtotal: number; tax: number; total: number; hasTax: boolean } {
-  const subtotal = basePrice * nights;
-  const rate = taxRate ?? DEFAULT_TAX_RATE;
-  const tax = calculateTaxAmount(subtotal, rate);
-  const total = calculateTotalWithTax(subtotal, rate);
-  const hasTax = rate > 0;
-  return { subtotal, tax, total, hasTax };
+  taxRate: number = DEFAULT_TAX_RATE
+): {
+  subtotal: number;
+  tax: number;
+  total: number;
+  hasTax: boolean;
+} {
+  return calculateTotalWithTax(basePrice * nights, taxRate);
+}
+
+/**
+ * Formats a price for display (COP locale).
+ */
+export function formatPrice(amount: number): string {
+  return amount.toLocaleString('es-CO');
+}
+
+/**
+ * Returns the tax label based on rate.
+ */
+export function getTaxLabel(taxRate: number = DEFAULT_TAX_RATE): string {
+  return taxRate > 0 ? `IVA (${Math.round(taxRate * 100)}%)` : '';
 }

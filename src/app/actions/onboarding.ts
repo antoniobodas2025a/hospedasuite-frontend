@@ -136,7 +136,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       cancellation_policy: state.settings.cancellationPolicy || null,
       whatsapp_number: state.settings.whatsappNumber || null,
       google_maps_url: state.settings.googleMapsUrl || null,
-      tax_rate: state.settings.taxRate ?? 0.19,
+      tax_rate: state.settings.taxRate ?? 0,
     };
 
     if (isManual) {

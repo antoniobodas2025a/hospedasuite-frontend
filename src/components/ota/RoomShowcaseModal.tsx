@@ -8,7 +8,7 @@ import {
   Info, ClipboardList, Clock
 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { calculateTotalWithTax } from '@/lib/pricing';
+import { calculateTotalWithTax, DEFAULT_TAX_RATE } from '@/lib/pricing';
 import { format, parseISO } from 'date-fns';
 import type { Room, GalleryItem } from '@/types';
 import { GlassCard } from '@/components/ui/glass';
@@ -106,7 +106,8 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
   const basePrice = room.price_per_night || room.price || 0;
   // Price coherence: use hotel's tax_rate for all displays
   const subtotal = basePrice * nights;
-  const totalPrice = calculateTotalWithTax(subtotal, hotel.tax_rate);
+  const effectiveRate = hotel.tax_rate ?? DEFAULT_TAX_RATE;
+  const { total: totalPrice } = calculateTotalWithTax(subtotal, effectiveRate);
   const isOverCapacity = defaultGuests > Number(room.capacity ?? 0);
 
   const handleCheckout = () => {

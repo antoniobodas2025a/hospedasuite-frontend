@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { ArrowRight, ShieldCheck } from 'lucide-react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { calculateTotalWithTax } from '@/lib/pricing';
+import { calculateTotalWithTax, DEFAULT_TAX_RATE } from '@/lib/pricing';
 import { useTranslations } from 'next-intl';
 
 // ============================================================================
@@ -78,7 +78,8 @@ export default function MobileStickyCta({
   };
 
   // Mac 2026: Price coherence — use hotel's tax_rate, default 0.19
-  const displayPrice = calculateTotalWithTax(minPrice, taxRate);
+  const effectiveRate = taxRate ?? DEFAULT_TAX_RATE;
+  const { total: displayPrice } = calculateTotalWithTax(minPrice, effectiveRate);
 
   return (
     <div

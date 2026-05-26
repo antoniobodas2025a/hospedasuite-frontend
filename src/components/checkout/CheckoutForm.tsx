@@ -70,7 +70,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
   // Price coherence: use hotel's tax_rate for all displays
   const subtotal = basePrice;
   const effectiveRate = taxRate ?? DEFAULT_TAX_RATE;
-  const taxes = calculateTaxAmount(subtotal, taxRate);
+  const taxes = calculateTaxAmount(subtotal, effectiveRate);
   const grandTotal = subtotal + taxes;
   const hasTax = effectiveRate > 0;
 
