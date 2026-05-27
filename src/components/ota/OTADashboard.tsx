@@ -23,6 +23,7 @@ import { fetchOTAHotelsAction } from '@/app/actions/ota';
 import { useTranslations } from 'next-intl';
 import { springSnappy, springGentle } from '@/lib/mac2026/spring';
 import { preserveSearchParams } from '@/lib/handoff-url';
+import { searchCache } from '@/lib/search-cache';
 
 const CATEGORIES = [
   { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal, popular: false },
@@ -88,24 +89,70 @@ export default function OTADashboard({
     router.replace(url, { scroll: false });
   }, [searchParams, pathname, router]);
 
-  // Debounced search effect — now includes date/guest filters
+  // Debounced search effect with stale-while-revalidate cache
   useEffect(() => {
     let isMounted = true;
 
     const delayDebounceFn = setTimeout(async () => {
-      setIsSearching(true);
+      const cacheParams = {
+        page: 0,
+        limit: 24,
+        category: activeCategory,
+        search: searchTerm,
+        location: urlLocation,
+        checkin: urlCheckin || undefined,
+        checkout: urlCheckout || undefined,
+        guests: urlGuests,
+      };
 
-      const response = await fetchOTAHotelsAction(0, 24, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests);
+      // Try cache first (stale-while-revalidate)
+      const cached = searchCache.get<{ data: any[]; hasMore: boolean }>(cacheParams);
+      if (cached) {
+        // Return cached data immediately
+        if (isMounted) {
+          setHotels(cached.data);
+          setPage(0);
+          setHasMore(cached.hasMore);
+          setIsSearching(false);
+        }
+
+        // Revalidate in background
+        fetchOTAHotelsAction(
+          cacheParams.page, cacheParams.limit, cacheParams.category,
+          cacheParams.search, cacheParams.location,
+          cacheParams.checkin, cacheParams.checkout, cacheParams.guests
+        ).then((response) => {
+          if (isMounted && response.success) {
+            searchCache.set(cacheParams, { data: response.data, hasMore: response.hasMore });
+            // Only update if data changed
+            if (JSON.stringify(response.data) !== JSON.stringify(cached.data)) {
+              setHotels(response.data);
+              setHasMore(response.hasMore);
+            }
+          }
+        }).catch(() => {
+          // Silently ignore revalidation errors
+        });
+
+        return;
+      }
+
+      // Cache miss — fetch fresh
+      setIsSearching(true);
+      const response = await fetchOTAHotelsAction(
+        0, 24, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests
+      );
 
       if (isMounted) {
         if (response.success) {
+          searchCache.set(cacheParams, { data: response.data, hasMore: response.hasMore });
           setHotels(response.data);
           setPage(0);
           setHasMore(response.hasMore);
         }
         setIsSearching(false);
       }
-    }, 500);
+    }, 300); // Reduced from 500ms to 300ms since cache provides instant feedback
 
     return () => {
       isMounted = false;
