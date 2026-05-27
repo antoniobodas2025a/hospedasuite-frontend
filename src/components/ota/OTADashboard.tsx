@@ -13,10 +13,15 @@ import {
   UserLock,
   Loader2,
   ChevronDown,
+  Calendar,
+  User,
+  MapPin,
 } from 'lucide-react';
 import HotelCard from './HotelCard';
 import LanguageSwitcher from './LanguageSwitcher';
 import SearchBarUnified from './SearchBarUnified';
+import MobileSearchSheet from './MobileSearchSheet';
+import HotelMapView from './HotelMapView';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { fetchOTAHotelsAction } from '@/app/actions/ota';
@@ -68,6 +73,8 @@ export default function OTADashboard({
   const [searchTerm, setSearchTerm] = useState(urlSearch);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+  const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
+  const [showMap, setShowMap] = useState(false);
 
   // Sync category, searchTerm, and location to URL
   const syncToUrl = useCallback((updates: { category?: string; search?: string; location?: string }) => {
@@ -250,14 +257,67 @@ export default function OTADashboard({
         <div className={`sticky z-40 mb-8 sm:mb-12 transition-[top] ${isHeaderVisible ? 'top-14' : 'top-0'}`}
           style={{ transition: 'top 0.3s var(--spring-gentle)' }}
         >
-          <div className='max-w-3xl mx-auto relative group'>
+          {/* Desktop: Full search bar */}
+          <div className='hidden sm:block max-w-3xl mx-auto relative group'>
             <SearchBarUnified
               onSearch={(filters) => {
                 setSearchTerm(filters.location);
               }}
             />
           </div>
+
+          {/* Mobile: Tap to open search sheet */}
+          <button
+            onClick={() => setIsMobileSheetOpen(true)}
+            className='sm:hidden flex items-center gap-3 w-full px-5 py-3.5 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm active:scale-[0.98] transition-transform'
+          >
+            <MapPin size={20} className='text-brand-600 shrink-0' />
+            <div className='flex-1 text-left'>
+              <p className='text-xs text-muted-foreground'>{urlLocation || t('ota.search.destination')}</p>
+              <p className='text-sm font-bold text-foreground truncate'>
+                {urlLocation || t('ota.search.placeholder')}
+              </p>
+            </div>
+            {(urlCheckin || urlGuests) && (
+              <div className='flex items-center gap-2 text-xs text-muted-foreground'>
+                {urlCheckin && <Calendar size={14} />}
+                {urlGuests && <User size={14} />}
+              </div>
+            )}
+          </button>
         </div>
+
+        {/* Map toggle + Map view */}
+        {hotels.length > 0 && (
+          <div className='mb-6 sm:mb-8'>
+            <div className='flex items-center justify-between mb-3'>
+              <h2 className='text-sm font-bold text-foreground'>
+                {hotels.length} {hotels.length === 1 ? 'alojamiento' : 'alojamientos'}
+              </h2>
+              <button
+                onClick={() => setShowMap(!showMap)}
+                className='flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors'
+              >
+                <MapPin size={14} />
+                {showMap ? 'Ver lista' : 'Ver mapa'}
+              </button>
+            </div>
+
+            {showMap ? (
+              <HotelMapView
+                hotels={hotels.map((h: any) => ({
+                  id: h.id,
+                  name: h.name,
+                  location: h.location,
+                  address: h.address,
+                  min_price: h.min_price,
+                  slug: h.slug || h.city_slug,
+                }))}
+                centerLocation={urlLocation || undefined}
+              />
+            ) : null}
+          </div>
+        )}
 
         {/* CATEGORIES — 2 popular pills + chip for rest */}
         <div className='flex flex-wrap items-center justify-center gap-2 mb-8 sm:mb-12'>
@@ -401,6 +461,16 @@ export default function OTADashboard({
           </div>
         )}
       </main>
+
+      {/* Mobile Search Sheet */}
+      <MobileSearchSheet
+        isOpen={isMobileSheetOpen}
+        onClose={() => setIsMobileSheetOpen(false)}
+        onSearch={(filters) => {
+          setSearchTerm(filters.location);
+        }}
+        isLoading={isSearching}
+      />
     </div>
   );
 }

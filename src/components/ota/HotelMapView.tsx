@@ -1,0 +1,136 @@
+'use client';
+
+import { useState, useEffect } from 'react';
+import { MapPin, ExternalLink, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
+import { springSnappy } from '@/lib/mac2026/spring';
+
+interface HotelMapViewProps {
+  hotels: Array<{
+    id: string;
+    name: string;
+    location: string;
+    address?: string;
+    min_price: number;
+    slug: string;
+  }>;
+  centerLocation?: string;
+}
+
+/**
+ * HotelMapView — Simple map view showing hotel locations.
+ *
+ * Uses Google Maps embed with markers for each hotel.
+ * Falls back to a list view if map fails to load.
+ */
+export default function HotelMapView({ hotels, centerLocation }: HotelMapViewProps) {
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasError, setHasError] = useState(false);
+  const [selectedHotel, setSelectedHotel] = useState<string | null>(null);
+
+  // Build Google Maps embed URL
+  const mapUrl = (() => {
+    if (hotels.length === 0) return null;
+
+    // Use center location or first hotel location
+    const center = centerLocation || hotels[0]?.location || '';
+
+    // Build markers for each hotel
+    const markers = hotels.slice(0, 10).map((h, i) => {
+      const loc = encodeURIComponent(h.location || h.address || '');
+      const color = selectedHotel === h.id ? 'red' : 'blue';
+      return `markers=color:${color}%7Clabel:${i + 1}%7C${loc}`;
+    }).join('&');
+
+    const centerEncoded = encodeURIComponent(center);
+    return `https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || ''}&center=${centerEncoded}&zoom=12&maptype=roadmap&${markers}`;
+  })();
+
+  if (hotels.length === 0) {
+    return (
+      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <MapPin size={48} className="mb-4 text-muted-foreground/40" />
+        <p className="text-sm font-medium">No hay hoteles para mostrar en el mapa</p>
+      </div>
+    );
+  }
+
+  if (hasError || !mapUrl) {
+    // Fallback: list view
+    return (
+      <div className="space-y-3">
+        <h3 className="text-sm font-bold text-foreground">Hoteles encontrados</h3>
+        <div className="space-y-2">
+          {hotels.map((hotel) => (
+            <a
+              key={hotel.id}
+              href={`/hotel/${hotel.slug}`}
+              className="flex items-center gap-3 p-3 bg-muted/30 rounded-[var(--radius-squircle-lg)] border border-border/30 hover:bg-muted/50 transition-colors"
+            >
+              <MapPin size={16} className="text-brand-500 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-bold text-foreground truncate">{hotel.name}</p>
+                <p className="text-xs text-muted-foreground truncate">{hotel.location}</p>
+              </div>
+              <span className="text-xs font-bold text-secondary">${hotel.min_price.toLocaleString()}</span>
+              <ExternalLink size={14} className="text-muted-foreground shrink-0" />
+            </a>
+          ))}
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30">
+      {/* Loading state */}
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
+          <Loader2 size={24} className="text-brand-500 animate-spin" />
+        </div>
+      )}
+
+      {/* Map iframe */}
+      <iframe
+        src={mapUrl}
+        className="w-full h-full border-0"
+        loading="lazy"
+        onLoad={() => setIsLoading(false)}
+        onError={() => {
+          setIsLoading(false);
+          setHasError(true);
+        }}
+        allowFullScreen
+        title="Mapa de hoteles"
+      />
+
+      {/* Hotel list overlay (bottom) */}
+      <div className="absolute bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm border-t border-border/30 p-3">
+        <div className="flex items-center gap-2 overflow-x-auto">
+          {hotels.slice(0, 5).map((hotel, i) => (
+            <button
+              key={hotel.id}
+              onClick={() => setSelectedHotel(selectedHotel === hotel.id ? null : hotel.id)}
+              className={cn(
+                'flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-lg)] text-xs font-medium whitespace-nowrap transition-colors',
+                selectedHotel === hotel.id
+                  ? 'bg-brand-500 text-primary-foreground'
+                  : 'bg-muted/50 text-foreground hover:bg-muted'
+              )}
+            >
+              <span className="size-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">
+                {i + 1}
+              </span>
+              <span className="truncate max-w-[120px]">{hotel.name}</span>
+            </button>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// Helper for className merging (inline to avoid extra import)
+function cn(...classes: (string | false | undefined | null)[]) {
+  return classes.filter(Boolean).join(' ');
+}
