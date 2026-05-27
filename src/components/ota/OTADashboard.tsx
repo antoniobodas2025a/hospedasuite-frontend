@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 import HotelCard from './HotelCard';
 import LanguageSwitcher from './LanguageSwitcher';
-import LocationAutocomplete from './LocationAutocomplete';
+import SearchBarUnified from './SearchBarUnified';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { fetchOTAHotelsAction } from '@/app/actions/ota';
@@ -203,36 +203,16 @@ export default function OTADashboard({
           </h1>
         </div>
 
-        {/* SEARCH BAR — Location autocomplete + free-text search */}
+        {/* SEARCH BAR — Unified 3-zone (Location, Dates, Guests) */}
         <div className={`sticky z-40 mb-8 sm:mb-12 transition-[top] ${isHeaderVisible ? 'top-14' : 'top-0'}`}
           style={{ transition: 'top 0.3s var(--spring-gentle)' }}
         >
-          <div className='max-w-xl mx-auto relative group'>
-            <div className='relative bg-card rounded-[var(--radius-squircle-xl)] shadow-lg flex items-center p-1.5 sm:p-2 border border-border/50 ring-1 ring-foreground/5'>
-              <LocationAutocomplete
-                value={searchTerm}
-                onChange={(val) => {
-                  setSearchTerm(val);
-                  // Sync both search (for display) and location (for filtering)
-                  syncToUrl({ search: val, location: val });
-                }}
-                placeholder={t('ota.search.placeholder')}
-              />
-              {/* Glow indicator when searching */}
-              <AnimatePresence>
-                {isSearching && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.8 }}
-                    animate={{ opacity: 1, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.8 }}
-                    transition={springSnappy()}
-                    className='pr-3'
-                  >
-                    <Loader2 size={16} className='text-brand-500 animate-spin' />
-                  </motion.div>
-                )}
-              </AnimatePresence>
-            </div>
+          <div className='max-w-3xl mx-auto relative group'>
+            <SearchBarUnified
+              onSearch={(filters) => {
+                setSearchTerm(filters.location);
+              }}
+            />
           </div>
         </div>
 
