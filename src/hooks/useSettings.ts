@@ -8,6 +8,8 @@ import { saveSettingsAction } from '@/app/actions/settings';
 export interface HotelSettings {
   id: string;
   name: string;
+  city: string;
+  location: string;
   address: string;
   phone: string;
   email: string;

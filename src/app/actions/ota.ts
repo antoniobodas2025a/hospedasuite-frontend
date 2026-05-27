@@ -31,20 +31,43 @@ export async function searchLocationsAction(query: string): Promise<{ success: b
 
     // Group by city, count hotels, filter by query
     const cityMap = new Map<string, number>();
+    const locationSet = new Set<string>();
+
     for (const hotel of data || []) {
       const city = (hotel.city || '').trim();
-      if (!city) continue;
-      cityMap.set(city, (cityMap.get(city) || 0) + 1);
+      const location = (hotel.location || '').trim();
+
+      if (city) {
+        cityMap.set(city, (cityMap.get(city) || 0) + 1);
+      }
+      if (location) {
+        locationSet.add(location);
+      }
     }
 
-    // Filter by query match (city or location)
+    // Filter by query match (city, location, or address)
     const lowerQuery = query.toLowerCase();
     const results: LocationSuggestion[] = [];
 
+    // Match cities
     for (const [city, count] of cityMap.entries()) {
       const lowerCity = city.toLowerCase();
       if (lowerCity.includes(lowerQuery)) {
         results.push({ city, hotelCount: count });
+      }
+    }
+
+    // Match locations (neighborhoods, areas) that aren't already in cities
+    for (const loc of locationSet) {
+      const lowerLoc = loc.toLowerCase();
+      if (lowerLoc.includes(lowerQuery) && !cityMap.has(loc)) {
+        // Count hotels with this location
+        const count = (data || []).filter((h: any) =>
+          (h.location || '').trim().toLowerCase() === lowerLoc
+        ).length;
+        if (count > 0) {
+          results.push({ city: loc, hotelCount: count });
+        }
       }
     }
 
@@ -111,7 +134,8 @@ export async function fetchOTAHotelsAction(
         id: h.id, 
         name: h.name, 
         location: h.location || 'Destino', 
-        city_slug: h.slug,
+        city: h.city || null,
+        slug: h.slug,
         min_price: roomPrices.length > 0 ? Math.min(...roomPrices) : 0, 
         main_image_url: h.main_image_url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070',
         description: h.description || '',

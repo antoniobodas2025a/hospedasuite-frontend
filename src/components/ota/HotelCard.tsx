@@ -12,7 +12,8 @@ interface Hotel {
   id: string;
   name: string;
   location: string;
-  city_slug?: string;
+  city?: string;
+  slug: string;
   min_price: number;
   main_image_url: string;
   description?: string;
@@ -28,9 +29,12 @@ export default function HotelCard({ hotel, href }: { hotel: Hotel; href?: string
     hotel.main_image_url ||
     'https://images.unsplash.com/photo-1571003123894-1f0594d2b5d9?q=80&w=2049';
 
+  // FIX: Use actual location data, not the hotel slug
+  const displayLocation = hotel.location || hotel.city || 'Destino';
+
   const handleClick = () => {
-    if (!hotel.city_slug) return;
-    const target = href || `/hotel/${hotel.city_slug}`;
+    if (!hotel.slug) return;
+    const target = href || `/hotel/${hotel.slug}`;
     router.push(target);
   };
 
@@ -69,9 +73,7 @@ export default function HotelCard({ hotel, href }: { hotel: Hotel; href?: string
                 size={12}
                 className='text-secondary'
               />
-              {hotel.city_slug
-                ? hotel.city_slug.replace('-', ' ')
-                : hotel.location}
+              {displayLocation}
             </div>
             {hotel.description && (
               <p className='mt-2 text-xs text-white/70 leading-snug line-clamp-2'>

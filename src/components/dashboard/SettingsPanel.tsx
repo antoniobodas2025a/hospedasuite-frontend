@@ -328,6 +328,11 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                 <div className="space-y-6">
                   <input {...register('name')} placeholder="Nombre" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
                   <div className="grid grid-cols-2 gap-6">
+                    <input {...register('city')} placeholder="Ciudad" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+                    <input {...register('location')} placeholder="Ubicación (barrio/zona)" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+                  </div>
+                  <input {...register('address')} placeholder="Dirección completa" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+                  <div className="grid grid-cols-2 gap-6">
                     <input {...register('phone')} placeholder="Tel" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
                     <input {...register('email')} placeholder="Email" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
                   </div>

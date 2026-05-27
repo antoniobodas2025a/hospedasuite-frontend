@@ -311,7 +311,7 @@ export default function OTADashboard({
                   location: h.location,
                   address: h.address,
                   min_price: h.min_price,
-                  slug: h.slug || h.city_slug,
+                  slug: h.slug,
                 }))}
                 centerLocation={urlLocation || undefined}
               />
@@ -422,7 +422,7 @@ export default function OTADashboard({
                 <HotelCard
                   key={hotel.id}
                   hotel={hotel}
-                  href={preserveSearchParams(searchParams, `/hotel/${hotel.city_slug}`)}
+                  href={preserveSearchParams(searchParams, `/hotel/${hotel.slug}`)}
                 />
               ))}
             </AnimatePresence>

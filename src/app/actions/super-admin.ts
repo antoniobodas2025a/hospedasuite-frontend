@@ -42,6 +42,7 @@ export async function createHotelAction(formData: FormData) {
       name,
       email,
       location: 'Por definir',
+      city: 'Por definir', // FIX: Set city so hotel appears in location search
       owner_id: createdAuthId,
       subscription_plan: plan,
       status: 'active',

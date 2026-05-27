@@ -11,6 +11,8 @@ import { getCurrentHotel } from '@/lib/hotel-context';
 export interface HotelSettings {
   id: string;
   name: string;
+  city: string;
+  location: string;
   address: string;
   phone: string;
   email: string;
@@ -35,6 +37,8 @@ export async function saveSettingsAction(settings: HotelSettings) {
       .from('hotels')
       .update({
         name: settings.name,
+        city: settings.city,
+        location: settings.location,
         address: settings.address,
         phone: settings.phone,
         email: settings.email,
