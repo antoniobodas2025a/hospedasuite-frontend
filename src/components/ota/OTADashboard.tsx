@@ -16,6 +16,7 @@ import {
 } from 'lucide-react';
 import HotelCard from './HotelCard';
 import LanguageSwitcher from './LanguageSwitcher';
+import LocationAutocomplete from './LocationAutocomplete';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { fetchOTAHotelsAction } from '@/app/actions/ota';
@@ -71,7 +72,7 @@ export default function OTADashboard({
     // Skip initial sync — URL is already correct on mount
   }, []);
 
-  const syncToUrl = useCallback((updates: { category?: string; search?: string }) => {
+  const syncToUrl = useCallback((updates: { category?: string; search?: string; location?: string }) => {
     const params = new URLSearchParams(searchParams.toString());
     if (updates.category !== undefined) {
       if (updates.category === 'all') params.delete('category');
@@ -80,6 +81,10 @@ export default function OTADashboard({
     if (updates.search !== undefined) {
       if (updates.search === '') params.delete('search');
       else params.set('search', updates.search);
+    }
+    if (updates.location !== undefined) {
+      if (updates.location === '') params.delete('location');
+      else params.set('location', updates.location);
     }
     const query = params.toString();
     const url = query ? `${pathname}?${query}` : pathname;
@@ -198,28 +203,20 @@ export default function OTADashboard({
           </h1>
         </div>
 
-        {/* SEARCH BAR — no button, Enter key triggers */}
+        {/* SEARCH BAR — Location autocomplete + free-text search */}
         <div className={`sticky z-40 mb-8 sm:mb-12 transition-[top] ${isHeaderVisible ? 'top-14' : 'top-0'}`}
           style={{ transition: 'top 0.3s var(--spring-gentle)' }}
         >
           <div className='max-w-xl mx-auto relative group'>
             <div className='relative bg-card rounded-[var(--radius-squircle-xl)] shadow-lg flex items-center p-1.5 sm:p-2 border border-border/50 ring-1 ring-foreground/5'>
-              <div className='pl-3 text-muted-foreground'>
-                <Search size={18} />
-              </div>
-              <input
-                type='text'
-                placeholder={t('ota.search.placeholder')}
-                className='w-full bg-transparent border-none focus:ring-0 text-foreground placeholder:text-muted-foreground/50 px-3 h-9 sm:h-10 text-sm sm:text-base outline-none'
+              <LocationAutocomplete
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                onBlur={() => syncToUrl({ search: searchTerm })}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    (e.target as HTMLElement).blur();
-                    syncToUrl({ search: searchTerm });
-                  }
+                onChange={(val) => {
+                  setSearchTerm(val);
+                  // Sync both search (for display) and location (for filtering)
+                  syncToUrl({ search: val, location: val });
                 }}
+                placeholder={t('ota.search.placeholder')}
               />
               {/* Glow indicator when searching */}
               <AnimatePresence>

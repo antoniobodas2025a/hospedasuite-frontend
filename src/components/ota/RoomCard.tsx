@@ -64,7 +64,7 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
   const isAlmostGone = isSearchingDates && availableCount <= 2 && availableCount > 0;
 
   // Preserve existing params (location, category, filters) and add room selection
-  let queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
+  const queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
   if (checkIn) queryParams.set('checkin', checkIn);
   if (checkOut) queryParams.set('checkout', checkOut);
   if (guests) queryParams.set('guests', guests);

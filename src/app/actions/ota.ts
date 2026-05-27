@@ -2,6 +2,65 @@
 import type { Room } from '@/types';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+export interface LocationSuggestion {
+  city: string;
+  hotelCount: number;
+}
+
+/**
+ * Search locations (cities) with hotel counts for autocomplete.
+ * Returns distinct cities matching the query, sorted by hotel count.
+ */
+export async function searchLocationsAction(query: string): Promise<{ success: boolean; data: LocationSuggestion[]; error?: string }> {
+  try {
+    if (!query || query.length < 2) {
+      return { success: true, data: [] };
+    }
+
+    // Fetch all active hotels with their city
+    const { data, error } = await supabaseAdmin
+      .from('hotels')
+      .select('city, location')
+      .eq('status', 'active')
+      .not('city', 'is', null);
+
+    if (error) {
+      console.error('[LOCATIONS] Error fetching cities:', error.message);
+      return { success: false, data: [], error: error.message };
+    }
+
+    // Group by city, count hotels, filter by query
+    const cityMap = new Map<string, number>();
+    for (const hotel of data || []) {
+      const city = (hotel.city || '').trim();
+      if (!city) continue;
+      cityMap.set(city, (cityMap.get(city) || 0) + 1);
+    }
+
+    // Filter by query match (city or location)
+    const lowerQuery = query.toLowerCase();
+    const results: LocationSuggestion[] = [];
+
+    for (const [city, count] of cityMap.entries()) {
+      const lowerCity = city.toLowerCase();
+      if (lowerCity.includes(lowerQuery)) {
+        results.push({ city, hotelCount: count });
+      }
+    }
+
+    // Sort by hotel count (descending), then alphabetically
+    results.sort((a, b) => b.hotelCount - a.hotelCount || a.city.localeCompare(b.city));
+
+    // Limit to top 8 suggestions
+    return { success: true, data: results.slice(0, 8) };
+
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : 'Error desconocido';
+    console.error('[LOCATIONS] Failed to search locations:', message);
+    return { success: false, data: [], error: message };
+  }
+}
+
 export async function fetchOTAHotelsAction(
   page: number = 0, 
   limit: number = 24, 
