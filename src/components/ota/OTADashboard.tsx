@@ -53,7 +53,10 @@ export default function OTADashboard({
   // Initialize from URL params (survives refresh, back navigation, shared links)
   const urlCategory = searchParams.get('category') || 'all';
   const urlSearch = searchParams.get('search') || '';
-  const locationParam = searchParams.get('location') || '';
+  const urlLocation = searchParams.get('location') || '';
+  const urlCheckin = searchParams.get('checkin') || '';
+  const urlCheckout = searchParams.get('checkout') || '';
+  const urlGuests = searchParams.get('guests') ? Number(searchParams.get('guests')) : undefined;
 
   const [hotels, setHotels] = useState(initialHotels);
   const [page, setPage] = useState(0);
@@ -65,13 +68,7 @@ export default function OTADashboard({
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
 
-  // Sync category and searchTerm to URL (debounced for search, immediate for category)
-  useEffect(() => {
-    if (isInitialized.current) return;
-    isInitialized.current = true;
-    // Skip initial sync — URL is already correct on mount
-  }, []);
-
+  // Sync category, searchTerm, and location to URL
   const syncToUrl = useCallback((updates: { category?: string; search?: string; location?: string }) => {
     const params = new URLSearchParams(searchParams.toString());
     if (updates.category !== undefined) {
@@ -91,14 +88,14 @@ export default function OTADashboard({
     router.replace(url, { scroll: false });
   }, [searchParams, pathname, router]);
 
-  // Debounced search effect
+  // Debounced search effect — now includes date/guest filters
   useEffect(() => {
     let isMounted = true;
 
     const delayDebounceFn = setTimeout(async () => {
       setIsSearching(true);
 
-      const response = await fetchOTAHotelsAction(0, 24, activeCategory, searchTerm, locationParam);
+      const response = await fetchOTAHotelsAction(0, 24, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests);
 
       if (isMounted) {
         if (response.success) {
@@ -114,7 +111,7 @@ export default function OTADashboard({
       isMounted = false;
       clearTimeout(delayDebounceFn);
     };
-  }, [searchTerm, activeCategory, locationParam]);
+  }, [searchTerm, activeCategory, urlLocation, urlCheckin, urlCheckout, urlGuests]);
 
   // Scroll handler: hide header on scroll down, show on scroll up
   useEffect(() => {
@@ -146,8 +143,7 @@ export default function OTADashboard({
     setIsLoadingMore(true);
 
     const nextPage = page + 1;
-    // FIX: pass locationParam to preserve location filter on pagination
-    const response = await fetchOTAHotelsAction(nextPage, 24, activeCategory, searchTerm, locationParam);
+    const response = await fetchOTAHotelsAction(nextPage, 24, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests);
 
     if (response.success) {
       setHotels((prev) => [...prev, ...response.data]);

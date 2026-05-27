@@ -66,7 +66,10 @@ export async function fetchOTAHotelsAction(
   limit: number = 24, 
   category: string = 'all', 
   search: string = '',
-  location: string = ''
+  location: string = '',
+  checkin?: string,
+  checkout?: string,
+  guests?: number
 ) {
   try {
     
@@ -88,6 +91,11 @@ export async function fetchOTAHotelsAction(
 
     if (location) {
       query = query.or(`city.ilike.%${location}%,location.ilike.%${location}%,address.ilike.%${location}%`);
+    }
+
+    // Filter by guest capacity if guests specified
+    if (guests && guests > 0) {
+      query = query.gte('max_capacity', guests);
     }
 
     const { data: hotels, error } = await query.range(from, to);
@@ -112,8 +120,37 @@ export async function fetchOTAHotelsAction(
       };
     }) || [];
 
-    const hasMore = hotels ? hotels.length === limit : false;
-    return { success: true, data: otaHotels, hasMore };
+    // If dates are specified, filter hotels that have available rooms
+    let finalHotels = otaHotels;
+    if (checkin && checkout) {
+      const safeCheckIn = checkin.split('T')[0];
+      const safeCheckOut = checkout.split('T')[0];
+
+      // Check availability for each hotel
+      const availabilityChecks = finalHotels.map(async (hotel: any) => {
+        const { data: availableRooms } = await supabaseAdmin.rpc('get_available_rooms', {
+          p_hotel_id: hotel.id,
+          p_check_in: safeCheckIn,
+          p_check_out: safeCheckOut
+        });
+
+        // Filter by guest capacity if specified
+        const filteredRooms = (availableRooms || []).filter((r: any) => {
+          if (guests && guests > 0) {
+            return Number(r.capacity ?? 0) >= guests;
+          }
+          return true;
+        });
+
+        return filteredRooms.length > 0 ? hotel : null;
+      });
+
+      const availabilityResults = await Promise.all(availabilityChecks);
+      finalHotels = availabilityResults.filter(Boolean);
+    }
+
+    const hasMore = finalHotels.length === limit;
+    return { success: true, data: finalHotels, hasMore };
     
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Error desconocido en OTA';

@@ -10,7 +10,10 @@
       "highlight": "seguro"
     },
     "search": {
-      "placeholder": "A donde quieres escapar hoy?",
+      "placeholder": "¿A dónde quieres escapar hoy?",
+      "destination": "Destino",
+      "checkin": "Llegada",
+      "checkout": "Salida",
       "button": "Buscar",
       "arrival": "Llegada",
       "departure": "Salida",

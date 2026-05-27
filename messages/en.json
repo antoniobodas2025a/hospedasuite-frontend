@@ -11,6 +11,9 @@
     },
     "search": {
       "placeholder": "Where do you want to escape to?",
+      "destination": "Destination",
+      "checkin": "Check-in",
+      "checkout": "Check-out",
       "button": "Search",
       "arrival": "Arrival",
       "departure": "Departure",
