@@ -192,41 +192,19 @@ export async function fetchOTAHotelsAction(
       throw new Error(error.message);
     }
 
-    // DEBUG: Log what we got from Supabase
-    console.log(`[OTA DEBUG] Location filter: "${location}"`);
-    console.log(`[OTA DEBUG] Total hotels from Supabase (before filter): ${allHotels?.length || 0}`);
-    if (allHotels && allHotels.length > 0) {
-      console.log(`[OTA DEBUG] Sample hotel cities:`, allHotels.slice(0, 3).map((h: any) => ({
-        name: h.name,
-        city: h.city,
-        location: h.location,
-        address: h.address,
-        rooms: h.rooms?.length || 0
-      })));
-    }
-
     const normalizedLocation = normalizeForSearch(location);
-    console.log(`[OTA DEBUG] Normalized search query: "${normalizedLocation}"`);
     const filteredHotels = (allHotels || []).filter((h: any) => {
       const city = normalizeForSearch(h.city || '');
       const loc = normalizeForSearch(h.location || '');
       const addr = normalizeForSearch(h.address || '');
-      const matches = city.includes(normalizedLocation) ||
-                      loc.includes(normalizedLocation) ||
-                      addr.includes(normalizedLocation);
-      if (matches) {
-        console.log(`[OTA DEBUG] MATCH: "${h.name}" - city="${h.city}" location="${h.location}" address="${h.address}"`);
-      }
-      return matches;
+      return city.includes(normalizedLocation) ||
+             loc.includes(normalizedLocation) ||
+             addr.includes(normalizedLocation);
     });
-
-    console.log(`[OTA DEBUG] Hotels after location filter: ${filteredHotels.length}`);
 
     // Apply pagination after filtering
     const pagedHotels = filteredHotels.slice(from, to + 1);
     const hasMoreFiltered = filteredHotels.length > to + 1;
-
-    console.log(`[OTA DEBUG] Hotels after pagination: ${pagedHotels.length}`);
 
     const otaHotels = pagedHotels.map((h: any) => {
       const roomPrices = h.rooms?.map((r: { price: number }) => r.price) || [];
