@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { MapPin, ExternalLink, Loader2 } from 'lucide-react';
 import { motion } from 'framer-motion';
 import { springSnappy } from '@/lib/mac2026/spring';
@@ -20,31 +20,13 @@ interface HotelMapViewProps {
 /**
  * HotelMapView — Simple map view showing hotel locations.
  *
- * Uses Google Maps embed with markers for each hotel.
+ * Uses free Google Maps embed (no API key required).
  * Falls back to a list view if map fails to load.
  */
 export default function HotelMapView({ hotels, centerLocation }: HotelMapViewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [selectedHotel, setSelectedHotel] = useState<string | null>(null);
-
-  // Build Google Maps embed URL
-  const mapUrl = (() => {
-    if (hotels.length === 0) return null;
-
-    // Use center location or first hotel location
-    const center = centerLocation || hotels[0]?.location || '';
-
-    // Build markers for each hotel
-    const markers = hotels.slice(0, 10).map((h, i) => {
-      const loc = encodeURIComponent(h.location || h.address || '');
-      const color = selectedHotel === h.id ? 'red' : 'blue';
-      return `markers=color:${color}%7Clabel:${i + 1}%7C${loc}`;
-    }).join('&');
-
-    const centerEncoded = encodeURIComponent(center);
-    return `https://www.google.com/maps/embed/v1/view?key=${process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || ''}&center=${centerEncoded}&zoom=12&maptype=roadmap&${markers}`;
-  })();
 
   if (hotels.length === 0) {
     return (
@@ -55,7 +37,12 @@ export default function HotelMapView({ hotels, centerLocation }: HotelMapViewPro
     );
   }
 
-  if (hasError || !mapUrl) {
+  // Free Google Maps embed URL (no API key required)
+  const center = centerLocation || hotels[0]?.location || '';
+  const centerEncoded = encodeURIComponent(center);
+  const mapUrl = `https://maps.google.com/maps?q=${centerEncoded}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
+
+  if (hasError) {
     // Fallback: list view
     return (
       <div className="space-y-3">
@@ -90,7 +77,7 @@ export default function HotelMapView({ hotels, centerLocation }: HotelMapViewPro
         </div>
       )}
 
-      {/* Map iframe */}
+      {/* Map iframe — free embed, no API key needed */}
       <iframe
         src={mapUrl}
         className="w-full h-full border-0"
@@ -130,7 +117,7 @@ export default function HotelMapView({ hotels, centerLocation }: HotelMapViewPro
   );
 }
 
-// Helper for className merging (inline to avoid extra import)
+// Helper for className merging
 function cn(...classes: (string | false | undefined | null)[]) {
   return classes.filter(Boolean).join(' ');
 }
