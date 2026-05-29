@@ -17,6 +17,10 @@ export const RELEVANT_PARAMS = [
   'max_price',
   'min_beds',
   'amenities',
+  // Map state params (PRD-006: Map-First Discovery)
+  'z',     // zoom
+  'lat',   // center latitude
+  'lng',   // center longitude
 ] as const;
 
 /**
