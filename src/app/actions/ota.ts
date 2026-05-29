@@ -1,7 +1,7 @@
 'use server';
 import type { Room } from '@/types';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { rankHotels } from '@/lib/hotel-ranking';
+import { rankHotels, applyDiversity } from '@/lib/hotel-ranking';
 
 /**
  * Normalize string for search: remove accents, lowercase, trim.
@@ -253,7 +253,10 @@ export async function fetchOTAHotelsAction(
     const enrichedMap = new Map(otaHotels.map((h: any) => [h.id, h]));
     let finalHotels: any[] = ranked.map(r => enrichedMap.get(r.id)).filter(Boolean);
 
-    // 7. Paginate from the fully processed result
+    // 7. Diversity constraint — round-robin by category (max 2 of same type in a row)
+    finalHotels = applyDiversity(finalHotels, 2);
+
+    // 8. Paginate from the fully processed result
     const pagedHotels = finalHotels.slice(from, to + 1);
     const hasMore = finalHotels.length > to + 1;
 

@@ -158,3 +158,76 @@ function computeMedian(values: number[]): number {
     ? sorted[mid]
     : (sorted[mid - 1] + sorted[mid]) / 2;
 }
+
+// ── Diversity Constraint ──────────────────────────────────────────────────────
+
+/**
+ * applyDiversity — Round-robin interleaving by category/type.
+ *
+ * Ensures no more than `maxPerCategory` hotels of the same type appear
+ * consecutively in the result list. Preserves relative ranking within each
+ * category queue. When the constraint can no longer be satisfied, remaining
+ * hotels are flushed in their original order.
+ *
+ * @param hotels  Ranked hotels (highest score first).
+ * @param maxPerCategory  Max consecutive hotels of same category (default 2).
+ * @returns Diversity-ordered array of same length.
+ */
+export function applyDiversity<T extends { type?: string; category?: string }>(
+  hotels: T[],
+  maxPerCategory: number = 2,
+): T[] {
+  if (hotels.length === 0) return [];
+
+  const result: T[] = [];
+  const categoryQueues = new Map<string, T[]>();
+
+  // Group by category/type, preserving rank order within each queue
+  for (const h of hotels) {
+    const key = h.type || h.category || 'other';
+    if (!categoryQueues.has(key)) {
+      categoryQueues.set(key, []);
+    }
+    categoryQueues.get(key)!.push(h);
+  }
+
+  const categories = Array.from(categoryQueues.keys());
+  let lastCategory = '';
+  let consecutiveCount = 0;
+
+  while (result.length < hotels.length) {
+    let added = false;
+
+    for (const cat of categories) {
+      const queue = categoryQueues.get(cat);
+      if (!queue || queue.length === 0) continue;
+
+      // Diversity check: no more than maxPerCategory of same category in a row
+      if (cat === lastCategory && consecutiveCount >= maxPerCategory) continue;
+
+      const item = queue.shift()!;
+      result.push(item);
+
+      if (cat === lastCategory) {
+        consecutiveCount++;
+      } else {
+        lastCategory = cat;
+        consecutiveCount = 1;
+      }
+      added = true;
+    }
+
+    if (!added) {
+      // Can't satisfy diversity anymore — flush remaining hotels
+      for (const cat of categories) {
+        const queue = categoryQueues.get(cat);
+        while (queue && queue.length > 0) {
+          result.push(queue.shift()!);
+        }
+      }
+      break;
+    }
+  }
+
+  return result;
+}
