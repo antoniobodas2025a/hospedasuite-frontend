@@ -389,6 +389,28 @@ export default function OTADashboard({
                   enableSearchOnMove={true}
                 />
 
+                {/* Mobile: Back to list button (top-left) */}
+                <motion.button
+                  initial={{ opacity: 0, x: -8 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  onClick={() => setShowMap(false)}
+                  className="sm:hidden absolute top-3 left-3 z-[100] flex items-center gap-1.5 px-3 py-2 bg-card/90 backdrop-blur-sm text-xs font-semibold text-foreground rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm active:scale-[0.95] transition-transform"
+                >
+                  <ChevronDown size={14} className="rotate-90" />
+                  Lista
+                </motion.button>
+
+                {/* Mobile: Floating search button (bottom-right) */}
+                <motion.button
+                  initial={{ opacity: 0, scale: 0.8 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  whileTap={{ scale: 0.9 }}
+                  onClick={() => setIsMobileSheetOpen(true)}
+                  className="sm:hidden absolute bottom-4 right-4 z-[100] flex items-center justify-center w-12 h-12 bg-brand-600 text-white rounded-[var(--radius-squircle-xl)] shadow-lg hover:bg-brand-700 transition-colors"
+                >
+                  <Search size={20} />
+                </motion.button>
+
                 {/* Bounds filter summary (Phase 2: PRD-004) */}
                 {boundsFilterResult && boundsFilterResult.visibleCount < boundsFilterResult.total - boundsFilterResult.unresolvableIds.size && (
                   <motion.div
@@ -561,12 +583,26 @@ export default function OTADashboard({
         )}
       </main>
 
-      {/* Mobile Search Sheet */}
+      {/* Mobile Search Sheet (Phase 3: PRD-004 - works over map view) */}
       <MobileSearchSheet
         isOpen={isMobileSheetOpen}
         onClose={() => setIsMobileSheetOpen(false)}
         onSearch={(filters) => {
+          // Update search term (triggers hotel fetch + map marker update)
           setSearchTerm(filters.location);
+          // Update URL location param
+          syncToUrl({ location: filters.location });
+          // Update dates/guests URL params
+          const params = new URLSearchParams(searchParams.toString());
+          if (filters.checkin) params.set('checkin', filters.checkin);
+          else params.delete('checkin');
+          if (filters.checkout) params.set('checkout', filters.checkout);
+          else params.delete('checkout');
+          if (filters.guests > 1) params.set('guests', filters.guests.toString());
+          else params.delete('guests');
+          const query = params.toString();
+          const url = query ? `${pathname}?${query}` : pathname;
+          router.replace(url, { scroll: false });
         }}
         isLoading={isSearching}
       />
