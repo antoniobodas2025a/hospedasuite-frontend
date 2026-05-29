@@ -21,6 +21,7 @@ interface Hotel {
 interface MarkerLifecycleManagerProps {
   hotels: Hotel[];
   selectedHotelId?: string;
+  onMarkerClick?: (hotelId: string) => void;
   onGeocodingProgress?: (current: number, total: number) => void;
   onMarkersReady?: () => void;
 }
@@ -55,6 +56,7 @@ function createHotelIcon(price: number, isSelected: boolean): L.DivIcon {
 export default function MarkerLifecycleManager({
   hotels,
   selectedHotelId = '',
+  onMarkerClick,
   onGeocodingProgress,
   onMarkersReady,
 }: MarkerLifecycleManagerProps) {
@@ -135,6 +137,11 @@ export default function MarkerLifecycleManager({
         }) as L.Marker & { geoResult?: GeoResult };
 
         marker.geoResult = result;
+
+        // Sprint 2: Click marker → scroll to card
+        if (onMarkerClick) {
+          marker.on('click', () => onMarkerClick(hotel.id));
+        }
 
         // Add popup
         marker.bindPopup(`

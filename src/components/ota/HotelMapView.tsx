@@ -24,6 +24,7 @@ interface HotelMapViewProps {
   hotels: Hotel[];
   centerLocation?: string;
   selectedHotelId?: string;
+  onMarkerClick?: (hotelId: string) => void;
   onMapBoundsChange?: (bounds: L.LatLngBounds, center: L.LatLng, zoom: number) => void;
   onSearchAreaChange?: (areaName: string) => void;
   enableSearchOnMove?: boolean;
@@ -39,6 +40,7 @@ export default function HotelMapView({
   hotels,
   centerLocation,
   selectedHotelId = '',
+  onMarkerClick,
   onMapBoundsChange,
   onSearchAreaChange,
   enableSearchOnMove = false,
@@ -87,6 +89,7 @@ export default function HotelMapView({
         <MarkerLifecycleManager
           hotels={hotels}
           selectedHotelId={selectedHotelId}
+          onMarkerClick={onMarkerClick}
           onGeocodingProgress={(current, total) => setGeocodingProgress({ current, total })}
           onMarkersReady={() => setIsLoading(false)}
         />

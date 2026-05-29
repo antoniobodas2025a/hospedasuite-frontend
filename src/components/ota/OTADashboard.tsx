@@ -21,6 +21,7 @@ import {
   ArrowUpDown,
 } from 'lucide-react';
 import HotelCard from './HotelCard';
+import FeaturedCard from './FeaturedCard';
 import LanguageSwitcher from './LanguageSwitcher';
 import SearchBarUnified from './SearchBarUnified';
 import MobileSearchSheet from './MobileSearchSheet';
@@ -34,6 +35,7 @@ import { preserveSearchParams } from '@/lib/handoff-url';
 import { searchCache } from '@/lib/search-cache';
 import L from 'leaflet';
 import { filterHotelsByBounds, getBoundsFilterSummary, BoundsFilterResult } from '@/lib/bounds-filter';
+import { getCachedCoords } from '@/lib/geo-cache';
 
 const CATEGORIES = [
   { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal, popular: false },
@@ -200,6 +202,49 @@ export default function OTADashboard({
 
   const visibleHotels = sortedHotels.slice(0, visibleCount);
   const hasMoreHotels = sortedHotels.length > visibleCount;
+
+  // Sprint 2: Proximity context — calculate distance from city center
+  const cityCenterCoords = useMemo(() => {
+    if (!urlLocation) return null;
+    return getCachedCoords(urlLocation);
+  }, [urlLocation]);
+
+  const getDistanceFromCenter = useCallback((hotel: any): number | undefined => {
+    if (!cityCenterCoords) return undefined;
+    const hotelCoords = getCachedCoords(hotel.location);
+    if (!hotelCoords) return undefined;
+
+    // Haversine formula
+    const R = 6371; // Earth's radius in km
+    const dLat = (hotelCoords.lat - cityCenterCoords.lat) * Math.PI / 180;
+    const dLng = (hotelCoords.lng - cityCenterCoords.lng) * Math.PI / 180;
+    const a =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos(cityCenterCoords.lat * Math.PI / 180) *
+      Math.cos(hotelCoords.lat * Math.PI / 180) *
+      Math.sin(dLng / 2) * Math.sin(dLng / 2);
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+    return R * c;
+  }, [cityCenterCoords]);
+
+  // Sprint 2: Featured card — pick the highest-rated hotel
+  const featuredHotel = useMemo(() => {
+    if (sortedHotels.length === 0) return null;
+    return sortedHotels.reduce((best: any, h: any) =>
+      (h.rating || 0) > (best.rating || 0) ? h : best
+    , sortedHotels[0]);
+  }, [sortedHotels]);
+
+  // Sprint 2: Click marker → scroll to card
+  const handleMarkerClick = useCallback((hotelId: string) => {
+    const element = document.getElementById(`hotel-card-${hotelId}`);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      setSelectedHotelId(hotelId);
+      // Clear highlight after 2s
+      setTimeout(() => setSelectedHotelId(''), 2000);
+    }
+  }, []);
 
   // Debounced search effect with stale-while-revalidate cache
   useEffect(() => {
@@ -495,6 +540,7 @@ export default function OTADashboard({
                   }))}
                   centerLocation={urlLocation || undefined}
                   selectedHotelId={selectedHotelId}
+                  onMarkerClick={handleMarkerClick}
                   onMapBoundsChange={handleMapBoundsChange}
                   onSearchAreaChange={handleSearchAreaChange}
                   enableSearchOnMove={true}
@@ -649,6 +695,11 @@ export default function OTADashboard({
           </div>
         ) : visibleHotels.length > 0 ? (
           <>
+            {/* Sprint 2: Featured card */}
+            {featuredHotel && sortBy === 'recommended' && (
+              <FeaturedCard hotel={featuredHotel} />
+            )}
+
             {/* Sorting controls — Sprint 1: PRD-005 */}
             <div className='flex items-center justify-between mb-4'>
               <div className='relative'>
@@ -674,13 +725,15 @@ export default function OTADashboard({
             <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8'>
               <AnimatePresence mode='popLayout'>
                 {visibleHotels.map((hotel: any) => (
-                  <HotelCard
-                    key={hotel.id}
-                    hotel={hotel}
-                    href={preserveSearchParams(searchParams, `/hotel/${hotel.slug}`)}
-                    isSelected={hotel.id === selectedHotelId}
-                    onSelect={handleHotelSelect}
-                  />
+                  <div key={hotel.id} id={`hotel-card-${hotel.id}`}>
+                    <HotelCard
+                      hotel={hotel}
+                      href={preserveSearchParams(searchParams, `/hotel/${hotel.slug}`)}
+                      isSelected={hotel.id === selectedHotelId}
+                      onSelect={handleHotelSelect}
+                      distanceFromCenter={getDistanceFromCenter(hotel)}
+                    />
+                  </div>
                 ))}
               </AnimatePresence>
             </div>

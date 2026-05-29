@@ -26,11 +26,13 @@ export default function HotelCard({
   href,
   isSelected = false,
   onSelect,
+  distanceFromCenter,
 }: {
   hotel: Hotel;
   href?: string;
   isSelected?: boolean;
   onSelect?: (hotelId: string) => void;
+  distanceFromCenter?: number; // km from city center
 }) {
   const router = useRouter();
   const t = useTranslations();
@@ -88,6 +90,9 @@ export default function HotelCard({
                 className='text-secondary'
               />
               {displayLocation}
+              {distanceFromCenter !== undefined && distanceFromCenter > 0 && (
+                <span className='text-white/50 ml-1'>· {distanceFromCenter.toFixed(1)} km del centro</span>
+              )}
             </div>
             {hotel.description && (
               <p className='mt-2 text-xs text-white/70 leading-snug line-clamp-2'>
