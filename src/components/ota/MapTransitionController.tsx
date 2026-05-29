@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { geocodeLocation } from '@/lib/geocoding';
+import { useSharedMoveGuard } from '@/lib/use-shared-move-guard';
 
 interface Hotel {
   id: string;
@@ -36,6 +37,7 @@ export default function MapTransitionController({
   transitionDuration = 1.2,
 }: MapTransitionControllerProps) {
   const map = useMap();
+  const { setInternalMove } = useSharedMoveGuard();
   const lastHotelIdsRef = useRef<Set<string>>(new Set());
   const isInitialMount = useRef(true);
 
@@ -49,6 +51,7 @@ export default function MapTransitionController({
       const result = await geocodeLocation(centerLocation);
       if (cancelled || !result) return;
 
+      setInternalMove();
       map.flyTo([result.lat, result.lng], 12, {
         duration: transitionDuration,
         easeLinearity: 0.25,
@@ -60,7 +63,7 @@ export default function MapTransitionController({
     return () => {
       cancelled = true;
     };
-  }, [centerLocation, map, transitionDuration]);
+  }, [centerLocation, map, transitionDuration, setInternalMove]);
 
   // Transition 3: flyTo selected hotel marker (Idea #2: hover hotel → zoom to marker)
   useEffect(() => {
@@ -78,6 +81,7 @@ export default function MapTransitionController({
       const result = await geocodeLocation(query);
       if (cancelled || !result) return;
 
+      setInternalMove();
       map.flyTo([result.lat, result.lng], 14, {
         duration: 0.8,
         easeLinearity: 0.25,
@@ -89,7 +93,7 @@ export default function MapTransitionController({
     return () => {
       cancelled = true;
     };
-  }, [selectedHotelId, hotels, map]);
+  }, [selectedHotelId, hotels, map, setInternalMove]);
 
   // Transition 2: fitBounds when hotels change
   useEffect(() => {
@@ -117,13 +121,6 @@ export default function MapTransitionController({
 
     // Wait a tick for markers to render, then fitBounds
     const timeoutId = setTimeout(() => {
-      const allLayers = map.eachLayer((layer) => {
-        if (layer instanceof L.Marker) {
-          return layer;
-        }
-        return null;
-      });
-
       const markers: L.Marker[] = [];
       map.eachLayer((layer) => {
         if (layer instanceof L.Marker) {
@@ -133,6 +130,7 @@ export default function MapTransitionController({
 
       if (markers.length === 0) return;
 
+      setInternalMove();
       const group = L.featureGroup(markers);
       map.flyToBounds(group.getBounds(), {
         padding: [50, 50],
@@ -143,7 +141,7 @@ export default function MapTransitionController({
     }, 300);
 
     return () => clearTimeout(timeoutId);
-  }, [hotels, map, transitionDuration]);
+  }, [hotels, map, transitionDuration, setInternalMove]);
 
   return null;
 }
