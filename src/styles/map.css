@@ -1,0 +1,191 @@
+/* Leaflet Map Overrides for HospedaSuite Mac 2026 Theme */
+
+/* Reset Leaflet container styles to match our rounded corners */
+.leaflet-container {
+  background: var(--bg-muted);
+  font-family: inherit;
+}
+
+/* Hide Leaflet attribution on small screens (optional, keep on desktop) */
+.leaflet-control-attribution {
+  font-size: 9px;
+  background: rgba(255, 255, 255, 0.8) !important;
+  backdrop-filter: blur(4px);
+  border-radius: var(--radius-squircle-sm) !important;
+  padding: 2px 6px !important;
+}
+
+/* Custom Zoom Controls */
+.leaflet-control-zoom {
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.leaflet-control-zoom a {
+  background: var(--bg-background) !important;
+  color: var(--text-foreground) !important;
+  border: 1px solid var(--border) !important;
+  border-radius: var(--radius-squircle-md) !important;
+  width: 32px !important;
+  height: 32px !important;
+  line-height: 32px !important;
+  font-size: 16px !important;
+  transition: background 0.2s;
+}
+
+.leaflet-control-zoom a:hover {
+  background: var(--bg-muted) !important;
+}
+
+/* Marker Popup Overrides */
+.leaflet-popup-content-wrapper {
+  background: var(--bg-card);
+  color: var(--text-foreground);
+  border-radius: var(--radius-squircle-xl) !important;
+  box-shadow: var(--shadow-xl);
+  border: 1px solid var(--border);
+  padding: 0;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.leaflet-popup-tip {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-md);
+}
+
+.leaflet-popup-close-button {
+  color: var(--text-muted-foreground) !important;
+  top: 8px !important;
+  right: 8px !important;
+  width: 24px !important;
+  height: 24px !important;
+  font-size: 20px !important;
+  z-index: 10;
+}
+
+.leaflet-popup-close-button:hover {
+  color: var(--text-foreground) !important;
+  background: var(--bg-muted);
+}
+
+/* Marker Icon Overrides */
+.hotel-marker-pin {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-squircle-lg);
+  padding: 4px 8px;
+  box-shadow: var(--shadow-md);
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-foreground);
+  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.hotel-marker-pin.selected {
+  background: var(--bg-brand-500);
+  color: white;
+  border-color: var(--bg-brand-600);
+}
+
+/* Cluster Icon Overrides */
+.cluster-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cluster-badge {
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  color: white;
+  box-shadow: var(--shadow-md);
+  border: 2px solid white;
+}
+
+.cluster-badge.sm {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+  background: var(--bg-brand-400);
+}
+
+.cluster-badge.md {
+  width: 40px;
+  height: 40px;
+  font-size: 14px;
+  background: var(--bg-brand-500);
+}
+
+.cluster-badge.lg {
+  width: 48px;
+  height: 48px;
+  font-size: 16px;
+  background: var(--bg-brand-600);
+}
+
+/* Popup Content Styles */
+.hotel-popup {
+  display: flex;
+  flex-direction: column;
+  max-width: 200px;
+}
+
+.popup-image {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border-bottom: 1px solid var(--border);
+}
+
+.popup-info {
+  padding: 8px;
+}
+
+.popup-name {
+  font-size: 13px;
+  font-weight: 700;
+  margin: 0 0 4px 0;
+  color: var(--text-foreground);
+}
+
+.popup-location {
+  font-size: 11px;
+  color: var(--text-muted-foreground);
+  margin: 0 0 6px 0;
+}
+
+.popup-price {
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-brand-600);
+  margin: 0 0 8px 0;
+}
+
+.popup-cta {
+  display: block;
+  text-align: center;
+  background: var(--bg-brand-500);
+  color: white;
+  padding: 6px;
+  border-radius: var(--radius-squircle-md);
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  transition: background 0.2s;
+}
+
+.popup-cta:hover {
+  background: var(--bg-brand-600);
+}

@@ -1,9 +1,24 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { MapContainer, TileLayer, useMap } from 'react-leaflet';
 import { MapPin, ExternalLink, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
-import { springSnappy } from '@/lib/mac2026/spring';
+import 'leaflet/dist/leaflet.css';
+import '@/styles/map.css';
+
+// Fix Leaflet default icon path issues in Next.js
+import L from 'leaflet';
+import icon from 'leaflet/dist/images/marker-icon.png';
+import iconShadow from 'leaflet/dist/images/marker-shadow.png';
+
+const DefaultIcon = L.icon({
+  iconUrl: icon.src,
+  shadowUrl: iconShadow.src,
+  iconSize: [25, 41],
+  iconAnchor: [12, 41],
+});
+
+L.Marker.prototype.options.icon = DefaultIcon;
 
 interface HotelMapViewProps {
   hotels: Array<{
@@ -17,16 +32,29 @@ interface HotelMapViewProps {
   centerLocation?: string;
 }
 
+// Component to handle map bounds fitting
+function FitBounds({ hotels }: { hotels: HotelMapViewProps['hotels'] }) {
+  const map = useMap();
+
+  useEffect(() => {
+    if (hotels.length > 0 && map) {
+      // For now, we just center on a default location.
+      // In Phase 2, we'll geocode and fit bounds properly.
+      map.setView([4.6097, -74.0817], 6); // Center on Colombia
+    }
+  }, [hotels, map]);
+
+  return null;
+}
+
 /**
- * HotelMapView — Simple map view showing hotel locations.
+ * HotelMapView — Interactive map using Leaflet + OpenStreetMap.
  *
- * Uses free Google Maps embed (no API key required).
- * Falls back to a list view if map fails to load.
+ * Phase 1: Basic map with tiles.
+ * Phase 2+: Geocoding, markers, clustering, popups.
  */
 export default function HotelMapView({ hotels, centerLocation }: HotelMapViewProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [hasError, setHasError] = useState(false);
-  const [selectedHotel, setSelectedHotel] = useState<string | null>(null);
 
   if (hotels.length === 0) {
     return (
@@ -37,87 +65,53 @@ export default function HotelMapView({ hotels, centerLocation }: HotelMapViewPro
     );
   }
 
-  // Free Google Maps embed URL (no API key required)
-  const center = centerLocation || hotels[0]?.location || '';
-  const centerEncoded = encodeURIComponent(center);
-  const mapUrl = `https://maps.google.com/maps?q=${centerEncoded}&t=&z=12&ie=UTF8&iwloc=&output=embed`;
-
-  if (hasError) {
-    // Fallback: list view
-    return (
-      <div className="space-y-3">
-        <h3 className="text-sm font-bold text-foreground">Hoteles encontrados</h3>
-        <div className="space-y-2">
-          {hotels.map((hotel) => (
-            <a
-              key={hotel.id}
-              href={`/hotel/${hotel.slug}`}
-              className="flex items-center gap-3 p-3 bg-muted/30 rounded-[var(--radius-squircle-lg)] border border-border/30 hover:bg-muted/50 transition-colors"
-            >
-              <MapPin size={16} className="text-brand-500 shrink-0" />
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-foreground truncate">{hotel.name}</p>
-                <p className="text-xs text-muted-foreground truncate">{hotel.location}</p>
-              </div>
-              <span className="text-xs font-bold text-secondary">${hotel.min_price.toLocaleString()}</span>
-              <ExternalLink size={14} className="text-muted-foreground shrink-0" />
-            </a>
-          ))}
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30">
+    <div className="relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30 shadow-sm">
       {/* Loading state */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-10">
+        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-[1000]">
           <Loader2 size={24} className="text-brand-500 animate-spin" />
         </div>
       )}
 
-      {/* Map iframe — free embed, no API key needed */}
-      <iframe
-        src={mapUrl}
-        className="w-full h-full border-0"
-        loading="lazy"
-        onLoad={() => setIsLoading(false)}
-        onError={() => {
-          setIsLoading(false);
-          setHasError(true);
-        }}
-        allowFullScreen
-        title="Mapa de hoteles"
-      />
+      {/* Map Container */}
+      <MapContainer
+        center={[4.6097, -74.0817]} // Default center (Bogotá)
+        zoom={6}
+        className="w-full h-full z-0"
+        zoomControl={false}
+        whenReady={() => setIsLoading(false)}
+      >
+        <TileLayer
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+        />
+        
+        {/* Zoom control repositioned */}
+        <FitBounds hotels={hotels} />
+      </MapContainer>
 
-      {/* Hotel list overlay (bottom) */}
-      <div className="absolute bottom-0 left-0 right-0 bg-background/90 backdrop-blur-sm border-t border-border/30 p-3">
-        <div className="flex items-center gap-2 overflow-x-auto">
-          {hotels.slice(0, 5).map((hotel, i) => (
-            <button
-              key={hotel.id}
-              onClick={() => setSelectedHotel(selectedHotel === hotel.id ? null : hotel.id)}
-              className={cn(
-                'flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-lg)] text-xs font-medium whitespace-nowrap transition-colors',
-                selectedHotel === hotel.id
-                  ? 'bg-brand-500 text-primary-foreground'
-                  : 'bg-muted/50 text-foreground hover:bg-muted'
-              )}
-            >
-              <span className="size-5 rounded-full bg-white/20 flex items-center justify-center text-[10px] font-bold">
-                {i + 1}
-              </span>
-              <span className="truncate max-w-[120px]">{hotel.name}</span>
-            </button>
-          ))}
-        </div>
+      {/* Zoom Controls (Custom Position) */}
+      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
+        <button
+          onClick={() => {
+            // We'll add zoom controls logic later or use Leaflet's default
+          }}
+          className="size-8 bg-background rounded-[var(--radius-squircle-md)] shadow-md flex items-center justify-center text-foreground hover:bg-muted transition-colors"
+          aria-label="Zoom in"
+        >
+          +
+        </button>
+        <button
+          onClick={() => {
+            // Zoom out logic
+          }}
+          className="size-8 bg-background rounded-[var(--radius-squircle-md)] shadow-md flex items-center justify-center text-foreground hover:bg-muted transition-colors"
+          aria-label="Zoom out"
+        >
+          -
+        </button>
       </div>
     </div>
   );
-}
-
-// Helper for className merging
-function cn(...classes: (string | false | undefined | null)[]) {
-  return classes.filter(Boolean).join(' ');
 }
