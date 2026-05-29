@@ -38,6 +38,9 @@ import L from 'leaflet';
 import { filterHotelsByBounds, BoundsFilterResult } from '@/lib/bounds-filter';
 import { getCachedCoords } from '@/lib/geo-cache';
 import { deserializeMapParams, serializeMapParams } from '@/lib/map-url-state';
+import SearchSuggestions, { type SearchSuggestion } from './SearchSuggestions';
+import { fuzzySearch } from '@/lib/fuzzy-search';
+import { Globe } from 'lucide-react';
 
 const CATEGORIES = [
   { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal, popular: false },
@@ -49,6 +52,27 @@ const CATEGORIES = [
 
 const POPULAR_CATEGORIES = CATEGORIES.filter(c => c.popular);
 const OTHER_CATEGORIES = CATEGORIES.filter(c => !c.popular);
+
+// ── Fallback chain: static city lists for fuzzy typo detection ──────────────
+const FALLBACK_CITIES = [
+  'Bogotá', 'Medellín', 'Cartagena', 'Cali', 'Barranquilla',
+  'Santa Marta', 'San Andrés', 'Pereira', 'Manizales', 'Armenia',
+  'Bucaramanga', 'Villavicencio', 'Cúcuta', 'Ibagué', 'Neiva',
+  'Popayán', 'Pasto', 'Montería', 'Sincelejo', 'Valledupar',
+  'Guatapé', 'Jardín', 'Salento', 'Filandia', 'Villa de Leyva',
+  'Barichara', 'Palomino', 'Minca', 'Capurganá', 'Nuquí',
+];
+
+const POPULAR_DESTINATIONS = [
+  { city: 'Medellín', hotelCount: 45 },
+  { city: 'Cartagena', hotelCount: 38 },
+  { city: 'Bogotá', hotelCount: 32 },
+  { city: 'Santa Marta', hotelCount: 28 },
+  { city: 'San Andrés', hotelCount: 22 },
+  { city: 'Eje Cafetero', hotelCount: 20 },
+  { city: 'Guatapé', hotelCount: 15 },
+  { city: 'Villa de Leyva', hotelCount: 12 },
+];
 
 interface OTADashboardProps {
   initialHotels: any[];
@@ -136,6 +160,22 @@ export default function OTADashboard({
   const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'rating'>('recommended');
   const [visibleCount, setVisibleCount] = useState(6);
   const [searchStep, setSearchStep] = useState<'location' | 'full'>('location');
+
+  // ── PRD-008 Phase 3: Fallback Chain State ─────────────────────────────────
+  /** Current relaxation level (0=normal, 1-5=fallback cascade) */
+  const [fallbackLevel, setFallbackLevel] = useState(0);
+  /** User-facing message explaining the current fallback state */
+  const [fallbackMessage, setFallbackMessage] = useState('');
+  /** Search suggestions to display (typo corrections, alternatives) */
+  const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([]);
+  /** Results from relaxed fallback searches (shown instead of empty state) */
+  const [fallbackHotels, setFallbackHotels] = useState<any[]>([]);
+  /** Whether a fallback search is currently in-flight */
+  const [isFallbackSearching, setIsFallbackSearching] = useState(false);
+  /** Tracks whether the current param change was triggered by fallback */
+  const fallbackTriggeredRef = useRef(false);
+  /** Total result count from fallback search (for "X resultados" display) */
+  const [fallbackResultCount, setFallbackResultCount] = useState(0);
 
   // Sync category, searchTerm, and location to URL
   const syncToUrl = useCallback((updates: { category?: string; search?: string; location?: string }) => {
@@ -257,8 +297,13 @@ export default function OTADashboard({
   }, []);
 
   // Sprint 1: Sorting logic
+  // PRD-008: Use effective hotels (primary results, or fallback results when primary is empty)
+  const effectiveHotels = useMemo(() => {
+    return hotels.length > 0 ? hotels : fallbackHotels;
+  }, [hotels, fallbackHotels]);
+
   const sortedHotels = useMemo(() => {
-    const sorted = [...hotels];
+    const sorted = [...effectiveHotels];
     switch (sortBy) {
       case 'price-asc':
         return sorted.sort((a, b) => (a.min_price || 0) - (b.min_price || 0));
@@ -270,7 +315,7 @@ export default function OTADashboard({
       default:
         return sorted; // Default order (server ranking)
     }
-  }, [hotels, sortBy]);
+  }, [effectiveHotels, sortBy]);
 
   const visibleHotels = sortedHotels.slice(0, visibleCount);
   const hasMoreHotels = sortedHotels.length > visibleCount;
@@ -395,6 +440,162 @@ export default function OTADashboard({
       clearTimeout(delayDebounceFn);
     };
   }, [searchTerm, activeCategory, urlLocation, urlCheckin, urlCheckout, urlGuests]);
+
+  // ── PRD-008 Phase 3: Reset fallback when user manually changes search ──────
+  // Detects genuine user-driven param changes (not fallback-triggered re-fetches)
+  useEffect(() => {
+    if (!fallbackTriggeredRef.current) {
+      setFallbackLevel(0);
+      setFallbackMessage('');
+      setFallbackHotels([]);
+      setSuggestions([]);
+      setFallbackResultCount(0);
+    }
+    fallbackTriggeredRef.current = false;
+  }, [searchTerm, activeCategory, urlLocation, urlCheckin, urlCheckout, urlGuests]);
+
+  // ── PRD-008 Phase 3: Fallback Cascade Effect ──────────────────────────────
+  // 5-level relaxation chain when primary search returns zero results
+  useEffect(() => {
+    // Guard: don't run during search or when results exist
+    if (isSearching || isFallbackSearching) return;
+    if (hotels.length > 0 || fallbackHotels.length > 0 || fallbackLevel >= 5) return;
+
+    // Don't cascade if no filters are active to relax
+    const hasCategory = activeCategory !== 'all';
+    const hasLocation = !!urlLocation;
+    if (fallbackLevel >= 2 && !hasCategory && !hasLocation) return;
+
+    const runFallback = async () => {
+      const nextLevel = fallbackLevel + 1;
+      fallbackTriggeredRef.current = true;
+      setIsFallbackSearching(true);
+
+      let message = '';
+      let newSuggestions: SearchSuggestion[] = [];
+      let newHotels: any[] = [];
+      let resultCount = 0;
+
+      switch (nextLevel) {
+        // ── Level 1: Fuzzy typo detection on location ─────────────────────
+        case 1: {
+          if (!urlLocation) break;
+          const citiesList = FALLBACK_CITIES.map(c => ({ city: c }));
+          const matches = fuzzySearch(citiesList, urlLocation, ['city'], 5);
+          const goodMatches = matches.filter(m => m.score < 0.3);
+
+          if (goodMatches.length > 0) {
+            const best = goodMatches[0].item.city;
+            newSuggestions = [{
+              text: best,
+              subtitle: `Corrección de "${urlLocation}"`,
+              action: best,
+              icon: 'city',
+            }];
+            message = `¿Querías decir "${best}"?`;
+          }
+          break;
+        }
+
+        // ── Level 2: Remove category filter ───────────────────────────────
+        case 2: {
+          if (activeCategory === 'all') break;
+          const response = await fetchOTAHotelsAction(
+            0, 24, 'all', searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests,
+          );
+          if (response.success && response.data.length > 0) {
+            newHotels = response.data;
+            resultCount = response.data.length;
+            message = `Mostrando ${resultCount} resultados de todas las categorías`;
+          }
+          break;
+        }
+
+        // ── Level 3: Remove location filter ───────────────────────────────
+        case 3: {
+          if (!urlLocation) break;
+          const response = await fetchOTAHotelsAction(
+            0, 24, activeCategory, searchTerm, '', urlCheckin, urlCheckout, urlGuests,
+          );
+          if (response.success && response.data.length > 0) {
+            newHotels = response.data;
+            resultCount = response.data.length;
+            message = `Mostrando ${resultCount} resultados en otras zonas`;
+          }
+          break;
+        }
+
+        // ── Level 4: Remove both filters + show popular alternatives ──────
+        case 4: {
+          const response = await fetchOTAHotelsAction(
+            0, 24, 'all', searchTerm, '', urlCheckin, urlCheckout, urlGuests,
+          );
+          if (response.success && response.data.length > 0) {
+            newHotels = response.data;
+            resultCount = response.data.length;
+            message = `Resultados en toda Colombia • ${resultCount} alojamientos`;
+          }
+
+          // Always show popular destination suggestions at this level
+          newSuggestions = POPULAR_DESTINATIONS.map(d => ({
+            text: d.city,
+            subtitle: `${d.hotelCount} alojamientos`,
+            action: d.city,
+            icon: 'city' as const,
+          }));
+          break;
+        }
+
+        // ── Level 5: Pure suggestions (no results at all) ─────────────────
+        case 5: {
+          newSuggestions = POPULAR_DESTINATIONS.map(d => ({
+            text: d.city,
+            subtitle: `${d.hotelCount} alojamientos`,
+            action: d.city,
+            icon: 'city' as const,
+          }));
+          message = 'No encontramos resultados. Explorá estas alternativas:';
+          break;
+        }
+      }
+
+      setFallbackLevel(nextLevel);
+      setFallbackMessage(message);
+      setSuggestions(newSuggestions);
+      setFallbackHotels(newHotels);
+      setFallbackResultCount(resultCount);
+      setIsFallbackSearching(false);
+    };
+
+    runFallback();
+  }, [hotels.length, fallbackHotels.length, fallbackLevel, isSearching,
+      activeCategory, urlLocation, searchTerm, urlCheckin, urlCheckout, urlGuests]);
+
+  // ── PRD-008 Phase 3: Handle suggestion click ──────────────────────────────
+  const handleSuggestionClick = useCallback((suggestion: SearchSuggestion) => {
+    // Reset all fallback state
+    setFallbackLevel(0);
+    setFallbackMessage('');
+    setFallbackHotels([]);
+    setSuggestions([]);
+    setFallbackResultCount(0);
+
+    // Apply the suggestion as the new location and reset category
+    setActiveCategory('all');
+    setSearchTerm(suggestion.action);
+    syncToUrl({ location: suggestion.action, category: 'all' });
+  }, [syncToUrl]);
+
+  // ── PRD-008 Phase 3: "Buscar en toda Colombia" handler ────────────────────
+  const handleSearchAllColombia = useCallback(() => {
+    setFallbackLevel(0);
+    setFallbackMessage('');
+    setFallbackHotels([]);
+    setSuggestions([]);
+    setFallbackResultCount(0);
+    setActiveCategory('all');
+    syncToUrl({ category: 'all', location: '' });
+  }, [syncToUrl]);
 
   // Scroll handler: hide header on scroll down, show on scroll up
   useEffect(() => {
@@ -600,12 +801,68 @@ export default function OTADashboard({
           )}
         </>
       ) : (
-        <div className='text-center py-20'>
-          <Tent size={48} className='mx-auto mb-4 text-muted-foreground/40' />
-          <h3 className='text-lg font-bold text-muted-foreground mb-1'>
-            {t('ota.noResults.title')}
-          </h3>
-          <p className='text-sm text-muted-foreground/70'>{t('ota.noResults.description')}</p>
+        <div className='text-center py-10'>
+          {/* Fallback message banner */}
+          {fallbackMessage && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={springSnappy()}
+              className='mb-6'
+            >
+              <div className='inline-flex items-center gap-2 px-4 py-2 bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800/50 rounded-[var(--radius-squircle-lg)] text-sm font-medium text-amber-800 dark:text-amber-200'>
+                <Search size={14} className='shrink-0' />
+                {fallbackMessage}
+              </div>
+            </motion.div>
+          )}
+
+          {/* Fallback searching spinner */}
+          {isFallbackSearching && (
+            <div className='flex flex-col items-center justify-center py-12'>
+              <Loader2 size={32} className='animate-spin mb-3 text-brand-500' />
+              <p className='text-sm text-muted-foreground'>Buscando alternativas…</p>
+            </div>
+          )}
+
+          {/* SearchSuggestions component */}
+          {!isFallbackSearching && suggestions.length > 0 && (
+            <SearchSuggestions
+              suggestions={suggestions}
+              onSuggestionClick={handleSuggestionClick}
+              type={
+                fallbackLevel === 1 ? 'typo'
+                : fallbackLevel >= 5 ? 'empty'
+                : 'alternative'
+              }
+              className='mb-6'
+            />
+          )}
+
+          {/* "Buscar en toda Colombia" button (level 4) */}
+          {!isFallbackSearching && fallbackLevel >= 4 && (
+            <motion.button
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ ...springSnappy(), delay: 0.2 }}
+              onClick={handleSearchAllColombia}
+              className='mt-4 flex items-center gap-2 mx-auto px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] active:scale-[0.98] transition-all hover:bg-brand-700'
+            >
+              <Globe size={16} />
+              Buscar en toda Colombia
+            </motion.button>
+          )}
+
+          {/* Default empty state when no fallback is active */}
+          {!isFallbackSearching && suggestions.length === 0 && (
+            <>
+              <Tent size={48} className='mx-auto mb-4 text-muted-foreground/40' />
+              <h3 className='text-lg font-bold text-muted-foreground mb-1'>
+                {t('ota.noResults.title')}
+              </h3>
+              <p className='text-sm text-muted-foreground/70'>{t('ota.noResults.description')}</p>
+            </>
+          )}
         </div>
       )}
 
