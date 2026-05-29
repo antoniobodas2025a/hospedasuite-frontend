@@ -1,6 +1,7 @@
 'use server';
 import type { Room } from '@/types';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { rankHotels } from '@/lib/hotel-ranking';
 
 /**
  * Normalize string for search: remove accents, lowercase, trim.
@@ -230,9 +231,31 @@ export async function fetchOTAHotelsAction(
       reviewStats: reviewMap.get(h.id) || { averageRating: 0, totalReviews: 0 },
     }));
 
-    // 6. Paginate from the processed result
-    const pagedHotels = otaHotels.slice(from, to + 1);
-    const hasMore = otaHotels.length > to + 1;
+    // 6. MCDA Ranking — score hotels by availability, reviews, price, and text match
+    const scorableHotels = otaHotels.map((h: any) => ({
+      id: h.id,
+      name: h.name,
+      location: h.location,
+      min_price: h.min_price,
+      description: h.description,
+      reviewStats: h.reviewStats,
+      availableRooms: h.availableRooms,
+      totalRooms: h.totalRooms,
+    }));
+
+    const ranked = rankHotels(scorableHotels, {
+      checkIn: checkin,
+      checkOut: checkout,
+      query: search || location,
+    });
+
+    // Map ranked order back to full hotel objects preserving enriched data
+    const enrichedMap = new Map(otaHotels.map((h: any) => [h.id, h]));
+    let finalHotels: any[] = ranked.map(r => enrichedMap.get(r.id)).filter(Boolean);
+
+    // 7. Paginate from the fully processed result
+    const pagedHotels = finalHotels.slice(from, to + 1);
+    const hasMore = finalHotels.length > to + 1;
 
     return { success: true, data: pagedHotels, hasMore };
     
