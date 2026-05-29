@@ -1,11 +1,10 @@
 /**
  * Geocoding utility using Nominatim (OpenStreetMap).
  * Free, no API key required, but rate-limited to 1 request/second.
- * Includes sessionStorage caching to avoid redundant requests.
+ * Uses GeoCacheManager for multi-level caching.
  */
 
-const GEOCACHE_KEY = 'hospedasuite_geocache';
-const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
+import { getCachedCoords, setCachedCoords } from './geo-cache';
 
 export interface GeoResult {
   lat: number;
@@ -13,56 +12,19 @@ export interface GeoResult {
   displayName: string;
 }
 
-/**
- * Get cached coordinates from sessionStorage.
- */
-export function getCachedCoords(query: string): [number, number] | null {
-  try {
-    const raw = sessionStorage.getItem(GEOCACHE_KEY);
-    if (!raw) return null;
-    const cache = JSON.parse(raw);
-    const entry = cache[query];
-    if (entry && Date.now() - entry.timestamp < 24 * 60 * 60 * 1000) {
-      return [entry.lat, entry.lng];
-    }
-    // Expired
-    delete cache[query];
-    sessionStorage.setItem(GEOCACHE_KEY, JSON.stringify(cache));
-    return null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * Save coordinates to sessionStorage cache.
- */
-export function setCachedCoords(query: string, lat: number, lng: number) {
-  try {
-    const raw = sessionStorage.getItem(GEOCACHE_KEY);
-    const cache = raw ? JSON.parse(raw) : {};
-    cache[query] = {
-      lat,
-      lng,
-      timestamp: Date.now(),
-    };
-    sessionStorage.setItem(GEOCACHE_KEY, JSON.stringify(cache));
-  } catch {
-    // Storage full or disabled
-  }
-}
+const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
 
 /**
  * Geocode a location string using Nominatim.
- * Respects rate limits and uses cache.
+ * Checks cache first (precomputed → memory → session), then falls back to API.
  */
 export async function geocodeLocation(query: string): Promise<GeoResult | null> {
   if (!query || query.length < 3) return null;
 
-  // Check cache first
+  // Check all cache levels first
   const cached = getCachedCoords(query);
   if (cached) {
-    return { lat: cached[0], lng: cached[1], displayName: query };
+    return cached;
   }
 
   // Nominatim requires a User-Agent header
@@ -87,10 +49,12 @@ export async function geocodeLocation(query: string): Promise<GeoResult | null> 
       const lat = parseFloat(result.lat);
       const lng = parseFloat(result.lon);
 
-      // Cache the result
-      setCachedCoords(query, lat, lng);
+      const geoResult: GeoResult = { lat, lng, displayName: result.display_name };
 
-      return { lat, lng, displayName: result.display_name };
+      // Cache the result in all levels
+      setCachedCoords(query, geoResult);
+
+      return geoResult;
     }
 
     return null;
