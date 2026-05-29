@@ -30,6 +30,7 @@ import { springSnappy, springGentle } from '@/lib/mac2026/spring';
 import { preserveSearchParams } from '@/lib/handoff-url';
 import { searchCache } from '@/lib/search-cache';
 import L from 'leaflet';
+import { filterHotelsByBounds, getBoundsFilterSummary, BoundsFilterResult } from '@/lib/bounds-filter';
 
 const CATEGORIES = [
   { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal, popular: false },
@@ -84,6 +85,10 @@ export default function OTADashboard({
   const [isMapMoved, setIsMapMoved] = useState(false);
   const originalSearchLocation = useRef(urlLocation);
 
+  // Bounds filter state (Phase 2: PRD-004 bounds filtering)
+  const [boundsFilterResult, setBoundsFilterResult] = useState<BoundsFilterResult | null>(null);
+  const boundsFilterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   // Sync category, searchTerm, and location to URL
   const syncToUrl = useCallback((updates: { category?: string; search?: string; location?: string }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -114,7 +119,24 @@ export default function OTADashboard({
     if (originalSearchLocation.current && urlLocation) {
       setIsMapMoved(true);
     }
-  }, [urlLocation]);
+
+    // Debounce bounds filtering (500ms) to avoid excessive computation
+    if (boundsFilterTimeoutRef.current) {
+      clearTimeout(boundsFilterTimeoutRef.current);
+    }
+
+    boundsFilterTimeoutRef.current = setTimeout(() => {
+      const result = filterHotelsByBounds(
+        hotels.map((h: any) => ({
+          id: h.id,
+          location: h.location,
+          address: h.address,
+        })),
+        bounds
+      );
+      setBoundsFilterResult(result);
+    }, 500);
+  }, [urlLocation, hotels]);
 
   const handleSearchAreaChange = useCallback((areaName: string) => {
     // Update URL location param when user pans to a new area
@@ -123,14 +145,24 @@ export default function OTADashboard({
     }
   }, [urlLocation, syncToUrl]);
 
-  // "Search this area" handler
+  // "Search this area" handler (Phase 2: PRD-004 bounds filtering)
   const handleSearchThisArea = useCallback(() => {
-    if (mapCenter) {
-      // Reverse geocode is already done by MapSearchSync → URL updated
-      // Just trigger a re-search with the new location
+    if (mapCenter && boundsFilterResult) {
+      // Use reverse geocoded area name from MapSearchSync (already updated URL)
+      // The search effect will re-run with the new urlLocation
       setIsMapMoved(false);
+      setBoundsFilterResult(null);
     }
-  }, [mapCenter]);
+  }, [mapCenter, boundsFilterResult]);
+
+  // Cleanup bounds filter timeout on unmount
+  useEffect(() => {
+    return () => {
+      if (boundsFilterTimeoutRef.current) {
+        clearTimeout(boundsFilterTimeoutRef.current);
+      }
+    };
+  }, []);
 
   // Debounced search effect with stale-while-revalidate cache
   useEffect(() => {
@@ -356,6 +388,17 @@ export default function OTADashboard({
                   onSearchAreaChange={handleSearchAreaChange}
                   enableSearchOnMove={true}
                 />
+
+                {/* Bounds filter summary (Phase 2: PRD-004) */}
+                {boundsFilterResult && boundsFilterResult.visibleCount < boundsFilterResult.total - boundsFilterResult.unresolvableIds.size && (
+                  <motion.div
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] px-3 py-1.5 bg-card/90 backdrop-blur-sm text-xs font-medium text-foreground rounded-full border border-border/30 shadow-sm"
+                  >
+                    {getBoundsFilterSummary(boundsFilterResult)}
+                  </motion.div>
+                )}
 
                 {/* "Search this area" button (appears when user pans away) */}
                 {isMapMoved && (
