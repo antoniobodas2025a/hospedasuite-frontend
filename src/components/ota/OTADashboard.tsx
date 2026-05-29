@@ -265,7 +265,7 @@ export default function OTADashboard({
       case 'price-desc':
         return sorted.sort((a, b) => (b.min_price || 0) - (a.min_price || 0));
       case 'rating':
-        return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+        return sorted.sort((a, b) => (b.reviewStats?.averageRating || 0) - (a.reviewStats?.averageRating || 0));
       case 'recommended':
       default:
         return sorted; // Default order (server ranking)
@@ -303,7 +303,7 @@ export default function OTADashboard({
   const featuredHotel = useMemo(() => {
     if (sortedHotels.length === 0) return null;
     return sortedHotels.reduce((best: any, h: any) =>
-      (h.rating || 0) > (best.rating || 0) ? h : best
+      (h.reviewStats?.averageRating || 0) > (best.reviewStats?.averageRating || 0) ? h : best
     , sortedHotels[0]);
   }, [sortedHotels]);
 

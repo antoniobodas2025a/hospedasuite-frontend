@@ -203,7 +203,34 @@ export async function fetchOTAHotelsAction(
       return { success: true, data: [], hasMore: false };
     }
 
-    // 5. Paginate from the processed result
+    // Update hotel IDs after availability filter
+    const remainingIds = otaHotels.map((h: any) => h.id);
+
+    // 5. Batch review stats (single query replaces N+1 per-hotel calls)
+    const { data: reviewData } = await supabaseAdmin
+      .from('reviews')
+      .select('hotel_id, rating')
+      .in('hotel_id', remainingIds)
+      .eq('status', 'approved');
+
+    const reviewMap = new Map<string, { averageRating: number; totalReviews: number }>();
+    for (const r of (reviewData || [])) {
+      const existing = reviewMap.get(r.hotel_id) || { averageRating: 0, totalReviews: 0 };
+      const newTotal = existing.totalReviews + 1;
+      const newAvg = (existing.averageRating * existing.totalReviews + r.rating) / newTotal;
+      reviewMap.set(r.hotel_id, {
+        averageRating: Math.round(newAvg * 10) / 10,
+        totalReviews: newTotal,
+      });
+    }
+
+    // Enrich hotels with reviewStats
+    otaHotels = otaHotels.map((h: any) => ({
+      ...h,
+      reviewStats: reviewMap.get(h.id) || { averageRating: 0, totalReviews: 0 },
+    }));
+
+    // 6. Paginate from the processed result
     const pagedHotels = otaHotels.slice(from, to + 1);
     const hasMore = otaHotels.length > to + 1;
 
