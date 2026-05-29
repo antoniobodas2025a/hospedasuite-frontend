@@ -28,6 +28,10 @@ interface HotelMapViewProps {
   onMapBoundsChange?: (bounds: L.LatLngBounds, center: L.LatLng, zoom: number) => void;
   onSearchAreaChange?: (areaName: string) => void;
   enableSearchOnMove?: boolean;
+  /** Override default center [lat, lng] (from URL state). Default: Bogotá [4.6097, -74.0817] */
+  initialCenter?: [number, number];
+  /** Override default zoom level (from URL state). Default: 6 */
+  initialZoom?: number;
 }
 
 /**
@@ -44,6 +48,8 @@ export default function HotelMapView({
   onMapBoundsChange,
   onSearchAreaChange,
   enableSearchOnMove = false,
+  initialCenter,
+  initialZoom,
 }: HotelMapViewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [geocodingProgress, setGeocodingProgress] = useState({ current: 0, total: 0 });
@@ -58,7 +64,7 @@ export default function HotelMapView({
   }
 
   return (
-    <div className="map-container-enter relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30 shadow-sm pb-20 sm:pb-0">
+    <div className="map-container-enter relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30 shadow-sm">
       {/* Loading state */}
       {isLoading && (
         <div className="map-loading-overlay absolute inset-0 flex items-center justify-center z-[1000]">
@@ -75,8 +81,8 @@ export default function HotelMapView({
 
       {/* Map Container */}
       <MapContainer
-        center={[4.6097, -74.0817]} // Default center (Bogotá)
-        zoom={6}
+        center={initialCenter || [4.6097, -74.0817]}
+        zoom={initialZoom || 6}
         className="w-full h-full z-0"
         zoomControl={false}
       >
