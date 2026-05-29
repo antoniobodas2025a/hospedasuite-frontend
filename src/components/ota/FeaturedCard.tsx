@@ -10,11 +10,66 @@ import Link from 'next/link';
 
 interface FeaturedCardProps {
   hotel: any;
+  /** Compact variant for split-view: max-h-[120px], horizontal layout with thumbnail only */
+  variant?: 'full' | 'compact';
 }
 
-export default function FeaturedCard({ hotel }: FeaturedCardProps) {
+export default function FeaturedCard({ hotel, variant = 'full' }: FeaturedCardProps) {
   const searchParams = useSearchParams();
   const href = preserveSearchParams(searchParams, `/hotel/${hotel.slug}`);
+
+  if (variant === 'compact') {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={springBounce()}
+        className='mb-4'
+      >
+        <Link
+          href={href}
+          className='group flex max-h-[120px] overflow-hidden rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm bg-card hover:shadow-md transition-shadow'
+          aria-label={`Ver ${hotel.name} — $${hotel.min_price?.toLocaleString()} por noche`}
+        >
+          {/* Thumbnail */}
+          <div className='w-[120px] min-w-[120px] relative overflow-hidden'>
+            {hotel.main_image_url ? (
+              <Image
+                src={hotel.main_image_url}
+                alt={hotel.name}
+                fill
+                className='object-cover group-hover:scale-105 transition-transform duration-500'
+                sizes='120px'
+              />
+            ) : (
+              <div className='w-full h-full bg-gradient-to-br from-brand-100 to-brand-200 flex items-center justify-center'>
+                <MapPin size={24} className='text-brand-400' />
+              </div>
+            )}
+          </div>
+
+          {/* Info */}
+          <div className='flex-1 flex flex-col justify-center px-3 py-2 min-w-0'>
+            <h3 className='text-sm font-bold text-foreground truncate'>
+              {hotel.name}
+            </h3>
+            <div className='flex items-center gap-2 mt-1'>
+              {hotel.rating && (
+                <span className='flex items-center gap-0.5 text-xs text-muted-foreground'>
+                  <Star size={12} className='fill-yellow-400 text-yellow-400' aria-hidden="true" />
+                  {hotel.rating}
+                </span>
+              )}
+              <span className='text-sm font-bold text-brand-600'>
+                ${hotel.min_price?.toLocaleString()}
+              </span>
+              <span className='text-xs text-muted-foreground'>/noche</span>
+            </div>
+          </div>
+        </Link>
+      </motion.div>
+    );
+  }
 
   return (
     <motion.div
