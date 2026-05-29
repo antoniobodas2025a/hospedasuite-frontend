@@ -32,6 +32,7 @@ import { useTranslations } from 'next-intl';
 import { springSnappy, springGentle } from '@/lib/mac2026/spring';
 import { preserveSearchParams } from '@/lib/handoff-url';
 import { searchCache } from '@/lib/search-cache';
+import { useSharedMoveGuard } from '@/lib/use-shared-move-guard';
 import L from 'leaflet';
 import { filterHotelsByBounds, getBoundsFilterSummary, BoundsFilterResult } from '@/lib/bounds-filter';
 import { getCachedCoords } from '@/lib/geo-cache';
@@ -82,6 +83,22 @@ export default function OTADashboard({
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
+
+  // PRD-006: Desktop split-view detection (≥768px)
+  const [isSplitView, setIsSplitView] = useState(false);
+
+  // PRD-006: Shared move guard for map flyTo deduplication
+  useSharedMoveGuard();
+
+  // Media query: detect desktop viewport for split-view layout
+  useEffect(() => {
+    const mql = window.matchMedia('(min-width: 768px)');
+    setIsSplitView(mql.matches);
+
+    const handler = (e: MediaQueryListEvent) => setIsSplitView(e.matches);
+    mql.addEventListener('change', handler);
+    return () => mql.removeEventListener('change', handler);
+  }, []);
 
   // Map state tracking (Phase 1: PRD-004 integration)
   const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
@@ -369,6 +386,200 @@ export default function OTADashboard({
 
   const activeCat = CATEGORIES.find(c => c.id === activeCategory);
 
+  // PRD-006: Extract hotel list (categories + grid) for reuse in split-view and mobile
+  const renderHotelList = () => (
+    <>
+      {/* CATEGORIES — 2 popular pills + chip for rest */}
+      <div className='flex flex-wrap items-center justify-center gap-2 mb-8 sm:mb-12'>
+        {POPULAR_CATEGORIES.map((cat) => {
+          const isActive = activeCategory === cat.id;
+          return (
+            <motion.button
+              key={cat.id}
+              onClick={() => {
+                setActiveCategory(cat.id);
+                syncToUrl({ category: cat.id });
+              }}
+              whileTap={{ scale: 0.95 }}
+              transition={springSnappy()}
+              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
+                isActive
+                  ? 'bg-foreground text-background shadow-md'
+                  : 'bg-card text-muted-foreground hover:text-foreground border border-border/50 hover:border-foreground/20'
+              }`}
+            >
+              <cat.icon size={14} />
+              {t(cat.labelKey)}
+            </motion.button>
+          );
+        })}
+
+        {/* Category chip for "All" + others */}
+        <div className='relative'>
+          <motion.button
+            onClick={() => setIsCategoryOpen(!isCategoryOpen)}
+            whileTap={{ scale: 0.95 }}
+            transition={springSnappy()}
+            className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
+              activeCategory === 'all' && !isCategoryOpen
+                ? 'bg-foreground text-background shadow-md'
+                : 'bg-card text-muted-foreground hover:text-foreground border-border/50 hover:border-foreground/20'
+            }`}
+          >
+            <SlidersHorizontal size={14} />
+            {activeCategory !== 'all' && activeCat ? t(activeCat.labelKey) : t('ota.categories.all')}
+            <ChevronDown size={12} className={`transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
+          </motion.button>
+
+          <AnimatePresence>
+            {isCategoryOpen && (
+              <>
+                {/* Backdrop */}
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  transition={{ duration: 0.15 }}
+                  className='fixed inset-0 z-40'
+                  onClick={() => setIsCategoryOpen(false)}
+                />
+                {/* Dropdown */}
+                <motion.div
+                  initial={{ opacity: 0, y: 8, scale: 0.95 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: 8, scale: 0.95 }}
+                  transition={springGentle()}
+                  className='absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] shadow-xl p-2 min-w-[180px]'
+                >
+                  {OTHER_CATEGORIES.map((cat) => {
+                    const isActive = activeCategory === cat.id;
+                    return (
+                      <button
+                        key={cat.id}
+                        onClick={() => {
+                          setActiveCategory(cat.id);
+                          setIsCategoryOpen(false);
+                          syncToUrl({ category: cat.id });
+                        }}
+                        className={`w-full flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-md)] text-sm font-medium transition-colors ${
+                          isActive
+                            ? 'bg-foreground/10 text-foreground'
+                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                        }`}
+                      >
+                        <cat.icon size={14} />
+                        {t(cat.labelKey)}
+                      </button>
+                    );
+                  })}
+                </motion.div>
+              </>
+            )}
+          </AnimatePresence>
+        </div>
+      </div>
+
+      {/* GRID DE HOTELES — Sprint 1: 3 cols (2 in split-view), 6 cards iniciales */}
+      {isSearching ? (
+        <div className='flex flex-col items-center justify-center py-20 text-muted-foreground'>
+          <Loader2 size={40} className='animate-spin mb-3 text-brand-500' />
+          <p className='font-semibold text-sm'>{t('ota.loading.searching')}</p>
+        </div>
+      ) : visibleHotels.length > 0 ? (
+        <>
+          {/* Sprint 2: Featured card */}
+          {featuredHotel && sortBy === 'recommended' && (
+            <FeaturedCard hotel={featuredHotel} variant={isSplitView ? 'compact' : 'full'} />
+          )}
+
+          {/* Sorting controls — Sprint 1: PRD-005 */}
+          <div className='flex items-center justify-between mb-4'>
+            <div className='relative'>
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                className='appearance-none flex items-center gap-2 px-4 py-2 bg-card border border-border/30 rounded-[var(--radius-squircle-xl)] text-sm font-medium text-foreground cursor-pointer hover:border-border/50 transition-colors pr-8'
+              >
+                <option value='recommended'>⭐ Recomendados</option>
+                <option value='price-asc'>💰 Precio: menor a mayor</option>
+                <option value='price-desc'>💰 Precio: mayor a menor</option>
+                <option value='rating'>⭐ Mejor rating</option>
+              </select>
+              <ArrowUpDown size={14} className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none' />
+            </div>
+            {hasMoreHotels && (
+              <p className='text-xs text-muted-foreground'>
+                Mostrando {visibleCount} de {sortedHotels.length}
+              </p>
+            )}
+          </div>
+
+          <div className={`grid grid-cols-1 sm:grid-cols-2 ${isSplitView ? '' : 'lg:grid-cols-3'} gap-4 sm:gap-6 lg:gap-8`}>
+            <AnimatePresence mode='popLayout'>
+              {visibleHotels.map((hotel: any) => (
+                <div key={hotel.id} id={`hotel-card-${hotel.id}`}>
+                  <HotelCard
+                    hotel={hotel}
+                    href={preserveSearchParams(searchParams, `/hotel/${hotel.slug}`)}
+                    isSelected={hotel.id === selectedHotelId}
+                    onSelect={handleHotelSelect}
+                    distanceFromCenter={getDistanceFromCenter(hotel)}
+                  />
+                </div>
+              ))}
+            </AnimatePresence>
+          </div>
+
+          {/* "Mostrar más" button — Sprint 1 */}
+          {hasMoreHotels && (
+            <div className='flex justify-center mt-12 sm:mt-16 mb-16 sm:mb-20'>
+              <motion.button
+                onClick={() => setVisibleCount(prev => prev + 6)}
+                whileTap={{ scale: 0.97 }}
+                transition={springSnappy()}
+                className='flex items-center gap-2 px-6 py-3 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all'
+              >
+                <Plus size={14} /> Mostrar más alojamientos
+              </motion.button>
+            </div>
+          )}
+        </>
+      ) : (
+        <div className='text-center py-20'>
+          <Tent size={48} className='mx-auto mb-4 text-muted-foreground/40' />
+          <h3 className='text-lg font-bold text-muted-foreground mb-1'>
+            {t('ota.noResults.title')}
+          </h3>
+          <p className='text-sm text-muted-foreground/70'>{t('ota.noResults.description')}</p>
+        </div>
+      )}
+
+      {/* BOTON CARGAR MAS (server-side pagination) */}
+      {hasMore && !isSearching && (
+        <div className='flex justify-center mt-8 mb-16 sm:mb-20'>
+          <motion.button
+            onClick={loadMoreHotels}
+            disabled={isLoadingMore}
+            whileTap={{ scale: 0.97 }}
+            transition={springSnappy()}
+            className='flex items-center gap-2 px-6 py-3 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all disabled:opacity-50'
+          >
+            {isLoadingMore ? (
+              <>
+                <Loader2 size={14} className='animate-spin text-brand-500' />
+                {t('ota.loading.loadingMore')}
+              </>
+            ) : (
+              <>
+                <Plus size={14} /> {t('ota.loadMore')}
+              </>
+            )}
+          </motion.button>
+        </div>
+      )}
+    </>
+  );
+
   return (
     <div className='min-h-screen bg-background flex flex-col font-sans text-foreground'>
       {/* HEADER — glass-pill, h-14 mobile */}
@@ -517,278 +728,128 @@ export default function OTADashboard({
           </button>
         </div>
 
-        {/* Map toggle + Map view */}
-        {sortedHotels.length > 0 && (
-          <div className='mb-6 sm:mb-8'>
-            <div className='flex items-center justify-between mb-3'>
-              <h2 className='text-sm font-bold text-foreground'>
+        {/* PRD-006: Desktop split-view layout (≥768px) */}
+        {isSplitView && sortedHotels.length > 0 ? (
+          <div className="split-view-layout mb-0">
+            {/* List panel (40%) — independent scroll */}
+            <div className="list-panel-scroll">
+              <h2 className="text-sm font-bold text-foreground mb-4">
                 {sortedHotels.length} {sortedHotels.length === 1 ? 'alojamiento' : 'alojamientos'}
               </h2>
-              <button
-                onClick={() => setShowMap(!showMap)}
-                className='flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors'
-              >
-                <MapPin size={14} />
-                {showMap ? 'Ver lista' : 'Ver mapa'}
-              </button>
+              {renderHotelList()}
             </div>
 
-            {showMap ? (
-              <div className="relative">
-                <HotelMapView
-                  hotels={sortedHotels.map((h: any) => ({
-                    id: h.id,
-                    name: h.name,
-                    location: h.location,
-                    address: h.address,
-                    min_price: h.min_price,
-                    slug: h.slug,
-                    main_image_url: h.main_image_url,
-                  }))}
-                  centerLocation={urlLocation || undefined}
-                  selectedHotelId={selectedHotelId}
-                  onMarkerClick={handleMarkerClick}
-                  onMapBoundsChange={handleMapBoundsChange}
-                  onSearchAreaChange={handleSearchAreaChange}
-                  enableSearchOnMove={true}
-                />
-
-                {/* Sprint 3: Mobile bottom bar (replaces floating buttons) */}
-                <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[200] px-3 pb-4 pt-2 bg-gradient-to-t from-background via-background/95 to-transparent">
-                  <div className="flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-lg p-2">
-                    {/* Back to list */}
-                    <button
-                      onClick={() => setShowMap(false)}
-                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-foreground rounded-[var(--radius-squircle-lg)] bg-muted/50 hover:bg-muted active:scale-[0.97] transition-all"
-                    >
-                      <ChevronDown size={14} className="rotate-90" />
-                      Lista
-                    </button>
-
-                    {/* Bounds filter summary */}
-                    {boundsFilterResult && boundsFilterResult.visibleCount < boundsFilterResult.total - boundsFilterResult.unresolvableIds.size && (
-                      <div className="flex-1 text-center text-xs font-medium text-muted-foreground truncate">
-                        {getBoundsFilterSummary(boundsFilterResult)}
-                      </div>
-                    )}
-
-                    {/* Search button */}
-                    <button
-                      onClick={() => setIsMobileSheetOpen(true)}
-                      className="flex items-center justify-center w-10 h-10 bg-brand-600 text-white rounded-[var(--radius-squircle-lg)] shadow-sm active:scale-[0.95] active:bg-brand-700 transition-all"
-                    >
-                      <Search size={18} />
-                    </button>
-                  </div>
-
-                  {/* "Search this area" button (appears when user pans away) */}
-                  <AnimatePresence>
-                    {isMapMoved && (
-                      <motion.button
-                        initial={{ opacity: 0, y: 8 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 8 }}
-                        onClick={handleSearchThisArea}
-                        className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg active:scale-[0.98] active:bg-brand-700 transition-all"
-                      >
-                        <Search size={14} />
-                        Buscar en esta zona
-                      </motion.button>
-                    )}
-                  </AnimatePresence>
-                </div>
-              </div>
-            ) : null}
-          </div>
-        )}
-
-        {/* CATEGORIES — 2 popular pills + chip for rest */}
-        <div className='flex flex-wrap items-center justify-center gap-2 mb-8 sm:mb-12'>
-          {POPULAR_CATEGORIES.map((cat) => {
-            const isActive = activeCategory === cat.id;
-            return (
-              <motion.button
-                key={cat.id}
-                onClick={() => {
-                  setActiveCategory(cat.id);
-                  syncToUrl({ category: cat.id });
-                }}
-                whileTap={{ scale: 0.95 }}
-                transition={springSnappy()}
-                className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold transition-all ${
-                  isActive
-                    ? 'bg-foreground text-background shadow-md'
-                    : 'bg-card text-muted-foreground hover:text-foreground border border-border/50 hover:border-foreground/20'
-                }`}
-              >
-                <cat.icon size={14} />
-                {t(cat.labelKey)}
-              </motion.button>
-            );
-          })}
-
-          {/* Category chip for "All" + others */}
-          <div className='relative'>
-            <motion.button
-              onClick={() => setIsCategoryOpen(!isCategoryOpen)}
-              whileTap={{ scale: 0.95 }}
-              transition={springSnappy()}
-              className={`flex items-center gap-1.5 px-4 py-2 rounded-full text-sm font-semibold border transition-all ${
-                activeCategory === 'all' && !isCategoryOpen
-                  ? 'bg-foreground text-background shadow-md'
-                  : 'bg-card text-muted-foreground hover:text-foreground border-border/50 hover:border-foreground/20'
-              }`}
-            >
-              <SlidersHorizontal size={14} />
-              {activeCategory !== 'all' && activeCat ? t(activeCat.labelKey) : t('ota.categories.all')}
-              <ChevronDown size={12} className={`transition-transform ${isCategoryOpen ? 'rotate-180' : ''}`} />
-            </motion.button>
-
-            <AnimatePresence>
-              {isCategoryOpen && (
-                <>
-                  {/* Backdrop */}
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.15 }}
-                    className='fixed inset-0 z-40'
-                    onClick={() => setIsCategoryOpen(false)}
-                  />
-                  {/* Dropdown */}
-                  <motion.div
-                    initial={{ opacity: 0, y: 8, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: 8, scale: 0.95 }}
-                    transition={springGentle()}
-                    className='absolute top-full mt-2 left-1/2 -translate-x-1/2 z-50 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] shadow-xl p-2 min-w-[180px]'
-                  >
-                    {OTHER_CATEGORIES.map((cat) => {
-                      const isActive = activeCategory === cat.id;
-                      return (
-                        <button
-                          key={cat.id}
-                          onClick={() => {
-                            setActiveCategory(cat.id);
-                            setIsCategoryOpen(false);
-                            syncToUrl({ category: cat.id });
-                          }}
-                          className={`w-full flex items-center gap-2 px-3 py-2 rounded-[var(--radius-squircle-md)] text-sm font-medium transition-colors ${
-                            isActive
-                              ? 'bg-foreground/10 text-foreground'
-                              : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                          }`}
-                        >
-                          <cat.icon size={14} />
-                          {t(cat.labelKey)}
-                        </button>
-                      );
-                    })}
-                  </motion.div>
-                </>
-              )}
-            </AnimatePresence>
-          </div>
-        </div>
-
-        {/* GRID DE HOTELES — Sprint 1: 3 cols, 6 cards iniciales */}
-        {isSearching ? (
-          <div className='flex flex-col items-center justify-center py-20 text-muted-foreground'>
-            <Loader2 size={40} className='animate-spin mb-3 text-brand-500' />
-            <p className='font-semibold text-sm'>{t('ota.loading.searching')}</p>
-          </div>
-        ) : visibleHotels.length > 0 ? (
-          <>
-            {/* Sprint 2: Featured card */}
-            {featuredHotel && sortBy === 'recommended' && (
-              <FeaturedCard hotel={featuredHotel} />
-            )}
-
-            {/* Sorting controls — Sprint 1: PRD-005 */}
-            <div className='flex items-center justify-between mb-4'>
-              <div className='relative'>
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
-                  className='appearance-none flex items-center gap-2 px-4 py-2 bg-card border border-border/30 rounded-[var(--radius-squircle-xl)] text-sm font-medium text-foreground cursor-pointer hover:border-border/50 transition-colors pr-8'
-                >
-                  <option value='recommended'>⭐ Recomendados</option>
-                  <option value='price-asc'>💰 Precio: menor a mayor</option>
-                  <option value='price-desc'>💰 Precio: mayor a menor</option>
-                  <option value='rating'>⭐ Mejor rating</option>
-                </select>
-                <ArrowUpDown size={14} className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none' />
-              </div>
-              {hasMoreHotels && (
-                <p className='text-xs text-muted-foreground'>
-                  Mostrando {visibleCount} de {sortedHotels.length}
-                </p>
-              )}
+            {/* Map panel (60%) — sticky, always visible */}
+            <div className="map-panel-sticky">
+              <HotelMapView
+                hotels={sortedHotels.map((h: any) => ({
+                  id: h.id,
+                  name: h.name,
+                  location: h.location,
+                  address: h.address,
+                  min_price: h.min_price,
+                  slug: h.slug,
+                  main_image_url: h.main_image_url,
+                }))}
+                centerLocation={urlLocation || undefined}
+                selectedHotelId={selectedHotelId}
+                onMarkerClick={handleMarkerClick}
+                onMapBoundsChange={handleMapBoundsChange}
+                onSearchAreaChange={handleSearchAreaChange}
+                enableSearchOnMove={true}
+              />
             </div>
-
-            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8'>
-              <AnimatePresence mode='popLayout'>
-                {visibleHotels.map((hotel: any) => (
-                  <div key={hotel.id} id={`hotel-card-${hotel.id}`}>
-                    <HotelCard
-                      hotel={hotel}
-                      href={preserveSearchParams(searchParams, `/hotel/${hotel.slug}`)}
-                      isSelected={hotel.id === selectedHotelId}
-                      onSelect={handleHotelSelect}
-                      distanceFromCenter={getDistanceFromCenter(hotel)}
-                    />
-                  </div>
-                ))}
-              </AnimatePresence>
-            </div>
-
-            {/* "Mostrar más" button — Sprint 1 */}
-            {hasMoreHotels && (
-              <div className='flex justify-center mt-12 sm:mt-16 mb-16 sm:mb-20'>
-                <motion.button
-                  onClick={() => setVisibleCount(prev => prev + 6)}
-                  whileTap={{ scale: 0.97 }}
-                  transition={springSnappy()}
-                  className='flex items-center gap-2 px-6 py-3 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all'
-                >
-                  <Plus size={14} /> Mostrar más alojamientos
-                </motion.button>
-              </div>
-            )}
-          </>
+          </div>
         ) : (
-          <div className='text-center py-20'>
-            <Tent size={48} className='mx-auto mb-4 text-muted-foreground/40' />
-            <h3 className='text-lg font-bold text-muted-foreground mb-1'>
-              {t('ota.noResults.title')}
-            </h3>
-            <p className='text-sm text-muted-foreground/70'>{t('ota.noResults.description')}</p>
-          </div>
-        )}
+          <>
+            {/* Mobile: Map toggle + Map view (existing behavior) */}
+            {sortedHotels.length > 0 && (
+              <div className='mb-6 sm:mb-8'>
+                <div className='flex items-center justify-between mb-3'>
+                  <h2 className='text-sm font-bold text-foreground'>
+                    {sortedHotels.length} {sortedHotels.length === 1 ? 'alojamiento' : 'alojamientos'}
+                  </h2>
+                  <button
+                    onClick={() => setShowMap(!showMap)}
+                    className='flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors'
+                  >
+                    <MapPin size={14} />
+                    {showMap ? 'Ver lista' : 'Ver mapa'}
+                  </button>
+                </div>
 
-        {/* BOTON CARGAR MAS (server-side pagination) */}
-        {hasMore && !isSearching && (
-          <div className='flex justify-center mt-8 mb-16 sm:mb-20'>
-            <motion.button
-              onClick={loadMoreHotels}
-              disabled={isLoadingMore}
-              whileTap={{ scale: 0.97 }}
-              transition={springSnappy()}
-              className='flex items-center gap-2 px-6 py-3 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all disabled:opacity-50'
-            >
-              {isLoadingMore ? (
-                <>
-                  <Loader2 size={14} className='animate-spin text-brand-500' />
-                  {t('ota.loading.loadingMore')}
-                </>
-              ) : (
-                <>
-                  <Plus size={14} /> {t('ota.loadMore')}
-                </>
-              )}
-            </motion.button>
-          </div>
+                {showMap ? (
+                  <div className="relative">
+                    <HotelMapView
+                      hotels={sortedHotels.map((h: any) => ({
+                        id: h.id,
+                        name: h.name,
+                        location: h.location,
+                        address: h.address,
+                        min_price: h.min_price,
+                        slug: h.slug,
+                        main_image_url: h.main_image_url,
+                      }))}
+                      centerLocation={urlLocation || undefined}
+                      selectedHotelId={selectedHotelId}
+                      onMarkerClick={handleMarkerClick}
+                      onMapBoundsChange={handleMapBoundsChange}
+                      onSearchAreaChange={handleSearchAreaChange}
+                      enableSearchOnMove={true}
+                    />
+
+                    {/* Sprint 3: Mobile bottom bar (replaces floating buttons) */}
+                    <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[200] px-3 pb-4 pt-2 bg-gradient-to-t from-background via-background/95 to-transparent">
+                      <div className="flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-lg p-2">
+                        {/* Back to list */}
+                        <button
+                          onClick={() => setShowMap(false)}
+                          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-foreground rounded-[var(--radius-squircle-lg)] bg-muted/50 hover:bg-muted active:scale-[0.97] transition-all"
+                        >
+                          <ChevronDown size={14} className="rotate-90" />
+                          Lista
+                        </button>
+
+                        {/* Bounds filter summary */}
+                        {boundsFilterResult && boundsFilterResult.visibleCount < boundsFilterResult.total - boundsFilterResult.unresolvableIds.size && (
+                          <div className="flex-1 text-center text-xs font-medium text-muted-foreground truncate">
+                            {getBoundsFilterSummary(boundsFilterResult)}
+                          </div>
+                        )}
+
+                        {/* Search button */}
+                        <button
+                          onClick={() => setIsMobileSheetOpen(true)}
+                          className="flex items-center justify-center w-10 h-10 bg-brand-600 text-white rounded-[var(--radius-squircle-lg)] shadow-sm active:scale-[0.95] active:bg-brand-700 transition-all"
+                        >
+                          <Search size={18} />
+                        </button>
+                      </div>
+
+                      {/* "Search this area" button (appears when user pans away) */}
+                      <AnimatePresence>
+                        {isMapMoved && (
+                          <motion.button
+                            initial={{ opacity: 0, y: 8 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, y: 8 }}
+                            onClick={handleSearchThisArea}
+                            className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg active:scale-[0.98] active:bg-brand-700 transition-all"
+                          >
+                            <Search size={14} />
+                            Buscar en esta zona
+                          </motion.button>
+                        )}
+                      </AnimatePresence>
+                    </div>
+                  </div>
+                ) : null}
+              </div>
+            )}
+
+            {/* Categories + grid (non-split-view only) */}
+            {renderHotelList()}
+          </>
         )}
       </main>
 
