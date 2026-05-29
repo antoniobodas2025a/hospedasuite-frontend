@@ -45,22 +45,22 @@ export default function HotelMapView({
 
   if (hotels.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <MapPin size={48} className="mb-4 text-muted-foreground/40" />
+      <div className="map-empty-state flex flex-col items-center justify-center py-16 text-muted-foreground">
+        <MapPin size={48} className="map-empty-icon mb-4 text-muted-foreground/40" />
         <p className="text-sm font-medium">No hay hoteles para mostrar en el mapa</p>
       </div>
     );
   }
 
   return (
-    <div className="relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30 shadow-sm">
+    <div className="map-container-enter relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30 shadow-sm">
       {/* Loading state */}
       {isLoading && (
-        <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-[1000]">
+        <div className="map-loading-overlay absolute inset-0 flex items-center justify-center z-[1000]">
           <div className="flex flex-col items-center gap-2">
-            <Loader2 size={24} className="text-brand-500 animate-spin" />
+            <Loader2 size={24} className="map-loading-spinner text-brand-500" />
             {geocodingProgress.total > 0 && (
-              <p className="text-xs text-muted-foreground">
+              <p className="map-loading-text text-xs text-muted-foreground">
                 Buscando ubicaciones... ({geocodingProgress.current}/{geocodingProgress.total})
               </p>
             )}
