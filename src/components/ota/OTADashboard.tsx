@@ -19,13 +19,26 @@ import {
   ArrowDown,
   ArrowUpDown,
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
 import HotelCard from './HotelCard';
 import FeaturedCard from './FeaturedCard';
 import LanguageSwitcher from './LanguageSwitcher';
 import SearchBarUnified from './SearchBarUnified';
 import MobileSearchSheet from './MobileSearchSheet';
-import HotelMapView from './HotelMapView';
 import MapBottomSheet from './MapBottomSheet';
+
+// PRD-008 fix: Leaflet depends on window/document → must be client-only
+const HotelMapView = dynamic(() => import('./HotelMapView'), {
+  ssr: false,
+  loading: () => (
+    <div className="w-full h-64 sm:h-80 bg-muted/30 rounded-[var(--radius-squircle-xl)] animate-pulse flex items-center justify-center border border-border/30">
+      <div className="flex flex-col items-center gap-2">
+        <Loader2 size={24} className="animate-spin text-muted-foreground" />
+        <p className="text-xs text-muted-foreground">Cargando mapa...</p>
+      </div>
+    </div>
+  ),
+});
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { fetchOTAHotelsAction } from '@/app/actions/ota';
