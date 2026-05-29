@@ -85,15 +85,17 @@ export default function OTADashboard({
   const [showMap, setShowMap] = useState(false);
 
   // PRD-006: Desktop split-view detection (≥768px)
-  const [isSplitView, setIsSplitView] = useState(false);
+  // Lazy init prevents flash of mobile layout on first render
+  const [isSplitView, setIsSplitView] = useState(() =>
+    typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : false
+  );
 
   // PRD-006: Shared move guard for map flyTo deduplication
   useSharedMoveGuard();
 
-  // Media query: detect desktop viewport for split-view layout
+  // Media query: listen for viewport changes (resize, orientation)
   useEffect(() => {
     const mql = window.matchMedia('(min-width: 768px)');
-    setIsSplitView(mql.matches);
 
     const handler = (e: MediaQueryListEvent) => setIsSplitView(e.matches);
     mql.addEventListener('change', handler);
