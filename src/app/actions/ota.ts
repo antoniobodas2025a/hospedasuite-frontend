@@ -111,9 +111,10 @@ export async function fetchOTAHotelsAction(
     const from = page * limit;
     const to = from + limit - 1;
 
+    // 1. Build base query — fetch ALL active hotels (no range; we rank/paginate server-side)
     let query = supabaseAdmin
       .from('hotels')
-      .select(`id, name, location, slug, status, main_image_url, description, category, type, rooms!inner(price)`)
+      .select(`id, name, location, city, slug, status, main_image_url, description, category, type, rooms!inner(price)`)
       .eq('status', 'active');
 
     if (category !== 'all') {
@@ -124,67 +125,6 @@ export async function fetchOTAHotelsAction(
       query = query.or(`name.ilike.%${search}%,location.ilike.%${search}%`);
     }
 
-    if (location) {
-      // Fetch ALL active hotels, filter by location client-side (accent-insensitive)
-      // Supabase ilike doesn't handle accents, so we filter in JS
-    } else {
-      const { data: hotels, error } = await query.range(from, to);
-
-      if (error) {
-        console.error("🚨 ERROR CRÍTICO DE SUPABASE EN OTA:", error.message);
-        throw new Error(error.message);
-      }
-
-      const otaHotels = hotels?.map((h: any) => {
-        const roomPrices = h.rooms?.map((r: { price: number }) => r.price) || [];
-        return {
-          id: h.id, 
-          name: h.name, 
-          location: h.location || 'Destino', 
-          city: h.city || null,
-          slug: h.slug,
-          min_price: roomPrices.length > 0 ? Math.min(...roomPrices) : 0, 
-          main_image_url: h.main_image_url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070',
-          description: h.description || '',
-          type: h.type || 'hotel', 
-          category: h.category
-        };
-      }) || [];
-
-      // If dates are specified, filter hotels that have available rooms
-      let finalHotels = otaHotels;
-      if (checkin && checkout) {
-        const safeCheckIn = checkin.split('T')[0];
-        const safeCheckOut = checkout.split('T')[0];
-
-        // Check availability for each hotel
-        const availabilityChecks = finalHotels.map(async (hotel: any) => {
-          const { data: availableRooms } = await supabaseAdmin.rpc('get_available_rooms', {
-            p_hotel_id: hotel.id,
-            p_check_in: safeCheckIn,
-            p_check_out: safeCheckOut
-          });
-
-          // Filter by guest capacity if specified
-          const filteredRooms = (availableRooms || []).filter((r: any) => {
-            if (guests && guests > 0) {
-              return Number(r.capacity ?? 0) >= guests;
-            }
-            return true;
-          });
-
-          return filteredRooms.length > 0 ? hotel : null;
-        });
-
-        const availabilityResults = await Promise.all(availabilityChecks);
-        finalHotels = availabilityResults.filter(Boolean);
-      }
-
-      const hasMore = finalHotels.length === limit;
-      return { success: true, data: finalHotels, hasMore };
-    }
-
-    // Location filter: fetch all, filter client-side (accent-insensitive)
     const { data: allHotels, error } = await query;
 
     if (error) {
@@ -192,21 +132,22 @@ export async function fetchOTAHotelsAction(
       throw new Error(error.message);
     }
 
-    const normalizedLocation = normalizeForSearch(location);
-    const filteredHotels = (allHotels || []).filter((h: any) => {
-      const city = normalizeForSearch(h.city || '');
-      const loc = normalizeForSearch(h.location || '');
-      const addr = normalizeForSearch(h.address || '');
-      return city.includes(normalizedLocation) ||
-             loc.includes(normalizedLocation) ||
-             addr.includes(normalizedLocation);
-    });
+    // 2. Client-side location filter (accent-insensitive)
+    let filteredHotels = allHotels || [];
+    if (location) {
+      const normalizedLocation = normalizeForSearch(location);
+      filteredHotels = filteredHotels.filter((h: any) => {
+        const city = normalizeForSearch(h.city || '');
+        const loc = normalizeForSearch(h.location || '');
+        const addr = normalizeForSearch(h.address || '');
+        return city.includes(normalizedLocation) ||
+               loc.includes(normalizedLocation) ||
+               addr.includes(normalizedLocation);
+      });
+    }
 
-    // Apply pagination after filtering
-    const pagedHotels = filteredHotels.slice(from, to + 1);
-    const hasMoreFiltered = filteredHotels.length > to + 1;
-
-    const otaHotels = pagedHotels.map((h: any) => {
+    // 3. Map to OTA response shape
+    let otaHotels = filteredHotels.map((h: any) => {
       const roomPrices = h.rooms?.map((r: { price: number }) => r.price) || [];
       return {
         id: h.id, 
@@ -218,39 +159,55 @@ export async function fetchOTAHotelsAction(
         main_image_url: h.main_image_url || 'https://images.unsplash.com/photo-1542314831-068cd1dbfeeb?q=80&w=2070',
         description: h.description || '',
         type: h.type || 'hotel', 
-        category: h.category
+        category: h.category,
       };
     });
 
-    // If dates are specified, filter hotels that have available rooms
-    let finalHotels = otaHotels;
+    if (otaHotels.length === 0) {
+      return { success: true, data: [], hasMore: false };
+    }
+
+    const hotelIds = otaHotels.map((h: any) => h.id);
+
+    // 4. Batch availability (single RPC replaces N+1 per-hotel calls)
     if (checkin && checkout) {
       const safeCheckIn = checkin.split('T')[0];
       const safeCheckOut = checkout.split('T')[0];
 
-      const availabilityChecks = finalHotels.map(async (hotel: any) => {
-        const { data: availableRooms } = await supabaseAdmin.rpc('get_available_rooms', {
-          p_hotel_id: hotel.id,
-          p_check_in: safeCheckIn,
-          p_check_out: safeCheckOut
-        });
-
-        const filteredRooms = (availableRooms || []).filter((r: any) => {
-          if (guests && guests > 0) {
-            return Number(r.capacity ?? 0) >= guests;
-          }
-          return true;
-        });
-
-        return filteredRooms.length > 0 ? hotel : null;
+      const { data: batchAvail } = await supabaseAdmin.rpc('get_batch_availability', {
+        p_hotel_ids: hotelIds,
+        p_check_in: safeCheckIn,
+        p_check_out: safeCheckOut,
+        p_guests: guests || 0,
       });
 
-      const availabilityResults = await Promise.all(availabilityChecks);
-      finalHotels = availabilityResults.filter(Boolean);
+      const availMap = new Map<string, any>((batchAvail || []).map((a: any) => [a.hotel_id, a]));
+
+      otaHotels = otaHotels
+        .filter((h: any) => {
+          const avail = availMap.get(h.id);
+          return avail && Number(avail.available_rooms) > 0;
+        })
+        .map((h: any) => {
+          const avail = availMap.get(h.id);
+          return {
+            ...h,
+            availableRooms: Number(avail?.available_rooms ?? 0),
+            totalRooms: Number(avail?.total_rooms ?? 0),
+            min_price: avail ? Number(avail.min_price) || h.min_price : h.min_price,
+          };
+        });
     }
 
-    const hasMore = finalHotels.length === limit;
-    return { success: true, data: finalHotels, hasMore };
+    if (otaHotels.length === 0) {
+      return { success: true, data: [], hasMore: false };
+    }
+
+    // 5. Paginate from the processed result
+    const pagedHotels = otaHotels.slice(from, to + 1);
+    const hasMore = otaHotels.length > to + 1;
+
+    return { success: true, data: pagedHotels, hasMore };
     
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : 'Error desconocido en OTA';
