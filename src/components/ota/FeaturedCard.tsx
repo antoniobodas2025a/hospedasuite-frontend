@@ -23,12 +23,12 @@ export default function FeaturedCard({ hotel }: FeaturedCardProps) {
       transition={springBounce()}
       className='mb-6 sm:mb-8'
     >
-      <Link href={href} className='group block'>
+      <Link href={href} className='group block' aria-label={`Ver ${hotel.name} - ${hotel.location} - $${hotel.min_price?.toLocaleString()} por noche`}>
         <div className='relative overflow-hidden rounded-[var(--radius-squircle-2xl)] border border-border/30 shadow-lg bg-card hover:shadow-xl transition-shadow'>
           {/* Featured badge */}
-          <div className='absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-brand-600/90 backdrop-blur-sm text-white text-xs font-bold rounded-full'>
-            <Star size={12} className='fill-white' />
-            Selección HospedaSuite
+          <div className='absolute top-4 left-4 z-10 flex items-center gap-1.5 px-3 py-1.5 bg-brand-600/90 backdrop-blur-sm text-white text-xs font-bold rounded-full' role="status">
+            <Star size={12} className='fill-white' aria-hidden="true" />
+            <span>Selección HospedaSuite</span>
           </div>
 
           {/* Image */}
@@ -56,12 +56,12 @@ export default function FeaturedCard({ hotel }: FeaturedCardProps) {
             <h3 className='text-xl sm:text-2xl font-bold mb-1'>{hotel.name}</h3>
             <div className='flex items-center gap-3 text-sm text-white/80'>
               <span className='flex items-center gap-1'>
-                <MapPin size={14} />
+                <MapPin size={14} aria-hidden="true" />
                 {hotel.location}
               </span>
               {hotel.rating && (
                 <span className='flex items-center gap-1'>
-                  <Star size={14} className='fill-yellow-400 text-yellow-400' />
+                  <Star size={14} className='fill-yellow-400 text-yellow-400' aria-hidden="true" />
                   {hotel.rating}
                 </span>
               )}

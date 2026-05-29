@@ -17,7 +17,6 @@ import {
   User,
   MapPin,
   ArrowDown,
-  Star,
   ArrowUpDown,
 } from 'lucide-react';
 import HotelCard from './HotelCard';
@@ -464,7 +463,7 @@ export default function OTADashboard({
                     </div>
                     <button
                       onClick={() => searchTerm.trim() && setSearchStep('full')}
-                      className='flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] hover:bg-brand-700 transition-colors active:scale-[0.97]'
+                      className='flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] transition-colors active:scale-[0.97] active:bg-brand-700'
                     >
                       <Search size={16} />
                       Buscar
@@ -568,7 +567,7 @@ export default function OTADashboard({
                     {/* Search button */}
                     <button
                       onClick={() => setIsMobileSheetOpen(true)}
-                      className="flex items-center justify-center w-10 h-10 bg-brand-600 text-white rounded-[var(--radius-squircle-lg)] shadow-sm hover:bg-brand-700 active:scale-[0.95] transition-all"
+                      className="flex items-center justify-center w-10 h-10 bg-brand-600 text-white rounded-[var(--radius-squircle-lg)] shadow-sm active:scale-[0.95] active:bg-brand-700 transition-all"
                     >
                       <Search size={18} />
                     </button>
@@ -582,7 +581,7 @@ export default function OTADashboard({
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 8 }}
                         onClick={handleSearchThisArea}
-                        className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg hover:bg-brand-700 active:scale-[0.98] transition-all"
+                        className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg active:scale-[0.98] active:bg-brand-700 transition-all"
                       >
                         <Search size={14} />
                         Buscar en esta zona

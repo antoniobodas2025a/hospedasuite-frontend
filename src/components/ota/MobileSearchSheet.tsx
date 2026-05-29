@@ -7,8 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { springSnappy, springGentle, springModal, springBounce } from '@/lib/mac2026/spring';
-import { GlassPanel } from '@/components/ui/glass';
+import { springSnappy, springModal, springBounce } from '@/lib/mac2026/spring';
 import GuestSelector from '@/components/ota/GuestSelector';
 import LocationAutocomplete from '@/components/ota/LocationAutocomplete';
 import 'react-day-picker/dist/style.css';
@@ -34,6 +33,8 @@ interface MobileSearchSheetProps {
  * Opens when user taps the search bar on mobile.
  * Contains: Location, Dates, Guests, and Search button.
  * Follows Mac 2026 aesthetics: squircles, glass, spring physics.
+ *
+ * Sprint 4: Swipeable bottom sheet with drag-to-dismiss.
  */
 export default function MobileSearchSheet({
   isOpen,
@@ -47,6 +48,13 @@ export default function MobileSearchSheet({
   const t = useTranslations();
   const appLocale = useLocale();
   const dateLocale = getDateFnsLocale(appLocale);
+
+  // Sprint 4: Swipe-to-dismiss state
+  const sheetRef = useRef<HTMLDivElement>(null);
+  const dragStartY = useRef<number>(0);
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragOffset, setDragOffset] = useState(0);
+  const [sheetHeight, setSheetHeight] = useState(600);
 
   // State: location
   const [location, setLocation] = useState(searchParams.get('location') || '');
@@ -98,6 +106,31 @@ export default function MobileSearchSheet({
       setShowGuestPicker(false);
     }
   }, [isOpen, searchParams]);
+
+  // Sprint 4: Swipe-to-dismiss handlers
+  const handleDragStart = (_: MouseEvent | PointerEvent | TouchEvent, info: { point: { y: number } }) => {
+    dragStartY.current = info.point.y;
+    setIsDragging(true);
+    setDragOffset(0);
+  };
+
+  const handleDrag = (_: MouseEvent | PointerEvent | TouchEvent, info: { point: { y: number } }) => {
+    const offset = info.point.y - dragStartY.current;
+    // Only allow downward drag
+    setDragOffset(offset > 0 ? offset : 0);
+  };
+
+  const handleDragEnd = (_: MouseEvent | PointerEvent | TouchEvent, info: { velocity: { y: number } }) => {
+    setIsDragging(false);
+    const threshold = sheetHeight * 0.25; // 25% of sheet height
+    const velocity = info.velocity.y;
+
+    // Dismiss if dragged past threshold or fast downward swipe
+    if (dragOffset > threshold || (velocity > 500 && dragOffset > 50)) {
+      onClose();
+    }
+    setDragOffset(0);
+  };
 
   // Handlers: Dates
   const handleSelectDates = (newDate: DateRange | undefined) => {
@@ -166,6 +199,21 @@ export default function MobileSearchSheet({
 
   const isFormComplete = location.trim().length > 0;
 
+  // Sprint 4: Accessibility — Escape key closes sheet
+  useEffect(() => {
+    if (!isOpen) return;
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        onClose();
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen, onClose]);
+
   return (
     <AnimatePresence>
       {isOpen && (
@@ -175,6 +223,9 @@ export default function MobileSearchSheet({
           exit={{ opacity: 0 }}
           transition={{ duration: 0.15 }}
           className="fixed inset-0 z-[var(--z-modal)] sm:hidden"
+          role="dialog"
+          aria-modal="true"
+          aria-label={t('ota.search.refine')}
         >
           {/* Backdrop */}
           <div
@@ -185,15 +236,31 @@ export default function MobileSearchSheet({
 
           {/* Bottom sheet */}
           <motion.div
+            ref={sheetRef}
             initial={{ y: '100%' }}
             animate={{ y: 0 }}
             exit={{ y: '100%' }}
             transition={springModal()}
+            drag="y"
+            dragConstraints={{ top: 0, bottom: 0 }}
+            dragElastic={0.1}
+            dragMomentum={false}
+            onDragStart={handleDragStart}
+            onDrag={handleDrag}
+            onDragEnd={handleDragEnd}
+            onLayoutMeasure={(_, layout) => setSheetHeight((layout as any).height || 600)}
             className="absolute bottom-0 left-0 right-0 max-h-[90dvh] flex flex-col bg-background rounded-t-[var(--radius-squircle-2xl)] shadow-2xl overflow-hidden"
+            style={{
+              y: isDragging ? dragOffset : undefined,
+            }}
           >
-            {/* Drag handle */}
-            <div className="flex justify-center pt-3 pb-2">
-              <div className="w-10 h-1 rounded-full bg-foreground/15" />
+            {/* Sprint 4: Drag handle — swipe to dismiss */}
+            <div
+              className="flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing"
+              role="separator"
+              aria-label={t('common.close')}
+            >
+              <div className="w-10 h-1 rounded-full bg-foreground/15 transition-all hover:bg-foreground/25" />
             </div>
 
             {/* Header */}
