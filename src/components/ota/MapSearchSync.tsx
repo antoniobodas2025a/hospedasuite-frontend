@@ -4,6 +4,8 @@ import { useEffect, useRef, useCallback, useState } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { geocodeLocation } from '@/lib/geocoding';
+import { useSharedMoveGuard } from '@/lib/use-shared-move-guard';
+import { boundsChangedOverThreshold } from '@/lib/map-url-state';
 
 interface MapSearchSyncProps {
   searchLocation?: string;
@@ -11,6 +13,10 @@ interface MapSearchSyncProps {
   onSearchAreaChange?: (areaName: string) => void;
   enableSearchOnMove?: boolean;
   moveDebounceMs?: number;
+  /** Threshold ratio (0-1) for bounds change detection. Default 0.2 = 20%. */
+  boundsThreshold?: number;
+  /** Fired when bounds change exceeds threshold — signals "search this area". */
+  onBoundsExceeded?: (bounds: L.LatLngBounds) => void;
 }
 
 /**
@@ -32,11 +38,17 @@ export default function MapSearchSync({
   onSearchAreaChange,
   enableSearchOnMove = false,
   moveDebounceMs = 1000,
+  boundsThreshold = 0.2,
+  onBoundsExceeded,
 }: MapSearchSyncProps) {
   const map = useMap();
-  const isInternalMove = useRef(false);
+  const {
+    isInternalMove,
+    setInternalMove,
+    clearInternalMove,
+  } = useSharedMoveGuard();
   const moveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastBoundsRef = useRef<L.LatLngBounds | null>(null);
+  const lastSearchBoundsRef = useRef<L.LatLngBounds | null>(null);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
 
   // Reverse geocode map center to get area name
@@ -77,13 +89,26 @@ export default function MapSearchSync({
     const handleMoveEnd = () => {
       // Skip if this was an internal programmatic move (flyTo, fitBounds)
       if (isInternalMove.current) {
-        isInternalMove.current = false;
+        clearInternalMove();
         return;
       }
 
       const bounds = map.getBounds();
       const center = map.getCenter();
       const zoom = map.getZoom();
+
+      // PRD-006: Bounds threshold detection — fire onBoundsExceeded when
+      // user pans/zooms beyond threshold from the last search bounds.
+      const prev = lastSearchBoundsRef.current;
+      if (!prev) {
+        // First moveend after a search → establish baseline
+        lastSearchBoundsRef.current = bounds;
+      } else if (
+        onBoundsExceeded &&
+        boundsChangedOverThreshold(prev, bounds, boundsThreshold)
+      ) {
+        onBoundsExceeded(bounds);
+      }
 
       // Notify bounds change (for filtering hotels)
       onMapBoundsChange?.(bounds, center, zoom);
@@ -119,16 +144,20 @@ export default function MapSearchSync({
         clearTimeout(moveTimeoutRef.current);
       }
     };
-  }, [map, onMapBoundsChange, onSearchAreaChange, enableSearchOnMove, moveDebounceMs, reverseGeocodeCenter]);
+  }, [map, onMapBoundsChange, onSearchAreaChange, enableSearchOnMove, moveDebounceMs, reverseGeocodeCenter, clearInternalMove, onBoundsExceeded, boundsThreshold]);
 
   // Sync: Search location → Map center
   useEffect(() => {
     if (!searchLocation || !map) return;
 
+    // Reset bounds baseline on new search — next user pan establishes
+    // a fresh baseline for threshold comparison.
+    lastSearchBoundsRef.current = null;
+
     let cancelled = false;
 
     const flyToSearchLocation = async () => {
-      isInternalMove.current = true;
+      setInternalMove();
       const result = await geocodeLocation(searchLocation);
       if (cancelled || !result) return;
 
@@ -143,7 +172,7 @@ export default function MapSearchSync({
     return () => {
       cancelled = true;
     };
-  }, [searchLocation, map]);
+  }, [searchLocation, map, setInternalMove]);
 
   return null;
 }
