@@ -408,3 +408,54 @@
 .map-container-enter {
   animation: map-fade-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
 }
+
+/* ============================================
+   PRD-006: Map-First Discovery — Split-View Layout
+   ============================================ */
+
+/* Desktop split-view: CSS Grid 40% list / 60% map */
+.split-view-layout {
+  display: grid;
+  grid-template-columns: 40% 60%;
+  height: calc(100vh - 88px); /* 88px = header (56px) + search bar area */
+  gap: 0;
+  margin-top: 0;
+}
+
+/* List panel: independent scroll, prevents scroll-chaining to map */
+.list-panel-scroll {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border, rgba(0, 0, 0, 0.15)) transparent;
+  padding-right: 1rem;
+  padding-left: 0.25rem;
+}
+
+/* Map panel: sticky within the grid cell, fills available height */
+.map-panel-sticky {
+  position: sticky;
+  top: 0;
+  height: 100%;
+}
+
+/* Responsive: below 768px, split-view collapses (handled by JS media query).
+   These classes are inactive on mobile since the grid is not rendered. */
+
+/* Map container in split-view: full height, no bottom padding */
+.split-view-layout .map-container-enter {
+  height: 100% !important;
+  border-radius: var(--radius-squircle-xl);
+}
+
+/* Remove bottom padding that was for mobile bottom bar in split-view context */
+.split-view-layout .map-container-enter.pb-20 {
+  padding-bottom: 0;
+}
+
+@media (max-width: 767px) {
+  .split-view-layout {
+    display: none; /* Never render grid below 768px */
+  }
+}
