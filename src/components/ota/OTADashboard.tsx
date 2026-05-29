@@ -25,6 +25,7 @@ import LanguageSwitcher from './LanguageSwitcher';
 import SearchBarUnified from './SearchBarUnified';
 import MobileSearchSheet from './MobileSearchSheet';
 import HotelMapView from './HotelMapView';
+import MapBottomSheet from './MapBottomSheet';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { fetchOTAHotelsAction } from '@/app/actions/ota';
@@ -34,8 +35,9 @@ import { preserveSearchParams } from '@/lib/handoff-url';
 import { searchCache } from '@/lib/search-cache';
 import { useSharedMoveGuard } from '@/lib/use-shared-move-guard';
 import L from 'leaflet';
-import { filterHotelsByBounds, getBoundsFilterSummary, BoundsFilterResult } from '@/lib/bounds-filter';
+import { filterHotelsByBounds, BoundsFilterResult } from '@/lib/bounds-filter';
 import { getCachedCoords } from '@/lib/geo-cache';
+import { deserializeMapParams } from '@/lib/map-url-state';
 
 const CATEGORIES = [
   { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal, popular: false },
@@ -82,13 +84,23 @@ export default function OTADashboard({
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
-  const [showMap, setShowMap] = useState(false);
 
   // PRD-006: Desktop split-view detection (≥768px)
   // Lazy init prevents flash of mobile layout on first render
   const [isSplitView, setIsSplitView] = useState(() =>
     typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : false
   );
+
+  // PRD-006: Restore map center/zoom from URL params
+  const initialMapState = useMemo(() => {
+    if (typeof window === 'undefined') return null;
+    return deserializeMapParams(new URLSearchParams(window.location.search));
+  }, []);
+  const initialCenter = useMemo<[number, number] | undefined>(() => {
+    if (!initialMapState) return undefined;
+    return [initialMapState.center.lat, initialMapState.center.lng];
+  }, [initialMapState]);
+  const initialZoom = initialMapState?.zoom ?? undefined;
 
   // PRD-006: Shared move guard for map flyTo deduplication
   useSharedMoveGuard();
@@ -759,98 +771,83 @@ export default function OTADashboard({
                 onMapBoundsChange={handleMapBoundsChange}
                 onSearchAreaChange={handleSearchAreaChange}
                 enableSearchOnMove={true}
+                initialCenter={initialCenter}
+                initialZoom={initialZoom}
               />
             </div>
           </div>
         ) : (
           <>
-            {/* Mobile: Map toggle + Map view (existing behavior) */}
-            {sortedHotels.length > 0 && (
-              <div className='mb-6 sm:mb-8'>
-                <div className='flex items-center justify-between mb-3'>
-                  <h2 className='text-sm font-bold text-foreground'>
-                    {sortedHotels.length} {sortedHotels.length === 1 ? 'alojamiento' : 'alojamientos'}
-                  </h2>
-                  <button
-                    onClick={() => setShowMap(!showMap)}
-                    className='flex items-center gap-1.5 text-xs font-semibold text-brand-600 hover:text-brand-700 transition-colors'
-                  >
-                    <MapPin size={14} />
-                    {showMap ? 'Ver lista' : 'Ver mapa'}
-                  </button>
+            {/* PRD-006: Mobile map-first (full-viewport map + bottom sheet) */}
+            {sortedHotels.length > 0 ? (
+              <>
+                {/* Full-viewport map (fixed, covers entire screen below header/search) */}
+                <div className="fixed inset-0 z-0">
+                  <HotelMapView
+                    hotels={sortedHotels.map((h: any) => ({
+                      id: h.id,
+                      name: h.name,
+                      location: h.location,
+                      address: h.address,
+                      min_price: h.min_price,
+                      slug: h.slug,
+                      main_image_url: h.main_image_url,
+                    }))}
+                    centerLocation={urlLocation || undefined}
+                    selectedHotelId={selectedHotelId}
+                    onMarkerClick={handleMarkerClick}
+                    onMapBoundsChange={handleMapBoundsChange}
+                    onSearchAreaChange={handleSearchAreaChange}
+                    enableSearchOnMove={true}
+                    initialCenter={initialCenter}
+                    initialZoom={initialZoom}
+                  />
+
+                  {/* "Search this area" button (appears when user pans beyond bounds threshold) */}
+                  <AnimatePresence>
+                    {isMapMoved && (
+                      <motion.button
+                        initial={{ opacity: 0, y: 16 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 16 }}
+                        onClick={handleSearchThisArea}
+                        className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg active:scale-[0.98] active:bg-brand-700 transition-all"
+                      >
+                        <Search size={14} />
+                        Buscar en esta zona
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
                 </div>
 
-                {showMap ? (
-                  <div className="relative">
-                    <HotelMapView
-                      hotels={sortedHotels.map((h: any) => ({
-                        id: h.id,
-                        name: h.name,
-                        location: h.location,
-                        address: h.address,
-                        min_price: h.min_price,
-                        slug: h.slug,
-                        main_image_url: h.main_image_url,
-                      }))}
-                      centerLocation={urlLocation || undefined}
-                      selectedHotelId={selectedHotelId}
-                      onMarkerClick={handleMarkerClick}
-                      onMapBoundsChange={handleMapBoundsChange}
-                      onSearchAreaChange={handleSearchAreaChange}
-                      enableSearchOnMove={true}
-                    />
+                {/* Bottom sheet overlay */}
+                <MapBottomSheet
+                  hotels={visibleHotels}
+                  featuredHotel={featuredHotel}
+                  sortBy={sortBy}
+                  onSortChange={setSortBy}
+                  onHotelSelect={handleHotelSelect}
+                  onMarkerClick={handleMarkerClick}
+                  onLoadMore={() => setVisibleCount(prev => prev + 6)}
+                  visibleCount={visibleCount}
+                  hasMoreHotels={hasMoreHotels}
+                  getDistanceFromCenter={getDistanceFromCenter}
+                  activeCategory={activeCategory}
+                  onCategoryChange={(cat) => {
+                    setActiveCategory(cat);
+                    syncToUrl({ category: cat });
+                  }}
+                />
 
-                    {/* Sprint 3: Mobile bottom bar (replaces floating buttons) */}
-                    <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[200] px-3 pb-4 pt-2 bg-gradient-to-t from-background via-background/95 to-transparent">
-                      <div className="flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-lg p-2">
-                        {/* Back to list */}
-                        <button
-                          onClick={() => setShowMap(false)}
-                          className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-foreground rounded-[var(--radius-squircle-lg)] bg-muted/50 hover:bg-muted active:scale-[0.97] transition-all"
-                        >
-                          <ChevronDown size={14} className="rotate-90" />
-                          Lista
-                        </button>
-
-                        {/* Bounds filter summary */}
-                        {boundsFilterResult && boundsFilterResult.visibleCount < boundsFilterResult.total - boundsFilterResult.unresolvableIds.size && (
-                          <div className="flex-1 text-center text-xs font-medium text-muted-foreground truncate">
-                            {getBoundsFilterSummary(boundsFilterResult)}
-                          </div>
-                        )}
-
-                        {/* Search button */}
-                        <button
-                          onClick={() => setIsMobileSheetOpen(true)}
-                          className="flex items-center justify-center w-10 h-10 bg-brand-600 text-white rounded-[var(--radius-squircle-lg)] shadow-sm active:scale-[0.95] active:bg-brand-700 transition-all"
-                        >
-                          <Search size={18} />
-                        </button>
-                      </div>
-
-                      {/* "Search this area" button (appears when user pans away) */}
-                      <AnimatePresence>
-                        {isMapMoved && (
-                          <motion.button
-                            initial={{ opacity: 0, y: 8 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            exit={{ opacity: 0, y: 8 }}
-                            onClick={handleSearchThisArea}
-                            className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg active:scale-[0.98] active:bg-brand-700 transition-all"
-                          >
-                            <Search size={14} />
-                            Buscar en esta zona
-                          </motion.button>
-                        )}
-                      </AnimatePresence>
-                    </div>
-                  </div>
-                ) : null}
-              </div>
+                {/* Spacer: prevents main content from collapsing when map is fixed.
+                    The hero text is hidden behind the map, but the sticky search bar
+                    still overlays correctly via z-40. */}
+                <div className="h-screen sm:hidden" aria-hidden="true" />
+              </>
+            ) : (
+              /* No results fallback: show categories + empty grid */
+              renderHotelList()
             )}
-
-            {/* Categories + grid (non-split-view only) */}
-            {renderHotelList()}
           </>
         )}
       </main>
