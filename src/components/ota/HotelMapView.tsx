@@ -1,13 +1,14 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { MapContainer, TileLayer, useMap } from 'react-leaflet';
+import { useEffect, useState, useRef } from 'react';
+import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import { MapPin, ExternalLink, Loader2 } from 'lucide-react';
+import L from 'leaflet';
+import { geocodeLocation, GeoResult } from '@/lib/geocoding';
 import 'leaflet/dist/leaflet.css';
 import '@/styles/map.css';
 
 // Fix Leaflet default icon path issues in Next.js
-import L from 'leaflet';
 import icon from 'leaflet/dist/images/marker-icon.png';
 import iconShadow from 'leaflet/dist/images/marker-shadow.png';
 
@@ -20,41 +21,131 @@ const DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
+interface Hotel {
+  id: string;
+  name: string;
+  location: string;
+  address?: string;
+  min_price: number;
+  slug: string;
+  main_image_url?: string;
+}
+
 interface HotelMapViewProps {
-  hotels: Array<{
-    id: string;
-    name: string;
-    location: string;
-    address?: string;
-    min_price: number;
-    slug: string;
-  }>;
+  hotels: Hotel[];
   centerLocation?: string;
 }
 
 // Component to handle map bounds fitting
-function FitBounds({ hotels }: { hotels: HotelMapViewProps['hotels'] }) {
+function FitBounds({ markers }: { markers: L.LatLngExpression[] }) {
   const map = useMap();
 
   useEffect(() => {
-    if (hotels.length > 0 && map) {
-      // For now, we just center on a default location.
-      // In Phase 2, we'll geocode and fit bounds properly.
-      map.setView([4.6097, -74.0817], 6); // Center on Colombia
+    if (markers.length > 0 && map) {
+      const bounds = L.latLngBounds(markers);
+      map.fitBounds(bounds, { padding: [50, 50] });
     }
-  }, [hotels, map]);
+  }, [markers, map]);
 
   return null;
+}
+
+// Custom marker icon factory
+function createHotelIcon(price: number, isSelected: boolean): L.DivIcon {
+  return L.divIcon({
+    className: 'hotel-marker-wrapper',
+    html: `
+      <div class="hotel-marker-pin ${isSelected ? 'selected' : ''}">
+        <span class="marker-price">$${price.toLocaleString()}</span>
+      </div>
+    `,
+    iconSize: [80, 40],
+    iconAnchor: [40, 20],
+    popupAnchor: [0, -20],
+  });
+}
+
+// Individual hotel marker component with geocoding
+function HotelMarker({ hotel }: { hotel: Hotel }) {
+  const [coords, setCoords] = useState<GeoResult | null>(null);
+  const [isGeocoding, setIsGeocoding] = useState(false);
+  const [selected, setSelected] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    const doGeocode = async () => {
+      // Try location first, then address
+      const query = hotel.location || hotel.address || '';
+      if (!query) return;
+
+      setIsGeocoding(true);
+      const result = await geocodeLocation(query);
+      if (!cancelled && result) {
+        setCoords(result);
+      }
+      setIsGeocoding(false);
+    };
+
+    doGeocode();
+    return () => { cancelled = true; };
+  }, [hotel.location, hotel.address]);
+
+  if (!coords) {
+    // Optionally show a loading indicator or nothing
+    return null;
+  }
+
+  return (
+    <Marker
+      position={[coords.lat, coords.lng]}
+      icon={createHotelIcon(hotel.min_price, selected)}
+      eventHandlers={{
+        click: () => setSelected(true),
+        popupclose: () => setSelected(false),
+      }}
+    >
+      <Popup>
+        <div className="hotel-popup">
+          {hotel.main_image_url && (
+            <img
+              src={hotel.main_image_url}
+              alt={hotel.name}
+              className="popup-image"
+              onError={(e) => (e.currentTarget.style.display = 'none')}
+            />
+          )}
+          <div className="popup-info">
+            <h3 className="popup-name">{hotel.name}</h3>
+            <p className="popup-location">{hotel.location}</p>
+            <p className="popup-price">
+              <span className="price-amount">${hotel.min_price.toLocaleString()}</span>
+              <span className="price-period"> /noche</span>
+            </p>
+            <a href={`/hotel/${hotel.slug}`} className="popup-cta">
+              Ver hotel →
+            </a>
+          </div>
+        </div>
+      </Popup>
+    </Marker>
+  );
 }
 
 /**
  * HotelMapView — Interactive map using Leaflet + OpenStreetMap.
  *
- * Phase 1: Basic map with tiles.
- * Phase 2+: Geocoding, markers, clustering, popups.
+ * Phase 2: Geocoding + markers.
  */
 export default function HotelMapView({ hotels, centerLocation }: HotelMapViewProps) {
   const [isLoading, setIsLoading] = useState(true);
+  const [markerPositions, setMarkerPositions] = useState<L.LatLngExpression[]>([]);
+
+  // We'll update marker positions as markers are geocoded
+  // This is handled inside HotelMarker via a callback if needed,
+  // but for simplicity, FitBounds will rely on rendered markers.
+  // Since HotelMarker renders conditionally, we can't easily collect positions here.
+  // Instead, we'll just use a default center or the first hotel's location if available.
 
   if (hotels.length === 0) {
     return (
@@ -87,31 +178,11 @@ export default function HotelMapView({ hotels, centerLocation }: HotelMapViewPro
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {/* Zoom control repositioned */}
-        <FitBounds hotels={hotels} />
+        {/* Render markers */}
+        {hotels.map((hotel) => (
+          <HotelMarker key={hotel.id} hotel={hotel} />
+        ))}
       </MapContainer>
-
-      {/* Zoom Controls (Custom Position) */}
-      <div className="absolute top-4 right-4 z-[1000] flex flex-col gap-2">
-        <button
-          onClick={() => {
-            // We'll add zoom controls logic later or use Leaflet's default
-          }}
-          className="size-8 bg-background rounded-[var(--radius-squircle-md)] shadow-md flex items-center justify-center text-foreground hover:bg-muted transition-colors"
-          aria-label="Zoom in"
-        >
-          +
-        </button>
-        <button
-          onClick={() => {
-            // Zoom out logic
-          }}
-          className="size-8 bg-background rounded-[var(--radius-squircle-md)] shadow-md flex items-center justify-center text-foreground hover:bg-muted transition-colors"
-          aria-label="Zoom out"
-        >
-          -
-        </button>
-      </div>
     </div>
   );
 }
