@@ -1,10 +1,11 @@
 'use client';
 
-import { useEffect, useState, useRef } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import { MapPin, ExternalLink, Loader2 } from 'lucide-react';
+import { useEffect, useState, useRef, useCallback } from 'react';
+import { MapContainer, TileLayer, useMap, Marker, Popup } from 'react-leaflet';
+import { MapPin, Loader2 } from 'lucide-react';
 import L from 'leaflet';
 import { geocodeLocation, GeoResult } from '@/lib/geocoding';
+import ClusteredMarkers from './ClusteredMarkers';
 import 'leaflet/dist/leaflet.css';
 import '@/styles/map.css';
 
@@ -36,20 +37,6 @@ interface HotelMapViewProps {
   centerLocation?: string;
 }
 
-// Component to handle map bounds fitting
-function FitBounds({ markers }: { markers: L.LatLngExpression[] }) {
-  const map = useMap();
-
-  useEffect(() => {
-    if (markers.length > 0 && map) {
-      const bounds = L.latLngBounds(markers);
-      map.fitBounds(bounds, { padding: [50, 50] });
-    }
-  }, [markers, map]);
-
-  return null;
-}
-
 // Custom marker icon factory
 function createHotelIcon(price: number, isSelected: boolean): L.DivIcon {
   return L.divIcon({
@@ -65,87 +52,64 @@ function createHotelIcon(price: number, isSelected: boolean): L.DivIcon {
   });
 }
 
-// Individual hotel marker component with geocoding
-function HotelMarker({ hotel }: { hotel: Hotel }) {
-  const [coords, setCoords] = useState<GeoResult | null>(null);
-  const [isGeocoding, setIsGeocoding] = useState(false);
-  const [selected, setSelected] = useState(false);
-
-  useEffect(() => {
-    let cancelled = false;
-
-    const doGeocode = async () => {
-      // Try location first, then address
-      const query = hotel.location || hotel.address || '';
-      if (!query) return;
-
-      setIsGeocoding(true);
-      const result = await geocodeLocation(query);
-      if (!cancelled && result) {
-        setCoords(result);
-      }
-      setIsGeocoding(false);
-    };
-
-    doGeocode();
-    return () => { cancelled = true; };
-  }, [hotel.location, hotel.address]);
-
-  if (!coords) {
-    // Optionally show a loading indicator or nothing
-    return null;
-  }
-
-  return (
-    <Marker
-      position={[coords.lat, coords.lng]}
-      icon={createHotelIcon(hotel.min_price, selected)}
-      eventHandlers={{
-        click: () => setSelected(true),
-        popupclose: () => setSelected(false),
-      }}
-    >
-      <Popup>
-        <div className="hotel-popup">
-          {hotel.main_image_url && (
-            <img
-              src={hotel.main_image_url}
-              alt={hotel.name}
-              className="popup-image"
-              onError={(e) => (e.currentTarget.style.display = 'none')}
-            />
-          )}
-          <div className="popup-info">
-            <h3 className="popup-name">{hotel.name}</h3>
-            <p className="popup-location">{hotel.location}</p>
-            <p className="popup-price">
-              <span className="price-amount">${hotel.min_price.toLocaleString()}</span>
-              <span className="price-period"> /noche</span>
-            </p>
-            <a href={`/hotel/${hotel.slug}`} className="popup-cta">
-              Ver hotel →
-            </a>
-          </div>
-        </div>
-      </Popup>
-    </Marker>
-  );
-}
-
 /**
  * HotelMapView — Interactive map using Leaflet + OpenStreetMap.
  *
- * Phase 2: Geocoding + markers.
+ * Phase 3: Clustering + custom icons.
  */
-export default function HotelMapView({ hotels, centerLocation }: HotelMapViewProps) {
+export default function HotelMapView({ hotels }: HotelMapViewProps) {
   const [isLoading, setIsLoading] = useState(true);
-  const [markerPositions, setMarkerPositions] = useState<L.LatLngExpression[]>([]);
+  const [markers, setMarkers] = useState<L.Marker[]>([]);
+  const [geocodedCount, setGeocodedCount] = useState(0);
 
-  // We'll update marker positions as markers are geocoded
-  // This is handled inside HotelMarker via a callback if needed,
-  // but for simplicity, FitBounds will rely on rendered markers.
-  // Since HotelMarker renders conditionally, we can't easily collect positions here.
-  // Instead, we'll just use a default center or the first hotel's location if available.
+  // Geocode all hotels on mount
+  useEffect(() => {
+    let cancelled = false;
+    const newMarkers: L.Marker[] = [];
+
+    const geocodeAll = async () => {
+      for (const hotel of hotels) {
+        if (cancelled) return;
+
+        const query = hotel.location || hotel.address || '';
+        if (!query) continue;
+
+        const result = await geocodeLocation(query);
+        if (!cancelled && result) {
+          const marker = L.marker([result.lat, result.lng], {
+            icon: createHotelIcon(hotel.min_price, false),
+          });
+
+          // Add popup
+          marker.bindPopup(`
+            <div class="hotel-popup">
+              ${hotel.main_image_url ? `<img src="${hotel.main_image_url}" alt="${hotel.name}" class="popup-image" onerror="this.style.display='none'" />` : ''}
+              <div class="popup-info">
+                <h3 class="popup-name">${hotel.name}</h3>
+                <p class="popup-location">${hotel.location}</p>
+                <p class="popup-price">
+                  <span class="price-amount">$${hotel.min_price.toLocaleString()}</span>
+                  <span class="price-period"> /noche</span>
+                </p>
+                <a href="/hotel/${hotel.slug}" class="popup-cta">Ver hotel →</a>
+              </div>
+            </div>
+          `);
+
+          newMarkers.push(marker);
+          setGeocodedCount((prev) => prev + 1);
+        }
+      }
+
+      if (!cancelled) {
+        setMarkers(newMarkers);
+        setIsLoading(false);
+      }
+    };
+
+    geocodeAll();
+    return () => { cancelled = true; };
+  }, [hotels]);
 
   if (hotels.length === 0) {
     return (
@@ -161,7 +125,12 @@ export default function HotelMapView({ hotels, centerLocation }: HotelMapViewPro
       {/* Loading state */}
       {isLoading && (
         <div className="absolute inset-0 flex items-center justify-center bg-muted/50 z-[1000]">
-          <Loader2 size={24} className="text-brand-500 animate-spin" />
+          <div className="flex flex-col items-center gap-2">
+            <Loader2 size={24} className="text-brand-500 animate-spin" />
+            <p className="text-xs text-muted-foreground">
+              Buscando ubicaciones... ({geocodedCount}/{hotels.length})
+            </p>
+          </div>
         </div>
       )}
 
@@ -171,17 +140,20 @@ export default function HotelMapView({ hotels, centerLocation }: HotelMapViewPro
         zoom={6}
         className="w-full h-full z-0"
         zoomControl={false}
-        whenReady={() => setIsLoading(false)}
+        whenReady={() => {
+          // Only stop loading if we have markers or if geocoding is done
+          if (markers.length > 0 || geocodedCount === hotels.length) {
+            setIsLoading(false);
+          }
+        }}
       >
         <TileLayer
           attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         
-        {/* Render markers */}
-        {hotels.map((hotel) => (
-          <HotelMarker key={hotel.id} hotel={hotel} />
-        ))}
+        {/* Clustered markers */}
+        {markers.length > 0 && <ClusteredMarkers markers={markers} />}
       </MapContainer>
     </div>
   );
