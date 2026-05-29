@@ -32,6 +32,10 @@ interface HotelMapViewProps {
   initialCenter?: [number, number];
   /** Override default zoom level (from URL state). Default: 6 */
   initialZoom?: number;
+  /** PRD-006: Fired when map pan/zoom exceeds bounds threshold (20%). */
+  onBoundsExceeded?: (bounds: L.LatLngBounds) => void;
+  /** PRD-006: Bounds change ratio threshold. Default: 0.2 */
+  boundsThreshold?: number;
 }
 
 /**
@@ -50,6 +54,8 @@ export default function HotelMapView({
   enableSearchOnMove = false,
   initialCenter,
   initialZoom,
+  onBoundsExceeded,
+  boundsThreshold,
 }: HotelMapViewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [geocodingProgress, setGeocodingProgress] = useState({ current: 0, total: 0 });
@@ -115,6 +121,8 @@ export default function HotelMapView({
           onSearchAreaChange={onSearchAreaChange}
           enableSearchOnMove={enableSearchOnMove}
           moveDebounceMs={1000}
+          onBoundsExceeded={onBoundsExceeded}
+          boundsThreshold={boundsThreshold}
         />
       </MapContainer>
     </div>

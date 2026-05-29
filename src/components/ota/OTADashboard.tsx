@@ -125,6 +125,9 @@ export default function OTADashboard({
   const [boundsFilterResult, setBoundsFilterResult] = useState<BoundsFilterResult | null>(null);
   const boundsFilterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // PRD-006: Bounds-exceeded state (pan > 20% threshold → show "Search this area")
+  const [isBoundsExceeded, setIsBoundsExceeded] = useState(false);
+
   // Selected hotel for map ↔ list sync (Idea #2: hover hotel → zoom to marker)
   const [selectedHotelId, setSelectedHotelId] = useState<string>('');
   const selectedHotelRef = useRef<string>('');
@@ -190,15 +193,31 @@ export default function OTADashboard({
     }
   }, [urlLocation, syncToUrl]);
 
-  // "Search this area" handler (Phase 2: PRD-004 bounds filtering)
-  const handleSearchThisArea = useCallback(() => {
-    if (mapCenter && boundsFilterResult) {
-      // Use reverse geocoded area name from MapSearchSync (already updated URL)
-      // The search effect will re-run with the new urlLocation
-      setIsMapMoved(false);
-      setBoundsFilterResult(null);
+  // PRD-006: Bounds-exceeded callback (pan > 20% threshold → show re-search button)
+  const handleBoundsExceeded = useCallback((bounds: L.LatLngBounds) => {
+    setIsBoundsExceeded(true);
+    setMapBounds(bounds);
+  }, []);
+
+  // "Search this area" handler (Phase 4: PRD-006 bounds re-search)
+  const handleSearchThisArea = useCallback(async () => {
+    if (!mapCenter) return;
+
+    setIsMapMoved(false);
+    setIsBoundsExceeded(false);
+    setBoundsFilterResult(null);
+
+    // Trigger full server re-fetch with current map area
+    const response = await fetchOTAHotelsAction(
+      0, 24, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests
+    );
+
+    if (response.success) {
+      setHotels(response.data);
+      setPage(0);
+      setHasMore(response.hasMore);
     }
-  }, [mapCenter, boundsFilterResult]);
+  }, [mapCenter, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests]);
 
   // Cleanup bounds filter timeout on unmount
   useEffect(() => {
@@ -754,7 +773,7 @@ export default function OTADashboard({
             </div>
 
             {/* Map panel (60%) — sticky, always visible */}
-            <div className="map-panel-sticky">
+            <div className="map-panel-sticky relative">
               <HotelMapView
                 hotels={sortedHotels.map((h: any) => ({
                   id: h.id,
@@ -773,7 +792,25 @@ export default function OTADashboard({
                 enableSearchOnMove={true}
                 initialCenter={initialCenter}
                 initialZoom={initialZoom}
+                onBoundsExceeded={handleBoundsExceeded}
+                boundsThreshold={0.2}
               />
+
+              {/* "Search this area" — bounds exceeded button */}
+              <AnimatePresence>
+                {isBoundsExceeded && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    onClick={handleSearchThisArea}
+                    className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg active:scale-[0.98] active:bg-brand-700 transition-all"
+                  >
+                    <Search size={14} />
+                    Buscar en esta zona
+                  </motion.button>
+                )}
+              </AnimatePresence>
             </div>
           </div>
         ) : (
@@ -801,11 +838,13 @@ export default function OTADashboard({
                     enableSearchOnMove={true}
                     initialCenter={initialCenter}
                     initialZoom={initialZoom}
+                    onBoundsExceeded={handleBoundsExceeded}
+                    boundsThreshold={0.2}
                   />
 
                   {/* "Search this area" button (appears when user pans beyond bounds threshold) */}
                   <AnimatePresence>
-                    {isMapMoved && (
+                    {isBoundsExceeded && (
                       <motion.button
                         initial={{ opacity: 0, y: 16 }}
                         animate={{ opacity: 1, y: 0 }}
