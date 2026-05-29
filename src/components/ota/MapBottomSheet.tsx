@@ -78,7 +78,7 @@ function getSnapLabel(index: SnapIndex): string {
  * Compute the three snap Y-values given the window height.
  * Returns [expanded, partial, collapsed] in pixels.
  */
-function getSnapTargets(windowHeight: number): [number, number, number] {
+export function getSnapTargets(windowHeight: number): [number, number, number] {
   const expanded = 0; // show 60vh of content
   const partial = Math.round(windowHeight * 0.3); // show 30vh
   const collapsed = Math.max(
@@ -89,7 +89,7 @@ function getSnapTargets(windowHeight: number): [number, number, number] {
 }
 
 /** Pick nearest snap biased by velocity direction. */
-function findNearestSnap(
+export function findNearestSnap(
   y: number,
   velocityY: number,
   snaps: [number, number, number],
