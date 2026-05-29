@@ -3,8 +3,10 @@
 import { useState } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { MapPin, Loader2 } from 'lucide-react';
+import L from 'leaflet';
 import MarkerLifecycleManager from './MarkerLifecycleManager';
 import MapTransitionController from './MapTransitionController';
+import MapSearchSync from './MapSearchSync';
 import 'leaflet/dist/leaflet.css';
 import '@/styles/map.css';
 
@@ -21,6 +23,9 @@ interface Hotel {
 interface HotelMapViewProps {
   hotels: Hotel[];
   centerLocation?: string;
+  onMapBoundsChange?: (bounds: L.LatLngBounds, center: L.LatLng, zoom: number) => void;
+  onSearchAreaChange?: (areaName: string) => void;
+  enableSearchOnMove?: boolean;
 }
 
 /**
@@ -28,7 +33,13 @@ interface HotelMapViewProps {
  *
  * Phase 2: MarkerLifecycleManager integration.
  */
-export default function HotelMapView({ hotels, centerLocation }: HotelMapViewProps) {
+export default function HotelMapView({
+  hotels,
+  centerLocation,
+  onMapBoundsChange,
+  onSearchAreaChange,
+  enableSearchOnMove = false,
+}: HotelMapViewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [geocodingProgress, setGeocodingProgress] = useState({ current: 0, total: 0 });
 
@@ -81,6 +92,15 @@ export default function HotelMapView({ hotels, centerLocation }: HotelMapViewPro
           hotels={hotels}
           centerLocation={centerLocation}
           transitionDuration={1.2}
+        />
+
+        {/* Search ↔ Map sync */}
+        <MapSearchSync
+          searchLocation={centerLocation}
+          onMapBoundsChange={onMapBoundsChange}
+          onSearchAreaChange={onSearchAreaChange}
+          enableSearchOnMove={enableSearchOnMove}
+          moveDebounceMs={1000}
         />
       </MapContainer>
     </div>
