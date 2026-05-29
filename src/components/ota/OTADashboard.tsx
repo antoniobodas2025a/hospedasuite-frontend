@@ -37,7 +37,7 @@ import { useSharedMoveGuard } from '@/lib/use-shared-move-guard';
 import L from 'leaflet';
 import { filterHotelsByBounds, BoundsFilterResult } from '@/lib/bounds-filter';
 import { getCachedCoords } from '@/lib/geo-cache';
-import { deserializeMapParams } from '@/lib/map-url-state';
+import { deserializeMapParams, serializeMapParams } from '@/lib/map-url-state';
 
 const CATEGORIES = [
   { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal, popular: false },
@@ -192,6 +192,28 @@ export default function OTADashboard({
       syncToUrl({ location: areaName });
     }
   }, [urlLocation, syncToUrl]);
+
+  // PRD-006: Persist map state to URL (center, zoom) with 300ms debounce
+  const mapUrlTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  useEffect(() => {
+    if (!mapCenter || !mapZoom) return;
+
+    if (mapUrlTimeoutRef.current) clearTimeout(mapUrlTimeoutRef.current);
+
+    mapUrlTimeoutRef.current = setTimeout(() => {
+      const qs = serializeMapParams({ center: { lat: mapCenter.lat, lng: mapCenter.lng }, zoom: mapZoom });
+      const params = new URLSearchParams(searchParams.toString());
+      qs.split('&').forEach((p) => {
+        const [k, v] = p.split('=');
+        if (k && v !== undefined) params.set(k, v);
+      });
+      router.replace(`${pathname}?${params.toString()}`, { scroll: false });
+    }, 300);
+
+    return () => {
+      if (mapUrlTimeoutRef.current) clearTimeout(mapUrlTimeoutRef.current);
+    };
+  }, [mapCenter, mapZoom, pathname, router, searchParams]);
 
   // PRD-006: Bounds-exceeded callback (pan > 20% threshold → show re-search button)
   const handleBoundsExceeded = useCallback((bounds: L.LatLngBounds) => {

@@ -242,10 +242,21 @@ export default function MapBottomSheet({
         {/* ---- Drag handle ---- */}
         <div
           className="flex-shrink-0 flex justify-center pt-3 pb-2 cursor-grab active:cursor-grabbing touch-none select-none"
-          role="separator"
-          aria-label="Arrastrar para ajustar vista"
+          role="button"
+          tabIndex={0}
+          aria-label="Arrastrar o usar flechas para ajustar vista"
+          aria-keyshortcuts="ArrowUp ArrowDown"
+          onKeyDown={(e) => {
+            if (e.key === 'ArrowUp' && snapIndex > 0) {
+              e.preventDefault();
+              setSnapIndex((snapIndex - 1) as SnapIndex);
+            } else if (e.key === 'ArrowDown' && snapIndex < 2) {
+              e.preventDefault();
+              setSnapIndex((snapIndex + 1) as SnapIndex);
+            }
+          }}
         >
-          <div className="w-10 h-1 rounded-full bg-foreground/15 transition-all hover:bg-foreground/25" />
+          <div className="w-10 h-1 rounded-full bg-foreground/15 transition-all hover:bg-foreground/25 focus-visible:ring-2 focus-visible:ring-brand-500" />
         </div>
 
         {/* ---- Scrollable content ---- */}
