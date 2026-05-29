@@ -1,15 +1,21 @@
 'use client';
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { MapPin, Loader2, X } from 'lucide-react';
+import { MapPin, Loader2, X, Sparkles } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { springSnappy, springGentle } from '@/lib/mac2026/spring';
 import { searchLocationsAction, LocationSuggestion } from '@/app/actions/ota';
+import { fuzzySearch } from '@/lib/fuzzy-search';
 
 interface LocationAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
   placeholder?: string;
+}
+
+interface FuzzySuggestion {
+  matchedCity: string;
+  score: number;
 }
 
 /**
@@ -25,12 +31,16 @@ export default function LocationAutocomplete({
 }: LocationAutocompleteProps) {
   const [inputValue, setInputValue] = useState(value);
   const [suggestions, setSuggestions] = useState<LocationSuggestion[]>([]);
+  const [fuzzySuggestion, setFuzzySuggestion] = useState<FuzzySuggestion | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
+
+  // Cache of previously fetched cities for fuzzy fallback
+  const recentCitiesRef = useRef<LocationSuggestion[]>([]);
 
   // Sync external value changes
   useEffect(() => {
@@ -55,21 +65,46 @@ export default function LocationAutocomplete({
   const fetchSuggestions = useCallback(async (query: string) => {
     if (query.length < 2) {
       setSuggestions([]);
+      setFuzzySuggestion(null);
       setIsOpen(false);
       return;
     }
 
     setIsLoading(true);
+    setFuzzySuggestion(null);
     const result = await searchLocationsAction(query);
     setIsLoading(false);
 
     if (result.success && result.data.length > 0) {
+      // Cache successful results for future fuzzy fallback
+      recentCitiesRef.current = result.data;
       setSuggestions(result.data);
+      setFuzzySuggestion(null);
       setIsOpen(true);
       setSelectedIndex(-1);
     } else {
       setSuggestions([]);
-      setIsOpen(false);
+
+      // Fuzzy fallback: search against cached cities
+      const cached = recentCitiesRef.current;
+      if (cached.length > 0) {
+        const fuzzyResults = fuzzySearch(cached, query, ['city'], 3);
+
+        // Only suggest if there's a confident match (>0.6 means score < 0.4)
+        const bestMatch = fuzzyResults.find(r => r.score < 0.4);
+        if (bestMatch && bestMatch.item.city.toLowerCase() !== query.toLowerCase()) {
+          setFuzzySuggestion({
+            matchedCity: bestMatch.item.city,
+            score: bestMatch.score,
+          });
+          setIsOpen(true);
+          setSelectedIndex(-1);
+        } else {
+          setIsOpen(false);
+        }
+      } else {
+        setIsOpen(false);
+      }
     }
   }, []);
 
@@ -88,6 +123,14 @@ export default function LocationAutocomplete({
     setInputValue(city);
     onChange(city);
     setIsOpen(false);
+    setSelectedIndex(-1);
+  };
+
+  const handleFuzzySelect = (matchedCity: string) => {
+    setInputValue(matchedCity);
+    onChange(matchedCity);
+    setIsOpen(false);
+    setFuzzySuggestion(null);
     setSelectedIndex(-1);
   };
 
@@ -188,7 +231,7 @@ export default function LocationAutocomplete({
 
       {/* Suggestions dropdown */}
       <AnimatePresence>
-        {isOpen && suggestions.length > 0 && (
+        {isOpen && (suggestions.length > 0 || fuzzySuggestion) && (
           <motion.div
             initial={{ opacity: 0, y: 4, scale: 0.98 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
@@ -199,6 +242,23 @@ export default function LocationAutocomplete({
             className="absolute top-full left-0 right-0 mt-2 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] shadow-xl overflow-hidden z-50"
           >
             <div className="max-h-60 overflow-y-auto">
+              {/* Fuzzy "¿Querías decir?" suggestion */}
+              {fuzzySuggestion && (
+                <button
+                  role="option"
+                  aria-selected={false}
+                  onClick={() => handleFuzzySelect(fuzzySuggestion.matchedCity)}
+                  className="w-full flex items-center gap-2.5 px-4 py-3 text-left text-sm transition-colors bg-amber-500/5 hover:bg-amber-500/10 border-b border-border/30"
+                >
+                  <Sparkles size={14} className="text-amber-500 shrink-0" />
+                  <span className="truncate">
+                    <span className="text-muted-foreground">¿Querías decir </span>
+                    <span className="font-semibold text-amber-600">{fuzzySuggestion.matchedCity}</span>
+                    <span className="text-muted-foreground">?</span>
+                  </span>
+                </button>
+              )}
+              {/* Normal suggestions */}
               {suggestions.map((suggestion, index) => (
                 <button
                   key={suggestion.city}
