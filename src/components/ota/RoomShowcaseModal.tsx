@@ -119,6 +119,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
     params.set('checkin', checkIn);
     params.set('checkout', checkOut);
     params.set('guests', defaultGuests.toString());
+    params.set('ref', 'ota'); // OTA attribution → 10% commission
     params.delete('showRoom'); // Remove modal param when going to checkout
     router.push(`/book/${hotel.slug}/checkout?${params.toString()}`);
   };
