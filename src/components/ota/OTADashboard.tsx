@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   SlidersHorizontal,
@@ -16,6 +16,9 @@ import {
   Calendar,
   User,
   MapPin,
+  ArrowDown,
+  Star,
+  ArrowUpDown,
 } from 'lucide-react';
 import HotelCard from './HotelCard';
 import LanguageSwitcher from './LanguageSwitcher';
@@ -92,6 +95,11 @@ export default function OTADashboard({
   // Selected hotel for map ↔ list sync (Idea #2: hover hotel → zoom to marker)
   const [selectedHotelId, setSelectedHotelId] = useState<string>('');
   const selectedHotelRef = useRef<string>('');
+
+  // Sprint 1: PRD-005 — Sorting + Progressive Disclosure
+  const [sortBy, setSortBy] = useState<'recommended' | 'price-asc' | 'price-desc' | 'rating'>('recommended');
+  const [visibleCount, setVisibleCount] = useState(6);
+  const [searchStep, setSearchStep] = useState<'location' | 'full'>('location');
 
   // Sync category, searchTerm, and location to URL
   const syncToUrl = useCallback((updates: { category?: string; search?: string; location?: string }) => {
@@ -173,6 +181,25 @@ export default function OTADashboard({
     setSelectedHotelId(hotelId);
     selectedHotelRef.current = hotelId;
   }, []);
+
+  // Sprint 1: Sorting logic
+  const sortedHotels = useMemo(() => {
+    const sorted = [...hotels];
+    switch (sortBy) {
+      case 'price-asc':
+        return sorted.sort((a, b) => (a.min_price || 0) - (b.min_price || 0));
+      case 'price-desc':
+        return sorted.sort((a, b) => (b.min_price || 0) - (a.min_price || 0));
+      case 'rating':
+        return sorted.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      case 'recommended':
+      default:
+        return sorted; // Default order (server ranking)
+    }
+  }, [hotels, sortBy]);
+
+  const visibleHotels = sortedHotels.slice(0, visibleCount);
+  const hasMoreHotels = sortedHotels.length > visibleCount;
 
   // Debounced search effect with stale-while-revalidate cache
   useEffect(() => {
@@ -321,27 +348,100 @@ export default function OTADashboard({
       </header>
 
       <main className='flex-1 max-w-7xl mx-auto px-4 pt-20 pb-8 w-full'>
-        {/* HERO — clean typography, no gradient */}
-        <div className='text-center mb-6 sm:mb-8'>
+        {/* HERO — Sprint 1: PRD-005 redesign */}
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={springGentle()}
+          className='text-center mb-6 sm:mb-8'
+        >
           <h1 className='text-3xl sm:text-4xl md:text-5xl font-bold text-foreground tracking-tight leading-tight'>
             {t('ota.hero.title')}{' '}
             <span className='text-brand-500'>
               {t('ota.hero.highlight')}
             </span>
           </h1>
-        </div>
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.3, duration: 0.5 }}
+            className='mt-3 text-sm sm:text-base text-muted-foreground max-w-md mx-auto'
+          >
+            Reserva directo · Sin comisiones · Mejor precio garantizado
+          </motion.p>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.6, duration: 0.5 }}
+            className='mt-6 flex justify-center'
+          >
+            <motion.div
+              animate={{ y: [0, 6, 0] }}
+              transition={{ duration: 1.5, repeat: Infinity, ease: 'easeInOut' }}
+              className='w-8 h-12 rounded-full border-2 border-muted-foreground/30 flex items-start justify-center p-1.5'
+            >
+              <ArrowDown size={14} className='text-muted-foreground/60' />
+            </motion.div>
+          </motion.div>
+        </motion.div>
 
-        {/* SEARCH BAR — Unified 3-zone (Location, Dates, Guests) */}
-        <div className={`sticky z-40 mb-8 sm:mb-12 transition-[top] ${isHeaderVisible ? 'top-14' : 'top-0'}`}
+        {/* SEARCH BAR — Sprint 1: Progressive disclosure */}
+        <div className={`sticky z-40 mb-6 sm:mb-8 transition-[top] ${isHeaderVisible ? 'top-14' : 'top-0'}`}
           style={{ transition: 'top 0.3s var(--spring-gentle)' }}
         >
-          {/* Desktop: Full search bar */}
-          <div className='hidden sm:block max-w-3xl mx-auto relative group'>
-            <SearchBarUnified
-              onSearch={(filters) => {
-                setSearchTerm(filters.location);
-              }}
-            />
+          {/* Desktop: Progressive disclosure search bar */}
+          <div className='hidden sm:block max-w-3xl mx-auto relative'>
+            <AnimatePresence mode='wait'>
+              {searchStep === 'location' ? (
+                <motion.div
+                  key='location-step'
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={springSnappy()}
+                >
+                  <div className='flex items-center gap-2 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm p-2'>
+                    <div className='flex-1 flex items-center gap-3 px-4'>
+                      <MapPin size={20} className='text-brand-600 shrink-0' />
+                      <input
+                        type='text'
+                        placeholder='¿A dónde querés escapar?'
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && searchTerm.trim()) {
+                            setSearchStep('full');
+                          }
+                        }}
+                        className='flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none'
+                        autoFocus
+                      />
+                    </div>
+                    <button
+                      onClick={() => searchTerm.trim() && setSearchStep('full')}
+                      className='flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] hover:bg-brand-700 transition-colors active:scale-[0.97]'
+                    >
+                      <Search size={16} />
+                      Buscar
+                    </button>
+                  </div>
+                </motion.div>
+              ) : (
+                <motion.div
+                  key='full-step'
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={springSnappy()}
+                >
+                  <SearchBarUnified
+                    onSearch={(filters) => {
+                      setSearchTerm(filters.location);
+                    }}
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
           </div>
 
           {/* Mobile: Tap to open search sheet */}
@@ -366,11 +466,11 @@ export default function OTADashboard({
         </div>
 
         {/* Map toggle + Map view */}
-        {hotels.length > 0 && (
+        {sortedHotels.length > 0 && (
           <div className='mb-6 sm:mb-8'>
             <div className='flex items-center justify-between mb-3'>
               <h2 className='text-sm font-bold text-foreground'>
-                {hotels.length} {hotels.length === 1 ? 'alojamiento' : 'alojamientos'}
+                {sortedHotels.length} {sortedHotels.length === 1 ? 'alojamiento' : 'alojamientos'}
               </h2>
               <button
                 onClick={() => setShowMap(!showMap)}
@@ -384,7 +484,7 @@ export default function OTADashboard({
             {showMap ? (
               <div className="relative">
                 <HotelMapView
-                  hotels={hotels.map((h: any) => ({
+                  hotels={sortedHotels.map((h: any) => ({
                     id: h.id,
                     name: h.name,
                     location: h.location,
@@ -541,26 +641,64 @@ export default function OTADashboard({
           </div>
         </div>
 
-        {/* GRID DE HOTELES — gap-4 mobile, gap-8 desktop */}
+        {/* GRID DE HOTELES — Sprint 1: 3 cols, 6 cards iniciales */}
         {isSearching ? (
           <div className='flex flex-col items-center justify-center py-20 text-muted-foreground'>
             <Loader2 size={40} className='animate-spin mb-3 text-brand-500' />
             <p className='font-semibold text-sm'>{t('ota.loading.searching')}</p>
           </div>
-        ) : hotels.length > 0 ? (
-          <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 sm:gap-6 lg:gap-8'>
-            <AnimatePresence mode='popLayout'>
-              {hotels.map((hotel) => (
-                <HotelCard
-                  key={hotel.id}
-                  hotel={hotel}
-                  href={preserveSearchParams(searchParams, `/hotel/${hotel.slug}`)}
-                  isSelected={hotel.id === selectedHotelId}
-                  onSelect={handleHotelSelect}
-                />
-              ))}
-            </AnimatePresence>
-          </div>
+        ) : visibleHotels.length > 0 ? (
+          <>
+            {/* Sorting controls — Sprint 1: PRD-005 */}
+            <div className='flex items-center justify-between mb-4'>
+              <div className='relative'>
+                <select
+                  value={sortBy}
+                  onChange={(e) => setSortBy(e.target.value as typeof sortBy)}
+                  className='appearance-none flex items-center gap-2 px-4 py-2 bg-card border border-border/30 rounded-[var(--radius-squircle-xl)] text-sm font-medium text-foreground cursor-pointer hover:border-border/50 transition-colors pr-8'
+                >
+                  <option value='recommended'>⭐ Recomendados</option>
+                  <option value='price-asc'>💰 Precio: menor a mayor</option>
+                  <option value='price-desc'>💰 Precio: mayor a menor</option>
+                  <option value='rating'>⭐ Mejor rating</option>
+                </select>
+                <ArrowUpDown size={14} className='absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none' />
+              </div>
+              {hasMoreHotels && (
+                <p className='text-xs text-muted-foreground'>
+                  Mostrando {visibleCount} de {sortedHotels.length}
+                </p>
+              )}
+            </div>
+
+            <div className='grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6 lg:gap-8'>
+              <AnimatePresence mode='popLayout'>
+                {visibleHotels.map((hotel: any) => (
+                  <HotelCard
+                    key={hotel.id}
+                    hotel={hotel}
+                    href={preserveSearchParams(searchParams, `/hotel/${hotel.slug}`)}
+                    isSelected={hotel.id === selectedHotelId}
+                    onSelect={handleHotelSelect}
+                  />
+                ))}
+              </AnimatePresence>
+            </div>
+
+            {/* "Mostrar más" button — Sprint 1 */}
+            {hasMoreHotels && (
+              <div className='flex justify-center mt-12 sm:mt-16 mb-16 sm:mb-20'>
+                <motion.button
+                  onClick={() => setVisibleCount(prev => prev + 6)}
+                  whileTap={{ scale: 0.97 }}
+                  transition={springSnappy()}
+                  className='flex items-center gap-2 px-6 py-3 bg-card border border-border/50 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground hover:border-foreground/20 transition-all'
+                >
+                  <Plus size={14} /> Mostrar más alojamientos
+                </motion.button>
+              </div>
+            )}
+          </>
         ) : (
           <div className='text-center py-20'>
             <Tent size={48} className='mx-auto mb-4 text-muted-foreground/40' />
@@ -571,9 +709,9 @@ export default function OTADashboard({
           </div>
         )}
 
-        {/* BOTON CARGAR MAS */}
+        {/* BOTON CARGAR MAS (server-side pagination) */}
         {hasMore && !isSearching && (
-          <div className='flex justify-center mt-12 sm:mt-16 mb-16 sm:mb-20'>
+          <div className='flex justify-center mt-8 mb-16 sm:mb-20'>
             <motion.button
               onClick={loadMoreHotels}
               disabled={isLoadingMore}
