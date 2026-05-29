@@ -20,6 +20,7 @@ interface Hotel {
 
 interface MarkerLifecycleManagerProps {
   hotels: Hotel[];
+  selectedHotelId?: string;
   onGeocodingProgress?: (current: number, total: number) => void;
   onMarkersReady?: () => void;
 }
@@ -53,6 +54,7 @@ function createHotelIcon(price: number, isSelected: boolean): L.DivIcon {
  */
 export default function MarkerLifecycleManager({
   hotels,
+  selectedHotelId = '',
   onGeocodingProgress,
   onMarkersReady,
 }: MarkerLifecycleManagerProps) {
@@ -192,6 +194,22 @@ export default function MarkerLifecycleManager({
       map.fitBounds(group.getBounds(), { padding: [50, 50] });
     }
   }, [hotels, onGeocodingProgress, map]);
+
+  // Update marker selection state (Idea #2: hover hotel → highlight marker)
+  useEffect(() => {
+    if (!clusterGroupRef.current) return;
+
+    markersRef.current.forEach((marker, id) => {
+      const hotel = hotels.find((h) => h.id === id);
+      if (!hotel) return;
+
+      const isSelected = id === selectedHotelId;
+      marker.setIcon(createHotelIcon(hotel.min_price, isSelected));
+
+      // Bring selected marker to front with z-index offset
+      marker.setZIndexOffset(isSelected ? 1000 : 0);
+    });
+  }, [selectedHotelId, hotels]);
 
   return null;
 }

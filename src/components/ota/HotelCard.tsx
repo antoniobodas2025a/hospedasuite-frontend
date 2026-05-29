@@ -21,7 +21,17 @@ interface Hotel {
   main_image_blur?: string;
 }
 
-export default function HotelCard({ hotel, href }: { hotel: Hotel; href?: string }) {
+export default function HotelCard({
+  hotel,
+  href,
+  isSelected = false,
+  onSelect,
+}: {
+  hotel: Hotel;
+  href?: string;
+  isSelected?: boolean;
+  onSelect?: (hotelId: string) => void;
+}) {
   const router = useRouter();
   const t = useTranslations();
 
@@ -46,8 +56,12 @@ export default function HotelCard({ hotel, href }: { hotel: Hotel; href?: string
       whileHover={{ y: -4 }}
       whileTap={{ scale: 0.98 }}
       transition={springBounce()}
-      className='group relative aspect-[3/4] rounded-[var(--radius-squircle-2xl)] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-shadow bg-brand-900'
+      className={`group relative aspect-[3/4] rounded-[var(--radius-squircle-2xl)] overflow-hidden cursor-pointer shadow-lg hover:shadow-2xl transition-shadow bg-brand-900 ${
+        isSelected ? 'ring-2 ring-brand-400 ring-offset-2 ring-offset-background' : ''
+      }`}
       onClick={handleClick}
+      onMouseEnter={() => onSelect?.(hotel.id)}
+      onMouseLeave={() => onSelect?.('')}
     >
       <Image
         src={getImageSizeUrl(bgImage, 'card')}

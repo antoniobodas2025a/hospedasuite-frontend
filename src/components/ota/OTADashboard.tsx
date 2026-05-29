@@ -89,6 +89,10 @@ export default function OTADashboard({
   const [boundsFilterResult, setBoundsFilterResult] = useState<BoundsFilterResult | null>(null);
   const boundsFilterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
+  // Selected hotel for map ↔ list sync (Idea #2: hover hotel → zoom to marker)
+  const [selectedHotelId, setSelectedHotelId] = useState<string>('');
+  const selectedHotelRef = useRef<string>('');
+
   // Sync category, searchTerm, and location to URL
   const syncToUrl = useCallback((updates: { category?: string; search?: string; location?: string }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -162,6 +166,12 @@ export default function OTADashboard({
         clearTimeout(boundsFilterTimeoutRef.current);
       }
     };
+  }, []);
+
+  // Handle hotel selection from list (hover → zoom to marker)
+  const handleHotelSelect = useCallback((hotelId: string) => {
+    setSelectedHotelId(hotelId);
+    selectedHotelRef.current = hotelId;
   }, []);
 
   // Debounced search effect with stale-while-revalidate cache
@@ -384,6 +394,7 @@ export default function OTADashboard({
                     main_image_url: h.main_image_url,
                   }))}
                   centerLocation={urlLocation || undefined}
+                  selectedHotelId={selectedHotelId}
                   onMapBoundsChange={handleMapBoundsChange}
                   onSearchAreaChange={handleSearchAreaChange}
                   enableSearchOnMove={true}
@@ -544,6 +555,8 @@ export default function OTADashboard({
                   key={hotel.id}
                   hotel={hotel}
                   href={preserveSearchParams(searchParams, `/hotel/${hotel.slug}`)}
+                  isSelected={hotel.id === selectedHotelId}
+                  onSelect={handleHotelSelect}
                 />
               ))}
             </AnimatePresence>

@@ -14,6 +14,7 @@ interface Hotel {
 interface MapTransitionControllerProps {
   hotels: Hotel[];
   centerLocation?: string;
+  selectedHotelId?: string;
   transitionDuration?: number;
 }
 
@@ -23,6 +24,7 @@ interface MapTransitionControllerProps {
  * Triggers flyTo or fitBounds animations when:
  * - Hotels change (fitBounds to show all markers)
  * - centerLocation changes (flyTo that location)
+ * - selectedHotelId changes (flyTo that hotel's marker)
  * - Markers are added/removed (smooth pan)
  *
  * Uses Leaflet's built-in easing for Mac 2026 spring-like feel.
@@ -30,6 +32,7 @@ interface MapTransitionControllerProps {
 export default function MapTransitionController({
   hotels,
   centerLocation,
+  selectedHotelId = '',
   transitionDuration = 1.2,
 }: MapTransitionControllerProps) {
   const map = useMap();
@@ -58,6 +61,35 @@ export default function MapTransitionController({
       cancelled = true;
     };
   }, [centerLocation, map, transitionDuration]);
+
+  // Transition 3: flyTo selected hotel marker (Idea #2: hover hotel → zoom to marker)
+  useEffect(() => {
+    if (!selectedHotelId) return;
+
+    const hotel = hotels.find((h) => h.id === selectedHotelId);
+    if (!hotel) return;
+
+    let cancelled = false;
+
+    const flyToHotel = async () => {
+      const query = hotel.location || hotel.address || '';
+      if (!query) return;
+
+      const result = await geocodeLocation(query);
+      if (cancelled || !result) return;
+
+      map.flyTo([result.lat, result.lng], 14, {
+        duration: 0.8,
+        easeLinearity: 0.25,
+      });
+    };
+
+    flyToHotel();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [selectedHotelId, hotels, map]);
 
   // Transition 2: fitBounds when hotels change
   useEffect(() => {

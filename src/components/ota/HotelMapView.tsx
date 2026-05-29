@@ -23,6 +23,7 @@ interface Hotel {
 interface HotelMapViewProps {
   hotels: Hotel[];
   centerLocation?: string;
+  selectedHotelId?: string;
   onMapBoundsChange?: (bounds: L.LatLngBounds, center: L.LatLng, zoom: number) => void;
   onSearchAreaChange?: (areaName: string) => void;
   enableSearchOnMove?: boolean;
@@ -32,10 +33,12 @@ interface HotelMapViewProps {
  * HotelMapView — Interactive map using Leaflet + OpenStreetMap.
  *
  * Phase 2: MarkerLifecycleManager integration.
+ * Idea #2: Hover hotel in list → zoom to marker.
  */
 export default function HotelMapView({
   hotels,
   centerLocation,
+  selectedHotelId = '',
   onMapBoundsChange,
   onSearchAreaChange,
   enableSearchOnMove = false,
@@ -83,6 +86,7 @@ export default function HotelMapView({
         {/* Marker lifecycle manager */}
         <MarkerLifecycleManager
           hotels={hotels}
+          selectedHotelId={selectedHotelId}
           onGeocodingProgress={(current, total) => setGeocodingProgress({ current, total })}
           onMarkersReady={() => setIsLoading(false)}
         />
@@ -91,6 +95,7 @@ export default function HotelMapView({
         <MapTransitionController
           hotels={hotels}
           centerLocation={centerLocation}
+          selectedHotelId={selectedHotelId}
           transitionDuration={1.2}
         />
 
