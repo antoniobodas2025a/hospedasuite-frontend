@@ -76,7 +76,8 @@ export default function OTADashboard({
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [activeCategory, setActiveCategory] = useState(urlCategory);
-  const [searchTerm, setSearchTerm] = useState(urlSearch);
+  // Progressive disclosure: searchTerm captures location from Step 1, synced from URL location
+  const [searchTerm, setSearchTerm] = useState(urlLocation);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
   const [isHeaderVisible, setIsHeaderVisible] = useState(true);
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
@@ -244,6 +245,13 @@ export default function OTADashboard({
       setTimeout(() => setSelectedHotelId(''), 2000);
     }
   }, []);
+
+  // Progressive disclosure: sync location to URL before transitioning to full search bar
+  const handleCommitLocation = useCallback(() => {
+    if (!searchTerm.trim()) return;
+    syncToUrl({ location: searchTerm });
+    setSearchStep('full');
+  }, [searchTerm, syncToUrl]);
 
   // Debounced search effect with stale-while-revalidate cache
   useEffect(() => {
@@ -454,7 +462,7 @@ export default function OTADashboard({
                         onChange={(e) => setSearchTerm(e.target.value)}
                         onKeyDown={(e) => {
                           if (e.key === 'Enter' && searchTerm.trim()) {
-                            setSearchStep('full');
+                            handleCommitLocation();
                           }
                         }}
                         className='flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none'
@@ -462,7 +470,7 @@ export default function OTADashboard({
                       />
                     </div>
                     <button
-                      onClick={() => searchTerm.trim() && setSearchStep('full')}
+                      onClick={handleCommitLocation}
                       className='flex items-center gap-2 px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] transition-colors active:scale-[0.97] active:bg-brand-700'
                     >
                       <Search size={16} />
