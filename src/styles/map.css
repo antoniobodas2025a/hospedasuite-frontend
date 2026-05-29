@@ -74,14 +74,51 @@
   background: var(--bg-muted);
 }
 
-/* Marker Icon Overrides */
-.hotel-marker-pin {
+/* Sprint 3: 2-tier mini-pin system */
+
+/* Tier 1: Mini-pin (default) — small circular dot */
+.hotel-marker-pin.mini {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
   background: var(--bg-card);
-  border: 1px solid var(--border);
-  border-radius: var(--radius-squircle-lg);
-  padding: 4px 8px;
+  border: 2px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.2s ease,
+              background 0.2s ease,
+              border-color 0.2s ease;
+}
+
+.hotel-marker-pin.mini .marker-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--bg-brand-400);
+  transition: background 0.2s ease;
+}
+
+.hotel-marker-pin.mini:hover {
+  transform: scale(1.2);
   box-shadow: var(--shadow-md);
-  font-size: 11px;
+  border-color: var(--bg-brand-300);
+}
+
+.hotel-marker-pin.mini:hover .marker-dot {
+  background: var(--bg-brand-500);
+}
+
+/* Tier 2: Expanded pin (selected/hovered) — full price tag */
+.hotel-marker-pin.expanded {
+  background: var(--bg-card);
+  border: 2px solid var(--bg-brand-400);
+  border-radius: var(--radius-squircle-lg);
+  padding: 6px 12px;
+  box-shadow: var(--shadow-lg);
+  font-size: 13px;
   font-weight: 700;
   color: var(--text-foreground);
   white-space: nowrap;
@@ -90,14 +127,20 @@
   justify-content: center;
   transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
               box-shadow 0.2s ease,
-              background 0.2s ease;
+              background 0.2s ease,
+              border-color 0.2s ease;
 }
 
-.hotel-marker-pin:hover {
+.hotel-marker-pin.expanded .marker-price {
+  color: var(--bg-brand-600);
+}
+
+.hotel-marker-pin.expanded:hover {
   transform: scale(1.1);
   box-shadow: var(--shadow-xl);
 }
 
+/* Legacy selected state (for backward compatibility) */
 .hotel-marker-pin.selected {
   background: var(--bg-brand-500);
   color: white;

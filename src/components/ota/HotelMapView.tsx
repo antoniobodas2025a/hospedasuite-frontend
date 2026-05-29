@@ -58,7 +58,7 @@ export default function HotelMapView({
   }
 
   return (
-    <div className="map-container-enter relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30 shadow-sm">
+    <div className="map-container-enter relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30 shadow-sm pb-20 sm:pb-0">
       {/* Loading state */}
       {isLoading && (
         <div className="map-loading-overlay absolute inset-0 flex items-center justify-center z-[1000]">

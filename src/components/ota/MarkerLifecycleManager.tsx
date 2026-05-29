@@ -26,18 +26,34 @@ interface MarkerLifecycleManagerProps {
   onMarkersReady?: () => void;
 }
 
-// Custom marker icon factory
-function createHotelIcon(price: number, isSelected: boolean): L.DivIcon {
+// Sprint 3: 2-tier mini-pin system
+// Tier 1: Mini-pin (default) — small circular dot, low visual weight
+// Tier 2: Expanded pin (selected/hovered) — full price tag, high visual weight
+function createMiniPinIcon(price: number, isExpanded: boolean): L.DivIcon {
+  if (isExpanded) {
+    return L.divIcon({
+      className: 'hotel-marker-wrapper',
+      html: `
+        <div class="hotel-marker-pin expanded">
+          <span class="marker-price">$${price.toLocaleString()}</span>
+        </div>
+      `,
+      iconSize: [90, 44],
+      iconAnchor: [45, 22],
+      popupAnchor: [0, -22],
+    });
+  }
+
   return L.divIcon({
     className: 'hotel-marker-wrapper',
     html: `
-      <div class="hotel-marker-pin ${isSelected ? 'selected' : ''}">
-        <span class="marker-price">$${price.toLocaleString()}</span>
+      <div class="hotel-marker-pin mini">
+        <span class="marker-dot"></span>
       </div>
     `,
-    iconSize: [80, 40],
-    iconAnchor: [40, 20],
-    popupAnchor: [0, -20],
+    iconSize: [24, 24],
+    iconAnchor: [12, 12],
+    popupAnchor: [0, -12],
   });
 }
 
@@ -133,7 +149,7 @@ export default function MarkerLifecycleManager({
         if (markersRef.current.has(hotel.id)) return;
 
         const marker = L.marker([result.lat, result.lng], {
-          icon: createHotelIcon(hotel.min_price, false),
+          icon: createMiniPinIcon(hotel.min_price, false),
         }) as L.Marker & { geoResult?: GeoResult };
 
         marker.geoResult = result;
@@ -190,8 +206,8 @@ export default function MarkerLifecycleManager({
             </div>
           </div>
         `);
-        // Update icon if price changed
-        marker.setIcon(createHotelIcon(hotel.min_price, false));
+        // Update icon if price changed or selection state changed
+        marker.setIcon(createMiniPinIcon(hotel.min_price, false));
       }
     });
 
@@ -211,7 +227,7 @@ export default function MarkerLifecycleManager({
       if (!hotel) return;
 
       const isSelected = id === selectedHotelId;
-      marker.setIcon(createHotelIcon(hotel.min_price, isSelected));
+      marker.setIcon(createMiniPinIcon(hotel.min_price, isSelected));
 
       // Bring selected marker to front with z-index offset
       marker.setZIndexOffset(isSelected ? 1000 : 0);

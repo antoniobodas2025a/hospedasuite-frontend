@@ -546,52 +546,50 @@ export default function OTADashboard({
                   enableSearchOnMove={true}
                 />
 
-                {/* Mobile: Back to list button (top-left) */}
-                <motion.button
-                  initial={{ opacity: 0, x: -8 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  onClick={() => setShowMap(false)}
-                  className="sm:hidden absolute top-3 left-3 z-[100] flex items-center gap-1.5 px-3 py-2 bg-card/90 backdrop-blur-sm text-xs font-semibold text-foreground rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm active:scale-[0.95] transition-transform"
-                >
-                  <ChevronDown size={14} className="rotate-90" />
-                  Lista
-                </motion.button>
+                {/* Sprint 3: Mobile bottom bar (replaces floating buttons) */}
+                <div className="sm:hidden fixed bottom-0 left-0 right-0 z-[200] px-3 pb-4 pt-2 bg-gradient-to-t from-background via-background/95 to-transparent">
+                  <div className="flex items-center gap-2 bg-card/90 backdrop-blur-sm rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-lg p-2">
+                    {/* Back to list */}
+                    <button
+                      onClick={() => setShowMap(false)}
+                      className="flex items-center gap-1.5 px-3 py-2 text-xs font-semibold text-foreground rounded-[var(--radius-squircle-lg)] bg-muted/50 hover:bg-muted active:scale-[0.97] transition-all"
+                    >
+                      <ChevronDown size={14} className="rotate-90" />
+                      Lista
+                    </button>
 
-                {/* Mobile: Floating search button (bottom-right) */}
-                <motion.button
-                  initial={{ opacity: 0, scale: 0.8 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  whileTap={{ scale: 0.9 }}
-                  onClick={() => setIsMobileSheetOpen(true)}
-                  className="sm:hidden absolute bottom-4 right-4 z-[100] flex items-center justify-center w-12 h-12 bg-brand-600 text-white rounded-[var(--radius-squircle-xl)] shadow-lg hover:bg-brand-700 transition-colors"
-                >
-                  <Search size={20} />
-                </motion.button>
+                    {/* Bounds filter summary */}
+                    {boundsFilterResult && boundsFilterResult.visibleCount < boundsFilterResult.total - boundsFilterResult.unresolvableIds.size && (
+                      <div className="flex-1 text-center text-xs font-medium text-muted-foreground truncate">
+                        {getBoundsFilterSummary(boundsFilterResult)}
+                      </div>
+                    )}
 
-                {/* Bounds filter summary (Phase 2: PRD-004) */}
-                {boundsFilterResult && boundsFilterResult.visibleCount < boundsFilterResult.total - boundsFilterResult.unresolvableIds.size && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    className="absolute top-4 left-1/2 -translate-x-1/2 z-[100] px-3 py-1.5 bg-card/90 backdrop-blur-sm text-xs font-medium text-foreground rounded-full border border-border/30 shadow-sm"
-                  >
-                    {getBoundsFilterSummary(boundsFilterResult)}
-                  </motion.div>
-                )}
+                    {/* Search button */}
+                    <button
+                      onClick={() => setIsMobileSheetOpen(true)}
+                      className="flex items-center justify-center w-10 h-10 bg-brand-600 text-white rounded-[var(--radius-squircle-lg)] shadow-sm hover:bg-brand-700 active:scale-[0.95] transition-all"
+                    >
+                      <Search size={18} />
+                    </button>
+                  </div>
 
-                {/* "Search this area" button (appears when user pans away) */}
-                {isMapMoved && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    onClick={handleSearchThisArea}
-                    className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg hover:bg-brand-700 transition-colors"
-                  >
-                    <Search size={14} />
-                    Buscar en esta zona
-                  </motion.button>
-                )}
+                  {/* "Search this area" button (appears when user pans away) */}
+                  <AnimatePresence>
+                    {isMapMoved && (
+                      <motion.button
+                        initial={{ opacity: 0, y: 8 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 8 }}
+                        onClick={handleSearchThisArea}
+                        className="w-full mt-2 flex items-center justify-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg hover:bg-brand-700 active:scale-[0.98] transition-all"
+                      >
+                        <Search size={14} />
+                        Buscar en esta zona
+                      </motion.button>
+                    )}
+                  </AnimatePresence>
+                </div>
               </div>
             ) : null}
           </div>
