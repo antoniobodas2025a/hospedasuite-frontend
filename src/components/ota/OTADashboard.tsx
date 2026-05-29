@@ -29,6 +29,7 @@ import { useTranslations } from 'next-intl';
 import { springSnappy, springGentle } from '@/lib/mac2026/spring';
 import { preserveSearchParams } from '@/lib/handoff-url';
 import { searchCache } from '@/lib/search-cache';
+import L from 'leaflet';
 
 const CATEGORIES = [
   { id: 'all', labelKey: 'ota.categories.all', icon: SlidersHorizontal, popular: false },
@@ -76,6 +77,13 @@ export default function OTADashboard({
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
   const [showMap, setShowMap] = useState(false);
 
+  // Map state tracking (Phase 1: PRD-004 integration)
+  const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
+  const [mapCenter, setMapCenter] = useState<L.LatLng | null>(null);
+  const [mapZoom, setMapZoom] = useState<number>(6);
+  const [isMapMoved, setIsMapMoved] = useState(false);
+  const originalSearchLocation = useRef(urlLocation);
+
   // Sync category, searchTerm, and location to URL
   const syncToUrl = useCallback((updates: { category?: string; search?: string; location?: string }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -95,6 +103,34 @@ export default function OTADashboard({
     const url = query ? `${pathname}?${query}` : pathname;
     router.replace(url, { scroll: false });
   }, [searchParams, pathname, router]);
+
+  // Map callbacks (Phase 1: PRD-004 integration)
+  const handleMapBoundsChange = useCallback((bounds: L.LatLngBounds, center: L.LatLng, zoom: number) => {
+    setMapBounds(bounds);
+    setMapCenter(center);
+    setMapZoom(zoom);
+
+    // Detect if user moved away from original search location
+    if (originalSearchLocation.current && urlLocation) {
+      setIsMapMoved(true);
+    }
+  }, [urlLocation]);
+
+  const handleSearchAreaChange = useCallback((areaName: string) => {
+    // Update URL location param when user pans to a new area
+    if (areaName && areaName !== urlLocation) {
+      syncToUrl({ location: areaName });
+    }
+  }, [urlLocation, syncToUrl]);
+
+  // "Search this area" handler
+  const handleSearchThisArea = useCallback(() => {
+    if (mapCenter) {
+      // Reverse geocode is already done by MapSearchSync → URL updated
+      // Just trigger a re-search with the new location
+      setIsMapMoved(false);
+    }
+  }, [mapCenter]);
 
   // Debounced search effect with stale-while-revalidate cache
   useEffect(() => {
@@ -304,17 +340,37 @@ export default function OTADashboard({
             </div>
 
             {showMap ? (
-              <HotelMapView
-                hotels={hotels.map((h: any) => ({
-                  id: h.id,
-                  name: h.name,
-                  location: h.location,
-                  address: h.address,
-                  min_price: h.min_price,
-                  slug: h.slug,
-                }))}
-                centerLocation={urlLocation || undefined}
-              />
+              <div className="relative">
+                <HotelMapView
+                  hotels={hotels.map((h: any) => ({
+                    id: h.id,
+                    name: h.name,
+                    location: h.location,
+                    address: h.address,
+                    min_price: h.min_price,
+                    slug: h.slug,
+                    main_image_url: h.main_image_url,
+                  }))}
+                  centerLocation={urlLocation || undefined}
+                  onMapBoundsChange={handleMapBoundsChange}
+                  onSearchAreaChange={handleSearchAreaChange}
+                  enableSearchOnMove={true}
+                />
+
+                {/* "Search this area" button (appears when user pans away) */}
+                {isMapMoved && (
+                  <motion.button
+                    initial={{ opacity: 0, y: 8 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: 8 }}
+                    onClick={handleSearchThisArea}
+                    className="absolute bottom-4 left-1/2 -translate-x-1/2 z-[100] flex items-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg hover:bg-brand-700 transition-colors"
+                  >
+                    <Search size={14} />
+                    Buscar en esta zona
+                  </motion.button>
+                )}
+              </div>
             ) : null}
           </div>
         )}
