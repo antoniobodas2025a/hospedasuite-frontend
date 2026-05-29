@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { MapPin, Loader2 } from 'lucide-react';
 import MarkerLifecycleManager from './MarkerLifecycleManager';
+import MapTransitionController from './MapTransitionController';
 import 'leaflet/dist/leaflet.css';
 import '@/styles/map.css';
 
@@ -27,7 +28,7 @@ interface HotelMapViewProps {
  *
  * Phase 2: MarkerLifecycleManager integration.
  */
-export default function HotelMapView({ hotels }: HotelMapViewProps) {
+export default function HotelMapView({ hotels, centerLocation }: HotelMapViewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [geocodingProgress, setGeocodingProgress] = useState({ current: 0, total: 0 });
 
@@ -73,6 +74,13 @@ export default function HotelMapView({ hotels }: HotelMapViewProps) {
           hotels={hotels}
           onGeocodingProgress={(current, total) => setGeocodingProgress({ current, total })}
           onMarkersReady={() => setIsLoading(false)}
+        />
+
+        {/* Smooth transitions */}
+        <MapTransitionController
+          hotels={hotels}
+          centerLocation={centerLocation}
+          transitionDuration={1.2}
         />
       </MapContainer>
     </div>
