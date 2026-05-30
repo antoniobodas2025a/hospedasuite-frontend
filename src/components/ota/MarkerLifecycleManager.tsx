@@ -82,6 +82,9 @@ export default function MarkerLifecycleManager({
       showCoverageOnHover: false,
       zoomToBoundsOnClick: true,
       spiderfyOnMaxZoom: true,
+      chunkedLoading: true,
+      chunkInterval: 100,
+      chunkDelay: 50,
       iconCreateFunction: (cluster: L.MarkerCluster) => {
         const count = cluster.getChildCount();
         // Find cheapest price among markers in this cluster
