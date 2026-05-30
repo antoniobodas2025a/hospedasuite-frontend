@@ -72,6 +72,7 @@ export default function MarkerLifecycleManager({
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersRef = useRef<Map<string, L.Marker & { geoResult?: GeoResult }>>(new Map());
   const isInitialized = useRef(false);
+  const hasFittedBounds = useRef(false);
 
   // Initialize cluster group
   useEffect(() => {
@@ -117,6 +118,12 @@ export default function MarkerLifecycleManager({
   // Diffing logic
   useEffect(() => {
     if (!clusterGroupRef.current) return;
+
+    // Reset fitBounds when hotels change to a different set (new search)
+    if (hotels.length === 0) {
+      hasFittedBounds.current = false;
+      return;
+    }
 
     const currentIds = new Set(hotels.map((h) => h.id));
     const activeIds = new Set(markersRef.current.keys());
@@ -267,8 +274,9 @@ export default function MarkerLifecycleManager({
       }
     });
 
-    // Auto-fit bounds if markers exist
-    if (markersRef.current.size > 0) {
+    // Auto-fit bounds only on initial load — prevents zoom loop
+    if (markersRef.current.size > 0 && !hasFittedBounds.current) {
+      hasFittedBounds.current = true;
       const group = L.featureGroup(Array.from(markersRef.current.values()));
       map.fitBounds(group.getBounds(), { padding: [50, 50] });
     }
