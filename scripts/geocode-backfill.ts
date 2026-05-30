@@ -32,6 +32,31 @@ const isDryRun = process.argv.includes('--dry-run');
 const limitArg = process.argv.find((a) => a.startsWith('--limit='));
 const maxHotels = limitArg ? parseInt(limitArg.split('=')[1], 10) : Infinity;
 
+// ─── Types ───────────────────────────────────────────────────────────────────
+
+interface GeocodeResult {
+  lat: number;
+  lng: number;
+  precision: 'rooftop' | 'street' | 'city' | 'none';
+  source: string;
+}
+
+interface BackfillEntry {
+  hotel_id: string;
+  name: string;
+  city: string | null;
+  location: string | null;
+  address: string | null;
+  status: 'pending' | 'success' | 'fallback' | 'error';
+  lat?: number;
+  lng?: number;
+  precision?: string;
+  source?: string;
+  error?: string;
+}
+
+// ─── Logging ─────────────────────────────────────────────────────────────────
+
 async function logResult(entry: BackfillEntry): Promise<void> {
   const line = `[${entry.status.toUpperCase()}] ${entry.hotel_id} | ${entry.name} | ${entry.lat ?? '-'},${entry.lng ?? '-'} | ${entry.precision ?? '-'} | ${entry.source ?? '-'}${entry.error ? ` | ERROR: ${entry.error}` : ''}`;
   console.log(line);
