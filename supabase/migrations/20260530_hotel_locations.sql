@@ -47,7 +47,7 @@ SELECT DISTINCT ON (h.id)
   MIN(r.price) FILTER (WHERE r.status = 'active') AS min_price,
   AVG(rv.rating) AS avg_rating,
   COUNT(rv.id) FILTER (WHERE rv.id IS NOT NULL) AS review_count,
-  array_agg(DISTINCT hfa.amenity_id) FILTER (WHERE hfa.amenity_id IS NOT NULL) AS amenity_ids
+  h.hotel_amenities AS amenity_ids
 FROM hotels h
 LEFT JOIN hotel_locations hl
   ON hl.hotel_id = h.id
@@ -60,9 +60,8 @@ LEFT JOIN hotel_locations hl
   )
 LEFT JOIN rooms r ON r.hotel_id = h.id AND r.status = 'active'
 LEFT JOIN reviews rv ON rv.hotel_id = h.id
-LEFT JOIN hotel_feature_amenities hfa ON hfa.hotel_id = h.id
 WHERE h.status = 'active'
-GROUP BY h.id, hl.lat, hl.lng, hl.precision;
+GROUP BY h.id, hl.lat, hl.lng, hl.precision, h.hotel_amenities;
 
 CREATE UNIQUE INDEX IF NOT EXISTS idx_ota_catalog_id ON ota_catalog(id);
 
