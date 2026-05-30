@@ -7,6 +7,7 @@ import { redirect } from 'next/navigation';
 import { FullWizardState } from '@/lib/onboarding-schemas';
 import { checkUnitLimit } from '@/data/plan-guard';
 import { generateUniqueSlug } from '@/lib/slug';
+import { FEATURES } from '@/lib/feature-flags';
 
 export async function executeOnboardingProvisioning(state: FullWizardState): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
@@ -254,7 +255,39 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       );
     }
 
-    // 4. Revalidate
+    // 4. Create saas_subscriptions record (feature-flagged — Wompi recurring billing)
+    // Only for Wompi payments; manual payments get a subscription on admin approval.
+    if (
+      FEATURES.WIZARD_WOMPI_SUBSCRIPTION &&
+      state.payment.paymentMethod === 'wompi'
+    ) {
+      try {
+        const now = new Date();
+        const trialEnd = new Date(now.getTime() + 90 * 86400000); // 90-day trial
+
+        await supabaseAdmin.from('saas_subscriptions').upsert(
+          {
+            hotel_id: hotelId,
+            plan_key: 'starter',
+            status: 'trialing',
+            current_period_start: now.toISOString(),
+            current_period_end: trialEnd.toISOString(),
+            wompi_payment_source_id: state.paymentTransactionId || null,
+          },
+          { onConflict: 'hotel_id' },
+        );
+
+        console.log(`💳 [Onboarding] Suscripción creada para hotel ${hotelId}`);
+      } catch (subErr) {
+        // Non-blocking — log but don't fail provisioning
+        console.warn(
+          `💳 [Onboarding] Error creando suscripción:`,
+          subErr instanceof Error ? subErr.message : subErr,
+        );
+      }
+    }
+
+    // 5. Revalidate
     revalidatePath('/software/onboarding');
     revalidatePath('/admin/dashboard');
     revalidatePath(`/hotel/${hotelSlug}`);

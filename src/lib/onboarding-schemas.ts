@@ -75,6 +75,7 @@ export const fullWizardStateSchema = z.object({
   rooms: z.array(roomDraftSchema).min(1),
   settings: settingsSchema,
   payment: paymentSchema,
+  paymentTransactionId: z.string().optional().nullable(),
 });
 
 export type HotelIdentityData = z.infer<typeof hotelIdentitySchema>;
