@@ -5,7 +5,7 @@ import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { geocodeLocation } from '@/lib/geocoding';
 import { useSharedMoveGuard } from '@/lib/use-shared-move-guard';
-import { boundsChangedOverThreshold } from '@/lib/map-url-state';
+import { boundsChangedOverThreshold, type SimpleBounds } from '@/lib/map-url-state';
 
 interface MapSearchSyncProps {
   searchLocation?: string;
@@ -17,6 +17,14 @@ interface MapSearchSyncProps {
   boundsThreshold?: number;
   /** Fired when bounds change exceeds threshold — signals "search this area". */
   onBoundsExceeded?: (bounds: L.LatLngBounds) => void;
+}
+
+/** Convert Leaflet LatLngBounds to SimpleBounds (SSR-safe). */
+function toSimpleBounds(b: L.LatLngBounds): SimpleBounds {
+  return {
+    sw: { lat: b.getSouthWest().lat, lng: b.getSouthWest().lng },
+    ne: { lat: b.getNorthEast().lat, lng: b.getNorthEast().lng },
+  };
 }
 
 /**
@@ -48,7 +56,7 @@ export default function MapSearchSync({
     clearInternalMove,
   } = useSharedMoveGuard();
   const moveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSearchBoundsRef = useRef<L.LatLngBounds | null>(null);
+  const lastSearchBoundsRef = useRef<SimpleBounds | null>(null);
   const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
 
   // Reverse geocode map center to get area name
@@ -102,10 +110,10 @@ export default function MapSearchSync({
       const prev = lastSearchBoundsRef.current;
       if (!prev) {
         // First moveend after a search → establish baseline
-        lastSearchBoundsRef.current = bounds;
+        lastSearchBoundsRef.current = toSimpleBounds(bounds);
       } else if (
         onBoundsExceeded &&
-        boundsChangedOverThreshold(prev, bounds, boundsThreshold)
+        boundsChangedOverThreshold(prev, toSimpleBounds(bounds), boundsThreshold)
       ) {
         onBoundsExceeded(bounds);
       }

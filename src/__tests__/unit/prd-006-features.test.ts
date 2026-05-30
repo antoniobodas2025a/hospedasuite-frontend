@@ -19,33 +19,15 @@ vi.mock('react', async () => {
 });
 
 /* ------------------------------------------------------------------ */
-/*  Mock: Leaflet LatLngBounds (just SW/NE accessor objects)          */
+/*  Imports                                                           */
 /* ------------------------------------------------------------------ */
-vi.mock('leaflet', () => {
-  function makeBounds(sw: [number, number], ne: [number, number]) {
-    return {
-      getSouthWest: () => ({ lat: sw[0], lng: sw[1] }),
-      getNorthEast: () => ({ lat: ne[0], lng: ne[1] }),
-    };
-  }
-  return {
-    default: {
-      latLngBounds: (sw: [number, number], ne: [number, number]) => makeBounds(sw, ne),
-    },
-  };
-});
-
-/* ------------------------------------------------------------------ */
-/*  Imports (after mocks)                                             */
-/* ------------------------------------------------------------------ */
-import L from 'leaflet';
-
 import {
   serializeMapParams,
   deserializeMapParams,
   boundsArea,
   boundsChangedOverThreshold,
   type MapState,
+  type SimpleBounds,
 } from '@/lib/map-url-state';
 
 import { getSnapTargets, findNearestSnap } from '@/components/ota/MapBottomSheet';
@@ -56,9 +38,12 @@ import { useSharedMoveGuard } from '@/lib/use-shared-move-guard';
 /*  Helpers                                                            */
 /* ------------------------------------------------------------------ */
 
-/** Create a mock LatLngBounds with the given SW / NE corners. */
-function b(sw: [number, number], ne: [number, number]): L.LatLngBounds {
-  return L.latLngBounds(sw, ne) as unknown as L.LatLngBounds;
+/** Create a SimpleBounds mock with the given SW / NE corners. */
+function b(sw: [number, number], ne: [number, number]): SimpleBounds {
+  return {
+    sw: { lat: sw[0], lng: sw[1] },
+    ne: { lat: ne[0], lng: ne[1] },
+  };
 }
 
 /* ================================================================== */
@@ -201,8 +186,8 @@ describe('map URL state serialization', () => {
       expect(restored!.zoom).toBe(6);
       // Bounds restoration
       expect(restored!.bounds).not.toBeNull();
-      const sw = restored!.bounds!.getSouthWest();
-      const ne = restored!.bounds!.getNorthEast();
+      const sw = restored!.bounds!.sw;
+      const ne = restored!.bounds!.ne;
       expect(sw.lat).toBeCloseTo(4.0, 4);
       expect(sw.lng).toBeCloseTo(-75.0, 4);
       expect(ne.lat).toBeCloseTo(5.0, 4);

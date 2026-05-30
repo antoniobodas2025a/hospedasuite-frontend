@@ -1,5 +1,3 @@
-import type { LatLngBounds } from 'leaflet';
-
 /**
  * Map URL state — serialize/deserialize map position to URL search params.
  *
@@ -9,6 +7,13 @@ import type { LatLngBounds } from 'leaflet';
  *   lng = center longitude (4 decimal places)
  *   b   = bounds as "swLat,swLng,neLat,neLng" (4 decimal each)
  */
+
+// Decoupled from Leaflet to ensure SSR safety.
+// We use simple objects instead of L.LatLngBounds instances.
+export interface SimpleBounds {
+  sw: { lat: number; lng: number };
+  ne: { lat: number; lng: number };
+}
 
 const PARAM_ZOOM = 'z';
 const PARAM_LAT = 'lat';
@@ -20,7 +25,7 @@ const DECIMAL_PLACES = 4;
 export interface MapState {
   center: { lat: number; lng: number };
   zoom: number;
-  bounds?: LatLngBounds | null;
+  bounds?: SimpleBounds | null;
 }
 
 /**
@@ -35,8 +40,8 @@ export function serializeMapParams(mapState: MapState): string {
   params.set(PARAM_ZOOM, mapState.zoom.toString());
 
   if (mapState.bounds) {
-    const sw = mapState.bounds.getSouthWest();
-    const ne = mapState.bounds.getNorthEast();
+    const sw = mapState.bounds.sw;
+    const ne = mapState.bounds.ne;
     const boundsStr = [
       sw.lat.toFixed(DECIMAL_PLACES),
       sw.lng.toFixed(DECIMAL_PLACES),
@@ -69,7 +74,7 @@ export function deserializeMapParams(
   if (isNaN(lat) || isNaN(lng) || isNaN(zoom)) return null;
 
   // Bounds are optional
-  let bounds: LatLngBounds | null = null;
+  let bounds: SimpleBounds | null = null;
   const boundsRaw = searchParams.get(PARAM_BOUNDS);
   if (boundsRaw) {
     const parts = boundsRaw.split(',').map(Number);
@@ -77,7 +82,10 @@ export function deserializeMapParams(
       parts.length === 4 &&
       parts.every((n) => !isNaN(n))
     ) {
-      bounds = LatLngBounds([parts[0], parts[1]], [parts[2], parts[3]]);
+      bounds = {
+        sw: { lat: parts[0], lng: parts[1] },
+        ne: { lat: parts[2], lng: parts[3] },
+      };
     }
   }
 
@@ -85,12 +93,11 @@ export function deserializeMapParams(
 }
 
 /**
- * Compute approximate area of a LatLngBounds in degree².
+ * Compute approximate area of a SimpleBounds in degree².
  * Used for comparing bounds changes.
  */
-export function boundsArea(bounds: LatLngBounds): number {
-  const sw = bounds.getSouthWest();
-  const ne = bounds.getNorthEast();
+export function boundsArea(bounds: SimpleBounds): number {
+  const { sw, ne } = bounds;
   return (ne.lat - sw.lat) * (ne.lng - sw.lng);
 }
 
@@ -105,8 +112,8 @@ export function boundsArea(bounds: LatLngBounds): number {
  *   - One area zero, other non-zero → changed (true)
  */
 export function boundsChangedOverThreshold(
-  b1: LatLngBounds,
-  b2: LatLngBounds,
+  b1: SimpleBounds,
+  b2: SimpleBounds,
   threshold: number
 ): boolean {
   const area1 = boundsArea(b1);
