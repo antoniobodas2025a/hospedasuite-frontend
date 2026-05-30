@@ -1105,6 +1105,10 @@ export default function OTADashboard({
                   min_price: h.min_price,
                   slug: h.slug,
                   main_image_url: h.main_image_url,
+                  latitude: h.latitude,
+                  longitude: h.longitude,
+                  precision: h.precision,
+                  reviewStats: h.reviewStats,
                 }))}
                 centerLocation={urlLocation || undefined}
                 selectedHotelId={selectedHotelId}
@@ -1115,7 +1119,6 @@ export default function OTADashboard({
                 initialCenter={initialCenter}
                 initialZoom={initialZoom}
                 onBoundsExceeded={handleBoundsExceeded}
-                boundsThreshold={0.2}
               />
 
               {/* "Search this area" — bounds exceeded button + overlay */}
@@ -1158,6 +1161,10 @@ export default function OTADashboard({
                       min_price: h.min_price,
                       slug: h.slug,
                       main_image_url: h.main_image_url,
+                      latitude: h.latitude,
+                      longitude: h.longitude,
+                      precision: h.precision,
+                      reviewStats: h.reviewStats,
                     }))}
                     centerLocation={urlLocation || undefined}
                     selectedHotelId={selectedHotelId}
