@@ -1,12 +1,6 @@
 import { MapPin, Clock, ShieldAlert, Navigation, Phone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import dynamic from 'next/dynamic';
-
-// Dynamic import del mapa (solo cliente — Leaflet no funciona en SSR)
-const HotelDetailMap = dynamic(
-  () => import('./HotelDetailMap'),
-  { ssr: false, loading: () => <div className="h-48 bg-muted rounded-[var(--radius-squircle-2xl)] animate-pulse" /> }
-);
+import HotelDetailMap from './HotelDetailMapWrapper';
 
 interface HotelInfoSectionProps {
   hotelName: string;
