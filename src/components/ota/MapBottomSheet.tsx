@@ -132,12 +132,11 @@ export default function MapBottomSheet({
   const t = useTranslations();
 
   /* ---- Window-aware snap targets ---- */
-  const [winHeight, setWinHeight] = useState(
-    () => (typeof window !== 'undefined' ? window.innerHeight : 800),
-  );
+  const [winHeight, setWinHeight] = useState(800); // matches SSR — corrected post-mount
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    setWinHeight(window.innerHeight); // set initial value after hydration
     const handleResize = () => setWinHeight(window.innerHeight);
     window.addEventListener('resize', handleResize);
     return () => window.removeEventListener('resize', handleResize);
