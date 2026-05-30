@@ -123,10 +123,8 @@ export default function OTADashboard({
   const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
   // PRD-006: Desktop split-view detection (≥768px)
-  // Lazy init prevents flash of mobile layout on first render
-  const [isSplitView, setIsSplitView] = useState(() =>
-    typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : false
-  );
+  // Initialized to false (matches SSR) — corrected after mount via useEffect
+  const [isSplitView, setIsSplitView] = useState(false);
 
   // PRD-006: Restore map center/zoom from URL params
   const initialMapState = useMemo(() => {
@@ -143,8 +141,10 @@ export default function OTADashboard({
   useSharedMoveGuard();
 
   // Media query: listen for viewport changes (resize, orientation)
+  // Also sets initial value after mount to match SSR
   useEffect(() => {
     const mql = window.matchMedia('(min-width: 768px)');
+    setIsSplitView(mql.matches); // set initial value after hydration
 
     const handler = (e: MediaQueryListEvent) => setIsSplitView(e.matches);
     mql.addEventListener('change', handler);
