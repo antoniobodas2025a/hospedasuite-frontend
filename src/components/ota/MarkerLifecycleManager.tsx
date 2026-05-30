@@ -16,6 +16,10 @@ interface Hotel {
   min_price: number;
   slug: string;
   main_image_url?: string;
+  /** PRD-009: Coordenadas precomputadas desde ota_catalog */
+  latitude?: number | null;
+  longitude?: number | null;
+  precision?: string | null;
 }
 
 interface MarkerLifecycleManagerProps {
@@ -135,7 +139,46 @@ export default function MarkerLifecycleManager({
     const geocodingPromises: Promise<void>[] = [];
 
     newHotels.forEach((hotel) => {
-      // Try location first, then address
+      // PRD-009: Use precomputed coordinates from ota_catalog if available
+      if (hotel.latitude != null && hotel.longitude != null) {
+        geocodingCount++;
+        onGeocodingProgress?.(geocodingCount, newHotels.length);
+
+        if (markersRef.current.has(hotel.id)) return;
+
+        const marker = L.marker([hotel.latitude, hotel.longitude], {
+          icon: createMiniPinIcon(hotel.min_price, false),
+        }) as L.Marker & { geoResult?: GeoResult };
+
+        marker.geoResult = { lat: hotel.latitude, lng: hotel.longitude, displayName: hotel.location };
+
+        // Sprint 2: Click marker → scroll to card
+        if (onMarkerClick) {
+          marker.on('click', () => onMarkerClick(hotel.id));
+        }
+
+        // Add popup
+        marker.bindPopup(`
+          <div class="hotel-popup">
+            ${hotel.main_image_url ? `<img src="${hotel.main_image_url}" alt="${hotel.name}" class="popup-image" onerror="this.style.display='none'" />` : ''}
+            <div class="popup-info">
+              <h3 class="popup-name">${hotel.name}</h3>
+              <p class="popup-location">${hotel.location}</p>
+              <p class="popup-price">
+                <span class="price-amount">$${hotel.min_price.toLocaleString()}</span>
+                <span class="price-period"> /noche</span>
+              </p>
+              <a href="/hotel/${hotel.slug}" class="popup-cta">Ver hotel →</a>
+            </div>
+          </div>
+        `);
+
+        clusterGroupRef.current!.addLayer(marker);
+        markersRef.current.set(hotel.id, marker);
+        return;
+      }
+
+      // Fallback: geocode from location/address string (client-side)
       const query = hotel.location || hotel.address || '';
       if (!query) return;
 

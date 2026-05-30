@@ -118,13 +118,6 @@ async function main(): Promise<void> {
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);
 
   // 2. Fetch hotels without locations
-  const { data: hotels, error } = await supabase
-    .from('hotels')
-    .select('id, name, city, location, address')
-    .is('id', null) // We'll filter via NOT EXISTS
-    .limit(0); // Placeholder — we'll use raw query
-
-  // Use a more direct approach: find hotels not in hotel_locations
   const { data: allHotels, error: hotelsError } = await supabase
     .from('hotels')
     .select('id, name, city, location, address')
