@@ -130,6 +130,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       category: state.hotelIdentity.category || null,
       type: state.hotelIdentity.propertyType,
       gallery_urls: state.galleryImages,
+      main_image_url: state.galleryImages?.[0] || null,
       amenities: state.settings.amenities,
       check_in_time: state.settings.checkInTime || '15:00',
       check_out_time: state.settings.checkOutTime || '11:00',
@@ -216,7 +217,44 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
 
     if (roomsError) throw roomsError;
 
-    // 3. Revalidate
+    // 3. Geocode hotel address (non-blocking — if it fails, hotel still works)
+    try {
+      const address = state.hotelIdentity.address || state.hotelIdentity.location || '';
+      const city = state.hotelIdentity.city || '';
+
+      if (address || city) {
+        const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+        const geocodeRes = await fetch(`${baseUrl}/api/geocode`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ address, city, country: 'Colombia' }),
+        });
+
+        if (geocodeRes.ok) {
+          const geocodeJson = await geocodeRes.json();
+          if (geocodeJson.success && geocodeJson.data) {
+            await supabaseAdmin.from('hotel_locations').insert({
+              hotel_id: hotelId,
+              lat: geocodeJson.data.lat,
+              lng: geocodeJson.data.lng,
+              precision: geocodeJson.data.precision,
+              source: 'wizard',
+              raw_input: [address, city].filter(Boolean).join(', '),
+              geocoded_at: new Date().toISOString(),
+            });
+            console.log(`📍 [Onboarding] Coordenadas guardadas para ${state.hotelIdentity.name}`);
+          }
+        }
+      }
+    } catch (geocodeErr) {
+      // Non-blocking — log but don't fail provisioning
+      console.warn(
+        `📍 [Onboarding] Geocoding no disponible:`,
+        geocodeErr instanceof Error ? geocodeErr.message : geocodeErr,
+      );
+    }
+
+    // 4. Revalidate
     revalidatePath('/software/onboarding');
     revalidatePath('/admin/dashboard');
     revalidatePath(`/hotel/${hotelSlug}`);
