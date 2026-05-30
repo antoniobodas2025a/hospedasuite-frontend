@@ -376,6 +376,36 @@ export default function OTADashboard({
     }
   }, []);
 
+  // PRD-009 Fase 3: Scroll list → highlight marker on map (IntersectionObserver)
+  useEffect(() => {
+    // Observe both split-view cards and bottom-sheet cards
+    const cards = document.querySelectorAll('[id^="hotel-card-"]');
+    if (cards.length === 0) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        // Find the card with the highest intersection ratio
+        let bestEntry: IntersectionObserverEntry | null = null;
+        for (const entry of entries) {
+          if (entry.intersectionRatio > 0.3 && (!bestEntry || entry.intersectionRatio > bestEntry.intersectionRatio)) {
+            bestEntry = entry;
+          }
+        }
+        if (bestEntry) {
+          const id = bestEntry.target.getAttribute('data-hotel-id') || '';
+          if (id && id !== selectedHotelRef.current) {
+            setSelectedHotelId(id);
+            selectedHotelRef.current = id;
+          }
+        }
+      },
+      { rootMargin: '-10% 0px -40% 0px', threshold: [0.1, 0.3, 0.6, 1.0] }
+    );
+
+    cards.forEach((card) => observer.observe(card));
+    return () => observer.disconnect();
+  }, [sortedHotels]);
+
   // Progressive disclosure: sync location to URL before transitioning to full search bar
   const handleCommitLocation = useCallback(() => {
     if (!searchTerm.trim()) return;
@@ -786,7 +816,7 @@ export default function OTADashboard({
           <div className={`grid grid-cols-1 sm:grid-cols-2 ${isSplitView ? '' : 'lg:grid-cols-3'} gap-4 sm:gap-6 lg:gap-8`}>
             <AnimatePresence mode='popLayout'>
               {visibleHotels.map((hotel: any) => (
-                <div key={hotel.id} id={`hotel-card-${hotel.id}`}>
+                <div key={hotel.id} id={`hotel-card-${hotel.id}`} data-hotel-id={hotel.id}>
                   <HotelCard
                     hotel={hotel}
                     href={preserveSearchParams(searchParams, `/hotel/${hotel.slug}`)}

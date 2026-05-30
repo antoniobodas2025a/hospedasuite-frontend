@@ -380,6 +380,7 @@ export default function MapBottomSheet({
                 <div
                   key={hotel.id}
                   id={`hotel-card-sheet-${hotel.id}`}
+                  data-hotel-id={hotel.id}
                   onMouseEnter={() => {
                     onHotelSelect(hotel.id);
                     onMarkerClick(hotel.id);
