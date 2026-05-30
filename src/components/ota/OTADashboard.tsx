@@ -1088,19 +1088,26 @@ export default function OTADashboard({
                 boundsThreshold={0.2}
               />
 
-              {/* "Search this area" — bounds exceeded button */}
+              {/* "Search this area" — bounds exceeded button + overlay */}
               <AnimatePresence>
                 {isBoundsExceeded && (
-                  <motion.button
-                    initial={{ opacity: 0, y: 8 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: 8 }}
-                    onClick={handleSearchThisArea}
-                    className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg active:scale-[0.98] active:bg-brand-700 transition-all"
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    exit={{ opacity: 0 }}
+                    className="absolute inset-0 z-10 bg-background/20 backdrop-blur-[1px] flex items-center justify-center"
                   >
-                    <Search size={14} />
-                    Buscar en esta zona
-                  </motion.button>
+                    <motion.button
+                      initial={{ opacity: 0, y: 8 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, y: 8 }}
+                      onClick={handleSearchThisArea}
+                      className="flex items-center gap-2 px-5 py-3 bg-foreground text-background text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-2xl active:scale-[0.98] transition-all"
+                    >
+                      <Search size={14} />
+                      Buscar en esta zona
+                    </motion.button>
+                  </motion.div>
                 )}
               </AnimatePresence>
             </div>
@@ -1134,19 +1141,26 @@ export default function OTADashboard({
                     boundsThreshold={0.2}
                   />
 
-                  {/* "Search this area" button (appears when user pans beyond bounds threshold) */}
+                  {/* "Search this area" button + overlay (appears when user pans beyond bounds threshold) */}
                   <AnimatePresence>
                     {isBoundsExceeded && (
-                      <motion.button
-                        initial={{ opacity: 0, y: 16 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: 16 }}
-                        onClick={handleSearchThisArea}
-                        className="absolute top-4 left-1/2 -translate-x-1/2 z-20 flex items-center gap-2 px-4 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-lg active:scale-[0.98] active:bg-brand-700 transition-all"
+                      <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        className="absolute inset-0 z-10 bg-background/20 backdrop-blur-[1px] flex items-center justify-center"
                       >
-                        <Search size={14} />
-                        Buscar en esta zona
-                      </motion.button>
+                        <motion.button
+                          initial={{ opacity: 0, y: 16 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: 16 }}
+                          onClick={handleSearchThisArea}
+                          className="flex items-center gap-2 px-5 py-3 bg-foreground text-background text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-2xl active:scale-[0.98] transition-all"
+                        >
+                          <Search size={14} />
+                          Buscar en esta zona
+                        </motion.button>
+                      </motion.div>
                     )}
                   </AnimatePresence>
                 </div>
