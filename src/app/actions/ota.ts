@@ -123,7 +123,7 @@ export async function fetchOTAHotelsAction(
     }
 
     if (search) {
-      query = query.or(`name.ilike.%${search}%,location.ilike.%${search}%`);
+      query = query.or(`name.ilike.%${search}%,location.ilike.%${search}%,city.ilike.%${search}%`);
     }
 
     const { data: allHotels, error } = await query;
@@ -149,7 +149,7 @@ export async function fetchOTAHotelsAction(
 
     // 3. Enrich with coordinates from ota_catalog
     const otaHotelIds = filteredHotels.map((h: any) => h.id);
-    let coordsMap = new Map<string, { lat: number; lng: number; precision: string }>();
+    const coordsMap = new Map<string, { lat: number; lng: number; precision: string }>();
 
     if (otaHotelIds.length > 0) {
       const { data: catalogData } = await supabaseAdmin
@@ -357,6 +357,23 @@ export async function getHotelDetailsBySlugAction(slug: string, checkIn?: string
           price_per_night: r.price // Compatibilidad con componentes frontend
         }))
     };
+
+    // 5. Enriquecer con coordenadas de hotel_locations (para mapa del detalle)
+    try {
+      const { data: loc } = await supabaseAdmin
+        .from('hotel_locations')
+        .select('lat, lng')
+        .eq('hotel_id', hotel.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .single();
+      if (loc) {
+        premiumHotel.latitude = loc.lat;
+        premiumHotel.longitude = loc.lng;
+      }
+    } catch {
+      // Non-blocking — el mapa del detalle funciona sin coordenadas
+    }
 
     return { success: true, hotel: premiumHotel };
 

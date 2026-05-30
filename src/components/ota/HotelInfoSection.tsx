@@ -1,12 +1,12 @@
 import { MapPin, Clock, ShieldAlert, Navigation, Phone } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import dynamic from 'next/dynamic';
 
-// ============================================================================
-// HOTEL INFO SECTION — Mapa, politicas e instrucciones de llegada
-//
-// Muestra la ubicacion, horarios y politicas del hotel para generar confianza
-// y reducir la friccion antes de reservar.
-// ============================================================================
+// Dynamic import del mapa (solo cliente — Leaflet no funciona en SSR)
+const HotelDetailMap = dynamic(
+  () => import('./HotelDetailMap'),
+  { ssr: false, loading: () => <div className="h-48 bg-muted rounded-[var(--radius-squircle-2xl)] animate-pulse" /> }
+);
 
 interface HotelInfoSectionProps {
   hotelName: string;
@@ -18,6 +18,9 @@ interface HotelInfoSectionProps {
   checkInTime?: string | null;
   checkOutTime?: string | null;
   receptionHours?: string | null;
+  /** PRD-009: Coordenadas para mapa Leaflet como fallback */
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 export default function HotelInfoSection({
@@ -30,6 +33,8 @@ export default function HotelInfoSection({
   checkInTime,
   checkOutTime,
   receptionHours,
+  latitude,
+  longitude,
 }: HotelInfoSectionProps) {
   const t = useTranslations();
   return (
@@ -60,6 +65,13 @@ export default function HotelInfoSection({
                 className="grayscale-[0.3] hover:grayscale-0 transition-all"
               />
             </div>
+          ) : latitude != null && longitude != null ? (
+            <HotelDetailMap
+              latitude={latitude}
+              longitude={longitude}
+              hotelName={hotelName}
+              location={location || ''}
+            />
           ) : location ? (
             <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48 bg-muted flex items-center justify-center">
               <div className="text-center p-4">

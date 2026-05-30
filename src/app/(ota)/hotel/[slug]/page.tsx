@@ -260,6 +260,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
                   checkInTime={hotel.check_in_time}
                   checkOutTime={hotel.check_out_time}
                   receptionHours={hotel.reception_hours}
+                  latitude={hotel.latitude}
+                  longitude={hotel.longitude}
                 />
               </Suspense>
             </div>

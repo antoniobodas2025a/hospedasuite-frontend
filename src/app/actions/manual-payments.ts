@@ -90,11 +90,11 @@ export async function createManualPayment(payload: {
       return { success: false, error: 'Error al registrar el pago: ' + insertError.message };
     }
 
-    // Actualizar hotel a pending_approval
-    const { error: hotelError } = await supabaseAdmin
-      .from('hotels')
-      .update({ subscription_status: 'pending_approval', status: 'draft' })
-      .eq('id', payload.hotel_id);
+      // Actualizar hotel a pending_approval (good faith: hotel visible en OTA)
+      const { error: hotelError } = await supabaseAdmin
+        .from('hotels')
+        .update({ subscription_status: 'pending_approval', status: 'active' })
+        .eq('id', payload.hotel_id);
 
     if (hotelError) {
       console.error('Update hotel status error:', hotelError);

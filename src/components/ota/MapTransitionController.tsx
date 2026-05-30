@@ -10,6 +10,9 @@ interface Hotel {
   id: string;
   location: string;
   address?: string;
+  /** PRD-009: Coordenadas precomputadas (evitan geocoding client-side) */
+  latitude?: number | null;
+  longitude?: number | null;
 }
 
 interface MapTransitionControllerProps {
@@ -75,6 +78,17 @@ export default function MapTransitionController({
     let cancelled = false;
 
     const flyToHotel = async () => {
+      // PRD-009: Usar coordenadas precomputadas si existen
+      if (hotel.latitude != null && hotel.longitude != null) {
+        setInternalMove();
+        map.flyTo([hotel.latitude, hotel.longitude], 14, {
+          duration: 0.8,
+          easeLinearity: 0.25,
+        });
+        return;
+      }
+
+      // Fallback: geocoding client-side
       const query = hotel.location || hotel.address || '';
       if (!query) return;
 

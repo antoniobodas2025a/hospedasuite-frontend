@@ -303,10 +303,14 @@ export default function OTADashboard({
     };
   }, []);
 
-  // Handle hotel selection from list (hover → zoom to marker)
+  // Handle hotel selection from list (hover → zoom to marker) with debounce
+  const hoverTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const handleHotelSelect = useCallback((hotelId: string) => {
-    setSelectedHotelId(hotelId);
-    selectedHotelRef.current = hotelId;
+    if (hoverTimeoutRef.current) clearTimeout(hoverTimeoutRef.current);
+    hoverTimeoutRef.current = setTimeout(() => {
+      setSelectedHotelId(hotelId);
+      selectedHotelRef.current = hotelId;
+    }, 80); // 80ms debounce — evita flyTo excesivo en scroll rápido
   }, []);
 
   // Sprint 1: Sorting logic
@@ -463,18 +467,23 @@ export default function OTADashboard({
 
       // Cache miss — fetch fresh
       setIsSearching(true);
-      const response = await fetchOTAHotelsAction(
-        0, 24, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests
-      );
+      try {
+        const response = await fetchOTAHotelsAction(
+          0, 24, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests
+        );
 
-      if (isMounted) {
-        if (response.success) {
-          searchCache.set(cacheParams, { data: response.data, hasMore: response.hasMore });
-          setHotels(response.data);
-          setPage(0);
-          setHasMore(response.hasMore);
+        if (isMounted) {
+          if (response.success) {
+            searchCache.set(cacheParams, { data: response.data, hasMore: response.hasMore });
+            setHotels(response.data);
+            setPage(0);
+            setHasMore(response.hasMore);
+          }
+          setIsSearching(false);
         }
-        setIsSearching(false);
+      } catch (error) {
+        if (isMounted) setIsSearching(false);
+        console.error('OTA search error:', error);
       }
     }, 300); // Reduced from 500ms to 300ms since cache provides instant feedback
 

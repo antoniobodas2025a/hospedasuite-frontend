@@ -167,13 +167,6 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
     { value: 'ninguno', label: 'Ninguno' },
   ];
 
-  const roomSizes: OptionDef[] = [
-    { value: 'pequeno', label: '< 15m²', icon: Maximize2 },
-    { value: 'mediano', label: '15-25m²', icon: Maximize2 },
-    { value: 'grande', label: '25-40m²', icon: Maximize2 },
-    { value: 'suite', label: '> 40m²', icon: Maximize2 },
-  ];
-
   const roomViews: OptionDef[] = [
     { value: 'interior', label: 'Interior', icon: EyeOff },
     { value: 'exterior', label: 'Exterior', icon: Eye },
@@ -278,13 +271,6 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
             />
           </motion.button>
         </div>
-
-        <OptionPicker
-          options={roomSizes}
-          value={room.roomSize}
-          onChange={(v) => onUpdate({ roomSize: v as RoomDraft['roomSize'] })}
-          label={t('roomSizeLabel')}
-        />
 
         <OptionPicker
           options={roomViews}

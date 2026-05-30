@@ -204,7 +204,6 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       bathroom_type: room.bathroomType || null,
       shower_type: room.showerType || null,
       hot_water: room.hotWater ?? true,
-      room_size: room.roomSize || null,
       room_view: room.roomView || null,
       gallery: room.imageUrls.map(url => ({ url })),
       availability_range: room.availabilityRange,

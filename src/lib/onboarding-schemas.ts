@@ -34,7 +34,6 @@ export const roomDraftSchema = z.object({
   bathroomType: z.enum(['privado', 'compartido', 'en-suite', 'exterior']).optional(),
   showerType: z.enum(['ducha', 'bañera', 'ambos', 'ninguno']).optional(),
   hotWater: z.boolean().optional(),
-  roomSize: z.enum(['pequeno', 'mediano', 'grande', 'suite']).optional(),
   roomView: z.enum(['interior', 'exterior', 'jardin', 'mar', 'montana', 'ciudad']).optional(),
   imageUrls: z.array(z.string()).default([]),
   availabilityRange: z.object({
