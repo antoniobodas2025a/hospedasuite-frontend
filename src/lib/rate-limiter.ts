@@ -65,4 +65,4 @@ export const MAPBOX_LIMITER = (): TokenBucket =>
 
 /** 1 request per second for Nominatim (per OpenStreetMap ToS). */
 export const NOMINATIM_LIMITER = (): TokenBucket =>
-  getGlobalLimiter('nominatim', 1, 1, 1_000);
+  getGlobalLimiter('nominatim', 2, 1, 1_000);
