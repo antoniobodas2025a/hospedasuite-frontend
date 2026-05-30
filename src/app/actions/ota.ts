@@ -147,9 +147,29 @@ export async function fetchOTAHotelsAction(
       });
     }
 
-    // 3. Map to OTA response shape
+    // 3. Enrich with coordinates from ota_catalog
+    const otaHotelIds = filteredHotels.map((h: any) => h.id);
+    let coordsMap = new Map<string, { lat: number; lng: number; precision: string }>();
+
+    if (otaHotelIds.length > 0) {
+      const { data: catalogData } = await supabaseAdmin
+        .from('ota_catalog')
+        .select('id, lat, lng, precision')
+        .in('id', otaHotelIds);
+
+      if (catalogData) {
+        for (const row of catalogData) {
+          if (row.lat && row.lng) {
+            coordsMap.set(row.id, { lat: row.lat, lng: row.lng, precision: row.precision });
+          }
+        }
+      }
+    }
+
+    // 4. Map to OTA response shape
     let otaHotels = filteredHotels.map((h: any) => {
       const roomPrices = h.rooms?.map((r: { price: number }) => r.price) || [];
+      const coords = coordsMap.get(h.id);
       return {
         id: h.id, 
         name: h.name, 
@@ -161,6 +181,9 @@ export async function fetchOTAHotelsAction(
         description: h.description || '',
         type: h.type || 'hotel', 
         category: h.category,
+        latitude: coords?.lat ?? null,
+        longitude: coords?.lng ?? null,
+        precision: coords?.precision ?? null,
       };
     });
 

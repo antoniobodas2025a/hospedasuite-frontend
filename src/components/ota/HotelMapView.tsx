@@ -18,6 +18,10 @@ interface Hotel {
   min_price: number;
   slug: string;
   main_image_url?: string;
+  /** PRD-009: Coordenadas desde ota_catalog */
+  latitude?: number | null;
+  longitude?: number | null;
+  precision?: string | null;
 }
 
 interface HotelMapViewProps {

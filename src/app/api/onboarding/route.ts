@@ -61,29 +61,77 @@ export async function POST(request: Request) {
     });
 
     // FASE D: Creación del Tenant (Hotel) y Configuración de Facturación
-    const { error: hotelError } = await supabaseAdmin.from('hotels').insert({
-      owner_id: createdUserId,
-      name: hotelData.name,
-      slug,
-      city: hotelData.city,
-      location: hotelData.location || hotelData.city,
-      email: adminData.email, 
-      wompi_payment_source_id: paymentToken,
-      wompi_acceptance_token: acceptanceToken || 'accepted_at_onboarding',
-      is_onboarding_complete: true,
-      status: 'active',
-      config: {
-        rooms_count: hotelData.rooms,
-        trial_starts_at: new Date().toISOString(),
-        billing_day: 91 // Trigger para el motor de facturación diferida
-      }
-    });
+    const { data: createdHotel, error: hotelError } = await supabaseAdmin
+      .from('hotels')
+      .insert({
+        owner_id: createdUserId,
+        name: hotelData.name,
+        slug,
+        city: hotelData.city,
+        location: hotelData.location || hotelData.city,
+        email: adminData.email,
+        wompi_payment_source_id: paymentToken,
+        wompi_acceptance_token: acceptanceToken || 'accepted_at_onboarding',
+        is_onboarding_complete: true,
+        status: 'active',
+        config: {
+          rooms_count: hotelData.rooms,
+          trial_starts_at: new Date().toISOString(),
+          billing_day: 91, // Trigger para el motor de facturación diferida
+        },
+      })
+      .select('id')
+      .single();
 
-    if (hotelError) {
-      throw new Error(`Database Error (Hotels): ${hotelError.message}`);
+    if (hotelError || !createdHotel) {
+      throw new Error(`Database Error (Hotels): ${hotelError?.message}`);
     }
 
     console.log(`✅ [Onboarding] Éxito: Hotel ${hotelData.name} instanciado.`);
+
+    // ─── Geocoding post-provisioning (non-blocking) ─────────────────────
+    // Si falla, no se detiene el onboarding — se guarda sin coordenadas.
+    try {
+      const address = hotelData.address || hotelData.location || '';
+      const city = hotelData.city || '';
+
+      if (address || city) {
+        const geocodeRes = await fetch(
+          `${process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000'}/api/geocode`,
+          {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              address,
+              city,
+              country: 'Colombia',
+            }),
+          },
+        );
+
+        if (geocodeRes.ok) {
+          const geocodeJson = await geocodeRes.json();
+          if (geocodeJson.success && geocodeJson.data) {
+            await supabaseAdmin.from('hotel_locations').insert({
+              hotel_id: createdHotel.id,
+              lat: geocodeJson.data.lat,
+              lng: geocodeJson.data.lng,
+              precision: geocodeJson.data.precision,
+              source: 'wizard',
+              raw_input: [address, city].filter(Boolean).join(', '),
+              geocoded_at: new Date().toISOString(),
+            });
+            console.log(`📍 [Onboarding] Coordenadas guardadas para ${hotelData.name}`);
+          }
+        }
+      }
+    } catch (geocodeErr) {
+      // Non-blocking: log but don't fail onboarding
+      console.warn(
+        `📍 [Onboarding] Geocoding no disponible para ${hotelData.name}:`,
+        geocodeErr instanceof Error ? geocodeErr.message : geocodeErr,
+      );
+    }
 
     return NextResponse.json({ 
       success: true, 
