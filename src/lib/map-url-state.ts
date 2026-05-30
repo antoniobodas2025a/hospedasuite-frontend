@@ -1,4 +1,4 @@
-import L from 'leaflet';
+import type { LatLngBounds } from 'leaflet';
 
 /**
  * Map URL state — serialize/deserialize map position to URL search params.
@@ -20,7 +20,7 @@ const DECIMAL_PLACES = 4;
 export interface MapState {
   center: { lat: number; lng: number };
   zoom: number;
-  bounds?: L.LatLngBounds | null;
+  bounds?: LatLngBounds | null;
 }
 
 /**
@@ -69,7 +69,7 @@ export function deserializeMapParams(
   if (isNaN(lat) || isNaN(lng) || isNaN(zoom)) return null;
 
   // Bounds are optional
-  let bounds: L.LatLngBounds | null = null;
+  let bounds: LatLngBounds | null = null;
   const boundsRaw = searchParams.get(PARAM_BOUNDS);
   if (boundsRaw) {
     const parts = boundsRaw.split(',').map(Number);
@@ -77,7 +77,7 @@ export function deserializeMapParams(
       parts.length === 4 &&
       parts.every((n) => !isNaN(n))
     ) {
-      bounds = L.latLngBounds([parts[0], parts[1]], [parts[2], parts[3]]);
+      bounds = LatLngBounds([parts[0], parts[1]], [parts[2], parts[3]]);
     }
   }
 
@@ -88,7 +88,7 @@ export function deserializeMapParams(
  * Compute approximate area of a LatLngBounds in degree².
  * Used for comparing bounds changes.
  */
-export function boundsArea(bounds: L.LatLngBounds): number {
+export function boundsArea(bounds: LatLngBounds): number {
   const sw = bounds.getSouthWest();
   const ne = bounds.getNorthEast();
   return (ne.lat - sw.lat) * (ne.lng - sw.lng);
@@ -105,8 +105,8 @@ export function boundsArea(bounds: L.LatLngBounds): number {
  *   - One area zero, other non-zero → changed (true)
  */
 export function boundsChangedOverThreshold(
-  b1: L.LatLngBounds,
-  b2: L.LatLngBounds,
+  b1: LatLngBounds,
+  b2: LatLngBounds,
   threshold: number
 ): boolean {
   const area1 = boundsArea(b1);
