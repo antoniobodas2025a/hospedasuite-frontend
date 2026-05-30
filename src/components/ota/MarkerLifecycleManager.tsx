@@ -20,6 +20,8 @@ interface Hotel {
   latitude?: number | null;
   longitude?: number | null;
   precision?: string | null;
+  /** PRD-006: Review stats for popup */
+  reviewStats?: { averageRating: number; totalReviews: number };
 }
 
 interface MarkerLifecycleManagerProps {
@@ -30,34 +32,20 @@ interface MarkerLifecycleManagerProps {
   onMarkersReady?: () => void;
 }
 
-// Sprint 3: 2-tier mini-pin system
-// Tier 1: Mini-pin (default) — small circular dot, low visual weight
-// Tier 2: Expanded pin (selected/hovered) — full price tag, high visual weight
-function createMiniPinIcon(price: number, isExpanded: boolean): L.DivIcon {
-  if (isExpanded) {
-    return L.divIcon({
-      className: 'hotel-marker-wrapper',
-      html: `
-        <div class="hotel-marker-pin expanded">
-          <span class="marker-price">$${price.toLocaleString()}</span>
-        </div>
-      `,
-      iconSize: [90, 44],
-      iconAnchor: [45, 22],
-      popupAnchor: [0, -22],
-    });
-  }
+// Sprint 3 + PRD-009 Fase 2: Price-badge markers (Airbnb-style)
+// Default: price pill showing "$120.000"
+// Selected: price pill with brand background, elevated
+// Cluster: count badge + cheapest price
+function createPricePinIcon(price: number, isSelected: boolean): L.DivIcon {
+  const formatted = price > 0 ? `$${price.toLocaleString()}` : '$$$';
+  const cls = isSelected ? 'marker-price-pill selected' : 'marker-price-pill';
 
   return L.divIcon({
     className: 'hotel-marker-wrapper',
-    html: `
-      <div class="hotel-marker-pin mini">
-        <span class="marker-dot"></span>
-      </div>
-    `,
-    iconSize: [24, 24],
-    iconAnchor: [12, 12],
-    popupAnchor: [0, -12],
+    html: `<div class="${cls}">${formatted}</div>`,
+    iconSize: isSelected ? [100, 36] : [90, 32],
+    iconAnchor: isSelected ? [50, 36] : [45, 32],
+    popupAnchor: [0, isSelected ? -36 : -32],
   });
 }
 
@@ -96,9 +84,17 @@ export default function MarkerLifecycleManager({
       spiderfyOnMaxZoom: true,
       iconCreateFunction: (cluster: L.MarkerCluster) => {
         const count = cluster.getChildCount();
+        // Find cheapest price among markers in this cluster
+        const markers = cluster.getAllChildMarkers() as (L.Marker & { hotelPrice?: number })[];
+        const prices = markers
+          .map((m) => m.hotelPrice)
+          .filter((p): p is number => p != null && p > 0)
+          .sort((a, b) => a - b);
+        const cheapest = prices.length > 0 ? `· $${prices[0].toLocaleString()}` : '';
         const size = count < 5 ? 'sm' : count < 15 ? 'md' : 'lg';
+
         return L.divIcon({
-          html: `<div class="cluster-badge ${size}">${count}</div>`,
+          html: `<div class="cluster-badge ${size}">${count} ${cheapest}</div>`,
           className: 'cluster-wrapper',
           iconSize: L.point(40, 40),
           iconAnchor: L.point(20, 20),
@@ -147,23 +143,30 @@ export default function MarkerLifecycleManager({
         if (markersRef.current.has(hotel.id)) return;
 
         const marker = L.marker([hotel.latitude, hotel.longitude], {
-          icon: createMiniPinIcon(hotel.min_price, false),
-        }) as L.Marker & { geoResult?: GeoResult };
+          icon: createPricePinIcon(hotel.min_price, false),
+        }) as L.Marker & { geoResult?: GeoResult; hotelPrice?: number };
 
         marker.geoResult = { lat: hotel.latitude, lng: hotel.longitude, displayName: hotel.location };
+        marker.hotelPrice = hotel.min_price;
 
-        // Sprint 2: Click marker → scroll to card
+        // Click marker → scroll to card
         if (onMarkerClick) {
           marker.on('click', () => onMarkerClick(hotel.id));
         }
 
-        // Add popup
+        // Popup with rating if available
+        const ratingHtml = hotel.reviewStats?.averageRating
+          ? `<span class="popup-rating">★ ${hotel.reviewStats.averageRating.toFixed(1)}</span>`
+          : '';
         marker.bindPopup(`
           <div class="hotel-popup">
             ${hotel.main_image_url ? `<img src="${hotel.main_image_url}" alt="${hotel.name}" class="popup-image" onerror="this.style.display='none'" />` : ''}
             <div class="popup-info">
               <h3 class="popup-name">${hotel.name}</h3>
-              <p class="popup-location">${hotel.location}</p>
+              <div class="popup-meta">
+                <span class="popup-location">${hotel.location}</span>
+                ${ratingHtml}
+              </div>
               <p class="popup-price">
                 <span class="price-amount">$${hotel.min_price.toLocaleString()}</span>
                 <span class="price-period"> /noche</span>
@@ -192,23 +195,30 @@ export default function MarkerLifecycleManager({
         if (markersRef.current.has(hotel.id)) return;
 
         const marker = L.marker([result.lat, result.lng], {
-          icon: createMiniPinIcon(hotel.min_price, false),
-        }) as L.Marker & { geoResult?: GeoResult };
+          icon: createPricePinIcon(hotel.min_price, false),
+        }) as L.Marker & { geoResult?: GeoResult; hotelPrice?: number };
 
         marker.geoResult = result;
+        marker.hotelPrice = hotel.min_price;
 
         // Sprint 2: Click marker → scroll to card
         if (onMarkerClick) {
           marker.on('click', () => onMarkerClick(hotel.id));
         }
 
-        // Add popup
+        // Add popup with rating if available
+        const ratingHtml = hotel.reviewStats?.averageRating
+          ? `<span class="popup-rating">★ ${hotel.reviewStats.averageRating.toFixed(1)}</span>`
+          : '';
         marker.bindPopup(`
           <div class="hotel-popup">
             ${hotel.main_image_url ? `<img src="${hotel.main_image_url}" alt="${hotel.name}" class="popup-image" onerror="this.style.display='none'" />` : ''}
             <div class="popup-info">
               <h3 class="popup-name">${hotel.name}</h3>
-              <p class="popup-location">${hotel.location}</p>
+              <div class="popup-meta">
+                <span class="popup-location">${hotel.location}</span>
+                ${ratingHtml}
+              </div>
               <p class="popup-price">
                 <span class="price-amount">$${hotel.min_price.toLocaleString()}</span>
                 <span class="price-period"> /noche</span>
@@ -250,7 +260,7 @@ export default function MarkerLifecycleManager({
           </div>
         `);
         // Update icon if price changed or selection state changed
-        marker.setIcon(createMiniPinIcon(hotel.min_price, false));
+        marker.setIcon(createPricePinIcon(hotel.min_price, false));
       }
     });
 
@@ -270,7 +280,7 @@ export default function MarkerLifecycleManager({
       if (!hotel) return;
 
       const isSelected = id === selectedHotelId;
-      marker.setIcon(createMiniPinIcon(hotel.min_price, isSelected));
+      marker.setIcon(createPricePinIcon(hotel.min_price, isSelected));
 
       // Bring selected marker to front with z-index offset
       marker.setZIndexOffset(isSelected ? 1000 : 0);
