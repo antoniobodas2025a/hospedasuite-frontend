@@ -18,6 +18,8 @@ export interface HotelSettings {
   email: string;
   tax_rate: number;
   primary_color: string;
+  latitude?: number | null;
+  longitude?: number | null;
   wompi_public_key?: string;
   wompi_integrity_secret?: string;
   wompi_events_secret?: string;
@@ -44,6 +46,8 @@ export async function saveSettingsAction(settings: HotelSettings) {
         email: settings.email,
         tax_rate: settings.tax_rate,
         primary_color: settings.primary_color,
+        latitude: settings.latitude ?? undefined,
+        longitude: settings.longitude ?? undefined,
         wompi_public_key: settings.wompi_public_key,
         wompi_integrity_secret: settings.wompi_integrity_secret,
         wompi_events_secret: settings.wompi_events_secret,
@@ -51,6 +55,21 @@ export async function saveSettingsAction(settings: HotelSettings) {
       .eq('id', settings.id);
 
     if (error) throw new Error(error.message);
+
+    // Save manual coordinates to hotel_locations (overrides geocoded values)
+    if (settings.latitude != null && settings.longitude != null) {
+      const { error: locError } = await supabaseAdmin
+        .from('hotel_locations')
+        .upsert({
+          hotel_id: settings.id,
+          lat: settings.latitude,
+          lng: settings.longitude,
+          precision: 'manual',
+          source: 'dashboard',
+          geocoded_at: new Date().toISOString(),
+        }, { onConflict: 'hotel_id' });
+      if (locError) console.warn('Failed to save manual coordinates:', locError.message);
+    }
 
     revalidatePath('/dashboard/settings');
     return { success: true };

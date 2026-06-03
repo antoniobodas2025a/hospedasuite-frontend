@@ -327,7 +327,7 @@ export default function OTADashboard({
 				if (k && v !== undefined) params.set(k, v);
 			});
 			// Use history.replaceState to avoid Next.js re-render — Airbnb-style silent URL update
-			window.history.replaceState(null, '', `${pathname}?${params.toString()}`);
+			window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
 		}, 500);
 
 		return () => {

@@ -3,6 +3,8 @@
 import React, { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { motion, AnimatePresence } from 'framer-motion';
+import dynamic from 'next/dynamic';
+const MapPicker = dynamic(() => import('./MapPicker'), { ssr: false });
 import { 
   Save, MessageCircle, ShieldAlert, ShieldCheck, Building, CreditCard, UploadCloud, 
   Users, Palette, Trash2, KeyRound, Globe, Check, Plus,
@@ -332,6 +334,27 @@ export default function SettingsPanel({ initialData, initialStaff = [] }: Settin
                     <input {...register('location')} placeholder="Ubicación (barrio/zona)" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
                   </div>
                   <input {...register('address')} placeholder="Dirección completa" className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
+
+                  {/* Map Picker — drag pin to exact hotel location */}
+                  <div>
+                    <label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+                      Ubicación exacta en el mapa
+                    </label>
+                    <p className="text-xs text-muted-foreground mb-2">
+                      Arrastrá el pin al punto exacto de tu hotel. Hacé clic en el mapa para moverlo.
+                    </p>
+                    <MapPicker
+                      initialLat={initialData?.latitude ?? null}
+                      initialLng={initialData?.longitude ?? null}
+                      cityName={watch('city') || initialData?.city}
+                      onPositionChange={(lat, lng) => {
+                        setValue('latitude', lat);
+                        setValue('longitude', lng);
+                      }}
+                    />
+                  </div>
+                  <input type="hidden" {...register('latitude')} />
+                  <input type="hidden" {...register('longitude')} />
                   <div className="grid grid-cols-2 gap-6">
                     <input {...register('phone')} placeholder="Tel" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />
                     <input {...register('email')} placeholder="Email" className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]" />

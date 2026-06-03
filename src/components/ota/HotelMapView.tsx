@@ -1,82 +1,86 @@
-'use client';
+"use client";
 
-import { useState, useEffect } from 'react';
-import { MapContainer, TileLayer } from 'react-leaflet';
-import { MapPin, Loader2 } from 'lucide-react';
-import L from 'leaflet';
-import MarkerLifecycleManager from './MarkerLifecycleManager';
-import MapTransitionController from './MapTransitionController';
-import MapSearchSync from './MapSearchSync';
-import 'leaflet/dist/leaflet.css';
-import '@/styles/map.css';
+import { useState, useEffect } from "react";
+import { MapContainer, TileLayer } from "react-leaflet";
+import { MapPin, Loader2 } from "lucide-react";
+import L from "leaflet";
+import MarkerLifecycleManager from "./MarkerLifecycleManager";
+import MapTransitionController from "./MapTransitionController";
+import MapSearchSync from "./MapSearchSync";
+import "leaflet/dist/leaflet.css";
+import "@/styles/map.css";
 
 interface Hotel {
-  id: string;
-  name: string;
-  location: string;
-  address?: string;
-  min_price: number;
-  slug: string;
-  main_image_url?: string;
-  /** PRD-009: Coordenadas desde ota_catalog */
-  latitude?: number | null;
-  longitude?: number | null;
-  precision?: string | null;
+	id: string;
+	name: string;
+	location: string;
+	address?: string;
+	min_price: number;
+	slug: string;
+	main_image_url?: string;
+	/** PRD-009: Coordenadas desde ota_catalog */
+	latitude?: number | null;
+	longitude?: number | null;
+	precision?: string | null;
 }
 
 interface HotelMapViewProps {
-  hotels: Hotel[];
-  centerLocation?: string;
-  selectedHotelId?: string;
-  onMarkerClick?: (hotelId: string) => void;
-  onMapBoundsChange?: (bounds: L.LatLngBounds, center: L.LatLng, zoom: number) => void;
-  onSearchAreaChange?: (areaName: string) => void;
-  enableSearchOnMove?: boolean;
-  /** Override default center [lat, lng] (from URL state). Default: Bogotá [4.6097, -74.0817] */
-  initialCenter?: [number, number];
-  /** Override default zoom level (from URL state). Default: 6 */
-  initialZoom?: number;
-  /** PRD-006: Fired when map pan/zoom exceeds bounds threshold (20%). */
-  onBoundsExceeded?: (bounds: L.LatLngBounds) => void;
-  /** PRD-006: Bounds change ratio threshold. Default: 0.2 */
-  boundsThreshold?: number;
-  /** User map interaction callbacks — pause card→map sync while panning */
-  onUserInteraction?: () => void;
-  onUserInteractionEnd?: () => void;
+	hotels: Hotel[];
+	centerLocation?: string;
+	selectedHotelId?: string;
+	onMarkerClick?: (hotelId: string) => void;
+	onMapBoundsChange?: (
+		bounds: L.LatLngBounds,
+		center: L.LatLng,
+		zoom: number,
+	) => void;
+	onSearchAreaChange?: (areaName: string) => void;
+	enableSearchOnMove?: boolean;
+	/** Override default center [lat, lng] (from URL state). Default: Bogotá [4.6097, -74.0817] */
+	initialCenter?: [number, number];
+	/** Override default zoom level (from URL state). Default: 6 */
+	initialZoom?: number;
+	/** PRD-006: Fired when map pan/zoom exceeds bounds threshold (20%). */
+	onBoundsExceeded?: (bounds: L.LatLngBounds) => void;
+	/** PRD-006: Bounds change ratio threshold. Default: 0.2 */
+	boundsThreshold?: number;
+	/** User map interaction callbacks — pause card→map sync while panning */
+	onUserInteraction?: () => void;
+	onUserInteractionEnd?: () => void;
 }
 
 /**
  * MapInteractionListener — tracks user dragging/zooming to pause card↔map sync.
  */
 function MapInteractionListener({
-  onInteraction,
-  onInteractionEnd,
+	onInteraction,
+	onInteractionEnd,
 }: {
-  onInteraction?: () => void;
-  onInteractionEnd?: () => void;
+	onInteraction?: () => void;
+	onInteractionEnd?: () => void;
 }) {
-  useEffect(() => {
-    // Use a minimal approach: listen for Leaflet's drag and zoom events
-    const mapEl = document.querySelector('.leaflet-container');
-    if (!mapEl) return;
+	useEffect(() => {
+		// Use a minimal approach: listen for Leaflet's drag and zoom events
+		const mapEl = document.querySelector(".leaflet-container");
+		if (!mapEl) return;
 
-    const handleStart = () => onInteraction?.();
-    const handleEnd = () => onInteractionEnd?.();
+		const handleStart = () => onInteraction?.();
+		const handleEnd = () => onInteractionEnd?.();
 
-    mapEl.addEventListener('mousedown', handleStart);
-    mapEl.addEventListener('mouseup', handleEnd);
-    mapEl.addEventListener('touchstart', handleStart);
-    mapEl.addEventListener('touchend', handleEnd);
+		mapEl.addEventListener("mousedown", handleStart);
+		mapEl.addEventListener("mouseup", handleEnd);
+		mapEl.addEventListener("touchstart", handleStart);
+		mapEl.addEventListener("touchend", handleEnd);
 
-    return () => {
-      mapEl.removeEventListener('mousedown', handleStart);
-      mapEl.removeEventListener('mouseup', handleEnd);
-      mapEl.removeEventListener('touchstart', handleStart);
-      mapEl.removeEventListener('touchend', handleEnd);
-    };
-  }, [onInteraction, onInteractionEnd]);
+		return () => {
+			mapEl.removeEventListener("mousedown", handleStart);
+			mapEl.removeEventListener("mouseup", handleEnd);
+			mapEl.removeEventListener("touchstart", handleStart);
+			mapEl.removeEventListener("touchend", handleEnd);
+		};
+	}, [onInteraction, onInteractionEnd]);
 
-  return null;
+	return null;
 }
 
 /**
@@ -86,94 +90,105 @@ function MapInteractionListener({
  * Idea #2: Hover hotel in list → zoom to marker.
  */
 export default function HotelMapView({
-  hotels,
-  centerLocation,
-  selectedHotelId = '',
-  onMarkerClick,
-  onMapBoundsChange,
-  onSearchAreaChange,
-  enableSearchOnMove = false,
-  initialCenter,
-  initialZoom,
-  onBoundsExceeded,
-  boundsThreshold,
-  onUserInteraction,
-  onUserInteractionEnd,
+	hotels,
+	centerLocation,
+	selectedHotelId = "",
+	onMarkerClick,
+	onMapBoundsChange,
+	onSearchAreaChange,
+	enableSearchOnMove = false,
+	initialCenter,
+	initialZoom,
+	onBoundsExceeded,
+	boundsThreshold,
+	onUserInteraction,
+	onUserInteractionEnd,
 }: HotelMapViewProps) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [geocodingProgress, setGeocodingProgress] = useState({ current: 0, total: 0 });
+	const [isLoading, setIsLoading] = useState(true);
+	const [geocodingProgress, setGeocodingProgress] = useState({
+		current: 0,
+		total: 0,
+	});
 
-  if (hotels.length === 0) {
-    return (
-      <div className="map-empty-state flex flex-col items-center justify-center py-16 text-muted-foreground">
-        <MapPin size={48} className="map-empty-icon mb-4 text-muted-foreground/40" />
-        <p className="text-sm font-medium">No hay hoteles para mostrar en el mapa</p>
-      </div>
-    );
-  }
+	if (hotels.length === 0) {
+		return (
+			<div className="map-empty-state flex flex-col items-center justify-center py-16 text-muted-foreground">
+				<MapPin
+					size={48}
+					className="map-empty-icon mb-4 text-muted-foreground/40"
+				/>
+				<p className="text-sm font-medium">
+					No hay hoteles para mostrar en el mapa
+				</p>
+			</div>
+		);
+	}
 
-  return (
-    <div className="map-container-enter relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30 shadow-sm">
-      {/* Loading state */}
-      {isLoading && (
-        <div className="map-loading-overlay absolute inset-0 flex items-center justify-center z-[1000]">
-          <div className="flex flex-col items-center gap-2">
-            <Loader2 size={24} className="map-loading-spinner text-brand-500" />
-            {geocodingProgress.total > 0 && (
-              <p className="map-loading-text text-xs text-muted-foreground">
-                Buscando ubicaciones... ({geocodingProgress.current}/{geocodingProgress.total})
-              </p>
-            )}
-          </div>
-        </div>
-      )}
+	return (
+		<div className="map-container-enter relative w-full h-64 sm:h-80 rounded-[var(--radius-squircle-xl)] overflow-hidden border border-border/30 shadow-sm">
+			{/* Loading state */}
+			{isLoading && (
+				<div className="map-loading-overlay absolute inset-0 flex items-center justify-center z-[1000]">
+					<div className="flex flex-col items-center gap-2">
+						<Loader2 size={24} className="map-loading-spinner text-brand-500" />
+						{geocodingProgress.total > 0 && (
+							<p className="map-loading-text text-xs text-muted-foreground">
+								Buscando ubicaciones... ({geocodingProgress.current}/
+								{geocodingProgress.total})
+							</p>
+						)}
+					</div>
+				</div>
+			)}
 
-      {/* Map Container */}
-      <MapContainer
-        center={initialCenter || [4.6097, -74.0817]}
-        zoom={initialZoom || 6}
-        className="w-full h-full z-0"
-        zoomControl={false}
-      >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        
-        {/* Marker lifecycle manager */}
-        <MarkerLifecycleManager
-          hotels={hotels}
-          selectedHotelId={selectedHotelId}
-          onMarkerClick={onMarkerClick}
-          onGeocodingProgress={(current, total) => setGeocodingProgress({ current, total })}
-          onMarkersReady={() => setIsLoading(false)}
-        />
+			{/* Map Container */}
+			<MapContainer
+				center={initialCenter || [4.6097, -74.0817]}
+				zoom={initialZoom || 6}
+				className="w-full h-full z-0"
+				zoomControl={false}
+			>
+				<TileLayer
+					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+					url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+				/>
 
-        {/* Smooth transitions */}
-        <MapTransitionController
-          hotels={hotels}
-          centerLocation={centerLocation}
-          selectedHotelId={selectedHotelId}
-          transitionDuration={1.2}
-        />
+				{/* Marker lifecycle manager */}
+				<MarkerLifecycleManager
+					hotels={hotels}
+					selectedHotelId={selectedHotelId}
+					onMarkerClick={onMarkerClick}
+					onGeocodingProgress={(current, total) =>
+						setGeocodingProgress({ current, total })
+					}
+					onMarkersReady={() => setIsLoading(false)}
+				/>
 
-        {/* Search ↔ Map sync */}
-        <MapSearchSync
-          searchLocation={centerLocation}
-          onMapBoundsChange={onMapBoundsChange}
-          onSearchAreaChange={onSearchAreaChange}
-          enableSearchOnMove={enableSearchOnMove}
-          moveDebounceMs={1000}
-          onBoundsExceeded={onBoundsExceeded}
-          boundsThreshold={boundsThreshold}
-        />
+				{/* Smooth transitions */}
+				<MapTransitionController
+					hotels={hotels}
+					centerLocation={centerLocation}
+					selectedHotelId={selectedHotelId}
+					transitionDuration={1.2}
+				/>
 
-        {/* User map interaction tracking — pause card→map sync while panning */}
-        <MapInteractionListener
-          onInteraction={onUserInteraction}
-          onInteractionEnd={onUserInteractionEnd}
-        />
-      </MapContainer>
-    </div>
-  );
+				{/* Search ↔ Map sync */}
+				<MapSearchSync
+					searchLocation={centerLocation}
+					onMapBoundsChange={onMapBoundsChange}
+					onSearchAreaChange={onSearchAreaChange}
+					enableSearchOnMove={enableSearchOnMove}
+					moveDebounceMs={1000}
+					onBoundsExceeded={onBoundsExceeded}
+					boundsThreshold={boundsThreshold}
+				/>
+
+				{/* User map interaction tracking — pause card→map sync while panning */}
+				<MapInteractionListener
+					onInteraction={onUserInteraction}
+					onInteractionEnd={onUserInteractionEnd}
+				/>
+			</MapContainer>
+		</div>
+	);
 }
