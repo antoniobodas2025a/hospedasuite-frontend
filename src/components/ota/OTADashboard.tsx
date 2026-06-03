@@ -1372,14 +1372,8 @@ export default function OTADashboard({
 					</div>
 				) : !isSplitView ? (
 					<>
-						{/* Desktop cards-only: no map, clean grid + toggle */}
+						{/* Desktop cards-only: no map, clean grid */}
 						{renderHotelList()}
-						{sortedHotels.length > 0 && (
-							<MapToggle
-								hotelCount={sortedHotels.length}
-								onClick={() => setViewMode("map")}
-							/>
-						)}
 					</>
 				) : (
 					<>
@@ -1443,21 +1437,19 @@ export default function OTADashboard({
 							</>
 						) : (
 							/* Mobile cards-only or no results */
-							<>
-								{renderHotelList()}
-								{sortedHotels.length > 0 && (
-									<div className="sm:hidden flex justify-center my-6">
-										<MapToggle
-											hotelCount={sortedHotels.length}
-											onClick={() => setViewMode("map")}
-										/>
-									</div>
-								)}
-							</>
+							renderHotelList()
 						)}
 					</>
 				)}
 			</main>
+
+		{/* PRD-014: Map toggle — visible in cards mode on both desktop and mobile */}
+		{sortedHotels.length > 0 && viewMode === "cards" && (
+			<MapToggle
+				hotelCount={sortedHotels.length}
+				onClick={() => setViewMode("map")}
+			/>
+		)}
 
 			{/* Mobile Search Sheet (Phase 3: PRD-004 - works over map view) */}
 			<MobileSearchSheet
