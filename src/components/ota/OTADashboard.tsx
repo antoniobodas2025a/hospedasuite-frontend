@@ -450,6 +450,22 @@ export default function OTADashboard({
 	}, []);
 
 	// PRD-009 Fase 3: Scroll list → highlight marker on map (IntersectionObserver)
+	// Guard: skip flyTo while user is actively panning the map
+	const isUserPanningRef = useRef(false);
+	const isUserPanningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+	// User map interaction guard: pause flyTo while user is dragging/zooming
+	const handleMapUserInteraction = useCallback(() => {
+		isUserPanningRef.current = true;
+		if (isUserPanningTimeoutRef.current) clearTimeout(isUserPanningTimeoutRef.current);
+	}, []);
+
+	const handleMapUserInteractionEnd = useCallback(() => {
+		isUserPanningTimeoutRef.current = setTimeout(() => {
+			isUserPanningRef.current = false;
+		}, 1500); // Re-enable IntersectionObserver sync after 1.5s of inactivity
+	}, []);
+  
 	useEffect(() => {
 		// Observe both split-view cards and bottom-sheet cards
 		const cards = document.querySelectorAll('[id^="hotel-card-"]');
@@ -470,7 +486,8 @@ export default function OTADashboard({
 				}
 				if (bestEntry) {
 					const id = bestEntry.target.getAttribute("data-hotel-id") || "";
-					if (id && id !== selectedHotelRef.current) {
+					// Skip flyTo while user is actively panning the map
+					if (id && id !== selectedHotelRef.current && !isUserPanningRef.current) {
 						setSelectedHotelId(id);
 						selectedHotelRef.current = id;
 					}
@@ -1336,6 +1353,8 @@ export default function OTADashboard({
 								initialCenter={initialCenter}
 								initialZoom={initialZoom}
 								onBoundsExceeded={handleBoundsExceeded}
+								onUserInteraction={handleMapUserInteraction}
+								onUserInteractionEnd={handleMapUserInteractionEnd}
 							/>
 						</div>
 					</div>
@@ -1370,6 +1389,8 @@ export default function OTADashboard({
 										initialZoom={initialZoom}
 										onBoundsExceeded={handleBoundsExceeded}
 										boundsThreshold={0.2}
+										onUserInteraction={handleMapUserInteraction}
+										onUserInteractionEnd={handleMapUserInteractionEnd}
 									/>
 								</div>
 

@@ -147,11 +147,12 @@ export async function fetchOTAHotelsAction(
       });
     }
 
-    // 3. Enrich with coordinates from ota_catalog
+    // 3. Enrich with coordinates from ota_catalog (primary) + hotel_locations (fallback)
     const otaHotelIds = filteredHotels.map((h: any) => h.id);
     const coordsMap = new Map<string, { lat: number; lng: number; precision: string }>();
 
     if (otaHotelIds.length > 0) {
+      // Primary: ota_catalog (precomputed, cached)
       const { data: catalogData } = await supabaseAdmin
         .from('ota_catalog')
         .select('id, lat, lng, precision')
@@ -161,6 +162,23 @@ export async function fetchOTAHotelsAction(
         for (const row of catalogData) {
           if (row.lat && row.lng) {
             coordsMap.set(row.id, { lat: row.lat, lng: row.lng, precision: row.precision });
+          }
+        }
+      }
+
+      // Fallback: hotel_locations (from onboarding wizard geocoding)
+      const idsWithoutCoords = otaHotelIds.filter((id) => !coordsMap.has(id));
+      if (idsWithoutCoords.length > 0) {
+        const { data: locData } = await supabaseAdmin
+          .from('hotel_locations')
+          .select('hotel_id, lat, lng, precision')
+          .in('hotel_id', idsWithoutCoords);
+
+        if (locData) {
+          for (const row of locData) {
+            if (row.lat && row.lng) {
+              coordsMap.set(row.hotel_id, { lat: row.lat, lng: row.lng, precision: row.precision });
+            }
           }
         }
       }

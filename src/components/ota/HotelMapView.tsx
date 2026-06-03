@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { MapContainer, TileLayer } from 'react-leaflet';
 import { MapPin, Loader2 } from 'lucide-react';
 import L from 'leaflet';
@@ -40,6 +40,43 @@ interface HotelMapViewProps {
   onBoundsExceeded?: (bounds: L.LatLngBounds) => void;
   /** PRD-006: Bounds change ratio threshold. Default: 0.2 */
   boundsThreshold?: number;
+  /** User map interaction callbacks — pause card→map sync while panning */
+  onUserInteraction?: () => void;
+  onUserInteractionEnd?: () => void;
+}
+
+/**
+ * MapInteractionListener — tracks user dragging/zooming to pause card↔map sync.
+ */
+function MapInteractionListener({
+  onInteraction,
+  onInteractionEnd,
+}: {
+  onInteraction?: () => void;
+  onInteractionEnd?: () => void;
+}) {
+  useEffect(() => {
+    // Use a minimal approach: listen for Leaflet's drag and zoom events
+    const mapEl = document.querySelector('.leaflet-container');
+    if (!mapEl) return;
+
+    const handleStart = () => onInteraction?.();
+    const handleEnd = () => onInteractionEnd?.();
+
+    mapEl.addEventListener('mousedown', handleStart);
+    mapEl.addEventListener('mouseup', handleEnd);
+    mapEl.addEventListener('touchstart', handleStart);
+    mapEl.addEventListener('touchend', handleEnd);
+
+    return () => {
+      mapEl.removeEventListener('mousedown', handleStart);
+      mapEl.removeEventListener('mouseup', handleEnd);
+      mapEl.removeEventListener('touchstart', handleStart);
+      mapEl.removeEventListener('touchend', handleEnd);
+    };
+  }, [onInteraction, onInteractionEnd]);
+
+  return null;
 }
 
 /**
@@ -60,6 +97,8 @@ export default function HotelMapView({
   initialZoom,
   onBoundsExceeded,
   boundsThreshold,
+  onUserInteraction,
+  onUserInteractionEnd,
 }: HotelMapViewProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [geocodingProgress, setGeocodingProgress] = useState({ current: 0, total: 0 });
@@ -127,6 +166,12 @@ export default function HotelMapView({
           moveDebounceMs={1000}
           onBoundsExceeded={onBoundsExceeded}
           boundsThreshold={boundsThreshold}
+        />
+
+        {/* User map interaction tracking — pause card→map sync while panning */}
+        <MapInteractionListener
+          onInteraction={onUserInteraction}
+          onInteractionEnd={onUserInteractionEnd}
         />
       </MapContainer>
     </div>
