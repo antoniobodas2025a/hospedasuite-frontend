@@ -170,6 +170,7 @@ export default function OTADashboard({
 	const [searchTerm, setSearchTerm] = useState(urlLocation);
 	const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 	const [isHeaderVisible, setIsHeaderVisible] = useState(true);
+	const isFirstSearchDone = useRef(false);
 	const [isMobileSheetOpen, setIsMobileSheetOpen] = useState(false);
 
 	// PRD-006: Desktop split-view detection (≥768px)
@@ -518,6 +519,13 @@ export default function OTADashboard({
 	// Debounced search effect with stale-while-revalidate cache
 	useEffect(() => {
 		let isMounted = true;
+
+		// Skip initial mount — SSR already loaded hotels
+		const hasUserSearch = searchTerm || urlLocation || urlCheckin || urlCheckout;
+		if (!hasUserSearch && !isFirstSearchDone.current) {
+			isFirstSearchDone.current = true;
+			return;
+		}
 
 		const delayDebounceFn = setTimeout(async () => {
 			const cacheParams = {
@@ -1215,7 +1223,7 @@ export default function OTADashboard({
 						transition={{ delay: 0.3, duration: 0.5 }}
 						className="mt-3 text-sm sm:text-base text-muted-foreground max-w-md mx-auto"
 					>
-						Reserva directo · Sin comisiones · Mejor precio garantizado
+						Glampings y hoteles boutique en los lugares más lindos de Colombia
 					</motion.p>
 					<motion.div
 						initial={{ opacity: 0 }}
