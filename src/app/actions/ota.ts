@@ -205,7 +205,9 @@ export async function fetchOTAHotelsAction(
 			}
 
 			// Third fallback: hotels table (manual coordinates from dashboard settings)
-			const idsStillWithoutCoords = otaHotelIds.filter((id) => !coordsMap.has(id));
+			const idsStillWithoutCoords = otaHotelIds.filter(
+				(id) => !coordsMap.has(id),
+			);
 			if (idsStillWithoutCoords.length > 0) {
 				const { data: hotelData } = await supabaseAdmin
 					.from("hotels")

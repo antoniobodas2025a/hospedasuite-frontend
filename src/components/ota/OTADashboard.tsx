@@ -26,6 +26,7 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import SearchBarUnified from "./SearchBarUnified";
 import MobileSearchSheet from "./MobileSearchSheet";
 import MapBottomSheet from "./MapBottomSheet";
+import MapToggle from "./MapToggle";
 
 // PRD-008 fix: Leaflet depends on window/document → must be client-only
 const HotelMapView = dynamic(() => import("./HotelMapView"), {
@@ -227,6 +228,9 @@ export default function OTADashboard({
 	>("recommended");
 	const [visibleCount, setVisibleCount] = useState(6);
 	const [searchStep, setSearchStep] = useState<"location" | "full">("location");
+
+	// PRD-014: Two-stage navigation — cards first, map on demand
+	const [viewMode, setViewMode] = useState<"cards" | "map">("cards");
 
 	// ── PRD-008 Phase 3: Fallback Chain State ─────────────────────────────────
 	/** Current relaxation level (0=normal, 1-5=fallback cascade) */
@@ -1316,8 +1320,8 @@ export default function OTADashboard({
 					</button>
 				</div>
 
-				{/* PRD-006: Desktop split-view layout (≥768px) */}
-				{isSplitView && sortedHotels.length > 0 ? (
+				{/* PRD-014: Desktop split-view only when user toggles map */}
+				{isSplitView && viewMode === "map" && sortedHotels.length > 0 ? (
 					<div className="split-view-layout mb-0">
 						{/* List panel (40%) — independent scroll */}
 						<div className="list-panel-scroll">
@@ -1366,12 +1370,23 @@ export default function OTADashboard({
 							/>
 						</div>
 					</div>
+				) : !isSplitView ? (
+					<>
+						{/* Desktop cards-only: no map, clean grid + toggle */}
+						{renderHotelList()}
+						{sortedHotels.length > 0 && (
+							<MapToggle
+								hotelCount={sortedHotels.length}
+								onClick={() => setViewMode("map")}
+							/>
+						)}
+					</>
 				) : (
 					<>
-						{/* PRD-006: Mobile map-first (full-viewport map + bottom sheet) */}
-						{sortedHotels.length > 0 ? (
+						{/* Mobile */}
+						{sortedHotels.length > 0 && viewMode === "map" ? (
 							<>
-								{/* Full-viewport map (fixed, covers entire screen below header/search) */}
+								{/* Mobile map + bottom sheet */}
 								<div className="fixed inset-0 z-0">
 									<HotelMapView
 										hotels={sortedHotels.map((h: any) => ({
@@ -1427,8 +1442,18 @@ export default function OTADashboard({
 								<div className="h-screen sm:hidden" aria-hidden="true" />
 							</>
 						) : (
-							/* No results fallback: show categories + empty grid */
-							renderHotelList()
+							/* Mobile cards-only or no results */
+							<>
+								{renderHotelList()}
+								{sortedHotels.length > 0 && (
+									<div className="sm:hidden flex justify-center my-6">
+										<MapToggle
+											hotelCount={sortedHotels.length}
+											onClick={() => setViewMode("map")}
+										/>
+									</div>
+								)}
+							</>
 						)}
 					</>
 				)}

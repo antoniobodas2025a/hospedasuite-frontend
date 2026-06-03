@@ -57,3 +57,4 @@ playwright/.cache/
 .atl/.skill-registry.cache.json
 # Sentry MCP auth proxy (temp tool)
 scripts/sentry-mcp-proxy.mjs
+.atl/
