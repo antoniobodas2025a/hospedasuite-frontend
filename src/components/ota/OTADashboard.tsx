@@ -312,7 +312,7 @@ export default function OTADashboard({
 	// PRD-006: Persist map state to URL (center, zoom) with 300ms debounce
 	const mapUrlTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 	useEffect(() => {
-		if (!mapCenter || !mapZoom) return;
+		if (!mapCenter || !mapZoom || !urlLocation) return;
 
 		if (mapUrlTimeoutRef.current) clearTimeout(mapUrlTimeoutRef.current);
 

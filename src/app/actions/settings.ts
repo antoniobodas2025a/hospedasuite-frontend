@@ -48,8 +48,6 @@ export async function saveSettingsAction(settings: HotelSettings) {
 				email: settings.email,
 				tax_rate: settings.tax_rate,
 				primary_color: settings.primary_color,
-				latitude: settings.latitude ?? undefined,
-				longitude: settings.longitude ?? undefined,
 				wompi_public_key: settings.wompi_public_key,
 				wompi_integrity_secret: settings.wompi_integrity_secret,
 				wompi_events_secret: settings.wompi_events_secret,

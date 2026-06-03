@@ -203,30 +203,6 @@ export async function fetchOTAHotelsAction(
 					}
 				}
 			}
-
-			// Third fallback: hotels table (manual coordinates from dashboard settings)
-			const idsStillWithoutCoords = otaHotelIds.filter(
-				(id) => !coordsMap.has(id),
-			);
-			if (idsStillWithoutCoords.length > 0) {
-				const { data: hotelData } = await supabaseAdmin
-					.from("hotels")
-					.select("id, latitude, longitude")
-					.in("id", idsStillWithoutCoords)
-					.not("latitude", "is", null);
-
-				if (hotelData) {
-					for (const row of hotelData) {
-						if (row.latitude && row.longitude) {
-							coordsMap.set(row.id, {
-								lat: row.latitude,
-								lng: row.longitude,
-								precision: "manual",
-							});
-						}
-					}
-				}
-			}
 		}
 
 		// 4. Map to OTA response shape
