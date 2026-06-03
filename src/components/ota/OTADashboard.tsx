@@ -454,21 +454,15 @@ export default function OTADashboard({
 	// PRD-009 Fase 3: Scroll list → highlight marker on map (IntersectionObserver)
 	// Guard: skip flyTo while user is actively panning the map
 	const isUserPanningRef = useRef(false);
-	const isUserPanningTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(
-		null,
-	);
 
 	// User map interaction guard: pause flyTo while user is dragging/zooming
+	// Uses Leaflet native dragstart/dragend events — NO timeouts needed
 	const handleMapUserInteraction = useCallback(() => {
 		isUserPanningRef.current = true;
-		if (isUserPanningTimeoutRef.current)
-			clearTimeout(isUserPanningTimeoutRef.current);
 	}, []);
 
 	const handleMapUserInteractionEnd = useCallback(() => {
-		isUserPanningTimeoutRef.current = setTimeout(() => {
-			isUserPanningRef.current = false;
-		}, 1500); // Re-enable IntersectionObserver sync after 1.5s of inactivity
+		isUserPanningRef.current = false;
 	}, []);
 
 	useEffect(() => {
@@ -521,7 +515,8 @@ export default function OTADashboard({
 		let isMounted = true;
 
 		// Skip initial mount — SSR already loaded hotels
-		const hasUserSearch = searchTerm || urlLocation || urlCheckin || urlCheckout;
+		const hasUserSearch =
+			searchTerm || urlLocation || urlCheckin || urlCheckout;
 		if (!hasUserSearch && !isFirstSearchDone.current) {
 			isFirstSearchDone.current = true;
 			return;

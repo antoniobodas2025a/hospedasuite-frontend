@@ -1,7 +1,7 @@
 "use client";
 
-import { useState, useEffect } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
+import { useState } from "react";
+import { MapContainer, TileLayer, useMapEvents } from "react-leaflet";
 import { MapPin, Loader2 } from "lucide-react";
 import L from "leaflet";
 import MarkerLifecycleManager from "./MarkerLifecycleManager";
@@ -50,35 +50,33 @@ interface HotelMapViewProps {
 }
 
 /**
- * MapInteractionListener — tracks user dragging/zooming to pause card↔map sync.
+ * MapDragDetector — uses Leaflet native events via useMapEvents to track
+ * when the user is actively dragging/zooming the map.
+ *
+ * Best practice per Leaflet docs: use map.dragging.moving() and
+ * dragstart/dragend/premove events instead of DOM listeners.
  */
-function MapInteractionListener({
-	onInteraction,
-	onInteractionEnd,
+function MapDragDetector({
+	onDragStart,
+	onDragEnd,
 }: {
-	onInteraction?: () => void;
-	onInteractionEnd?: () => void;
+	onDragStart?: () => void;
+	onDragEnd?: () => void;
 }) {
-	useEffect(() => {
-		// Use a minimal approach: listen for Leaflet's drag and zoom events
-		const mapEl = document.querySelector(".leaflet-container");
-		if (!mapEl) return;
-
-		const handleStart = () => onInteraction?.();
-		const handleEnd = () => onInteractionEnd?.();
-
-		mapEl.addEventListener("mousedown", handleStart);
-		mapEl.addEventListener("mouseup", handleEnd);
-		mapEl.addEventListener("touchstart", handleStart);
-		mapEl.addEventListener("touchend", handleEnd);
-
-		return () => {
-			mapEl.removeEventListener("mousedown", handleStart);
-			mapEl.removeEventListener("mouseup", handleEnd);
-			mapEl.removeEventListener("touchstart", handleStart);
-			mapEl.removeEventListener("touchend", handleEnd);
-		};
-	}, [onInteraction, onInteractionEnd]);
+	useMapEvents({
+		dragstart() {
+			onDragStart?.();
+		},
+		dragend() {
+			onDragEnd?.();
+		},
+		zoomstart() {
+			onDragStart?.();
+		},
+		zoomend() {
+			onDragEnd?.();
+		},
+	});
 
 	return null;
 }
@@ -184,9 +182,9 @@ export default function HotelMapView({
 				/>
 
 				{/* User map interaction tracking — pause card→map sync while panning */}
-				<MapInteractionListener
-					onInteraction={onUserInteraction}
-					onInteractionEnd={onUserInteractionEnd}
+				<MapDragDetector
+					onDragStart={onUserInteraction}
+					onDragEnd={onUserInteractionEnd}
 				/>
 			</MapContainer>
 		</div>
