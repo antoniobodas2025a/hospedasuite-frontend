@@ -270,18 +270,24 @@ export default function TermsPage() {
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans antialiased">
       {/* Header */}
       <header className="border-b border-black/5 bg-white/80 backdrop-blur-xl sticky top-0 z-50">
-        <div className="max-w-[980px] mx-auto px-6 h-14 flex items-center gap-4">
-          <Link
-            href="/software"
-            className="flex items-center gap-2 text-[13px] text-[#1d1d1f]/60 hover:text-[#1d1d1f] transition-colors font-medium"
-          >
-            <ArrowLeft size={16} />
-            Volver
-          </Link>
-          <span className="text-[#1d1d1f]/20">|</span>
-          <span className="text-[13px] font-semibold text-[#1d1d1f]/80 tracking-tight">
-            Términos y Condiciones del Servicio
-          </span>
+        <div className="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <Link
+              href="/software"
+              className="flex items-center gap-2 text-[13px] text-[#1d1d1f]/60 hover:text-[#1d1d1f] transition-colors font-medium"
+            >
+              <ArrowLeft size={16} />
+              Volver
+            </Link>
+            <span className="text-[#1d1d1f]/20">|</span>
+            <span className="text-[13px] font-semibold text-[#1d1d1f]/80 tracking-tight">
+              Términos y Condiciones del Servicio
+            </span>
+          </div>
+          <div className="flex items-center gap-2">
+            <img src="/logo.png" alt="HospedaSuite" className="w-6 h-6 rounded-lg object-cover" />
+            <span className="text-[13px] font-semibold text-[#1d1d1f]/80 tracking-tight hidden sm:block">HospedaSuite</span>
+          </div>
         </div>
       </header>
 

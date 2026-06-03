@@ -35,7 +35,12 @@ export const roomDraftSchema = z.object({
   showerType: z.enum(['ducha', 'bañera', 'ambos', 'ninguno']).optional(),
   hotWater: z.boolean().optional(),
   roomView: z.enum(['interior', 'exterior', 'jardin', 'mar', 'montana', 'ciudad']).optional(),
-  imageUrls: z.array(z.string()).default([]),
+  imageUrls: z.array(
+    z.string().refine(
+      url => !url.startsWith('blob:') && !url.startsWith('data:') && !url.startsWith('javascript:'),
+      'Formato de URL de imagen inválido (no se permiten URLs blob, data, o javascript)',
+    ),
+  ).default([]),
   availabilityRange: z.object({
     from: z.string(),
     to: z.string(),
@@ -70,7 +75,12 @@ export const paymentSchema = z.object({
 // Full wizard state schema (for provisioning)
 export const fullWizardStateSchema = z.object({
   hotelIdentity: hotelIdentitySchema,
-  galleryImages: z.array(z.string()),
+  galleryImages: z.array(
+    z.string().refine(
+      url => !url.startsWith('blob:') && !url.startsWith('data:') && !url.startsWith('javascript:'),
+      'Formato de URL de imagen inválido (no se permiten URLs blob, data, o javascript)',
+    ),
+  ),
   rooms: z.array(roomDraftSchema).min(1),
   settings: settingsSchema,
   payment: paymentSchema,

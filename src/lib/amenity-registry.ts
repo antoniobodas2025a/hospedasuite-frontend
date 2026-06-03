@@ -155,6 +155,11 @@ export const ROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
     label: 'Balcon',
     icon: Mountain,
   },
+  'private-bathroom': {
+    id: 'private-bathroom',
+    label: 'Bano Privado',
+    icon: ShowerHead,
+  },
 };
 
 export function getRoomAmenityById(id: string): RoomAmenityDefinition | null {

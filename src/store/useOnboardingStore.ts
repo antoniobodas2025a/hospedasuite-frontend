@@ -73,6 +73,7 @@ export interface OnboardingState {
   updateRoom: (roomId: string, data: Partial<RoomDraft>) => void;
   removeRoom: (roomId: string) => void;
   setRoomImages: (roomId: string, files: File[], previews: string[]) => void;
+  removeRoomImage: (roomId: string, index: number) => void;
 
   // Step 5 actions
   updateSettings: (data: Partial<SettingsData>) => void;
@@ -235,6 +236,17 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
     ),
   })),
 
+  removeRoomImage: (roomId, index) => set((state) => ({
+    rooms: state.rooms.map(r => {
+      if (r.id !== roomId) return r;
+      const newFiles = [...r.imageFiles];
+      const newPreviews = [...r.imagePreviews];
+      newFiles.splice(index, 1);
+      newPreviews.splice(index, 1);
+      return { ...r, imageFiles: newFiles, imagePreviews: newPreviews };
+    }),
+  })),
+
   updateSettings: (data) => set((state) => {
     const updated = { ...state.settings, ...data };
     const result = settingsSchema.safeParse(updated);
@@ -278,17 +290,24 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
         errors.push('Necesitás al menos 1 habitación');
       } else {
         state.rooms.forEach((room, i) => {
+          // Validate structural fields only; imagePreviews are blob: URLs
+          // that will be replaced by real R2 URLs during provisioning.
+          // URL format validation happens at provisioning time (server-side).
           const result = roomDraftSchema.safeParse({
             id: room.id,
             name: room.name,
             price: room.price,
             amenities: room.amenities || [],
-            imageUrls: room.imagePreviews || [],
+            imageUrls: [], // Real URLs don't exist yet
           });
           if (!result.success) {
             result.error.issues.forEach(issue => {
               errors.push(`Habitación ${i + 1}: ${issue.message}`);
             });
+          }
+          // Enforce at least 1 image per room
+          if (room.imageFiles.length === 0) {
+            errors.push(`Habitación ${i + 1} (${room.name}): necesita al menos 1 foto`);
           }
         });
       }

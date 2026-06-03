@@ -10,6 +10,7 @@ import { executeOnboardingProvisioning } from '@/app/actions/onboarding';
 import { getPresignedOnboardingUrlAction } from '@/app/actions/onboarding-upload';
 import { compressImage, uploadToR2 } from '@/lib/upload-utils';
 import { fullWizardStateSchema } from '@/lib/onboarding-schemas';
+import { detectUploadFailures } from '@/lib/upload-validator';
 
 function generateSlug(name: string): string {
   return name
@@ -114,10 +115,27 @@ export default function ProvisioningStep() {
         }
       }
 
-      // ─── FASE 1: CONSTRUIR ESTADO CON URLs REALES ──────────────
+      // ─── FASE 1: VERIFICAR QUE TODAS LAS IMÁGENES SE SUBIERON ──
+      const uploadError = detectUploadFailures({
+        galleryFileCount: galleryFiles.length,
+        galleryUrlCount: galleryUrls.length,
+        rooms: rooms.map(r => ({
+          name: r.name,
+          imageFileCount: r.imageFiles.length,
+          imageUrlCount: (roomUrlMap[r.id] || []).length,
+        })),
+      });
+
+      if (uploadError) {
+        setStatus('error');
+        setErrorMessage(uploadError);
+        return;
+      }
+
+      // ─── FASE 2: CONSTRUIR ESTADO CON URLs REALES ──────────────
       const wizardState = {
         hotelIdentity,
-        galleryImages: galleryUrls.length > 0 ? galleryUrls : galleryPreviews,
+        galleryImages: galleryUrls,
         rooms: rooms.map(r => ({
           id: r.id,
           name: r.name,
@@ -127,7 +145,7 @@ export default function ProvisioningStep() {
           amenities: r.amenities,
           capacity: r.capacity,
           beds: r.beds,
-          imageUrls: roomUrlMap[r.id] || r.imagePreviews,
+          imageUrls: roomUrlMap[r.id] || [],
           availabilityRange: null,
         })),
         settings,
@@ -140,7 +158,7 @@ export default function ProvisioningStep() {
         },
       };
 
-      // ─── FASE 2: VALIDAR Y PROVISIONAR ─────────────────────────
+      // ─── FASE 3: VALIDAR Y PROVISIONAR ─────────────────────────
       setStatus('provisioning');
 
       const result = fullWizardStateSchema.safeParse(wizardState);

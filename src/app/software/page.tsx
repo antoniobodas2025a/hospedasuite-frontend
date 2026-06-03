@@ -142,7 +142,7 @@ export default function App() {
       `}>
         <div className="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img src="logo.jpg" alt="HospedaSuite Logo" className="w-7 h-7 rounded-[10px] object-cover shadow-sm" />
+            <img src="/logo.png" alt="HospedaSuite Logo" className="w-7 h-7 rounded-[10px] object-cover shadow-sm" />
             <span className="font-semibold text-[17px] tracking-tight hidden sm:block">HospedaSuite</span>
           </div>
 
@@ -451,7 +451,7 @@ export default function App() {
         <div className="max-w-[980px] mx-auto px-6">
           <div className="flex flex-col items-center gap-6">
             <div className="flex items-center gap-2 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-              <img src="logo.jpg" alt="HospedaSuite Logo" className="w-6 h-6 rounded-[8px] object-cover" />
+              <img src="/logo.png" alt="HospedaSuite Logo" className="w-6 h-6 rounded-[8px] object-cover" />
               <span className="font-semibold text-[15px] tracking-tight text-[#1d1d1f]">HospedaSuite</span>
             </div>
             <p className="text-[12px] text-[#1d1d1f]/30 font-medium">

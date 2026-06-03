@@ -39,6 +39,7 @@ const HotelMapView = dynamic(() => import('./HotelMapView'), {
     </div>
   ),
 });
+import NextImage from 'next/image';
 import Link from 'next/link';
 import { useRouter, useSearchParams, usePathname } from 'next/navigation';
 import { fetchOTAHotelsAction } from '@/app/actions/ota';
@@ -953,8 +954,12 @@ export default function OTADashboard({
       >
         <div className='max-w-7xl mx-auto px-4 h-14 flex items-center justify-between'>
           <div className='flex items-center gap-2.5'>
-            <div className='w-8 h-8 bg-brand-600 rounded-[var(--radius-squircle-md)] flex items-center justify-center text-primary-foreground font-bold text-sm'>
-              H
+            <div className='w-8 h-8 rounded-[var(--radius-squircle-md)] overflow-hidden bg-white/10 p-0.5'>
+              <img
+                src='/logo.png'
+                alt='HospedaSuite'
+                className='w-full h-full object-contain'
+              />
             </div>
             <span className='text-lg font-bold text-foreground tracking-tight'>
               {t('ota.header.brand')}<span className='text-brand-500'>{t('ota.header.brandAccent')}</span>

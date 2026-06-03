@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, BedDouble, Bath, Maximize2, ChevronDown, ChevronUp, Droplets, ShowerHead, Mountain, Eye, EyeOff, Plus } from 'lucide-react';
+import { UploadCloud, BedDouble, Bath, Maximize2, ChevronDown, ChevronUp, Droplets, ShowerHead, Mountain, Eye, EyeOff, Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useOnboardingStore, RoomDraft } from '@/store/useOnboardingStore';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
@@ -104,7 +104,7 @@ type RoomSectionId = 'essentials' | 'bathroom' | 'details';
 
 export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) {
   const t = useTranslations('onboarding.roomDetail');
-  const { setRoomImages } = useOnboardingStore();
+  const { setRoomImages, removeRoomImage } = useOnboardingStore();
   const [isDragging, setIsDragging] = useState(false);
   const [openSections, setOpenSections] = useState<Record<RoomSectionId, boolean>>({
     essentials: true,
@@ -120,7 +120,16 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
     if (files.length === 0) return;
     const remaining = 5 - room.imagePreviews.length;
     if (remaining <= 0) return;
-    const toAdd = files.slice(0, remaining);
+
+    // Deduplicate: skip files that already exist (same name + size)
+    const existingKeys = new Set(
+      room.imageFiles.map(f => `${f.name}-${f.size}`)
+    );
+    const unique = files.filter(f => !existingKeys.has(`${f.name}-${f.size}`));
+
+    const toAdd = unique.slice(0, remaining);
+    if (toAdd.length === 0) return;
+
     const previews = toAdd.map(f => URL.createObjectURL(f));
     setRoomImages(room.id, [...room.imageFiles, ...toAdd], [...room.imagePreviews, ...previews]);
   };
@@ -318,6 +327,14 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
                 <div key={i} className="relative group aspect-[4/3]">
                   <img src={src} alt="" className="w-full h-full object-cover rounded-[var(--radius-squircle-md)] border border-white/10" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-[var(--radius-squircle-md)]" />
+                  <button
+                    type="button"
+                    onClick={() => removeRoomImage(room.id, i)}
+                    className="absolute top-1 right-1 p-1 rounded-full bg-red-500/90 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
+                    aria-label="Remove image"
+                  >
+                    <X size={14} />
+                  </button>
                 </div>
               ))}
               {room.imagePreviews.length < 5 && (

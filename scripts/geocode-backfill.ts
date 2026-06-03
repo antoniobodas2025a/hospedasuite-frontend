@@ -23,7 +23,7 @@ dotenv.config({ path: '.env.local' });
 
 const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-const API_BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
+const API_BASE_URL = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000';
 
 const RATE_LIMIT_MS = 1_100; // 1.1s between requests (Nominatim ToS: 1 req/sec)
 const LOG_FILE = 'geocode-backfill.log';

@@ -54,7 +54,7 @@ export default function LoginKeypad() {
               alt='HospedaSuite Logo'
               fill
               sizes='(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw'
-              className='object-contain p-1'
+              className='object-contain p-1 brightness-0 invert'
               priority
             />
           </div>

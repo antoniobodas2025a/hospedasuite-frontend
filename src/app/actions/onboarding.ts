@@ -8,6 +8,7 @@ import { FullWizardState } from '@/lib/onboarding-schemas';
 import { checkUnitLimit } from '@/data/plan-guard';
 import { generateUniqueSlug } from '@/lib/slug';
 import { FEATURES } from '@/lib/feature-flags';
+import { validateProvisioningImageUrls } from '@/lib/provisioning-guard';
 
 export async function executeOnboardingProvisioning(state: FullWizardState): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
@@ -94,6 +95,15 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
           error: `Tu plan permite hasta ${limitCheck.maxAllowed} unidades. Estás intentando crear ${roomCount} pero solo tienes espacio para ${limitCheck.remaining}.`,
         }
       }
+    }
+
+    // ─── Defense in depth: reject blob/data/javascript URLs ────
+    const imageUrlError = validateProvisioningImageUrls({
+      galleryImages: state.galleryImages,
+      rooms: state.rooms.map(r => ({ name: r.name, imageUrls: r.imageUrls })),
+    });
+    if (imageUrlError) {
+      return { success: false, error: imageUrlError };
     }
 
     // 1. Update hotel profile with wizard data

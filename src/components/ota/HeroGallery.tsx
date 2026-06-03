@@ -500,7 +500,6 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
               className="object-contain"
               sizes="80vw"
               quality={90}
-              priority
               placeholder={blurs?.gallery_blurs?.[activeIndex]?.blur ? 'blur' : undefined}
               blurDataURL={blurs?.gallery_blurs?.[activeIndex]?.blur}
             />

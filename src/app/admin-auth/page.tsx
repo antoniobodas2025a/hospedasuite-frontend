@@ -73,7 +73,7 @@ export default function AdminLoginPage() {
                   alt='Logo'
                   width={64}
                   height={64}
-                  className='object-cover'
+                  className='object-cover brightness-0 invert'
                   onError={(e) => {
                     e.currentTarget.style.display = 'none';
                   }}
