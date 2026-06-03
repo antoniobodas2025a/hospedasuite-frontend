@@ -32,8 +32,12 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
   const [isPending, startTransition] = useTransition();
   const [activeModal, setActiveModal] = useState<'dates' | 'guests' | null>(null);
 
-  // State: location
+  // State: location — sync from URL params on mount and on param change
   const [location, setLocation] = useState(searchParams.get('location') || '');
+  useEffect(() => {
+    const urlLoc = searchParams.get('location') || '';
+    if (urlLoc && urlLoc !== location) setLocation(urlLoc);
+  }, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // State: dates
   const [date, setDate] = useState<DateRange | undefined>(() => {
