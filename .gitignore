@@ -54,3 +54,5 @@ playwright/.cache/
 .engram/
 # Local Pi runtime state
 .pi/
+.atl/.skill-registry.cache.json
+context.md

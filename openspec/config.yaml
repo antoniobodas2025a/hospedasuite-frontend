@@ -1,0 +1,40 @@
+# OpenSpec Configuration — hospedasuite-platform
+# See ~/.pi/agent/npm/node_modules/gentle-pi/docs for full schema reference.
+
+project:
+  name: hospedasuite-platform
+  description: Hotel management SaaS — onboarding wizard, OTA, property management
+  language: typescript
+  framework: nextjs
+
+stack:
+  runtime: bun
+  ui: tailwind + shadcn/ui + radix-ui
+  backend: supabase (auth, postgres, storage/r2)
+  forms: react-hook-form + zod
+  state: zustand
+  i18n: next-intl
+
+testing:
+  runner: vitest
+  command: vitest run
+  e2e: playwright
+  e2e_command: npx playwright test
+  test_patterns:
+    - src/__tests__/**/*.test.ts
+    - src/lib/__tests__/**/*.test.ts
+
+linting:
+  runner: eslint
+  command: npx eslint
+  precommit: husky + lint-staged
+
+ci:
+  provider: none # TODO: add GitHub Actions
+
+strict_tdd: false
+
+conventions:
+  commits: conventional-commits
+  code_style: eslint-config-next
+  imports: path aliases (@/ → src/)
