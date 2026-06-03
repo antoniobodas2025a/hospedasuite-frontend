@@ -1034,7 +1034,7 @@ export default function OTADashboard({
 
 					{/* "Mostrar más" button — Sprint 1 */}
 					{hasMoreHotels && (
-						<div className="flex justify-center mt-12 sm:mt-16 mb-16 sm:mb-20">
+						<div className="flex justify-center mt-12 sm:mt-16 mb-32 sm:mb-32">
 							<motion.button
 								onClick={() => setVisibleCount((prev) => prev + 6)}
 								whileTap={{ scale: 0.97 }}

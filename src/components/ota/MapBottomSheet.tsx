@@ -259,7 +259,7 @@ export default function MapBottomSheet({
         </div>
 
         {/* ---- Scrollable content ---- */}
-        <div className="flex-1 overflow-y-auto overscroll-behavior-contain px-4 pb-6">
+        <div className="flex-1 overflow-y-auto overscroll-behavior-contain px-4 pb-12">
           {/* ---- Categories: horizontal scrollable row ---- */}
           {onCategoryChange && (
             <div className="flex items-center gap-2 overflow-x-auto pb-3 mb-3 scrollbar-none">
