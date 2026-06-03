@@ -670,7 +670,12 @@ export default function OTADashboard({
 				case 1: {
 					if (!urlLocation) break;
 					const citiesList = FALLBACK_CITIES.map((c) => ({ city: c }));
-					const matches = fuzzySearch(citiesList, urlLocation, ["city", "location"], 5);
+					const matches = fuzzySearch(
+						citiesList,
+						urlLocation,
+						["city", "location"],
+						5,
+					);
 					const goodMatches = matches.filter((m) => m.score < 0.3);
 
 					if (goodMatches.length > 0) {
