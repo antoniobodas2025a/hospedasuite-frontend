@@ -40,7 +40,6 @@ const HotelMapView = dynamic(() => import("./HotelMapView"), {
 		</div>
 	),
 });
-import NextImage from "next/image";
 import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import { fetchOTAHotelsAction } from "@/app/actions/ota";
@@ -151,11 +150,9 @@ export default function OTADashboard({
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
-	const isInitialized = useRef(false);
 
 	// Initialize from URL params (survives refresh, back navigation, shared links)
 	const urlCategory = searchParams.get("category") || "all";
-	const urlSearch = searchParams.get("search") || "";
 	const urlLocation = searchParams.get("location") || "";
 	const urlCheckin = searchParams.get("checkin") || "";
 	const urlCheckout = searchParams.get("checkout") || "";
@@ -204,8 +201,7 @@ export default function OTADashboard({
 		return () => mql.removeEventListener("change", handler);
 	}, []);
 
-	// Map state tracking (Phase 1: PRD-004 integration)
-	const [mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
+	const [_mapBounds, setMapBounds] = useState<L.LatLngBounds | null>(null);
 	const [mapCenter, setMapCenter] = useState<L.LatLng | null>(null);
 	const [mapZoom, setMapZoom] = useState<number>(6);
 	const [isMapMoved, setIsMapMoved] = useState(false);
@@ -246,7 +242,7 @@ export default function OTADashboard({
 	/** Tracks whether the current param change was triggered by fallback */
 	const fallbackTriggeredRef = useRef(false);
 	/** Total result count from fallback search (for "X resultados" display) */
-	const [fallbackResultCount, setFallbackResultCount] = useState(0);
+	const [_fallbackResultCount, setFallbackResultCount] = useState(0);
 
 	// Sync category, searchTerm, and location to URL
 	const syncToUrl = useCallback(
@@ -1443,13 +1439,13 @@ export default function OTADashboard({
 				)}
 			</main>
 
-		{/* PRD-014: Map toggle — visible in cards mode on both desktop and mobile */}
-		{sortedHotels.length > 0 && viewMode === "cards" && (
-			<MapToggle
-				hotelCount={sortedHotels.length}
-				onClick={() => setViewMode("map")}
-			/>
-		)}
+			{/* PRD-014: Map toggle — visible in cards mode on both desktop and mobile */}
+			{sortedHotels.length > 0 && viewMode === "cards" && (
+				<MapToggle
+					hotelCount={sortedHotels.length}
+					onClick={() => setViewMode("map")}
+				/>
+			)}
 
 			{/* Mobile Search Sheet (Phase 3: PRD-004 - works over map view) */}
 			<MobileSearchSheet
