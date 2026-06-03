@@ -55,4 +55,5 @@ playwright/.cache/
 # Local Pi runtime state
 .pi/
 .atl/.skill-registry.cache.json
-context.md
+# Sentry MCP auth proxy (temp tool)
+scripts/sentry-mcp-proxy.mjs
