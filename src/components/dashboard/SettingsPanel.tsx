@@ -483,12 +483,12 @@ export default function SettingsPanel({
 									<div className="grid grid-cols-2 gap-6">
 										<input
 											{...register("city")}
-											placeholder="Ciudad"
+											placeholder="Ciudad / Municipio"
 											className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]"
 										/>
 										<input
 											{...register("location")}
-											placeholder="Ubicación (barrio/zona)"
+											placeholder="Zona / Vereda / Barrio"
 											className="p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]"
 										/>
 									</div>

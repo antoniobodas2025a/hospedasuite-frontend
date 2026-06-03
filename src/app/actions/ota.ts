@@ -236,7 +236,7 @@ export async function fetchOTAHotelsAction(
 			return {
 				id: h.id,
 				name: h.name,
-				location: h.location || "Destino",
+				location: h.location || h.city || "",
 				city: h.city || null,
 				slug: h.slug,
 				min_price: roomPrices.length > 0 ? Math.min(...roomPrices) : 0,

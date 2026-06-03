@@ -3,8 +3,8 @@ import { z } from 'zod';
 // Step 1: Hotel Identity
 export const hotelIdentitySchema = z.object({
   name: z.string().min(3, 'El nombre debe tener al menos 3 caracteres'),
-  city: z.string().min(2, 'La ciudad es requerida'),
-  location: z.string().optional(),
+  city: z.string().min(2, 'La ciudad o municipio es requerido'),
+  location: z.string().min(2, 'La zona o vereda es requerida'),
   address: z.string().optional(),
   phone: z.string().optional(),
   email: z.string().email('Email inválido').optional().or(z.literal('')),
