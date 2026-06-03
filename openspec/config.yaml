@@ -30,7 +30,13 @@ linting:
   precommit: husky + lint-staged
 
 ci:
-  provider: none # TODO: add GitHub Actions
+  provider: github-actions
+  workflow: .github/workflows/ci.yml
+  jobs:
+    - lint
+    - typecheck
+    - test (vitest)
+    - build
 
 strict_tdd: false
 
