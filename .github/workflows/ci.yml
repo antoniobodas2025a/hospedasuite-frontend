@@ -51,11 +51,11 @@ jobs:
       - run: bun install --frozen-lockfile
       - run: bun run build
         env:
-          NEXT_PUBLIC_SUPABASE_URL: 'https://placeholder.supabase.co'
-          NEXT_PUBLIC_SUPABASE_ANON_KEY: 'placeholder'
-          NEXT_PUBLIC_IMAGE_SOURCE: 'r2'
-          NEXT_PUBLIC_IMAGE_BASE_URL: 'https://placeholder.r2.dev'
-          NEXT_PUBLIC_WOMPI_PUBLIC_KEY: 'placeholder'
-          NEXT_PUBLIC_POSTHOG_KEY: 'placeholder'
-          NEXT_PUBLIC_APP_URL: 'http://localhost:3000'
-          NEXT_PUBLIC_SMART_SEARCH: 'false'
+          NEXT_PUBLIC_SUPABASE_URL: "https://placeholder.supabase.co"
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: "placeholder"
+          NEXT_PUBLIC_IMAGE_SOURCE: "r2"
+          NEXT_PUBLIC_IMAGE_BASE_URL: "https://placeholder.r2.dev"
+          NEXT_PUBLIC_WOMPI_PUBLIC_KEY: "placeholder"
+          NEXT_PUBLIC_POSTHOG_KEY: "placeholder"
+          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+          NEXT_PUBLIC_SMART_SEARCH: "false"

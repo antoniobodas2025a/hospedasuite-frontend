@@ -49,6 +49,30 @@ function createPricePinIcon(price: number, isSelected: boolean): L.DivIcon {
   });
 }
 
+// PRD-005 Sprint 3: Mini-dot marker for 2-tier system (Tier 2 = bottom 80%)
+function createMiniDotIcon(isSelected: boolean): L.DivIcon {
+  const cls = isSelected ? 'marker-mini-dot selected' : 'marker-mini-dot';
+
+  return L.divIcon({
+    className: 'hotel-marker-wrapper',
+    html: `<div class="${cls}"></div>`,
+    iconSize: isSelected ? [18, 18] : [14, 14],
+    iconAnchor: isSelected ? [9, 9] : [7, 7],
+    popupAnchor: [0, isSelected ? -9 : -7],
+  });
+}
+
+// PRD-005 Sprint 3: Determine which hotels get price-badge (Tier 1) vs mini-dot (Tier 2).
+// Top 20% by rating get price badges; rest get mini-dots.
+function computeTier1Ids(hotels: Hotel[]): Set<string> {
+  const rated = hotels.filter((h) => (h.reviewStats?.averageRating ?? 0) > 0);
+  if (rated.length < 3) return new Set(hotels.slice(0, Math.ceil(hotels.length * 0.3)).map((h) => h.id));
+
+  const sorted = [...rated].sort((a, b) => (b.reviewStats?.averageRating ?? 0) - (a.reviewStats?.averageRating ?? 0));
+  const topCount = Math.max(1, Math.ceil(sorted.length * 0.2));
+  return new Set(sorted.slice(0, topCount).map((h) => h.id));
+}
+
 /**
  * MarkerLifecycleManager — Manages marker CRUD operations on the map.
  *
@@ -71,6 +95,7 @@ export default function MarkerLifecycleManager({
   const map = useMap();
   const clusterGroupRef = useRef<L.MarkerClusterGroup | null>(null);
   const markersRef = useRef<Map<string, L.Marker & { geoResult?: GeoResult }>>(new Map());
+  const tier1IdsRef = useRef<Set<string>>(new Set());
   const isInitialized = useRef(false);
   const hasFittedBounds = useRef(false);
 
@@ -128,6 +153,10 @@ export default function MarkerLifecycleManager({
     const currentIds = new Set(hotels.map((h) => h.id));
     const activeIds = new Set(markersRef.current.keys());
 
+    // PRD-005 Sprint 3: 2-tier pin ranking — recompute on every hotel set change
+    const tier1Ids = computeTier1Ids(hotels);
+    tier1IdsRef.current = tier1Ids;
+
     // 1. REMOVE: Markers that are no longer in the hotel list
     activeIds.forEach((id) => {
       if (!currentIds.has(id)) {
@@ -152,9 +181,11 @@ export default function MarkerLifecycleManager({
 
         if (markersRef.current.has(hotel.id)) return;
 
-        const marker = L.marker([hotel.latitude, hotel.longitude], {
-          icon: createPricePinIcon(hotel.min_price, false),
-        }) as L.Marker & { geoResult?: GeoResult; hotelPrice?: number };
+        const icon = tier1Ids.has(hotel.id)
+          ? createPricePinIcon(hotel.min_price, false)
+          : createMiniDotIcon(false);
+
+        const marker = L.marker([hotel.latitude, hotel.longitude], { icon }) as L.Marker & { geoResult?: GeoResult; hotelPrice?: number };
 
         marker.geoResult = { lat: hotel.latitude, lng: hotel.longitude, displayName: hotel.location };
         marker.hotelPrice = hotel.min_price;
@@ -204,9 +235,11 @@ export default function MarkerLifecycleManager({
         // Check if marker was already added by another async call (race condition protection)
         if (markersRef.current.has(hotel.id)) return;
 
-        const marker = L.marker([result.lat, result.lng], {
-          icon: createPricePinIcon(hotel.min_price, false),
-        }) as L.Marker & { geoResult?: GeoResult; hotelPrice?: number };
+        const icon2 = tier1Ids.has(hotel.id)
+          ? createPricePinIcon(hotel.min_price, false)
+          : createMiniDotIcon(false);
+
+        const marker = L.marker([result.lat, result.lng], { icon: icon2 }) as L.Marker & { geoResult?: GeoResult; hotelPrice?: number };
 
         marker.geoResult = result;
         marker.hotelPrice = hotel.min_price;
@@ -291,7 +324,10 @@ export default function MarkerLifecycleManager({
       if (!hotel) return;
 
       const isSelected = id === selectedHotelId;
-      marker.setIcon(createPricePinIcon(hotel.min_price, isSelected));
+      const icon = tier1IdsRef.current.has(id)
+        ? createPricePinIcon(hotel.min_price, isSelected)
+        : createMiniDotIcon(isSelected);
+      marker.setIcon(icon);
 
       // Bring selected marker to front with z-index offset
       marker.setZIndexOffset(isSelected ? 1000 : 0);

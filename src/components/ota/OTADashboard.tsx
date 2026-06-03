@@ -163,8 +163,7 @@ export default function OTADashboard({
   const [boundsFilterResult, setBoundsFilterResult] = useState<BoundsFilterResult | null>(null);
   const boundsFilterTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  // PRD-006: Bounds-exceeded state (pan > 20% threshold → show "Search this area")
-  const [isBoundsExceeded, setIsBoundsExceeded] = useState(false);
+
 
   // Selected hotel for map ↔ list sync (Idea #2: hover hotel → zoom to marker)
   const [selectedHotelId, setSelectedHotelId] = useState<string>('');
@@ -269,31 +268,11 @@ export default function OTADashboard({
     };
   }, [mapCenter, mapZoom, pathname, router, searchParams]);
 
-  // PRD-006: Bounds-exceeded callback (pan > 20% threshold → show re-search button)
+  // PRD-006: Bounds-exceeded → auto-enable map filtering (Airbnb-style)
   const handleBoundsExceeded = useCallback((bounds: L.LatLngBounds) => {
-    setIsBoundsExceeded(true);
+    setIsMapMoved(true);
     setMapBounds(bounds);
   }, []);
-
-  // "Search this area" handler (Phase 4: PRD-006 bounds re-search)
-  const handleSearchThisArea = useCallback(async () => {
-    if (!mapCenter) return;
-
-    setIsMapMoved(false);
-    setIsBoundsExceeded(false);
-    setBoundsFilterResult(null);
-
-    // Trigger full server re-fetch with current map area
-    const response = await fetchOTAHotelsAction(
-      0, 24, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests
-    );
-
-    if (response.success) {
-      setHotels(response.data);
-      setPage(0);
-      setHasMore(response.hasMore);
-    }
-  }, [mapCenter, activeCategory, searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests]);
 
   // Cleanup bounds filter timeout on unmount
   useEffect(() => {
@@ -317,8 +296,16 @@ export default function OTADashboard({
   // Sprint 1: Sorting logic
   // PRD-008: Use effective hotels (primary results, or fallback results when primary is empty)
   const effectiveHotels = useMemo(() => {
-    return hotels.length > 0 ? hotels : fallbackHotels;
-  }, [hotels, fallbackHotels]);
+    const source = hotels.length > 0 ? hotels : fallbackHotels;
+
+    // PRD-006: Apply bounds filter when user has panned the map
+    if (isMapMoved && boundsFilterResult) {
+      return source.filter((h: any) =>
+        boundsFilterResult.visibleIds.has(h.id) || boundsFilterResult.unresolvableIds.has(h.id)
+      );
+    }
+    return source;
+  }, [hotels, fallbackHotels, isMapMoved, boundsFilterResult]);
 
   const sortedHotels = useMemo(() => {
     const sorted = [...effectiveHotels];
@@ -1104,6 +1091,11 @@ export default function OTADashboard({
             <div className="list-panel-scroll">
               <h2 className="text-sm font-bold text-foreground mb-4">
                 {sortedHotels.length} {sortedHotels.length === 1 ? 'alojamiento' : 'alojamientos'}
+                {isMapMoved && boundsFilterResult && (
+                  <span className="ml-2 text-xs font-normal text-muted-foreground">
+                    · {boundsFilterResult.visibleCount + boundsFilterResult.unresolvableIds.size} en esta zona
+                  </span>
+                )}
               </h2>
               {renderHotelList()}
             </div>
@@ -1134,29 +1126,6 @@ export default function OTADashboard({
                 initialZoom={initialZoom}
                 onBoundsExceeded={handleBoundsExceeded}
               />
-
-              {/* "Search this area" — bounds exceeded button + overlay */}
-              <AnimatePresence>
-                {isBoundsExceeded && (
-                  <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    exit={{ opacity: 0 }}
-                    className="absolute inset-0 z-10 bg-background/20 backdrop-blur-[1px] flex items-center justify-center"
-                  >
-                    <motion.button
-                      initial={{ opacity: 0, y: 8 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      exit={{ opacity: 0, y: 8 }}
-                      onClick={handleSearchThisArea}
-                      className="flex items-center gap-2 px-5 py-3 bg-foreground text-background text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-2xl active:scale-[0.98] transition-all"
-                    >
-                      <Search size={14} />
-                      Buscar en esta zona
-                    </motion.button>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </div>
         ) : (
@@ -1191,29 +1160,6 @@ export default function OTADashboard({
                     onBoundsExceeded={handleBoundsExceeded}
                     boundsThreshold={0.2}
                   />
-
-                  {/* "Search this area" button + overlay (appears when user pans beyond bounds threshold) */}
-                  <AnimatePresence>
-                    {isBoundsExceeded && (
-                      <motion.div
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-10 bg-background/20 backdrop-blur-[1px] flex items-center justify-center"
-                      >
-                        <motion.button
-                          initial={{ opacity: 0, y: 16 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: 16 }}
-                          onClick={handleSearchThisArea}
-                          className="flex items-center gap-2 px-5 py-3 bg-foreground text-background text-sm font-semibold rounded-[var(--radius-squircle-xl)] shadow-2xl active:scale-[0.98] transition-all"
-                        >
-                          <Search size={14} />
-                          Buscar en esta zona
-                        </motion.button>
-                      </motion.div>
-                    )}
-                  </AnimatePresence>
                 </div>
 
                 {/* Bottom sheet overlay */}
