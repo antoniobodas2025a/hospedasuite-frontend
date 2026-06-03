@@ -52,3 +52,5 @@ playwright/.cache/
 
 # Engram AI agent memory
 .engram/
+# Local Pi runtime state
+.pi/
