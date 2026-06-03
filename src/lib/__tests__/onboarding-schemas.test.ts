@@ -12,6 +12,7 @@ function makeValidState(overrides?: Partial<{
     hotelIdentity: {
       name: 'Hotel Test',
       city: 'Medellín',
+      location: 'Zona Test',
       propertyType: 'hotel' as const,
     },
     galleryImages: overrides?.galleryImages ?? ['https://example.com/photo.webp'],

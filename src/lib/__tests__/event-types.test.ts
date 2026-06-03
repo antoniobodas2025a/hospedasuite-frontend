@@ -92,8 +92,8 @@ describe('event-types', () => {
   });
 
   describe('EVENT_TYPES constants', () => {
-    it('should have all 21 event types', () => {
-      expect(Object.keys(EVENT_TYPES).length).toBe(21);
+    it('should have all 22 event types', () => {
+      expect(Object.keys(EVENT_TYPES).length).toBe(22);
     });
 
     it('should have correct values', () => {
