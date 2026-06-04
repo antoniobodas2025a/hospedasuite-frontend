@@ -10,12 +10,12 @@ import { describe, it, expect } from "vitest";
 import { CLUSTERING_CONFIG } from "@/lib/clustering-config";
 
 describe("S8: Marker clusters break apart at the configured zoom threshold", () => {
-	it("disableClusteringAtZoom is 11 (uncluster sooner for better gestures)", () => {
-		expect(CLUSTERING_CONFIG.disableClusteringAtZoom).toBe(11);
+	it("disableClusteringAtZoom is 15 (uncluster later for cleaner map)", () => {
+		expect(CLUSTERING_CONFIG.disableClusteringAtZoom).toBe(15);
 	});
 
-	it("maxClusterRadius is 80 (tight clusters for dense areas)", () => {
-		expect(CLUSTERING_CONFIG.maxClusterRadius).toBe(80);
+	it("maxClusterRadius is 120 (wider grouping, less visual clutter)", () => {
+		expect(CLUSTERING_CONFIG.maxClusterRadius).toBe(120);
 	});
 
 	it("showCoverageOnHover is false (no visual noise)", () => {
