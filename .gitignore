@@ -52,8 +52,9 @@ playwright/.cache/
 
 # Engram AI agent memory
 .engram/
-# Local Pi runtime state
-.pi/
+# Local Pi runtime state (agents are shared)
+.pi/*
+!.pi/agents/
 .atl/.skill-registry.cache.json
 # Sentry MCP auth proxy (temp tool)
 scripts/sentry-mcp-proxy.mjs
