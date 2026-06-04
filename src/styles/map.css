@@ -458,9 +458,6 @@
 }
 
 /* Single column when map is hidden (cards-only mode on desktop) */
-.split-view-cards-only {
-	grid-template-columns: 1fr;
-}
 
 /* List panel: independent scroll, prevents scroll-chaining to map */
 .list-panel-scroll {

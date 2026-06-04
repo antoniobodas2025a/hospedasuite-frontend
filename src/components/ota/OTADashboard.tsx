@@ -1327,7 +1327,7 @@ export default function OTADashboard({
 				{/* PRD-014: Desktop split-view — always mounted, hidden when not in map mode */}
 				{isSplitView && sortedHotels.length > 0 ? (
 					<div
-						className={`split-view-layout mb-0 ${viewMode !== "map" ? "split-view-cards-only" : ""}`}
+						className="split-view-layout mb-0"
 					>
 						<div className="list-panel-scroll">
 							<h2 className="text-sm font-bold text-foreground mb-4">
