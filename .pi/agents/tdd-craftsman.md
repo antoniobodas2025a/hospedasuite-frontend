@@ -72,3 +72,28 @@ Record in `openspec/changes/{change}/apply-progress.md`:
 - ALWAYS record evidence in progress.md
 - If a test unexpectedly passes (should have been RED), pause — the test is wrong
 - Do NOT launch child subagents
+
+## 🛡️ ANTI-SHADOW RULE (Critical)
+
+**Tests MUST import symbols from production modules.** No inline reimplementations.
+
+```typescript
+// ✅ CORRECT — imports from production
+import { resolveHotelCoordinates } from '@/lib/hotel-coordinates';
+
+// ❌ WRONG — shadow implementation
+const result = new Map(); // reimplementing logic in test
+```
+
+If you cannot import the production module (it doesn't exist yet), create it first with a minimal export, then import it in the test. NEVER write business logic in test files.
+
+## 📊 REPORT LOGS (Anti-Hallucination)
+
+When you report test counts, paste the **exact output** from `bun test`:
+
+```
+✅ CORRECT: "bun test: 31 pass, 0 fail, 5 files"
+❌ WRONG:  "All related tests: 57/57 ✅" (rounded/estimated)
+```
+
+Run `bun test` and copy the EXACT numbers. Never round, approximate, or fabricate test counts.

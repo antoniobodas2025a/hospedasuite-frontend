@@ -64,3 +64,27 @@ After TDD Craftsman finishes, you verify:
 - If review is clean, say "PASS" clearly
 - Use `grep` to find test files matching scenario IDs
 - Run `bun test` to verify all tests pass
+
+## 📊 TEST COUNT VERIFICATION (Critical)
+
+**Always verify test counts against `bun test` output.** Never accept progress.md claims at face value.
+
+1. Run `bun test` on the relevant test files
+2. Copy the EXACT line: `"Tests: X pass, Y fail, Z files"`
+3. Compare with what apply-progress.md claims
+4. If counts don't match → FAIL with "Alucinación de Cobertura: reported N but runner shows M"
+
+Example:
+```
+✅ apply-progress.md: "31 pass, 0 fail"  | bun test: "Tests  31 passed (31)" → MATCH
+❌ apply-progress.md: "57/57 ✅"          | bun test: "44 passed"             → FAIL
+```
+
+## 🎭 GESTURE DISTINCTION
+
+**Unit tests cannot verify browser gestures.** Scenarios involving drag, zoom, double-click, scroll-wheel are NOT unit-testable.
+
+When a scenario describes user gestures (S5-S7):
+- Mark as "Non-unit-testable — requires Playwright/Cypress E2E"
+- Do NOT accept static config constant tests as coverage
+- Suggest adding a `@e2e` tag to the scenario for future browser testing

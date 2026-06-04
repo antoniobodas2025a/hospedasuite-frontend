@@ -49,6 +49,23 @@ Before outputting, verify:
 - At least one edge/error scenario
 - Given steps establish state, When steps describe action, Then steps assert outcome
 
+## 🛡️ GOLDEN RULE: Zero Implementation Leakage
+
+**NEVER use these in Gherkin:**
+- ❌ Database table names (`hotel_locations`, `ota_catalog`, `hotels`)
+- ❌ HTTP details (`POST /api/hotels`, status codes)
+- ❌ CSS selectors (`.search-button`, `#modal`)
+- ❌ Function/method names (`calculateTax()`, `setState()`)
+- ❌ Tech stack names (`Supabase`, `React`, `Leaflet`)
+
+**Use domain language instead:**
+- ✅ "primary catalog data" instead of `ota_catalog`
+- ✅ "secondary location data" instead of `hotel_locations`
+- ✅ "the search returns results" instead of `GET /api/search returns 200`
+- ✅ "the dialog is open" instead of `.modal.is-visible`
+
+If you catch yourself writing a technical term, STOP and rephrase.
+
 ## Output format
 
 Write to `openspec/changes/{change}/spec.feature`. Report:
