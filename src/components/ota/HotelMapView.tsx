@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { MapContainer, TileLayer, useMapEvents } from "react-leaflet";
 import { MapPin, Loader2 } from "lucide-react";
 import L from "leaflet";
@@ -108,6 +108,21 @@ export default function HotelMapView({
 		total: 0,
 	});
 
+	// S3: Sanitize — discard NaN coordinates from URL params or hotel data
+	const safeCenter = useMemo<[number, number]>(() => {
+		if (initialCenter && !isNaN(initialCenter[0]) && !isNaN(initialCenter[1])) {
+			return initialCenter;
+		}
+		return [4.6097, -74.0817];
+	}, [initialCenter]);
+
+	const safeZoom = useMemo(() => {
+		if (initialZoom != null && !isNaN(initialZoom) && initialZoom > 0) {
+			return initialZoom;
+		}
+		return 6;
+	}, [initialZoom]);
+
 	if (hotels.length === 0) {
 		return (
 			<div className="map-empty-state flex flex-col items-center justify-center py-16 text-muted-foreground">
@@ -141,8 +156,8 @@ export default function HotelMapView({
 
 			{/* Map Container */}
 			<MapContainer
-				center={initialCenter || [4.6097, -74.0817]}
-				zoom={initialZoom || 6}
+				center={safeCenter}
+				zoom={safeZoom}
 				className="w-full h-full z-0"
 				zoomControl={false}
 				scrollWheelZoom={true}

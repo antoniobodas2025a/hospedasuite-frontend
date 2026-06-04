@@ -223,8 +223,9 @@ export async function fetchOTAHotelsAction(
 				description: h.description || "",
 				type: h.type || "hotel",
 				category: h.category,
-				latitude: coords?.lat ?? null,
-				longitude: coords?.lng ?? null,
+				// S3: Filter NaN coordinates — hotel stays in cards list, no marker on map
+				latitude: coords?.lat != null && !isNaN(coords.lat) ? coords.lat : null,
+				longitude: coords?.lng != null && !isNaN(coords.lng) ? coords.lng : null,
 				precision: coords?.precision ?? null,
 			};
 		});
