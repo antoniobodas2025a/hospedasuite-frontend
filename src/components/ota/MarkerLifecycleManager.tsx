@@ -7,6 +7,7 @@ import "leaflet.markercluster";
 import "leaflet.markercluster/dist/MarkerCluster.css";
 import "leaflet.markercluster/dist/MarkerCluster.Default.css";
 import { geocodeLocation, GeoResult } from "@/lib/geocoding";
+import { CLUSTERING_CONFIG } from "@/lib/clustering-config";
 
 interface Hotel {
 	id: string;
@@ -112,14 +113,7 @@ export default function MarkerLifecycleManager({
 		if (!map || isInitialized.current) return;
 
 		const clusterGroup = L.markerClusterGroup({
-			maxClusterRadius: 80,
-			showCoverageOnHover: false,
-			zoomToBoundsOnClick: true,
-			spiderfyOnMaxZoom: true,
-			disableClusteringAtZoom: 14, // PRD-006: uncluster at zoom 14+ for natural pinch/zoom
-			chunkedLoading: true,
-			chunkInterval: 100,
-			chunkDelay: 50,
+			...CLUSTERING_CONFIG,
 			iconCreateFunction: (cluster: L.MarkerCluster) => {
 				const count = cluster.getChildCount();
 				// Find cheapest price among markers in this cluster
