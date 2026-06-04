@@ -63,7 +63,14 @@ export default function MapTransitionController({
 			// S2: Handle geocoding failure — notify parent for user feedback
 			handleCenterResult(decision, { onError: onCenterError });
 
-			if (cancelled || !decision.fly || !decision.target || isNaN(decision.target.lat) || isNaN(decision.target.lng)) return;
+			if (
+				cancelled ||
+				!decision.fly ||
+				!decision.target ||
+				!isFinite(decision.target.lat) ||
+				!isFinite(decision.target.lng)
+			)
+				return;
 
 			setInternalMove();
 			map.flyTo([decision.target.lat, decision.target.lng], 12, {
@@ -90,7 +97,12 @@ export default function MapTransitionController({
 
 		const flyToHotel = async () => {
 			// PRD-009: Usar coordenadas precomputadas si existen
-			if (hotel.latitude != null && hotel.longitude != null && !isNaN(hotel.latitude) && !isNaN(hotel.longitude)) {
+			if (
+				hotel.latitude != null &&
+				hotel.longitude != null &&
+				!isNaN(hotel.latitude) &&
+				!isNaN(hotel.longitude)
+			) {
 				setInternalMove();
 				map.flyTo([hotel.latitude, hotel.longitude], 14, {
 					duration: 0.8,
@@ -104,7 +116,7 @@ export default function MapTransitionController({
 			if (!query) return;
 
 			const result = await geocodeLocation(query);
-			if (cancelled || !result) return;
+			if (cancelled || !result || !isFinite(result.lat) || !isFinite(result.lng)) return;
 
 			setInternalMove();
 			map.flyTo([result.lat, result.lng], 14, {

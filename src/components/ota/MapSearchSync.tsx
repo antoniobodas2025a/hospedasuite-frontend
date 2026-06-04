@@ -1,30 +1,37 @@
-'use client';
+"use client";
 
-import { useEffect, useRef, useCallback, useState } from 'react';
-import { useMap } from 'react-leaflet';
-import L from 'leaflet';
-import { geocodeLocation } from '@/lib/geocoding';
-import { useSharedMoveGuard } from '@/lib/use-shared-move-guard';
-import { boundsChangedOverThreshold, type SimpleBounds } from '@/lib/map-url-state';
+import { useEffect, useRef, useCallback, useState } from "react";
+import { useMap } from "react-leaflet";
+import L from "leaflet";
+import { geocodeLocation } from "@/lib/geocoding";
+import { useSharedMoveGuard } from "@/lib/use-shared-move-guard";
+import {
+	boundsChangedOverThreshold,
+	type SimpleBounds,
+} from "@/lib/map-url-state";
 
 interface MapSearchSyncProps {
-  searchLocation?: string;
-  onMapBoundsChange?: (bounds: L.LatLngBounds, center: L.LatLng, zoom: number) => void;
-  onSearchAreaChange?: (areaName: string) => void;
-  enableSearchOnMove?: boolean;
-  moveDebounceMs?: number;
-  /** Threshold ratio (0-1) for bounds change detection. Default 0.2 = 20%. */
-  boundsThreshold?: number;
-  /** Fired when bounds change exceeds threshold — signals "search this area". */
-  onBoundsExceeded?: (bounds: L.LatLngBounds) => void;
+	searchLocation?: string;
+	onMapBoundsChange?: (
+		bounds: L.LatLngBounds,
+		center: L.LatLng,
+		zoom: number,
+	) => void;
+	onSearchAreaChange?: (areaName: string) => void;
+	enableSearchOnMove?: boolean;
+	moveDebounceMs?: number;
+	/** Threshold ratio (0-1) for bounds change detection. Default 0.2 = 20%. */
+	boundsThreshold?: number;
+	/** Fired when bounds change exceeds threshold — signals "search this area". */
+	onBoundsExceeded?: (bounds: L.LatLngBounds) => void;
 }
 
 /** Convert Leaflet LatLngBounds to SimpleBounds (SSR-safe). */
 function toSimpleBounds(b: L.LatLngBounds): SimpleBounds {
-  return {
-    sw: { lat: b.getSouthWest().lat, lng: b.getSouthWest().lng },
-    ne: { lat: b.getNorthEast().lat, lng: b.getNorthEast().lng },
-  };
+	return {
+		sw: { lat: b.getSouthWest().lat, lng: b.getSouthWest().lng },
+		ne: { lat: b.getNorthEast().lat, lng: b.getNorthEast().lng },
+	};
 }
 
 /**
@@ -41,146 +48,161 @@ function toSimpleBounds(b: L.LatLngBounds): SimpleBounds {
  * 3. Bounds tracking: Always track visible bounds for filtering hotels
  */
 export default function MapSearchSync({
-  searchLocation,
-  onMapBoundsChange,
-  onSearchAreaChange,
-  enableSearchOnMove = false,
-  moveDebounceMs = 1000,
-  boundsThreshold = 0.2,
-  onBoundsExceeded,
+	searchLocation,
+	onMapBoundsChange,
+	onSearchAreaChange,
+	enableSearchOnMove = false,
+	moveDebounceMs = 1000,
+	boundsThreshold = 0.2,
+	onBoundsExceeded,
 }: MapSearchSyncProps) {
-  const map = useMap();
-  const {
-    isInternalMove,
-    setInternalMove,
-    clearInternalMove,
-  } = useSharedMoveGuard();
-  const moveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const lastSearchBoundsRef = useRef<SimpleBounds | null>(null);
-  const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
+	const map = useMap();
+	const { isInternalMove, setInternalMove, clearInternalMove } =
+		useSharedMoveGuard();
+	const moveTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const lastSearchBoundsRef = useRef<SimpleBounds | null>(null);
+	const [isReverseGeocoding, setIsReverseGeocoding] = useState(false);
 
-  // Reverse geocode map center to get area name
-  const reverseGeocodeCenter = useCallback(async (center: L.LatLng) => {
-    if (isReverseGeocoding) return;
-    
-    setIsReverseGeocoding(true);
-    try {
-      // Use Nominatim reverse geocoding
-      const response = await fetch(
-        `https://nominatim.openstreetmap.org/reverse?lat=${center.lat}&lon=${center.lng}&format=json&zoom=10`
-      );
-      const data = await response.json();
-      
-      if (data.address) {
-        const areaName = 
-          data.address.city ||
-          data.address.town ||
-          data.address.village ||
-          data.address.county ||
-          data.address.state;
-        
-        if (areaName && onSearchAreaChange) {
-          onSearchAreaChange(areaName);
-        }
-      }
-    } catch (error) {
-      console.warn('Reverse geocoding failed:', error);
-    } finally {
-      setIsReverseGeocoding(false);
-    }
-  }, [onSearchAreaChange, isReverseGeocoding]);
+	// Reverse geocode map center to get area name
+	const reverseGeocodeCenter = useCallback(
+		async (center: L.LatLng) => {
+			if (isReverseGeocoding) return;
 
-  // Listen to map move/zoom events
-  useEffect(() => {
-    if (!map) return;
+			setIsReverseGeocoding(true);
+			try {
+				// Use Nominatim reverse geocoding
+				const response = await fetch(
+					`https://nominatim.openstreetmap.org/reverse?lat=${center.lat}&lon=${center.lng}&format=json&zoom=10`,
+				);
+				const data = await response.json();
 
-    const handleMoveEnd = () => {
-      // Skip if this was an internal programmatic move (flyTo, fitBounds)
-      if (isInternalMove.current) {
-        clearInternalMove();
-        return;
-      }
+				if (data.address) {
+					const areaName =
+						data.address.city ||
+						data.address.town ||
+						data.address.village ||
+						data.address.county ||
+						data.address.state;
 
-      const bounds = map.getBounds();
-      const center = map.getCenter();
-      const zoom = map.getZoom();
+					if (areaName && onSearchAreaChange) {
+						onSearchAreaChange(areaName);
+					}
+				}
+			} catch (error) {
+				console.warn("Reverse geocoding failed:", error);
+			} finally {
+				setIsReverseGeocoding(false);
+			}
+		},
+		[onSearchAreaChange, isReverseGeocoding],
+	);
 
-      // PRD-006: Bounds threshold detection — fire onBoundsExceeded when
-      // user pans/zooms beyond threshold from the last search bounds.
-      const prev = lastSearchBoundsRef.current;
-      if (!prev) {
-        // First moveend after a search → establish baseline
-        lastSearchBoundsRef.current = toSimpleBounds(bounds);
-      } else if (
-        onBoundsExceeded &&
-        boundsChangedOverThreshold(prev, toSimpleBounds(bounds), boundsThreshold)
-      ) {
-        onBoundsExceeded(bounds);
-      }
+	// Listen to map move/zoom events
+	useEffect(() => {
+		if (!map) return;
 
-      // Notify bounds change (for filtering hotels)
-      onMapBoundsChange?.(bounds, center, zoom);
+		const handleMoveEnd = () => {
+			// Skip if this was an internal programmatic move (flyTo, fitBounds)
+			if (isInternalMove.current) {
+				clearInternalMove();
+				return;
+			}
 
-      // Optional: reverse geocode and update search area
-      if (enableSearchOnMove) {
-        if (moveTimeoutRef.current) {
-          clearTimeout(moveTimeoutRef.current);
-        }
+			const bounds = map.getBounds();
+			const center = map.getCenter();
+			const zoom = map.getZoom();
 
-        moveTimeoutRef.current = setTimeout(() => {
-          reverseGeocodeCenter(center);
-        }, moveDebounceMs);
-      }
-    };
+			// PRD-006: Bounds threshold detection — fire onBoundsExceeded when
+			// user pans/zooms beyond threshold from the last search bounds.
+			const prev = lastSearchBoundsRef.current;
+			if (!prev) {
+				// First moveend after a search → establish baseline
+				lastSearchBoundsRef.current = toSimpleBounds(bounds);
+			} else if (
+				onBoundsExceeded &&
+				boundsChangedOverThreshold(
+					prev,
+					toSimpleBounds(bounds),
+					boundsThreshold,
+				)
+			) {
+				onBoundsExceeded(bounds);
+			}
 
-    const handleMoveStart = () => {
-      // Clear pending reverse geocode on new move
-      if (moveTimeoutRef.current) {
-        clearTimeout(moveTimeoutRef.current);
-      }
-    };
+			// Notify bounds change (for filtering hotels)
+			onMapBoundsChange?.(bounds, center, zoom);
 
-    map.on('movestart', handleMoveStart);
-    map.on('moveend', handleMoveEnd);
-    map.on('zoomend', handleMoveEnd);
+			// Optional: reverse geocode and update search area
+			if (enableSearchOnMove) {
+				if (moveTimeoutRef.current) {
+					clearTimeout(moveTimeoutRef.current);
+				}
 
-    return () => {
-      map.off('movestart', handleMoveStart);
-      map.off('moveend', handleMoveEnd);
-      map.off('zoomend', handleMoveEnd);
-      if (moveTimeoutRef.current) {
-        clearTimeout(moveTimeoutRef.current);
-      }
-    };
-  }, [map, onMapBoundsChange, onSearchAreaChange, enableSearchOnMove, moveDebounceMs, reverseGeocodeCenter, clearInternalMove, onBoundsExceeded, boundsThreshold]);
+				moveTimeoutRef.current = setTimeout(() => {
+					reverseGeocodeCenter(center);
+				}, moveDebounceMs);
+			}
+		};
 
-  // Sync: Search location → Map center
-  useEffect(() => {
-    if (!searchLocation || !map) return;
+		const handleMoveStart = () => {
+			// Clear pending reverse geocode on new move
+			if (moveTimeoutRef.current) {
+				clearTimeout(moveTimeoutRef.current);
+			}
+		};
 
-    // Reset bounds baseline on new search — next user pan establishes
-    // a fresh baseline for threshold comparison.
-    lastSearchBoundsRef.current = null;
+		map.on("movestart", handleMoveStart);
+		map.on("moveend", handleMoveEnd);
+		map.on("zoomend", handleMoveEnd);
 
-    let cancelled = false;
+		return () => {
+			map.off("movestart", handleMoveStart);
+			map.off("moveend", handleMoveEnd);
+			map.off("zoomend", handleMoveEnd);
+			if (moveTimeoutRef.current) {
+				clearTimeout(moveTimeoutRef.current);
+			}
+		};
+	}, [
+		map,
+		onMapBoundsChange,
+		onSearchAreaChange,
+		enableSearchOnMove,
+		moveDebounceMs,
+		reverseGeocodeCenter,
+		clearInternalMove,
+		onBoundsExceeded,
+		boundsThreshold,
+	]);
 
-    const flyToSearchLocation = async () => {
-      setInternalMove();
-      const result = await geocodeLocation(searchLocation);
-      if (cancelled || !result || isNaN(result.lat) || isNaN(result.lng)) return;
+	// Sync: Search location → Map center
+	useEffect(() => {
+		if (!searchLocation || !map) return;
 
-      map.flyTo([result.lat, result.lng], 12, {
-        duration: 1.2,
-        easeLinearity: 0.25,
-      });
-    };
+		// Reset bounds baseline on new search — next user pan establishes
+		// a fresh baseline for threshold comparison.
+		lastSearchBoundsRef.current = null;
 
-    flyToSearchLocation();
+		let cancelled = false;
 
-    return () => {
-      cancelled = true;
-    };
-  }, [searchLocation, map, setInternalMove]);
+		const flyToSearchLocation = async () => {
+			setInternalMove();
+			const result = await geocodeLocation(searchLocation);
+			if (cancelled || !result || !isFinite(result.lat) || !isFinite(result.lng))
+				return;
 
-  return null;
+			map.flyTo([result.lat, result.lng], 12, {
+				duration: 1.2,
+				easeLinearity: 0.25,
+			});
+		};
+
+		flyToSearchLocation();
+
+		return () => {
+			cancelled = true;
+		};
+	}, [searchLocation, map, setInternalMove]);
+
+	return null;
 }
