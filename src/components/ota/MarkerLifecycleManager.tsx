@@ -181,7 +181,12 @@ export default function MarkerLifecycleManager({
 
 		newHotels.forEach((hotel) => {
 			// PRD-009: Use precomputed coordinates from ota_catalog if available
-			if (hotel.latitude != null && hotel.longitude != null && !isNaN(hotel.latitude) && !isNaN(hotel.longitude)) {
+			if (
+				hotel.latitude != null &&
+				hotel.longitude != null &&
+				!isNaN(hotel.latitude) &&
+				!isNaN(hotel.longitude)
+			) {
 				geocodingCount++;
 				onGeocodingProgress?.(geocodingCount, newHotels.length);
 

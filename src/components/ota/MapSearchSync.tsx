@@ -188,10 +188,14 @@ export default function MapSearchSync({
 		const flyToSearchLocation = async () => {
 			setInternalMove();
 			const result = await geocodeLocation(searchLocation);
-			if (cancelled || !result || !isFinite(result.lat) || !isFinite(result.lng))
-				return;
+			if (cancelled || !result) return;
 
-			map.flyTo([result.lat, result.lng], 12, {
+			// S5: capture and validate inline
+			const sLat = result.lat;
+			const sLng = result.lng;
+			if (!isFinite(sLat) || !isFinite(sLng)) return;
+
+			map.flyTo([sLat, sLng], 12, {
 				duration: 1.2,
 				easeLinearity: 0.25,
 			});

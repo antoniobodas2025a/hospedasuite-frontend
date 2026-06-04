@@ -229,6 +229,9 @@ export default function OTADashboard({
 	// PRD-014: Two-stage navigation — cards first, map on demand
 	const [viewMode, setViewMode] = useState<"cards" | "map">("cards");
 
+	// Judge verdict: map and split-view only exist if search is active
+	const isSearchActive = useMemo(() => !!urlLocation, [urlLocation]);
+
 	// ── PRD-008 Phase 3: Fallback Chain State ─────────────────────────────────
 	/** Current relaxation level (0=normal, 1-5=fallback cascade) */
 	const [fallbackLevel, setFallbackLevel] = useState(0);
@@ -1324,8 +1327,8 @@ export default function OTADashboard({
 					</button>
 				</div>
 
-				{/* PRD-014: Desktop split-view — always mounted, hidden when not in map mode */}
-				{isSplitView && sortedHotels.length > 0 ? (
+				{/* Judge verdict: split-view only if search active AND map requested */}
+				{isSplitView && isSearchActive && viewMode === "map" && sortedHotels.length > 0 ? (
 					<div
 						className="split-view-layout mb-0"
 					>
@@ -1451,7 +1454,7 @@ export default function OTADashboard({
 			</main>
 
 			{/* PRD-014: Map toggle — only after user has searched for a location */}
-			{sortedHotels.length > 0 && viewMode === "cards" && urlLocation && (
+			{sortedHotels.length > 0 && viewMode === "cards" && isSearchActive && (
 				<MapToggle
 					hotelCount={sortedHotels.length}
 					onClick={() => setViewMode("map")}

@@ -38,7 +38,12 @@ export function resolveHotelCoordinates(
 
 	// Primary: ota_catalog
 	for (const row of catalogData) {
-		if (row.lat != null && row.lng != null && !isNaN(row.lat) && !isNaN(row.lng)) {
+		if (
+			row.lat != null &&
+			row.lng != null &&
+			!isNaN(row.lat) &&
+			!isNaN(row.lng)
+		) {
 			coordsMap.set(row.id, {
 				lat: row.lat,
 				lng: row.lng,

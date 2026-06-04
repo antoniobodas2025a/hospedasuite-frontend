@@ -66,14 +66,17 @@ export default function MapTransitionController({
 			if (
 				cancelled ||
 				!decision.fly ||
-				!decision.target ||
-				!isFinite(decision.target.lat) ||
-				!isFinite(decision.target.lng)
+				!decision.target
 			)
 				return;
 
+			// S5: capture and validate inline — impossible to bypass
+			const tLat = decision.target.lat;
+			const tLng = decision.target.lng;
+			if (!isFinite(tLat) || !isFinite(tLng)) return;
+
 			setInternalMove();
-			map.flyTo([decision.target.lat, decision.target.lng], 12, {
+			map.flyTo([tLat, tLng], 12, {
 				duration: transitionDuration,
 				easeLinearity: 0.25,
 			});
@@ -116,10 +119,15 @@ export default function MapTransitionController({
 			if (!query) return;
 
 			const result = await geocodeLocation(query);
-			if (cancelled || !result || !isFinite(result.lat) || !isFinite(result.lng)) return;
+			if (cancelled || !result) return;
+
+			// S5: capture and validate inline — impossible to bypass
+			const rLat = result.lat;
+			const rLng = result.lng;
+			if (!isFinite(rLat) || !isFinite(rLng)) return;
 
 			setInternalMove();
-			map.flyTo([result.lat, result.lng], 14, {
+			map.flyTo([rLat, rLng], 14, {
 				duration: 0.8,
 				easeLinearity: 0.25,
 			});
