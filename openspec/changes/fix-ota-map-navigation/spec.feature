@@ -67,17 +67,17 @@ Feature: OTA Map Navigation
 
   # ─── Issue 3: Hotel markers from dashboard coordinates ──────────────────────
 
-  Scenario: Hotel with coordinates in hotel_locations appears as marker (S9)
+  Scenario: Hotel with coordinates in secondary data appears as marker (S9)
     Given the hotel "arrayan3" has coordinates in its secondary location data
-    And the ota_catalog entry for "arrayan3" has null coordinates
+    And the primary catalog entry for "arrayan3" has no coordinates
     When the map loads hotel data
-    Then the map should display a marker for "arrayan3" at its hotel_locations coordinates
+    Then the map should display a marker for "arrayan3" at its secondary location coordinates
 
-  Scenario: Hotel with coordinates in both tables uses ota_catalog (S10)
+  Scenario: Hotel with coordinates in both sources uses primary catalog (S10)
     Given the hotel "arrayan3" has coordinates in its primary catalog data
     And the hotel "arrayan3" also has coordinates in its secondary location data
     When the map loads hotel data
-    Then the marker position should use ota_catalog coordinates
+    Then the marker position should use primary catalog coordinates
     And the marker should appear at the expected location
 
   Scenario: Hotel with no coordinates in either table shows no marker (S11)
@@ -87,8 +87,8 @@ Feature: OTA Map Navigation
     And the hotel should still appear in the search result list
 
   Scenario: Map renders all markers from mixed coordinate sources (S12)
-    Given 5 hotels have coordinates in ota_catalog
-    And 3 hotels have coordinates only in hotel_locations
+    Given 5 hotels have coordinates in the primary catalog
+    And 3 hotels have coordinates only in the secondary location data
     And 2 hotels have no coordinates
     When the map loads the full hotel set
     Then exactly 8 markers should appear on the map
