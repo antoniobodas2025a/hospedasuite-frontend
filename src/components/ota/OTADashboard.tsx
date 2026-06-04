@@ -1447,8 +1447,8 @@ export default function OTADashboard({
 				)}
 			</main>
 
-			{/* PRD-014: Map toggle — visible in cards mode on both desktop and mobile */}
-			{sortedHotels.length > 0 && viewMode === "cards" && (
+			{/* PRD-014: Map toggle — only after user has searched for a location */}
+			{sortedHotels.length > 0 && viewMode === "cards" && urlLocation && (
 				<MapToggle
 					hotelCount={sortedHotels.length}
 					onClick={() => setViewMode("map")}
