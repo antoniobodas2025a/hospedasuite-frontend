@@ -145,6 +145,9 @@ export default function HotelMapView({
 				zoom={initialZoom || 6}
 				className="w-full h-full z-0"
 				zoomControl={false}
+				scrollWheelZoom={true}
+				wheelPxPerZoomLevel={20}
+				wheelDebounceTime={80}
 			>
 				<TileLayer
 					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'

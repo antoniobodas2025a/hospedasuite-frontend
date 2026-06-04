@@ -8,10 +8,10 @@
 
 export const CLUSTERING_CONFIG = {
 	/** Zoom level at which clustering is disabled — individual markers shown */
-	disableClusteringAtZoom: 11,
+	disableClusteringAtZoom: 15,
 
-	/** Maximum radius (px) for a cluster to cover */
-	maxClusterRadius: 80,
+	/** Maximum radius (px) for a cluster to cover — higher = more aggressive grouping */
+	maxClusterRadius: 120,
 
 	/** Show coverage area polygon on hover */
 	showCoverageOnHover: false,
