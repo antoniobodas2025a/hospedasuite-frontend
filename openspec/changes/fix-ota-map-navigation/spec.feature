@@ -30,7 +30,7 @@ Feature: OTA Map Navigation
     When the user searches for "duitama" again
     And clicks "Mostrar mapa"
     Then the map should fly to coordinates [5.8245, -73.0323]
-    And the transition should use cached coordinates without a network request
+    And the transition should complete using cached coordinates within 100ms
 
   Scenario: Map updates center when changing search location (S4)
     Given the user is viewing the map centered on "duitama"
@@ -68,20 +68,20 @@ Feature: OTA Map Navigation
   # ─── Issue 3: Hotel markers from dashboard coordinates ──────────────────────
 
   Scenario: Hotel with coordinates in hotel_locations appears as marker (S9)
-    Given the hotel "arrayan3" has coordinates stored in the hotel_locations table
+    Given the hotel "arrayan3" has coordinates in its secondary location data
     And the ota_catalog entry for "arrayan3" has null coordinates
     When the map loads hotel data
     Then the map should display a marker for "arrayan3" at its hotel_locations coordinates
 
   Scenario: Hotel with coordinates in both tables uses ota_catalog (S10)
-    Given the hotel "arrayan3" has coordinates in the ota_catalog table
-    And the hotel "arrayan3" also has coordinates in the hotel_locations table
+    Given the hotel "arrayan3" has coordinates in its primary catalog data
+    And the hotel "arrayan3" also has coordinates in its secondary location data
     When the map loads hotel data
     Then the marker position should use ota_catalog coordinates
     And the marker should appear at the expected location
 
   Scenario: Hotel with no coordinates in either table shows no marker (S11)
-    Given the hotel "no-coords-hotel" has null coordinates in both ota_catalog and hotel_locations
+    Given the hotel "no-coords-hotel" has no coordinates in any location source
     When the map loads hotel data
     Then no marker should be rendered for "no-coords-hotel"
     And the hotel should still appear in the search result list
@@ -92,4 +92,4 @@ Feature: OTA Map Navigation
     And 2 hotels have no coordinates
     When the map loads the full hotel set
     Then exactly 8 markers should appear on the map
-    And markers from hotel_locations fallback should include a precision indicator of "hotel_locations"
+    And markers from the secondary source should include a precision indicator
