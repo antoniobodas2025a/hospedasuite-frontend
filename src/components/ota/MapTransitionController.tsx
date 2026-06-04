@@ -4,6 +4,7 @@ import { useEffect, useRef } from 'react';
 import { useMap } from 'react-leaflet';
 import L from 'leaflet';
 import { geocodeLocation } from '@/lib/geocoding';
+import { resolveCenterLocation, handleCenterResult } from '@/lib/map-centering';
 import { useSharedMoveGuard } from '@/lib/use-shared-move-guard';
 
 interface Hotel {
@@ -20,6 +21,8 @@ interface MapTransitionControllerProps {
   centerLocation?: string;
   selectedHotelId?: string;
   transitionDuration?: number;
+  /** S2: Callback when geocoding fails — parent shows user-facing message */
+  onCenterError?: (message: string) => void;
 }
 
 /**
@@ -38,6 +41,7 @@ export default function MapTransitionController({
   centerLocation,
   selectedHotelId = '',
   transitionDuration = 1.2,
+  onCenterError,
 }: MapTransitionControllerProps) {
   const map = useMap();
   const { setInternalMove } = useSharedMoveGuard();
@@ -51,11 +55,15 @@ export default function MapTransitionController({
     let cancelled = false;
 
     const flyToLocation = async () => {
-      const result = await geocodeLocation(centerLocation);
-      if (cancelled || !result) return;
+      const decision = await resolveCenterLocation(centerLocation, geocodeLocation);
+
+      // S2: Handle geocoding failure — notify parent for user feedback
+      handleCenterResult(decision, { onError: onCenterError });
+
+      if (cancelled || !decision.fly || !decision.target) return;
 
       setInternalMove();
-      map.flyTo([result.lat, result.lng], 12, {
+      map.flyTo([decision.target.lat, decision.target.lng], 12, {
         duration: transitionDuration,
         easeLinearity: 0.25,
       });
@@ -66,7 +74,7 @@ export default function MapTransitionController({
     return () => {
       cancelled = true;
     };
-  }, [centerLocation, map, transitionDuration, setInternalMove]);
+  }, [centerLocation, map, transitionDuration, setInternalMove, onCenterError]);
 
   // Transition 3: flyTo selected hotel marker (Idea #2: hover hotel → zoom to marker)
   useEffect(() => {
