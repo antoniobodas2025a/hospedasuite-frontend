@@ -1324,10 +1324,9 @@ export default function OTADashboard({
 					</button>
 				</div>
 
-				{/* PRD-014: Desktop split-view only when user toggles map */}
-				{isSplitView && viewMode === "map" && sortedHotels.length > 0 ? (
-					<div className="split-view-layout mb-0">
-						{/* List panel (40%) — independent scroll */}
+				{/* PRD-014: Desktop split-view — always mounted, hidden when not in map mode */}
+				{isSplitView && sortedHotels.length > 0 ? (
+					<div className={`split-view-layout mb-0 ${viewMode !== "map" ? "split-view-cards-only" : ""}`}>
 						<div className="list-panel-scroll">
 							<h2 className="text-sm font-bold text-foreground mb-4">
 								{sortedHotels.length}{" "}
@@ -1344,8 +1343,8 @@ export default function OTADashboard({
 							{renderHotelList()}
 						</div>
 
-						{/* Map panel (60%) — sticky, always visible */}
-						<div className="map-panel-sticky relative">
+						{/* Map panel — hidden with CSS when not in map mode, avoids Leaflet crash */}
+						<div className={`map-panel-sticky relative ${viewMode !== "map" ? "hidden" : ""}`}>
 							<HotelMapView
 								hotels={sortedHotels.map((h: any) => ({
 									id: h.id,
