@@ -181,7 +181,7 @@ export default function MarkerLifecycleManager({
 
 		newHotels.forEach((hotel) => {
 			// PRD-009: Use precomputed coordinates from ota_catalog if available
-			if (hotel.latitude != null && hotel.longitude != null) {
+			if (hotel.latitude != null && hotel.longitude != null && !isNaN(hotel.latitude) && !isNaN(hotel.longitude)) {
 				geocodingCount++;
 				onGeocodingProgress?.(geocodingCount, newHotels.length);
 
@@ -239,7 +239,7 @@ export default function MarkerLifecycleManager({
 			if (!query) return;
 
 			const promise = geocodeLocation(query).then((result) => {
-				if (!result) return;
+				if (!result || isNaN(result.lat) || isNaN(result.lng)) return;
 
 				geocodingCount++;
 				onGeocodingProgress?.(geocodingCount, newHotels.length);

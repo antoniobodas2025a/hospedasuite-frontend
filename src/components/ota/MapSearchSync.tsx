@@ -167,7 +167,7 @@ export default function MapSearchSync({
     const flyToSearchLocation = async () => {
       setInternalMove();
       const result = await geocodeLocation(searchLocation);
-      if (cancelled || !result) return;
+      if (cancelled || !result || isNaN(result.lat) || isNaN(result.lng)) return;
 
       map.flyTo([result.lat, result.lng], 12, {
         duration: 1.2,

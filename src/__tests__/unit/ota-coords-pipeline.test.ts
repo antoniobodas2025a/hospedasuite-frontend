@@ -7,9 +7,7 @@
 
 import { describe, it, expect } from "vitest";
 
-import {
-	resolveHotelCoordinates,
-} from "@/lib/hotel-coordinates";
+import { resolveHotelCoordinates } from "@/lib/hotel-coordinates";
 
 // ─── S9: hotel_locations fallback when ota_catalog has no coords ────────────
 

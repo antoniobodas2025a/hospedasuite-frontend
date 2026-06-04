@@ -1326,7 +1326,9 @@ export default function OTADashboard({
 
 				{/* PRD-014: Desktop split-view — always mounted, hidden when not in map mode */}
 				{isSplitView && sortedHotels.length > 0 ? (
-					<div className={`split-view-layout mb-0 ${viewMode !== "map" ? "split-view-cards-only" : ""}`}>
+					<div
+						className={`split-view-layout mb-0 ${viewMode !== "map" ? "split-view-cards-only" : ""}`}
+					>
 						<div className="list-panel-scroll">
 							<h2 className="text-sm font-bold text-foreground mb-4">
 								{sortedHotels.length}{" "}
@@ -1344,7 +1346,9 @@ export default function OTADashboard({
 						</div>
 
 						{/* Map panel — hidden with CSS when not in map mode, avoids Leaflet crash */}
-						<div className={`map-panel-sticky relative ${viewMode !== "map" ? "hidden" : ""}`}>
+						<div
+							className={`map-panel-sticky relative ${viewMode !== "map" ? "hidden" : ""}`}
+						>
 							<HotelMapView
 								hotels={sortedHotels.map((h: any) => ({
 									id: h.id,

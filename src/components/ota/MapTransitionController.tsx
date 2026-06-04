@@ -63,7 +63,7 @@ export default function MapTransitionController({
 			// S2: Handle geocoding failure — notify parent for user feedback
 			handleCenterResult(decision, { onError: onCenterError });
 
-			if (cancelled || !decision.fly || !decision.target) return;
+			if (cancelled || !decision.fly || !decision.target || isNaN(decision.target.lat) || isNaN(decision.target.lng)) return;
 
 			setInternalMove();
 			map.flyTo([decision.target.lat, decision.target.lng], 12, {
@@ -90,7 +90,7 @@ export default function MapTransitionController({
 
 		const flyToHotel = async () => {
 			// PRD-009: Usar coordenadas precomputadas si existen
-			if (hotel.latitude != null && hotel.longitude != null) {
+			if (hotel.latitude != null && hotel.longitude != null && !isNaN(hotel.latitude) && !isNaN(hotel.longitude)) {
 				setInternalMove();
 				map.flyTo([hotel.latitude, hotel.longitude], 14, {
 					duration: 0.8,
