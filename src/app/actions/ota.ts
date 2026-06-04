@@ -2,6 +2,10 @@
 import type { Room } from "@/types";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { rankHotels, applyDiversity } from "@/lib/hotel-ranking";
+import {
+	resolveHotelCoordinates,
+	type CoordRecord,
+} from "@/lib/hotel-coordinates";
 
 /**
  * Normalize string for search: remove accents, lowercase, trim.
@@ -170,38 +174,35 @@ export async function fetchOTAHotelsAction(
 				.select("id, lat, lng, precision")
 				.in("id", otaHotelIds);
 
-			if (catalogData) {
-				for (const row of catalogData) {
-					if (row.lat && row.lng) {
-						coordsMap.set(row.id, {
-							lat: row.lat,
-							lng: row.lng,
-							precision: row.precision,
-						});
-					}
-				}
-			}
-
 			// Fallback: hotel_locations (from onboarding wizard geocoding)
-			const idsWithoutCoords = otaHotelIds.filter((id) => !coordsMap.has(id));
+			const idsWithoutCoords = otaHotelIds.filter(
+				(id: string) =>
+					!catalogData?.some((row: any) => row.id === id && row.lat && row.lng),
+			);
+
+			let locData: any[] | null = null;
 			if (idsWithoutCoords.length > 0) {
-				const { data: locData } = await supabaseAdmin
+				const locResult = await supabaseAdmin
 					.from("hotel_locations")
 					.select("hotel_id, lat, lng, precision")
 					.in("hotel_id", idsWithoutCoords)
 					.order("geocoded_at", { ascending: false });
+				locData = locResult.data;
+			}
 
-				if (locData) {
-					for (const row of locData) {
-						if (row.lat && row.lng) {
-							coordsMap.set(row.hotel_id, {
-								lat: row.lat,
-								lng: row.lng,
-								precision: row.precision,
-							});
-						}
-					}
-				}
+			// Delegate to pure function (S9-S12)
+			const resolved = resolveHotelCoordinates(
+				otaHotelIds,
+				(catalogData || []) as CoordRecord[],
+				(locData || []) as (CoordRecord & { hotel_id: string })[],
+			);
+
+			for (const [id, coord] of resolved) {
+				coordsMap.set(id, {
+					lat: coord.lat,
+					lng: coord.lng,
+					precision: coord.precision,
+				});
 			}
 		}
 

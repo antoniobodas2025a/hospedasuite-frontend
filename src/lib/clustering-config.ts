@@ -7,27 +7,27 @@
  */
 
 export const CLUSTERING_CONFIG = {
-  /** Zoom level at which clustering is disabled — individual markers shown */
-  disableClusteringAtZoom: 11,
+	/** Zoom level at which clustering is disabled — individual markers shown */
+	disableClusteringAtZoom: 11,
 
-  /** Maximum radius (px) for a cluster to cover */
-  maxClusterRadius: 80,
+	/** Maximum radius (px) for a cluster to cover */
+	maxClusterRadius: 80,
 
-  /** Show coverage area polygon on hover */
-  showCoverageOnHover: false,
+	/** Show coverage area polygon on hover */
+	showCoverageOnHover: false,
 
-  /** Zoom to cluster bounds when clicked */
-  zoomToBoundsOnClick: true,
+	/** Zoom to cluster bounds when clicked */
+	zoomToBoundsOnClick: true,
 
-  /** Spiderfy markers when zoomed to max */
-  spiderfyOnMaxZoom: true,
+	/** Spiderfy markers when zoomed to max */
+	spiderfyOnMaxZoom: true,
 
-  /** Enable chunked loading for large marker sets */
-  chunkedLoading: true,
+	/** Enable chunked loading for large marker sets */
+	chunkedLoading: true,
 
-  /** Interval between chunks (ms) */
-  chunkInterval: 100,
+	/** Interval between chunks (ms) */
+	chunkInterval: 100,
 
-  /** Delay before chunk processing (ms) */
-  chunkDelay: 50,
+	/** Delay before chunk processing (ms) */
+	chunkDelay: 50,
 } as const;
