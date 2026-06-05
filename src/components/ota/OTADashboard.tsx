@@ -332,7 +332,7 @@ export default function OTADashboard({
 			});
 			// Use history.replaceState to avoid Next.js re-render — Airbnb-style silent URL update
 			window.history.replaceState(null, "", `${pathname}?${params.toString()}`);
-		}, 500);
+		}, 2000);
 
 		return () => {
 			if (mapUrlTimeoutRef.current) clearTimeout(mapUrlTimeoutRef.current);
