@@ -59,3 +59,4 @@ playwright/.cache/
 # Sentry MCP auth proxy (temp tool)
 scripts/sentry-mcp-proxy.mjs
 .atl/
+.build/

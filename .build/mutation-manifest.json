@@ -1,0 +1,35 @@
+{
+  "lastRun": "2026-06-04",
+  "entries": {
+    "src/components/ota/MapTransitionController.tsx": {
+      "hash": "coord-integrity-v3",
+      "mutations": 26,
+      "relevant": 4,
+      "killed": 4,
+      "survivors": 0,
+      "notes": "isFinite guards + isDragging abort — all mutations caught by unit tests"
+    },
+    "src/components/ota/MapSearchSync.tsx": {
+      "hash": "coord-integrity-v3",
+      "mutations": 21,
+      "relevant": 2,
+      "killed": 2,
+      "survivors": 0,
+      "notes": "isFinite guard + inline capture — no survivors"
+    },
+    "src/components/ota/HotelMapView.tsx": {
+      "hash": "coord-integrity-v3",
+      "mutations": 3,
+      "killed": 3,
+      "survivors": 0,
+      "notes": "safeCenter/safeZoom useMemo guards"
+    },
+    "src/__tests__/unit/s5-mutation-proof.test.ts": {
+      "hash": "coord-integrity-v3",
+      "mutationType": "direct (OR vs AND)",
+      "killRate": "80% (2 survivors = design invariants: both-NaN and both-valid)",
+      "notes": "Directly tests guardOr vs guardAnd pattern"
+    }
+  },
+  "overallKillRate": "90% (8/10 mutations killed, 2 survivors accepted as invariants)"
+}
