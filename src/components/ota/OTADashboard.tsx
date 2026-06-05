@@ -456,16 +456,11 @@ export default function OTADashboard({
 
 	// PRD-009 Fase 3: Scroll list → highlight marker on map (IntersectionObserver)
 	// Guard: skip flyTo while user is actively panning the map
-	const isUserPanningRef = useRef(false);
 
 	// User map interaction guard: pause flyTo while user is dragging/zooming
 	// Uses Leaflet native dragstart/dragend events — NO timeouts needed
-	const handleMapUserInteraction = useCallback(() => {
-		isUserPanningRef.current = true;
 	}, []);
 
-	const handleMapUserInteractionEnd = useCallback(() => {
-		isUserPanningRef.current = false;
 	}, []);
 
 	useEffect(() => {
@@ -492,7 +487,6 @@ export default function OTADashboard({
 					if (
 						id &&
 						id !== selectedHotelRef.current &&
-						!isUserPanningRef.current
 					) {
 						setSelectedHotelId(id);
 						selectedHotelRef.current = id;
@@ -1328,10 +1322,11 @@ export default function OTADashboard({
 				</div>
 
 				{/* Judge verdict: split-view only if search active AND map requested */}
-				{isSplitView && isSearchActive && viewMode === "map" && sortedHotels.length > 0 ? (
-					<div
-						className="split-view-layout mb-0"
-					>
+				{isSplitView &&
+				isSearchActive &&
+				viewMode === "map" &&
+				sortedHotels.length > 0 ? (
+					<div className="split-view-layout mb-0">
 						<div className="list-panel-scroll">
 							<h2 className="text-sm font-bold text-foreground mb-4">
 								{sortedHotels.length}{" "}
@@ -1375,8 +1370,6 @@ export default function OTADashboard({
 								initialCenter={initialCenter}
 								initialZoom={initialZoom}
 								onBoundsExceeded={handleBoundsExceeded}
-								onUserInteraction={handleMapUserInteraction}
-								onUserInteractionEnd={handleMapUserInteractionEnd}
 							/>
 						</div>
 					</div>
@@ -1416,8 +1409,6 @@ export default function OTADashboard({
 										initialZoom={initialZoom}
 										onBoundsExceeded={handleBoundsExceeded}
 										boundsThreshold={0.2}
-										onUserInteraction={handleMapUserInteraction}
-										onUserInteractionEnd={handleMapUserInteractionEnd}
 									/>
 								</div>
 

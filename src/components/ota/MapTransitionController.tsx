@@ -5,6 +5,7 @@ import { useMap } from "react-leaflet";
 import L from "leaflet";
 import { geocodeLocation } from "@/lib/geocoding";
 import { resolveCenterLocation, handleCenterResult } from "@/lib/map-centering";
+import { useUserDraggingGuard } from "@/lib/use-user-dragging-guard";
 import { useSharedMoveGuard } from "@/lib/use-shared-move-guard";
 
 interface Hotel {
@@ -45,6 +46,7 @@ export default function MapTransitionController({
 }: MapTransitionControllerProps) {
 	const map = useMap();
 	const { setInternalMove } = useSharedMoveGuard();
+	const { isDragging } = useUserDraggingGuard();
 	const lastHotelIdsRef = useRef<Set<string>>(new Set());
 	const isInitialMount = useRef(true);
 
@@ -63,17 +65,15 @@ export default function MapTransitionController({
 			// S2: Handle geocoding failure — notify parent for user feedback
 			handleCenterResult(decision, { onError: onCenterError });
 
-			if (
-				cancelled ||
-				!decision.fly ||
-				!decision.target
-			)
-				return;
+			if (cancelled || !decision.fly || !decision.target) return;
 
 			// S5: capture and validate inline — impossible to bypass
 			const tLat = decision.target.lat;
 			const tLng = decision.target.lng;
 			if (!isFinite(tLat) || !isFinite(tLng)) return;
+
+			// S14: Abort if user is actively dragging/zooming
+			if (isDragging.current) return;
 
 			setInternalMove();
 			map.flyTo([tLat, tLng], 12, {
@@ -125,6 +125,9 @@ export default function MapTransitionController({
 			const rLat = result.lat;
 			const rLng = result.lng;
 			if (!isFinite(rLat) || !isFinite(rLng)) return;
+
+			// S14: Abort if user is actively dragging/zooming
+			if (isDragging.current) return;
 
 			setInternalMove();
 			map.flyTo([rLat, rLng], 14, {

@@ -7,6 +7,7 @@ import L from "leaflet";
 import MarkerLifecycleManager from "./MarkerLifecycleManager";
 import MapTransitionController from "./MapTransitionController";
 import MapSearchSync from "./MapSearchSync";
+import { useUserDraggingGuard } from "@/lib/use-user-dragging-guard";
 import "leaflet/dist/leaflet.css";
 import "@/styles/map.css";
 
@@ -45,8 +46,6 @@ interface HotelMapViewProps {
 	/** PRD-006: Bounds change ratio threshold. Default: 0.2 */
 	boundsThreshold?: number;
 	/** User map interaction callbacks — pause card→map sync while panning */
-	onUserInteraction?: () => void;
-	onUserInteractionEnd?: () => void;
 }
 
 /**
@@ -56,26 +55,14 @@ interface HotelMapViewProps {
  * Best practice per Leaflet docs: use map.dragging.moving() and
  * dragstart/dragend/premove events instead of DOM listeners.
  */
-function MapDragDetector({
-	onDragStart,
-	onDragEnd,
-}: {
-	onDragStart?: () => void;
-	onDragEnd?: () => void;
-}) {
+function MapDragDetector() {
+	const { setDragging, clearDragging } = useUserDraggingGuard();
+
 	useMapEvents({
-		dragstart() {
-			onDragStart?.();
-		},
-		dragend() {
-			onDragEnd?.();
-		},
-		zoomstart() {
-			onDragStart?.();
-		},
-		zoomend() {
-			onDragEnd?.();
-		},
+		dragstart() { setDragging(); },
+		dragend() { clearDragging(); },
+		zoomstart() { setDragging(); },
+		zoomend() { clearDragging(); },
 	});
 
 	return null;
@@ -99,8 +86,6 @@ export default function HotelMapView({
 	initialZoom,
 	onBoundsExceeded,
 	boundsThreshold,
-	onUserInteraction,
-	onUserInteractionEnd,
 }: HotelMapViewProps) {
 	const [isLoading, setIsLoading] = useState(true);
 	const [geocodingProgress, setGeocodingProgress] = useState({
@@ -166,7 +151,7 @@ export default function HotelMapView({
 			>
 				<TileLayer
 					attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-					url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+					url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
 				/>
 
 				{/* Marker lifecycle manager */}
@@ -200,10 +185,7 @@ export default function HotelMapView({
 				/>
 
 				{/* User map interaction tracking — pause card→map sync while panning */}
-				<MapDragDetector
-					onDragStart={onUserInteraction}
-					onDragEnd={onUserInteractionEnd}
-				/>
+				<MapDragDetector />
 			</MapContainer>
 		</div>
 	);

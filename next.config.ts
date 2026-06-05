@@ -1,99 +1,106 @@
-import { withSentryConfig } from '@sentry/nextjs';
-import createNextIntlPlugin from 'next-intl/plugin';
+import { withSentryConfig } from "@sentry/nextjs";
+import createNextIntlPlugin from "next-intl/plugin";
 
-const withNextIntl = createNextIntlPlugin('./i18n/request.ts');
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // 📸 CONFIGURACIÓN DE MOTOR DE IMÁGENES (SUPABASE + CDN)
-  images: {
-    formats: ['image/avif', 'image/webp'] as ['image/avif', 'image/webp'],  // AVIF primero, fallback WebP
-    minimumCacheTTL: 31536000,              // 1 año — imágenes no cambian
-    qualities: [75, 85],                    // 75 default, 85 for hero/cover
-    deviceSizes: [320, 480, 640, 768, 1024, 1280, 1536],
-    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
-    remotePatterns: [
-      {
-        protocol: 'https',
-        hostname: 'auaqpomuivfhomlkvhju.supabase.co',
-        port: '',
-        pathname: '/storage/v1/**',
-      },
-      {
-        protocol: 'https',
-        hostname: 'images.unsplash.com',
-      },
-      {
-        protocol: 'https',
-        hostname: 'pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev',
-        port: '',
-        pathname: '/**',
-      },
-    ],
-  },
-  
-  // 🛡️ CONFIGURACIÓN DE COMPILACIÓN
-  // TS ahora tiene 0 errores — este bloque se mantiene vacío pero disponible
-  // si en el futuro se necesita configurar type checking del build.
+	// 📸 CONFIGURACIÓN DE MOTOR DE IMÁGENES (SUPABASE + CDN)
+	images: {
+		formats: ["image/avif", "image/webp"] as ["image/avif", "image/webp"], // AVIF primero, fallback WebP
+		minimumCacheTTL: 31536000, // 1 año — imágenes no cambian
+		qualities: [75, 85], // 75 default, 85 for hero/cover
+		deviceSizes: [320, 480, 640, 768, 1024, 1280, 1536],
+		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+		remotePatterns: [
+			{
+				protocol: "https",
+				hostname: "auaqpomuivfhomlkvhju.supabase.co",
+				port: "",
+				pathname: "/storage/v1/**",
+			},
+			{
+				protocol: "https",
+				hostname: "images.unsplash.com",
+			},
+			{
+				protocol: "https",
+				hostname: "pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev",
+				port: "",
+				pathname: "/**",
+			},
+		],
+	},
 
-  // 🛡️ BARRERA WAF: Cabeceras HTTP Estrictas (Security-First)
-  async headers() {
-    const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hospedasuite.com';
-    const wompiDomain = 'https://checkout.wompi.co';
-    const r2Domain = 'https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev';
-    const supabaseDomain = 'https://auaqpomuivfhomlkvhju.supabase.co';
-    const sentryDomain = 'https://o450*.ingest.sentry.io';
+	// 🛡️ CONFIGURACIÓN DE COMPILACIÓN
+	// TS ahora tiene 0 errores — este bloque se mantiene vacío pero disponible
+	// si en el futuro se necesita configurar type checking del build.
 
-    return [
-      {
-        source: '/(.*)',
-        headers: [
-          { key: 'X-DNS-Prefetch-Control', value: 'on' },
-          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          {
-            key: 'Content-Security-Policy',
-            value: [
-              `default-src 'self'`,
-              `script-src 'self' 'unsafe-inline' 'unsafe-eval' ${wompiDomain} ${sentryDomain}`,
-              `style-src 'self' 'unsafe-inline'`,
-              `img-src 'self' blob: data: ${r2Domain} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
-              `font-src 'self' data:`,
-              `connect-src 'self' ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org`,
-              `media-src 'self' blob:`,
-              `object-src 'none'`,
-              `frame-src ${wompiDomain}`,
-              `frame-ancestors 'self'`,
-              `base-uri 'self'`,
-              `form-action 'self' ${wompiDomain}`,
-            ].join('; '),
-          },
-          {
-            key: 'Permissions-Policy',
-            value: [
-              'camera=()',
-              'microphone=()',
-              'geolocation=()',
-              'payment=(self "https://checkout.wompi.co")',
-            ].join(', '),
-          },
-        ],
-      },
-    ];
-  },
+	// 🛡️ BARRERA WAF: Cabeceras HTTP Estrictas (Security-First)
+	async headers() {
+		const appUrl =
+			process.env.NEXT_PUBLIC_APP_URL || "https://hospedasuite.com";
+		const wompiDomain = "https://checkout.wompi.co";
+		const r2Domain = "https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev";
+		const supabaseDomain = "https://auaqpomuivfhomlkvhju.supabase.co";
+		const sentryDomain = "https://o450*.ingest.sentry.io";
+
+		return [
+			{
+				source: "/(.*)",
+				headers: [
+					{ key: "X-DNS-Prefetch-Control", value: "on" },
+					{
+						key: "Strict-Transport-Security",
+						value: "max-age=63072000; includeSubDomains; preload",
+					},
+					{ key: "X-Frame-Options", value: "SAMEORIGIN" },
+					{ key: "X-Content-Type-Options", value: "nosniff" },
+					{ key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+					{
+						key: "Content-Security-Policy",
+						value: [
+							`default-src 'self'`,
+							`script-src 'self' 'unsafe-inline' 'unsafe-eval' ${wompiDomain} ${sentryDomain}`,
+							`style-src 'self' 'unsafe-inline'`,
+							`img-src 'self' blob: data: ${r2Domain} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
+							`font-src 'self' data:`,
+							`connect-src 'self' ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org`,
+							`media-src 'self' blob:`,
+							`object-src 'none'`,
+							`frame-src ${wompiDomain}`,
+							`frame-ancestors 'self'`,
+							`base-uri 'self'`,
+							`form-action 'self' ${wompiDomain}`,
+						].join("; "),
+					},
+					{
+						key: "Permissions-Policy",
+						value: [
+							"camera=()",
+							"microphone=()",
+							"geolocation=()",
+							'payment=(self "https://checkout.wompi.co")',
+						].join(", "),
+					},
+				],
+			},
+		];
+	},
 };
 
 // 📡 INYECCIÓN DE TELEMETRÍA (Sentry Wizard + SecOps Shield)
 const sentryOptions = {
-  org: "hospedasuite",
-  project: "hospedasuite-frontend",
-  silent: true,
-  widenClientFileUpload: true,
-  tunnelRoute: "/monitoring",
-  hideSourceMaps: true, // Protección de propiedad intelectual (Capa 7)
+	org: "hospedasuite",
+	project: "hospedasuite-frontend",
+	silent: true,
+	widenClientFileUpload: true,
+	tunnelRoute: "/monitoring",
+	hideSourceMaps: true, // Protección de propiedad intelectual (Capa 7)
 };
 
 // EXPORTACIÓN DETERMINISTA
-export default withSentryConfig(withNextIntl(nextConfig as import('next').NextConfig), sentryOptions);
+export default withSentryConfig(
+	withNextIntl(nextConfig as import("next").NextConfig),
+	sentryOptions,
+);
