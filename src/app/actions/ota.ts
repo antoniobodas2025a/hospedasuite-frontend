@@ -7,6 +7,26 @@ import {
 	type CoordRecord,
 } from "@/lib/hotel-coordinates";
 
+// ─── Retry helper for Supabase queries (ETIMEDOUT resilience) ──────────────
+
+async function withRetry<T>(
+	fn: () => Promise<T>,
+	maxRetries = 3,
+	baseDelay = 1000,
+): Promise<T> {
+	for (let attempt = 0; attempt <= maxRetries; attempt++) {
+		try {
+			return await fn();
+		} catch (error: unknown) {
+			const msg = error instanceof Error ? error.message : String(error);
+			const isTimeout = msg.includes("ETIMEDOUT") || msg.includes("TimeoutError");
+			if (!isTimeout || attempt >= maxRetries) throw error;
+			await new Promise((r) => setTimeout(r, baseDelay * Math.pow(2, attempt)));
+		}
+	}
+	throw new Error("Unreachable");
+}
+
 /**
  * Normalize string for search: remove accents, lowercase, trim.
  * "Medellín" → "medellin", "Bogotá" → "bogota"
@@ -119,7 +139,7 @@ export async function fetchOTAHotelsAction(
 		const from = page * limit;
 		const to = from + limit - 1;
 
-		// 1. Build base query — fetch ALL active hotels (no range; we rank/paginate server-side)
+		// 1. Build base query — fetch ALL active hotels with retry on timeout
 		let query = supabaseAdmin
 			.from("hotels")
 			.select(
@@ -137,7 +157,8 @@ export async function fetchOTAHotelsAction(
 			);
 		}
 
-		const { data: allHotels, error } = await query;
+		// Execute with retry on ETIMEDOUT (exponential backoff: 1s, 2s, 4s)
+		const { data: allHotels, error } = await withRetry(() => query);
 
 		if (error) {
 			console.error("🚨 ERROR CRÍTICO DE SUPABASE EN OTA:", error.message);
