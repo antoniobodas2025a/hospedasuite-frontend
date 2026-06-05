@@ -1,37 +1,58 @@
 "use client";
 
 /**
- * Module-level state shared between MapDragDetector and MapTransitionController.
+ * Coordinate Firewall — module-level state for map sovereignty.
  *
- * - isDragging: true during active drag/zoom — abort flyTo immediately
- * - lastInteraction: timestamp of last user gesture — block flyTo for 15s window
+ * Architectural principle: the map is NON-CONTROLLED during user gestures.
+ * URL is a mirror, not a command. RSC echoes with stale coordinates are ignored.
  *
- * Pattern: URL is a suggestion, not a command. User gestures always win.
- * Covers 13.8s latency window from the latency audit.
+ * Token-based intent validation (replaces timestamp-only approach):
+ *   - setSearchIntent(token): called when user explicitly searches a location
+ *   - purgeIntent(): called on physical contact (mousedown/touchstart)
+ *   - isIntentValid(token): only flyTo if token matches + within 15s window
+ *
+ * §5 from Master Plan: Sovereignty via Search Intent Stamp (T_url ≡ T_local)
  */
 
 const state = {
 	isDragging: false,
 	lastInteraction: 0,
+	activeIntent: null as string | null,
+	intentTimestamp: 0,
 };
 
-const INTERACTION_WINDOW_MS = 15000; // 15 seconds — covers 13.8s observed latency
+const INTERACTION_WINDOW_MS = 15000;
 
-export function useUserDraggingGuard() {
+export function useMapCoordinateFirewall() {
 	return {
 		isDragging: { current: state.isDragging } as React.RefObject<boolean>,
 
-		setDragging: () => {
+		/** Called on physical contact — stops animation, kills intent, restores handlers */
+		stabilizeInteractions: (map: { stop: () => void }) => {
 			state.isDragging = true;
 			state.lastInteraction = Date.now();
+			state.activeIntent = null;
+			map.stop();
 		},
 
-		clearDragging: () => {
+		/** Called when drag/zoom ends */
+		releaseInteraction: () => {
 			state.isDragging = false;
-			// Note: lastInteraction is NOT cleared — it persists for the 15s window
 		},
 
-		/** Block programmatic flyTo if user touched map recently */
+		/** Called when user explicitly searches for a location */
+		setSearchIntent: (token: string) => {
+			state.activeIntent = token;
+			state.intentTimestamp = Date.now();
+		},
+
+		/** Check if a programmatic flyTo is allowed for this token */
+		isIntentValid: (token: string) => {
+			if (state.activeIntent !== token) return false;
+			return Date.now() - state.intentTimestamp < INTERACTION_WINDOW_MS;
+		},
+
+		/** Block ANY programmatic flyTo if user touched map recently */
 		shouldBlockFlyTo: () => {
 			return Date.now() - state.lastInteraction < INTERACTION_WINDOW_MS;
 		},

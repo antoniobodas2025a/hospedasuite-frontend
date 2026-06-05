@@ -5,7 +5,7 @@ import { useMap } from "react-leaflet";
 import L from "leaflet";
 import { geocodeLocation } from "@/lib/geocoding";
 import { resolveCenterLocation, handleCenterResult } from "@/lib/map-centering";
-import { useUserDraggingGuard } from "@/lib/use-user-dragging-guard";
+import { useMapCoordinateFirewall } from "@/lib/use-user-dragging-guard";
 import { useSharedMoveGuard } from "@/lib/use-shared-move-guard";
 
 interface Hotel {
@@ -46,7 +46,7 @@ export default function MapTransitionController({
 }: MapTransitionControllerProps) {
 	const map = useMap();
 	const { setInternalMove } = useSharedMoveGuard();
-	const { isDragging, shouldBlockFlyTo } = useUserDraggingGuard();
+	const { isDragging, shouldBlockFlyTo } = useMapCoordinateFirewall();
 	const lastHotelIdsRef = useRef<Set<string>>(new Set());
 	const isInitialMount = useRef(true);
 	const lastCenterRef = useRef<{ lat: number; lng: number } | null>(null);

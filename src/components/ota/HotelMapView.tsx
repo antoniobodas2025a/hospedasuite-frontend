@@ -7,7 +7,7 @@ import L from "leaflet";
 import MarkerLifecycleManager from "./MarkerLifecycleManager";
 import MapTransitionController from "./MapTransitionController";
 import MapSearchSync from "./MapSearchSync";
-import { useUserDraggingGuard } from "@/lib/use-user-dragging-guard";
+import { useMapCoordinateFirewall } from "@/lib/use-user-dragging-guard";
 import "leaflet/dist/leaflet.css";
 import "@/styles/map.css";
 
@@ -56,19 +56,15 @@ interface HotelMapViewProps {
  * dragstart/dragend/premove events instead of DOM listeners.
  */
 function MapDragDetector() {
-	const { setDragging, clearDragging } = useUserDraggingGuard();
+	const { stabilizeInteractions, releaseInteraction } = useMapCoordinateFirewall();
 	const map = useMap();
 
-	// Section 4: Low-level DOM capture — stop animation BEFORE Leaflet processes gesture.
-	// mousedown/touchstart fire BEFORE dragstart/zoomstart, breaking the recursion.
+	// §5: Low-level DOM capture — stop animation, kill intent, restore handlers.
 	useEffect(() => {
 		const container = map.getContainer();
 		if (!container) return;
 
-		const onContact = () => {
-			setDragging();
-			map.stop(); // Immediate cinematic stop — no recursion
-		};
+		const onContact = () => stabilizeInteractions(map);
 
 		container.addEventListener("mousedown", onContact, { capture: true });
 		container.addEventListener("touchstart", onContact, { capture: true });
@@ -77,11 +73,11 @@ function MapDragDetector() {
 			container.removeEventListener("mousedown", onContact, { capture: true });
 			container.removeEventListener("touchstart", onContact, { capture: true });
 		};
-	}, [map, setDragging]);
+	}, [map, stabilizeInteractions]);
 
 	useMapEvents({
-		dragend() { clearDragging(); },
-		zoomend() { clearDragging(); },
+		dragend() { releaseInteraction(); },
+		zoomend() { releaseInteraction(); },
 	});
 
 	return null;
