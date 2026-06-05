@@ -459,9 +459,7 @@ export default function OTADashboard({
 
 	// User map interaction guard: pause flyTo while user is dragging/zooming
 	// Uses Leaflet native dragstart/dragend events — NO timeouts needed
-	}, []);
 
-	}, []);
 
 	useEffect(() => {
 		// Observe both split-view cards and bottom-sheet cards
@@ -486,7 +484,7 @@ export default function OTADashboard({
 					// Skip flyTo while user is actively panning the map
 					if (
 						id &&
-						id !== selectedHotelRef.current &&
+						id !== selectedHotelRef.current
 					) {
 						setSelectedHotelId(id);
 						selectedHotelRef.current = id;
