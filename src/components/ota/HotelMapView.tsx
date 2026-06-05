@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
-import { MapContainer, TileLayer, useMapEvents } from "react-leaflet";
+import { MapContainer, TileLayer, useMapEvents, useMap } from "react-leaflet";
 import { MapPin, Loader2 } from "lucide-react";
 import L from "leaflet";
 import MarkerLifecycleManager from "./MarkerLifecycleManager";
@@ -57,12 +57,23 @@ interface HotelMapViewProps {
  */
 function MapDragDetector() {
 	const { setDragging, clearDragging } = useUserDraggingGuard();
+	const map = useMap();
 
 	useMapEvents({
-		dragstart() { setDragging(); },
-		dragend() { clearDragging(); },
-		zoomstart() { setDragging(); },
-		zoomend() { clearDragging(); },
+		dragstart() {
+			setDragging();
+			map.stop(); // Section 4: immediate cinematic stop on physical contact
+		},
+		dragend() {
+			clearDragging();
+		},
+		zoomstart() {
+			setDragging();
+			map.stop();
+		},
+		zoomend() {
+			clearDragging();
+		},
 	});
 
 	return null;
