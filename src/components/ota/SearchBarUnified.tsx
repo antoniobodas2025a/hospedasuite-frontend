@@ -1,6 +1,6 @@
 "use client";
 
-import React, {
+import {
 	useState,
 	useRef,
 	useEffect,
@@ -11,10 +11,7 @@ import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import {
 	Calendar as CalendarIcon,
 	X,
-	Loader2,
-	CheckCircle2,
 	User,
-	ChevronRight,
 	MapPin,
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
@@ -23,7 +20,6 @@ import { format, parseISO, isValid, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
 	springSnappy,
-	springGentle,
 	springModal,
 	springBounce,
 } from "@/lib/mac2026/spring";
@@ -52,7 +48,9 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 	const appLocale = useLocale();
 	const dateLocale = getDateFnsLocale(appLocale);
 	const containerRef = useRef<HTMLDivElement>(null);
-	const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+	const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
+		null,
+	);
 
 	const [isPending, startTransition] = useTransition();
 	const [activeModal, setActiveModal] = useState<"dates" | "guests" | null>(

@@ -46,7 +46,7 @@ export default function MapTransitionController({
 }: MapTransitionControllerProps) {
 	const map = useMap();
 	const { setInternalMove } = useSharedMoveGuard();
-	const { isDragging } = useUserDraggingGuard();
+	const { isDragging, shouldBlockFlyTo } = useUserDraggingGuard();
 	const lastHotelIdsRef = useRef<Set<string>>(new Set());
 	const isInitialMount = useRef(true);
 	const lastCenterRef = useRef<{ lat: number; lng: number } | null>(null);
@@ -71,18 +71,21 @@ export default function MapTransitionController({
 			// S5: capture and validate inline — impossible to bypass
 			const tLat = decision.target.lat;
 			const tLng = decision.target.lng;
-		if (!isFinite(tLat) || !isFinite(tLng)) return;
+			if (!isFinite(tLat) || !isFinite(tLng)) return;
 
-		// S14: Abort if user is actively dragging/zooming
-		if (isDragging.current) return;
+			// S14: Abort if user is actively dragging/zooming
+			if (isDragging.current) return;
 
-		// Micro-movement filter: skip if change < 0.001° (~111m)
-		const mapCenter = map.getCenter();
-		const dist = Math.sqrt(
-			Math.pow(tLat - mapCenter.lat, 2) + Math.pow(tLng - mapCenter.lng, 2)
-		);
-		if (lastCenterRef.current && dist < 0.001) return;
-		lastCenterRef.current = { lat: tLat, lng: tLng };
+			// Micro-movement filter: skip if change < 0.001° (~111m)
+			const mapCenter = map.getCenter();
+			const dist = Math.sqrt(
+				Math.pow(tLat - mapCenter.lat, 2) + Math.pow(tLng - mapCenter.lng, 2),
+			);
+			if (lastCenterRef.current && dist < 0.001) return;
+			lastCenterRef.current = { lat: tLat, lng: tLng };
+
+			// Local-First: block flyTo if user touched map in last 15s
+			if (shouldBlockFlyTo()) return;
 
 			setInternalMove();
 			map.flyTo([tLat, tLng], 12, {
@@ -133,17 +136,17 @@ export default function MapTransitionController({
 			// S5: capture and validate inline — impossible to bypass
 			const rLat = result.lat;
 			const rLng = result.lng;
-		if (!isFinite(rLat) || !isFinite(rLng)) return;
+			if (!isFinite(rLat) || !isFinite(rLng)) return;
 
-		// S14: Abort if user is actively dragging/zooming
-		if (isDragging.current) return;
+			// S14: Abort if user is actively dragging/zooming
+			if (isDragging.current) return;
 
-		// Micro-movement filter
-		const mapCenter = map.getCenter();
-		const dist = Math.sqrt(
-			Math.pow(rLat - mapCenter.lat, 2) + Math.pow(rLng - mapCenter.lng, 2)
-		);
-		if (dist < 0.001) return;
+			// Micro-movement filter
+			const mapCenter = map.getCenter();
+			const dist = Math.sqrt(
+				Math.pow(rLat - mapCenter.lat, 2) + Math.pow(rLng - mapCenter.lng, 2),
+			);
+			if (dist < 0.001) return;
 
 			setInternalMove();
 			map.flyTo([rLat, rLng], 14, {
