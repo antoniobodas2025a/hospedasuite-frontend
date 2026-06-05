@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { MapContainer, TileLayer, useMapEvents, useMap } from "react-leaflet";
 import { MapPin, Loader2 } from "lucide-react";
 import L from "leaflet";
@@ -59,21 +59,29 @@ function MapDragDetector() {
 	const { setDragging, clearDragging } = useUserDraggingGuard();
 	const map = useMap();
 
+	// Section 4: Low-level DOM capture — stop animation BEFORE Leaflet processes gesture.
+	// mousedown/touchstart fire BEFORE dragstart/zoomstart, breaking the recursion.
+	useEffect(() => {
+		const container = map.getContainer();
+		if (!container) return;
+
+		const onContact = () => {
+			setDragging();
+			map.stop(); // Immediate cinematic stop — no recursion
+		};
+
+		container.addEventListener("mousedown", onContact, { capture: true });
+		container.addEventListener("touchstart", onContact, { capture: true });
+
+		return () => {
+			container.removeEventListener("mousedown", onContact, { capture: true });
+			container.removeEventListener("touchstart", onContact, { capture: true });
+		};
+	}, [map, setDragging]);
+
 	useMapEvents({
-		dragstart() {
-			setDragging();
-			map.stop(); // Section 4: immediate cinematic stop on physical contact
-		},
-		dragend() {
-			clearDragging();
-		},
-		zoomstart() {
-			setDragging();
-			map.stop();
-		},
-		zoomend() {
-			clearDragging();
-		},
+		dragend() { clearDragging(); },
+		zoomend() { clearDragging(); },
 	});
 
 	return null;
