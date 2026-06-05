@@ -1,6 +1,500 @@
+/* Leaflet Map Overrides for HospedaSuite Mac 2026 Theme */
+
+/* Reset Leaflet container styles to match our rounded corners */
+.leaflet-container {
+	background: var(--bg-muted);
+	font-family: inherit;
+}
+
+/* Hide Leaflet attribution on small screens (optional, keep on desktop) */
+.leaflet-control-attribution {
+	font-size: 9px;
+	background: rgba(255, 255, 255, 0.8) !important;
+	backdrop-filter: blur(4px);
+	border-radius: var(--radius-squircle-sm) !important;
+	padding: 2px 6px !important;
+}
+
+/* Custom Zoom Controls */
+.leaflet-control-zoom {
+	border: none !important;
+	box-shadow: none !important;
+}
+
+.leaflet-control-zoom a {
+	background: var(--bg-background) !important;
+	color: var(--text-foreground) !important;
+	border: 1px solid var(--border) !important;
+	border-radius: var(--radius-squircle-md) !important;
+	width: 32px !important;
+	height: 32px !important;
+	line-height: 32px !important;
+	font-size: 16px !important;
+	transition: background 0.2s;
+}
+
+.leaflet-control-zoom a:hover {
+	background: var(--bg-muted) !important;
+}
+
+/* Marker Popup Overrides */
+.leaflet-popup-content-wrapper {
+	background: var(--bg-card);
+	color: var(--text-foreground);
+	border-radius: var(--radius-squircle-xl) !important;
+	box-shadow: var(--shadow-xl);
+	border: 1px solid var(--border);
+	padding: 0;
+	overflow: hidden;
+}
+
+.leaflet-popup-content {
+	margin: 0;
+	line-height: 1.5;
+}
+
+.leaflet-popup-tip {
+	background: var(--bg-card);
+	border: 1px solid var(--border);
+	box-shadow: var(--shadow-md);
+}
+
+.leaflet-popup-close-button {
+	color: var(--text-muted-foreground) !important;
+	top: 8px !important;
+	right: 8px !important;
+	width: 24px !important;
+	height: 24px !important;
+	font-size: 20px !important;
+	z-index: 10;
+}
+
+.leaflet-popup-close-button:hover {
+	color: var(--text-foreground) !important;
+	background: var(--bg-muted);
+}
+
+/* PRD-009 Fase 2: Price-badge markers (Airbnb-style) */
+
+/* Default: price pill */
+.marker-price-pill {
+	background: var(--bg-card);
+	border: 1.5px solid var(--border);
+	border-radius: 999px;
+	padding: 4px 12px;
+	font-size: 12px;
+	font-weight: 700;
+	color: var(--text-foreground);
+	white-space: nowrap;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	box-shadow: var(--shadow-md);
+	transition:
+		transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+		box-shadow 0.2s ease,
+		background 0.2s ease,
+		border-color 0.2s ease;
+}
+
+.marker-price-pill:hover {
+	transform: scale(1.08);
+	box-shadow: var(--shadow-lg);
+	border-color: var(--bg-brand-300);
+	z-index: 10;
+}
+
+/* Selected: brand background, white text, elevated */
+.marker-price-pill.selected {
+	background: var(--bg-brand-500);
+	color: white;
+	border-color: var(--bg-brand-600);
+	box-shadow:
+		var(--shadow-xl),
+		0 0 0 3px rgba(0, 0, 0, 0.08);
+	transform: scale(1.12);
+	z-index: 1000;
+}
+
+/* PRD-005 Sprint 3: Mini-dot markers — 2-tier Airbnb-style system */
+/* Tier 2 (bottom 80%): small dot */
+.marker-mini-dot {
+	width: 10px;
+	height: 10px;
+	background: var(--bg-foreground);
+	border: 1.5px solid white;
+	border-radius: 50%;
+	box-shadow: var(--shadow-sm);
+	transition:
+		transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1),
+		box-shadow 0.2s ease,
+		width 0.2s ease,
+		height 0.2s ease;
+}
+
+.marker-mini-dot:hover {
+	transform: scale(1.5);
+	box-shadow: var(--shadow-md);
+}
+
+.marker-mini-dot.selected {
+	width: 14px;
+	height: 14px;
+	background: var(--bg-brand-500);
+	border-color: var(--bg-brand-300);
+	box-shadow:
+		var(--shadow-lg),
+		0 0 0 3px rgba(0, 0, 0, 0.06);
+	transform: scale(1.3);
+	z-index: 1000;
+}
+
+/* Marker entrance animation (spring physics) */
+@keyframes marker-spring-in {
+	0% {
+		transform: scale(0) translateY(-20px);
+		opacity: 0;
+	}
+	60% {
+		transform: scale(1.2) translateY(0);
+		opacity: 1;
+	}
+	80% {
+		transform: scale(0.95) translateY(0);
+	}
+	100% {
+		transform: scale(1) translateY(0);
+		opacity: 1;
+	}
+}
+
+.hotel-marker-wrapper {
+	animation: marker-spring-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* PRD-009 Fase 2: Cluster with cheapest price */
+.cluster-badge {
+	border-radius: 999px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	gap: 2px;
+	font-weight: 800;
+	color: white;
+	padding: 0 12px;
+	box-shadow: var(--shadow-md);
+	border: 2px solid white;
+	white-space: nowrap;
+	transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.cluster-badge:hover {
+	transform: scale(1.15);
+}
+
+.cluster-badge.sm {
+	height: 32px;
+	font-size: 11px;
+	background: var(--bg-brand-400);
+}
+
+.cluster-badge.md {
+	height: 40px;
+	font-size: 12px;
+	background: var(--bg-brand-500);
+}
+
+.cluster-badge.lg {
+	height: 48px;
+	font-size: 14px;
+	background: var(--bg-brand-600);
+}
+
+/* Cluster entrance animation */
+@keyframes cluster-pop-in {
+	0% {
+		transform: scale(0);
+		opacity: 0;
+	}
+	70% {
+		transform: scale(1.1);
+		opacity: 1;
+	}
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+}
+
+.cluster-wrapper .cluster-badge {
+	animation: cluster-pop-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* Popup Content Styles */
+.hotel-popup {
+	display: flex;
+	flex-direction: column;
+	max-width: 220px;
+}
+
+.popup-image {
+	width: 100%;
+	height: 100px;
+	object-fit: cover;
+	border-bottom: 1px solid var(--border);
+}
+
+.popup-info {
+	padding: 10px 12px 12px;
+}
+
+.popup-name {
+	font-size: 13px;
+	font-weight: 700;
+	margin: 0 0 2px 0;
+	color: var(--text-foreground);
+	line-height: 1.3;
+}
+
+.popup-meta {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	margin-bottom: 6px;
+}
+
+.popup-location {
+	font-size: 11px;
+	color: var(--text-muted-foreground);
+	margin: 0;
+}
+
+.popup-rating {
+	font-size: 11px;
+	font-weight: 700;
+	color: var(--text-foreground);
+	background: #f59e0b10;
+	padding: 1px 6px;
+	border-radius: 4px;
+	white-space: nowrap;
+}
+
+.popup-price {
+	font-size: 13px;
+	font-weight: 700;
+	color: var(--text-foreground);
+	margin: 0 0 8px 0;
+}
+
+.price-amount {
+	color: var(--bg-brand-600);
+}
+
+.price-period {
+	font-weight: 500;
+	color: var(--text-muted-foreground);
+	font-size: 11px;
+}
+
+.popup-cta {
+	display: block;
+	text-align: center;
+	background: var(--bg-brand-500);
+	color: white;
+	padding: 7px 12px;
+	border-radius: var(--radius-squircle-md);
+	text-decoration: none;
+	font-size: 12px;
+	font-weight: 600;
+	transition:
+		background 0.2s,
+		transform 0.15s;
+}
+
+.popup-cta:hover {
+	background: var(--bg-brand-600);
+}
+
+/* ============================================
+   Phase 5: UI Polish - Loading, Empty State, Springs
+   ============================================ */
+
+/* Loading overlay with glassmorphism */
+.map-loading-overlay {
+	background: rgba(255, 255, 255, 0.7);
+	backdrop-filter: blur(8px) saturate(180%);
+	-webkit-backdrop-filter: blur(8px) saturate(180%);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+/* Loading spinner with spring bounce */
+@keyframes spinner-pulse {
+	0%,
+	100% {
+		transform: scale(1);
+		opacity: 1;
+	}
+	50% {
+		transform: scale(1.1);
+		opacity: 0.8;
+	}
+}
+
+.map-loading-spinner {
+	animation: spinner-pulse 1.5s cubic-bezier(0.34, 1.56, 0.64, 1) infinite;
+}
+
+/* Loading progress text fade */
+@keyframes text-fade-in {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.map-loading-text {
+	animation: text-fade-in 0.3s ease both;
+}
+
+/* Empty state shake animation */
+@keyframes empty-shake {
+	0%,
+	100% {
+		transform: translateX(0);
+	}
+	10%,
+	30%,
+	50%,
+	70%,
+	90% {
+		transform: translateX(-4px);
+	}
+	20%,
+	40%,
+	60%,
+	80% {
+		transform: translateX(4px);
+	}
+}
+
+.map-empty-state {
+	animation: empty-shake 0.6s cubic-bezier(0.36, 0.07, 0.19, 0.97) both;
+}
+
+/* Empty state icon float */
+@keyframes icon-float {
+	0%,
+	100% {
+		transform: translateY(0);
+	}
+	50% {
+		transform: translateY(-8px);
+	}
+}
+
+.map-empty-icon {
+	animation: icon-float 3s ease-in-out infinite;
+}
+
+/* Glassmorphism card for map container */
+.map-glass-container {
+	background: rgba(255, 255, 255, 0.6);
+	backdrop-filter: blur(12px) saturate(180%);
+	-webkit-backdrop-filter: blur(12px) saturate(180%);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	box-shadow:
+		0 4px 6px -1px rgba(0, 0, 0, 0.1),
+		0 2px 4px -1px rgba(0, 0, 0, 0.06),
+		inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Specular highlight effect */
+.map-glass-container::before {
+	content: "";
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+	height: 1px;
+	background: linear-gradient(
+		90deg,
+		transparent,
+		rgba(255, 255, 255, 0.6),
+		transparent
+	);
+}
+
+/* Map view transition (fade in) */
+@keyframes map-fade-in {
+	from {
+		opacity: 0;
+		transform: scale(0.98);
+	}
+	to {
+		opacity: 1;
+		transform: scale(1);
+	}
+}
+
+.map-container-enter {
+	animation: map-fade-in 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+}
+
+/* ============================================
+   PRD-006: Map-First Discovery — Split-View Layout
+   ============================================ */
+
+/* Desktop split-view: CSS Grid 40% list / 60% map */
+.split-view-layout {
+	display: grid;
+	grid-template-columns: 40% 60%;
+	height: calc(100vh - 88px); /* 88px = header (56px) + search bar area */
+	gap: 0;
+	margin-top: 0;
+}
+
+/* Single column when map is hidden (cards-only mode on desktop) */
+
+/* List panel: independent scroll, prevents scroll-chaining to map */
+.list-panel-scroll {
+	overflow-y: auto;
+	overscroll-behavior: contain;
+	-webkit-overflow-scrolling: touch;
+	scrollbar-width: thin;
+	scrollbar-color: var(--border, rgba(0, 0, 0, 0.15)) transparent;
+	padding-right: 1rem;
+	padding-left: 0.25rem;
+	padding-bottom: 6rem; /* PRD-006: ensure last cards not cut off */
+}
+
+/* Map panel: sticky within the grid cell, fills available height */
 .map-panel-sticky {
 	position: sticky;
 	top: 0;
 	height: 100%;
 	min-height: 400px;
+}
+
+/* Responsive: below 768px, split-view collapses (handled by JS media query).
+   These classes are inactive on mobile since the grid is not rendered. */
+
+/* Map container in split-view: full height, no bottom padding */
+.split-view-layout .map-container-enter {
+	height: 100% !important;
+	border-radius: var(--radius-squircle-xl);
+}
+
+/* Remove bottom padding that was for mobile bottom bar in split-view context */
+.split-view-layout .map-container-enter.pb-20 {
+	padding-bottom: 0;
+}
+
+@media (max-width: 767px) {
+	.split-view-layout {
+		display: none; /* Never render grid below 768px */
+	}
 }
