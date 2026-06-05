@@ -52,6 +52,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 	const appLocale = useLocale();
 	const dateLocale = getDateFnsLocale(appLocale);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(null);
 
 	const [isPending, startTransition] = useTransition();
 	const [activeModal, setActiveModal] = useState<"dates" | "guests" | null>(
@@ -191,16 +192,20 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 		});
 	};
 
-	// Handlers: Location
+	// Handlers: Location — with 300ms debounce to prevent rapid-fire POSTs
 	const handleLocationChange = (val: string) => {
 		setLocation(val);
-		pushUrl({ location: val });
-		onSearch?.({
-			location: val,
-			checkin: date?.from ? format(date.from, "yyyy-MM-dd") : null,
-			checkout: date?.to ? format(date.to, "yyyy-MM-dd") : null,
-			guests,
-		});
+
+		if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current);
+		locationDebounceRef.current = setTimeout(() => {
+			pushUrl({ location: val });
+			onSearch?.({
+				location: val,
+				checkin: date?.from ? format(date.from, "yyyy-MM-dd") : null,
+				checkout: date?.to ? format(date.to, "yyyy-MM-dd") : null,
+				guests,
+			});
+		}, 300);
 	};
 
 	// Derived
