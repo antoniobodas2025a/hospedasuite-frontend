@@ -11,7 +11,6 @@ import { hotelIdentitySchema, roomDraftSchema, settingsSchema } from '@/lib/onbo
 import StepIndicator from '@/components/onboarding/StepIndicator';
 import HotelIdentityStep from '@/components/onboarding/HotelIdentityStep';
 import PropertyGalleryStep from '@/components/onboarding/PropertyGalleryStep';
-import PropertyTypeStep from '@/components/onboarding/PropertyTypeStep';
 import RoomTemplatesStep from '@/components/onboarding/RoomTemplatesStep';
 import SettingsStep from '@/components/onboarding/SettingsStep';
 import PaymentEditStep from '@/components/onboarding/PaymentEditStep';
@@ -32,6 +31,13 @@ export default function OnboardingWizard() {
   const searchParams = useSearchParams();
   const supabase = createClient();
   const { currentStep, maxCompletedStep, setCurrentStep, setMaxCompletedStep, setHotelId, setPaymentInfo, paymentTransactionId, manualReceiptUrl, isProvisioning, validateStep, validationErrors, setValidationErrors } = useOnboardingStore();
+
+  // Migration: Step 3 (PropertyType) was removed — bump completed step if stuck
+  useEffect(() => {
+    if (maxCompletedStep >= 3 && currentStep >= 3) {
+      setMaxCompletedStep(Math.max(maxCompletedStep, 3));
+    }
+  }, []);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showAuth, setShowAuth] = useState(false);
@@ -41,12 +47,11 @@ export default function OnboardingWizard() {
   const STEPS = [
     { number: 1, label: t('onboarding.steps.identity') },
     { number: 2, label: t('onboarding.steps.gallery') },
-    { number: 3, label: t('onboarding.steps.type') },
-    { number: 4, label: t('onboarding.steps.units') },
-    { number: 5, label: t('onboarding.steps.config') },
-    { number: 6, label: t('onboarding.steps.review') || 'Revisar' },
-    { number: 7, label: t('onboarding.steps.pay') || 'Pago' },
-    { number: 8, label: t('onboarding.steps.activate') },
+    { number: 3, label: t('onboarding.steps.units') },
+    { number: 4, label: t('onboarding.steps.config') },
+    { number: 5, label: t('onboarding.steps.review') || 'Revisar' },
+    { number: 6, label: t('onboarding.steps.pay') || 'Pago' },
+    { number: 7, label: t('onboarding.steps.activate') },
   ];
 
   // Resolve context on mount
@@ -112,7 +117,7 @@ export default function OnboardingWizard() {
   };
 
   const canProceed = currentStep <= maxCompletedStep + 1;
-  const isLastStep = currentStep === 8;
+  const isLastStep = currentStep === 7;
 
   const handleNext = () => {
     // Validate current step before advancing
@@ -130,7 +135,7 @@ export default function OnboardingWizard() {
       return next;
     });
 
-    if (currentStep < 8) {
+    if (currentStep < 7) {
       setMaxCompletedStep(Math.max(maxCompletedStep, currentStep));
       setCurrentStep(currentStep + 1);
     }
@@ -221,17 +226,16 @@ export default function OnboardingWizard() {
           <AnimatePresence mode="wait">
             {currentStep === 1 && <HotelIdentityStep key="step1" />}
             {currentStep === 2 && <PropertyGalleryStep key="step2" />}
-            {currentStep === 3 && <PropertyTypeStep key="step3" />}
-            {currentStep === 4 && <RoomTemplatesStep key="step4" />}
-            {currentStep === 5 && <SettingsStep key="step5" />}
-            {currentStep === 6 && <PaymentEditStep key="step6" />}
-            {currentStep === 7 && <PaymentStep key="step7" />}
-            {currentStep === 8 && <PaymentReviewStep key="step8" />}
+            {currentStep === 3 && <RoomTemplatesStep key="step4" />}
+            {currentStep === 4 && <SettingsStep key="step5" />}
+            {currentStep === 5 && <PaymentEditStep key="step6" />}
+            {currentStep === 6 && <PaymentStep key="step7" />}
+            {currentStep === 7 && <PaymentReviewStep key="step8" />}
           </AnimatePresence>
         </div>
 
         {/* Navigation */}
-        {currentStep < 9 && (
+        {currentStep < 8 && (
           <div className="mt-8 space-y-3">
             {/* Step validation errors */}
             {stepErrors[currentStep] && stepErrors[currentStep].length > 0 && (
