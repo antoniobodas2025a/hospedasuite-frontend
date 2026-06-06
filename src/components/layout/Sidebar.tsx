@@ -215,6 +215,7 @@ const SidebarView: React.FC<SidebarViewProps> = ({
 export default function Sidebar({
 	hotelName = "HospedaSuite",
 	
+	user,
 	subscriptionPlan = "starter",
 }: SidebarProps) {
 	const pathname = usePathname();
