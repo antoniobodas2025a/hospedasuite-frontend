@@ -2,7 +2,27 @@
 
 import { useState } from 'react';
 import { motion } from 'framer-motion';
-import { UploadCloud, Building2 } from 'lucide-react';
+import { UploadCloud, Building2, MapPin } from 'lucide-react';
+import { useState as useCollapseState } from 'react';
+
+function CollapsibleSection({ title, icon: Icon, children }: { title: string; icon: React.ElementType; children: React.ReactNode }) {
+  const [isOpen, setIsOpen] = useCollapseState(false);
+  return (
+    <div className="bg-white/5 border border-white/5 rounded-[var(--radius-squircle-lg)] overflow-hidden">
+      <button
+        onClick={() => setIsOpen(!isOpen)}
+        className="w-full flex items-center justify-between p-3 text-left hover:bg-white/[0.02] transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Icon size={14} className="text-zinc-500" />
+          <span className="text-xs font-bold text-zinc-400">{title}</span>
+        </div>
+        <span className="text-zinc-600 text-xs">{isOpen ? '▲' : '▼'}</span>
+      </button>
+      {isOpen && <div className="p-3 pt-0">{children}</div>}
+    </div>
+  );
+}
 import { useTranslations } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { hotelIdentitySchema } from '@/lib/onboarding-schemas';
@@ -113,6 +133,42 @@ export default function HotelIdentityStep() {
         </div>
 
         {/* Logo Upload */}
+
+        {/* ── Información adicional (progressive disclosure) ── */}
+        <CollapsibleSection title={t('address') || "Dirección y contacto"} icon={MapPin}>
+          <div className="space-y-4">
+            <input
+              type="text"
+              value={hotelIdentity.address || ''}
+              onChange={(e) => updateHotelIdentity({ address: e.target.value })}
+              placeholder="Dirección completa (opcional)"
+              className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-xl)] p-3 text-white outline-none focus:border-indigo-500/50 transition-all placeholder:text-zinc-700 text-sm"
+            />
+            <div className="grid grid-cols-2 gap-3">
+              <input
+                type="text"
+                value={hotelIdentity.phone || ''}
+                onChange={(e) => updateHotelIdentity({ phone: e.target.value })}
+                placeholder="Teléfono (opcional)"
+                className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-xl)] p-3 text-white outline-none focus:border-indigo-500/50 transition-all placeholder:text-zinc-700 text-sm"
+              />
+              <input
+                type="text"
+                value={hotelIdentity.email || ''}
+                onChange={(e) => updateHotelIdentity({ email: e.target.value })}
+                placeholder="Email (opcional)"
+                className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-xl)] p-3 text-white outline-none focus:border-indigo-500/50 transition-all placeholder:text-zinc-700 text-sm"
+              />
+            </div>
+            <textarea
+              value={hotelIdentity.description || ''}
+              onChange={(e) => updateHotelIdentity({ description: e.target.value })}
+              placeholder="Descripción del hotel (opcional)"
+              rows={3}
+              className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-xl)] p-3 text-white outline-none focus:border-indigo-500/50 transition-all placeholder:text-zinc-700 text-sm resize-none"
+            />
+          </div>
+        </CollapsibleSection>
         <div>
           <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">{t('logoLabel')}</label>
           <label
