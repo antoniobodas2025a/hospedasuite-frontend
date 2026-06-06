@@ -11,6 +11,7 @@ export default defineConfig({
     testTimeout: 15000,
     environment: 'node',
     globals: true,
+    setupFiles: ["./src/__tests__/vitest-bun-polyfills.ts"],
   },
   resolve: {
     alias: {
