@@ -77,8 +77,8 @@ export const roomsListSchema = z.object({
 // Step 5: Settings
 export const settingsSchema = z.object({
 	amenities: z.array(z.string()).default([]),
-	checkInTime: z.string().optional(),
-	checkOutTime: z.string().optional(),
+	checkInTime: z.string().min(1, "El horario de llegada es requerido"),
+	checkOutTime: z.string().min(1, "El horario de salida es requerido"),
 	cancellationPolicy: z.string().optional(),
 	whatsappNumber: z.string().optional(),
 	googleMapsUrl: z.string().url("URL inválida").optional().or(z.literal("")),
