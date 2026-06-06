@@ -29,6 +29,8 @@ function makeValidState(
 			},
 		],
 		settings: {
+			checkInTime: "15:00",
+			checkOutTime: "12:00",
 			taxRate: 0,
 		},
 		payment: {
@@ -193,6 +195,7 @@ describe("fullWizardStateSchema.galleryImages", () => {
 			hotelIdentity: {
 				name: "Hotel Test",
 				city: "Bogotá",
+				location: "Zona Test",
 				propertyType: "hotel" as const,
 			},
 			galleryImages: [
@@ -213,7 +216,7 @@ describe("fullWizardStateSchema.galleryImages", () => {
 					imageUrls: ["https://cdn.example.com/room-b.webp"],
 				},
 			],
-			settings: { taxRate: 0.19 },
+			settings: { checkInTime: "15:00", checkOutTime: "12:00", taxRate: 0.19 },
 			payment: {
 				price: 89900,
 				paymentMethod: "wompi" as const,
