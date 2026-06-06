@@ -27,11 +27,9 @@ import {
 	Eye,
 	Star,
 	ChevronDown,
-	ChevronUp,
 	Image as ImageIcon,
 	Settings2,
 	UtensilsCrossed,
-	type LucideIcon,
 } from "lucide-react";
 import {
 	saveSettingsAction,
@@ -50,7 +48,6 @@ import { cn } from "@/lib/utils";
 import { GlassTooltip } from "@/components/ui/GlassTooltip";
 import { UndoToast } from "@/components/ui/UndoToast";
 
-import { getAmenityById, AMENITY_REGISTRY } from "@/lib/amenity-registry";
 
 const HOTEL_AMENITIES = Object.values(AMENITY_REGISTRY);
 
@@ -534,42 +531,49 @@ export default function SettingsPanel({
 										/>
 									</div>
 
-							{/* Fiscal — collapsible (Ley de Miller) */}
+									{/* Fiscal — collapsible (Ley de Miller) */}
+									<div className="mt-6 p-4 bg-card/40 border border-border/20 rounded-[var(--radius-squircle-xl)]">
+										<button
+											type="button"
+											onClick={() => setShowFiscal(!showFiscal)}
+											className="w-full flex items-center justify-between"
+										>
+											<span className="text-sm font-bold">
+												💰 Régimen Tributario
+											</span>
+											<span className="text-xs text-muted-foreground">
+												{showFiscal ? "▲" : "▼"}
+											</span>
+										</button>
+										{showFiscal && (
+											<div className="mt-4">
+												<label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+													Régimen Tributario
+												</label>
+												<select
+													{...register("tax_rate", { valueAsNumber: true })}
+													className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-foreground"
+												>
+													<option value={0}>
+														Régimen Simplificado (sin IVA)
+													</option>
+													<option value={0.19}>
+														Régimen Ordinario (IVA 19%)
+													</option>
+												</select>
+											</div>
+										)}
+									</div>
+								</div>
+							</div>
+							{/* Pagos — collapsible (Ley de Miller) */}
 							<div className="mt-6 p-4 bg-card/40 border border-border/20 rounded-[var(--radius-squircle-xl)]">
-								<button type="button" onClick={() => setShowFiscal(!showFiscal)} className="w-full flex items-center justify-between">
-									<span className="text-sm font-bold">💰 Régimen Tributario</span>
-									<span className="text-xs text-muted-foreground">{showFiscal ? '▲' : '▼'}</span>
+								<button type="button" onClick={() => setShowPayments(!showPayments)} className="w-full flex items-center justify-between">
+									<span className="text-sm font-bold">💳 Configuración de Pagos</span>
+									<span className="text-xs text-muted-foreground">{showPayments ? '▲' : '▼'}</span>
 								</button>
-								{showFiscal && (
-								<div className="mt-4">
-									<label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
-										Régimen Tributario
-									</label>
-									<select
-										{...register("tax_rate", { valueAsNumber: true })}
-										className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-foreground"
-									>
-										<option value={0}>Régimen Simplificado (sin IVA)</option>
-										<option value={0.19}>Régimen Ordinario (IVA 19%)</option>
-									</select>
-								</div>
-								)}
-							</div>
-								</div>
-							</div>
-							<div className="bg-card/60 p-10 rounded-[var(--radius-squircle-3xl)] border border-border shadow-2xl space-y-8">
-								<h3 className="text-xl font-bold flex items-center gap-3">
-									<CreditCard className="text-sky-400" /> Wompi
-									<GlassTooltip
-										content="Claves de API de Wompi para procesar pagos online. Se obtienen en el dashboard de Wompi > Desarrollo > API Keys."
-										side="right"
-									>
-										<span className="cursor-help text-muted-foreground hover:text-muted-foreground transition-colors">
-											<Eye size={16} />
-										</span>
-									</GlassTooltip>
-								</h3>
-								<div className="space-y-6">
+								{showPayments && (
+								<div className="mt-4 space-y-6">
 									<input
 										{...register("wompi_public_key")}
 										type="password"
@@ -605,6 +609,7 @@ export default function SettingsPanel({
 										Desarrollo → API Keys (son valores distintos).
 									</p>
 								</div>
+								)}
 							</div>
 						</motion.div>
 					)}
