@@ -3,7 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { LogOut, Calculator, Lock, LucideIcon } from 'lucide-react';
+import { LogOut, Calculator, Lock, LucideIcon, ChevronDown } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import NavButton from '../ui/NavButton';
 import { MENU_GROUPS } from '@/config/menuItems';
@@ -48,6 +48,19 @@ const SidebarView: React.FC<SidebarViewProps> = ({
   onLogout,
   onOpenShiftModal
 }) => {
+  // Ley de Miller: collapse non-essential groups by default
+  const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
+    new Set(['services', 'management', 'system'])
+  );
+
+  const toggleGroup = (id: string) => {
+    setCollapsedGroups(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
   return (
     <aside className="hidden md:flex w-72 glass-panel text-sidebar-foreground flex-col shadow-2xl z-20 rounded-r-[var(--radius-squircle-3xl)] my-4 ml-4 h-[calc(100vh-2rem)] sticky top-4">
       {/* Hotel Brand Context */}
@@ -87,13 +100,21 @@ const SidebarView: React.FC<SidebarViewProps> = ({
           return (
             <div key={group.id}>
               {/* Section header — only visible when group has active item or on hover */}
-              <h2 className={cn(
-                "text-[10px] font-bold uppercase tracking-widest mb-2 px-4 transition-colors duration-200",
-                hasActive ? "text-brand-400" : "text-muted-foreground/40"
-              )}>
-                {group.label}
-              </h2>
-              <div className="space-y-1">
+			<h2
+				className={cn(
+					"text-[10px] font-bold uppercase tracking-widest mb-2 px-4 transition-colors duration-200 cursor-pointer flex items-center gap-1",
+					hasActive ? "text-brand-400" : "text-muted-foreground/40 hover:text-muted-foreground/60"
+				)}
+				onClick={() => toggleGroup(group.id)}
+			>
+				{group.label}
+				<ChevronDown className={cn(
+					"size-3 transition-transform",
+					collapsedGroups.has(group.id) ? "" : "rotate-180"
+				)} />
+			</h2>
+			{!collapsedGroups.has(group.id) && (
+			<div className="space-y-1">
                 {group.items.map((item) => {
                   const isActive = currentPath === item.href || (currentPath.startsWith(item.href) && item.href !== '/dashboard');
                   const showBadge = item.id === 'housekeeping';
@@ -131,6 +152,7 @@ const SidebarView: React.FC<SidebarViewProps> = ({
                   );
                 })}
               </div>
+			)}
             </div>
           );
         })}

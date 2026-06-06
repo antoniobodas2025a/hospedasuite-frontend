@@ -46,8 +46,8 @@ const DashboardKPIsView: React.FC<DashboardKPIsViewProps> = ({ cards, dirtyRooms
   return (
     <div className='space-y-8 font-poppins'>
       
-      {/* GRID ESTRATÉGICO: 4 Columnas Liquid Glass */}
-      <div className='grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6'>
+      {/* GRID: 2 rows of 3 — Ley de Miller chunking */}
+      <div className='grid grid-cols-2 md:grid-cols-3 gap-4'>
         {cards.map((card, idx) => (
           <motion.div
             key={idx}
