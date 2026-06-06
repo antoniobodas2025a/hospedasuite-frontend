@@ -170,7 +170,7 @@ export default function HotelIdentityStep() {
 
 				{/* ── Información adicional (progressive disclosure) ── */}
 				<CollapsibleSection
-					title={t("address") || "Dirección y contacto"}
+					title="Información adicional"
 					icon={MapPin}
 				>
 					<div className="space-y-4">
