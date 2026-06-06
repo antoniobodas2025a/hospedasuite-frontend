@@ -19,7 +19,8 @@ async function withRetry<T>(
 			return await fn();
 		} catch (error: unknown) {
 			const msg = error instanceof Error ? error.message : String(error);
-			const isTimeout = msg.includes("ETIMEDOUT") || msg.includes("TimeoutError");
+			const isTimeout =
+				msg.includes("ETIMEDOUT") || msg.includes("TimeoutError");
 			if (!isTimeout || attempt >= maxRetries) throw error;
 			await new Promise((r) => setTimeout(r, baseDelay * Math.pow(2, attempt)));
 		}

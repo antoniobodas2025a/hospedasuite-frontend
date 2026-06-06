@@ -19,7 +19,11 @@ function makeValidState(overrides?: Record<string, unknown>) {
 			location: "El Poblado",
 			propertyType: "hotel" as const,
 		},
-		galleryImages: ["https://example.com/photo.webp", "https://example.com/2.webp", "https://example.com/3.webp"],
+		galleryImages: [
+			"https://example.com/photo.webp",
+			"https://example.com/2.webp",
+			"https://example.com/3.webp",
+		],
 		rooms: [
 			{
 				id: "550e8400-e29b-41d4-a716-446655440000",
@@ -111,7 +115,9 @@ describe("Provisioning: error messages are domain-language", () => {
 		expect(result.success).toBe(false);
 		if (!result.success) {
 			const allMessages = result.error.issues.map((i) => i.message).join(" ");
-			expect(allMessages).not.toMatch(/null|undefined|NaN|ota_catalog|hotel_locations/i);
+			expect(allMessages).not.toMatch(
+				/null|undefined|NaN|ota_catalog|hotel_locations/i,
+			);
 		}
 	});
 });

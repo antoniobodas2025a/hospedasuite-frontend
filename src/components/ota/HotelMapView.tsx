@@ -56,7 +56,8 @@ interface HotelMapViewProps {
  * dragstart/dragend/premove events instead of DOM listeners.
  */
 function MapDragDetector() {
-	const { stabilizeInteractions, releaseInteraction } = useMapCoordinateFirewall();
+	const { stabilizeInteractions, releaseInteraction } =
+		useMapCoordinateFirewall();
 	const map = useMap();
 
 	// §5: Low-level DOM capture — stop animation, kill intent, restore handlers.
@@ -76,8 +77,12 @@ function MapDragDetector() {
 	}, [map, stabilizeInteractions]);
 
 	useMapEvents({
-		dragend() { releaseInteraction(); },
-		zoomend() { releaseInteraction(); },
+		dragend() {
+			releaseInteraction();
+		},
+		zoomend() {
+			releaseInteraction();
+		},
 	});
 
 	return null;
