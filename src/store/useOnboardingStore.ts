@@ -158,8 +158,15 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
   setGalleryImages: (files, previews) => set((state) => {
     const maxGallery = 8;
     const remaining = maxGallery - state.galleryFiles.length;
-    const toAdd = files.slice(0, remaining);
-    const toAddPreviews = previews.slice(0, remaining);
+    // Dedup: skip files already in the gallery by name + size
+    const existingKeys = new Set(
+      state.galleryFiles.map(f => `${f.name}|${f.size}`)
+    );
+    const uniqueEntries = files
+      .map((f, i) => ({ file: f, preview: previews[i] }))
+      .filter(({ file }) => !existingKeys.has(`${file.name}|${file.size}`));
+    const toAdd = uniqueEntries.slice(0, remaining).map(e => e.file);
+    const toAddPreviews = uniqueEntries.slice(0, remaining).map(e => e.preview);
     return {
       galleryFiles: [...state.galleryFiles, ...toAdd],
       galleryPreviews: [...state.galleryPreviews, ...toAddPreviews],
