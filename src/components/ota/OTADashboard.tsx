@@ -26,7 +26,6 @@ import LanguageSwitcher from "./LanguageSwitcher";
 import SearchBarUnified from "./SearchBarUnified";
 import MobileSearchSheet from "./MobileSearchSheet";
 import MapBottomSheet from "./MapBottomSheet";
-import MapToggle from "./MapToggle";
 
 // PRD-008 fix: Leaflet depends on window/document → must be client-only
 const HotelMapView = dynamic(() => import("./HotelMapView"), {
@@ -226,8 +225,8 @@ export default function OTADashboard({
 	const [visibleCount, setVisibleCount] = useState(6);
 	const [searchStep, setSearchStep] = useState<"location" | "full">("location");
 
-	// PRD-014: Two-stage navigation — cards first, map on demand
-	const [viewMode, setViewMode] = useState<"cards" | "map">("cards");
+	// Production V1.0: map disabled — available at /lab/map for dev testing
+	const [viewMode] = useState<"cards">("cards");
 
 	// Judge verdict: map and split-view only exist if search is active
 	const isSearchActive = useMemo(() => !!urlLocation, [urlLocation]);
@@ -460,7 +459,6 @@ export default function OTADashboard({
 	// User map interaction guard: pause flyTo while user is dragging/zooming
 	// Uses Leaflet native dragstart/dragend events — NO timeouts needed
 
-
 	useEffect(() => {
 		// Observe both split-view cards and bottom-sheet cards
 		const cards = document.querySelectorAll('[id^="hotel-card-"]');
@@ -482,10 +480,7 @@ export default function OTADashboard({
 				if (bestEntry) {
 					const id = bestEntry.target.getAttribute("data-hotel-id") || "";
 					// Skip flyTo while user is actively panning the map
-					if (
-						id &&
-						id !== selectedHotelRef.current
-					) {
+					if (id && id !== selectedHotelRef.current) {
 						setSelectedHotelId(id);
 						selectedHotelRef.current = id;
 					}
@@ -1443,14 +1438,6 @@ export default function OTADashboard({
 			</main>
 
 			{/* PRD-014: Map toggle — only after user has searched for a location */}
-			{sortedHotels.length > 0 && viewMode === "cards" && isSearchActive && (
-				<MapToggle
-					hotelCount={sortedHotels.length}
-					onClick={() => setViewMode("map")}
-				/>
-			)}
-
-			{/* Mobile Search Sheet (Phase 3: PRD-004 - works over map view) */}
 			<MobileSearchSheet
 				isOpen={isMobileSheetOpen}
 				onClose={() => setIsMobileSheetOpen(false)}
