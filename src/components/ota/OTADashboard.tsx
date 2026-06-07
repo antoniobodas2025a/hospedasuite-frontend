@@ -1166,7 +1166,7 @@ export default function OTADashboard({
 				style={{ transition: "transform 0.3s var(--spring-gentle)" }}
 			>
 				<div className="max-w-7xl mx-auto px-4 h-14 flex items-center justify-between">
-					<div className="flex items-center gap-2.5">
+					<Link href="/" className="flex items-center gap-2.5 hover:opacity-80 transition-opacity">
 						<div className="w-8 h-8 rounded-[var(--radius-squircle-md)] overflow-hidden bg-white/10 p-0.5">
 							<img
 								src="/logo.png"
@@ -1180,7 +1180,7 @@ export default function OTADashboard({
 								{t("ota.header.brandAccent")}
 							</span>
 						</span>
-					</div>
+					</Link>
 
 					<div className="flex items-center gap-2">
 						<LanguageSwitcher />
