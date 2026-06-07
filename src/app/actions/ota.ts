@@ -159,7 +159,8 @@ export async function fetchOTAHotelsAction(
 		}
 
 		// Execute with retry on ETIMEDOUT (exponential backoff: 1s, 2s, 4s)
-		const { data: allHotels, error } = await withRetry(() => query);
+		const result = await withRetry(async () => await query);
+		const { data: allHotels, error } = result;
 
 		if (error) {
 			console.error("🚨 ERROR CRÍTICO DE SUPABASE EN OTA:", error.message);
