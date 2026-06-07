@@ -123,7 +123,6 @@ function SortableThumbnail({
 interface RoomGalleryProps {
 	images: GalleryItem[];
 	roomName: string;
-	onClose?: () => void;
 	variant?: "inline" | "compact";
 	/** Optional blur placeholder for the main/hero image */
 	blurDataURL?: string;
@@ -132,7 +131,6 @@ interface RoomGalleryProps {
 export default function RoomGallery({
 	images,
 	roomName,
-	onClose,
 	variant = "inline",
 	blurDataURL,
 }: RoomGalleryProps) {
@@ -196,7 +194,7 @@ export default function RoomGallery({
 	// --------------------------------------------------------------------------
 	if (variant === "inline") {
 		return (
-			<>
+			<div suppressHydrationWarning>
 				<Suspense
 					fallback={
 						<div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
@@ -213,7 +211,7 @@ export default function RoomGallery({
 						onClose={() => setOpen(false)}
 					/>
 				</Suspense>
-			</>
+			</div>
 		);
 	}
 
@@ -226,7 +224,7 @@ export default function RoomGallery({
 		: null;
 
 	return (
-		<>
+		<div suppressHydrationWarning>
 			<DndContext
 				sensors={sensors}
 				collisionDetection={closestCenter}
@@ -334,6 +332,6 @@ export default function RoomGallery({
 					}}
 				/>
 			</Suspense>
-		</>
+		</div>
 	);
 }
