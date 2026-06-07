@@ -65,7 +65,7 @@ function DisclosureSection({
 	children,
 }: {
 	title: string;
-	icon: LucideIcon;
+	icon: React.ElementType;
 	iconColor: string;
 	description?: React.ReactNode;
 	isOpen: boolean;
