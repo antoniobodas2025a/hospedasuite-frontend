@@ -8,7 +8,7 @@ import Image from "next/image";
 import { MapPin, Star } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { RoomShowcaseModal } from "@/components/ota/RoomShowcaseModal";
+import { RoomShowcaseModalWrapper } from "@/components/ota/RoomShowcaseModalWrapper";
 import AvailabilitySearchBar from "@/components/ota/AvailabilitySearchBar";
 import HeroGallery from "@/components/ota/HeroGallery";
 import type { ImageBlurMeta } from "@/lib/image-config";
@@ -188,7 +188,7 @@ export default async function OTAHotelDetailPage({
 			{/* Room Showcase Modal — lazy data when closed */}
 			<Suspense fallback={null}>
 				<ErrorBoundary name="RoomShowcaseModal">
-					<RoomShowcaseModal hotel={modalHotelData} />
+					<RoomShowcaseModalWrapper hotel={modalHotelData} />
 				</ErrorBoundary>
 			</Suspense>
 

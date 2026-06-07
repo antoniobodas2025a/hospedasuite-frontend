@@ -1,5 +1,4 @@
 "use client";
-import { useRouter } from "next/navigation";
 
 import React, { useMemo } from "react";
 import {
@@ -70,8 +69,7 @@ function AmenityGlass({
 	);
 }
 
-export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
-	const router = useRouter();
+export function RoomShowcaseModal({ hotel, onClose, onCheckout }: { hotel: HotelForModal; onClose: () => void; onCheckout: (roomId: string, guests: number) => void }) {
 	const t = useTranslations();
 	const appLocale = useLocale();
 	const dateLocale = getDateFnsLocale(appLocale);
@@ -89,11 +87,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 		[hotel.rooms, roomId],
 	);
 
-	const closeModal = () => {
-		const params = new URLSearchParams(window.location.search);
-		params.delete("showRoom");
-		router.push(`?${params.toString()}`, { scroll: false });
-	};
+	// onClose handled by parent via onClose callback
 
 	if (!roomId) return null;
 
@@ -103,7 +97,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 			<div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
 				<div
 					className="absolute inset-0 bg-foreground/40 backdrop-blur-xl"
-					onClick={closeModal}
+					onClick={onClose}
 				/>
 				<div className="relative z-10 glass-panel p-10 w-full max-w-md text-center shadow-2xl shadow-elev-2 animate-in zoom-in-95 duration-200">
 					<div className="size-16 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center mx-auto mb-6">
@@ -117,7 +111,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 					</p>
 					<button
 						onClick={() => {
-							closeModal();
+							onClose();
 							window.scrollTo({ top: 0, behavior: "smooth" });
 						}}
 						className="w-full glass-card text-foreground font-semibold py-4 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-[0.98]"
@@ -144,18 +138,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 	const { total: totalPrice } = calculateTotalWithTax(subtotal, effectiveRate);
 	const isOverCapacity = defaultGuests > Number(room.capacity ?? 0);
 
-	const handleCheckout = () => {
-		if (isOverCapacity) return;
-		// Preserve existing params (location, category, filters) and add checkout params
-		const params = new URLSearchParams(window.location.search);
-		params.set("room", room.id!);
-		params.set("checkin", checkIn);
-		params.set("checkout", checkOut);
-		params.set("guests", defaultGuests.toString());
-		params.set("ref", "ota"); // OTA attribution → 10% commission
-		params.delete("showRoom"); // Remove modal param when going to checkout
-		router.push(`/book/${hotel.slug}/checkout?${params.toString()}`);
-	};
+	// handleCheckout delegated to parent via onCheckout callback
 
 	const rawGallery = room.gallery ?? [];
 	const images: GalleryItem[] = Array.isArray(rawGallery)
@@ -172,14 +155,14 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 			{/* Backdrop con blur pesado */}
 			<div
 				className="absolute inset-0 bg-foreground/50 backdrop-blur-2xl"
-				onClick={closeModal}
+				onClick={onClose}
 			/>
 
 			{/* MODAL CONTAINER — Liquid Glass */}
 			<div className="relative w-full max-w-7xl h-[96vh] sm:h-[92vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-300 sm:rounded-[var(--radius-squircle-2xl)] rounded-t-[2rem] glass-panel">
 				{/* Boton cerrar glass */}
 				<button
-					onClick={closeModal}
+					onClick={onClose}
 					className="absolute top-4 right-4 z-30 size-10 flex items-center justify-center rounded-full glass-pill text-foreground/70 hover:bg-accent/25 hover:scale-110 hover:text-foreground transition-all shadow-lg shadow-elev-1 active:scale-95"
 				>
 					<X size={18} strokeWidth={2.5} />
@@ -318,7 +301,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 												<div className="flex gap-2 mt-1 ml-6">
 													<button
 														onClick={() => {
-															closeModal();
+															onClose();
 															window.scrollTo({ top: 0, behavior: "smooth" });
 														}}
 														className="text-[10px] font-bold underline underline-offset-2 hover:text-destructive/70 transition-colors"
@@ -333,7 +316,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 														) && (
 															<button
 																onClick={() => {
-																	closeModal();
+																	onClose();
 																	const section =
 																		document.getElementById("rooms-section");
 																	if (section)
@@ -391,7 +374,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 								</div>
 								<button
 									disabled={isOverCapacity}
-									onClick={handleCheckout}
+									onClick={() => onCheckout(room.id!, defaultGuests)}
 									className={cn(
 										"px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97] shadow-cta",
 										isOverCapacity
@@ -527,7 +510,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 											<div className="flex gap-2 mt-1 ml-6">
 												<button
 													onClick={() => {
-														closeModal();
+														onClose();
 														window.scrollTo({ top: 0, behavior: "smooth" });
 													}}
 													className="text-[10px] font-bold underline underline-offset-2 hover:text-destructive/70 transition-colors"
@@ -542,7 +525,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 													) && (
 														<button
 															onClick={() => {
-																closeModal();
+																onClose();
 																const section =
 																	document.getElementById("rooms-section");
 																if (section)
@@ -598,7 +581,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 							</div>
 							<button
 								disabled={isOverCapacity}
-								onClick={handleCheckout}
+								onClick={() => onCheckout(room.id!, defaultGuests)}
 								className={cn(
 									"px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
 									isOverCapacity
