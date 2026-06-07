@@ -331,7 +331,6 @@ export default function RoomGallery({
 					onOpen={setOpen}
 					onClose={() => {
 						setOpen(false);
-						onClose?.();
 					}}
 				/>
 			</Suspense>
