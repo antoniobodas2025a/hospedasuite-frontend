@@ -207,7 +207,7 @@ export default function RoomGallery({ images, roomName, onClose, variant = 'inli
               setIndex(0);
               setOpen(true);
             }}
-            className="relative block h-[260px] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
+            className="relative block h-[260px] max-h-[40vh] sm:max-h-none sm:h-[260px] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
             aria-label={t('ota.roomGallery.viewGallery', { name: roomName })}
           >
             <Image
