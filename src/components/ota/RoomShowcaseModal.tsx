@@ -154,7 +154,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
               images={images} 
               roomName={room.name ?? t('ota.showcase.fallbackRoom')} 
               onClose={closeModal}
-              variant="inline"
+              variant="compact"
             />
           </div>
 
