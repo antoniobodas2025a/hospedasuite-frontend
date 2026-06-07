@@ -53,3 +53,17 @@ if (!vi.waitFor) {
 		throw lastError ?? new Error(`waitFor timed out after ${timeout}ms`);
 	};
 }
+
+// ── DOM polyfills for Bun (no browser APIs) ───────────────────────────────
+
+// sessionStorage mock
+if (typeof globalThis.sessionStorage === "undefined") {
+	const store = new Map<string, string>();
+	(globalThis as Record<string, unknown>).sessionStorage = {
+		getItem: (key: string) => store.get(key) ?? null,
+		setItem: (key: string, value: string) => store.set(key, value),
+		removeItem: (key: string) => store.delete(key),
+		clear: () => store.clear(),
+		get length() { return store.size; },
+	};
+}
