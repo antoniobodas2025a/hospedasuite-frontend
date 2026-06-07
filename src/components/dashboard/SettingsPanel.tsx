@@ -49,7 +49,6 @@ import { GlassTooltip } from "@/components/ui/GlassTooltip";
 import { UndoToast } from "@/components/ui/UndoToast";
 import { AMENITY_REGISTRY } from "@/lib/amenity-registry";
 
-
 const HOTEL_AMENITIES = Object.values(AMENITY_REGISTRY);
 
 /**
@@ -569,47 +568,55 @@ export default function SettingsPanel({
 							</div>
 							{/* Pagos — collapsible (Ley de Miller) */}
 							<div className="mt-6 p-4 bg-card/40 border border-border/20 rounded-[var(--radius-squircle-xl)]">
-								<button type="button" onClick={() => setShowPayments(!showPayments)} className="w-full flex items-center justify-between">
-									<span className="text-sm font-bold">💳 Configuración de Pagos</span>
-									<span className="text-xs text-muted-foreground">{showPayments ? '▲' : '▼'}</span>
+								<button
+									type="button"
+									onClick={() => setShowPayments(!showPayments)}
+									className="w-full flex items-center justify-between"
+								>
+									<span className="text-sm font-bold">
+										💳 Configuración de Pagos
+									</span>
+									<span className="text-xs text-muted-foreground">
+										{showPayments ? "▲" : "▼"}
+									</span>
 								</button>
 								{showPayments && (
-								<div className="mt-4 space-y-6">
-									<input
-										{...register("wompi_public_key")}
-										type="password"
-										placeholder="Public Key"
-										className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]"
-									/>
-									<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-										<div>
-											<input
-												{...register("wompi_integrity_secret")}
-												type="password"
-												placeholder="Integrity Secret (Checkout)"
-												className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]"
-											/>
-											<p className="text-[10px] text-muted-foreground mt-1">
-												Para firma de checkout
-											</p>
+									<div className="mt-4 space-y-6">
+										<input
+											{...register("wompi_public_key")}
+											type="password"
+											placeholder="Public Key"
+											className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]"
+										/>
+										<div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+											<div>
+												<input
+													{...register("wompi_integrity_secret")}
+													type="password"
+													placeholder="Integrity Secret (Checkout)"
+													className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]"
+												/>
+												<p className="text-[10px] text-muted-foreground mt-1">
+													Para firma de checkout
+												</p>
+											</div>
+											<div>
+												<input
+													{...register("wompi_events_secret")}
+													type="password"
+													placeholder="Events Secret (Webhook)"
+													className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]"
+												/>
+												<p className="text-[10px] text-muted-foreground mt-1">
+													Para verificar webhooks
+												</p>
+											</div>
 										</div>
-										<div>
-											<input
-												{...register("wompi_events_secret")}
-												type="password"
-												placeholder="Events Secret (Webhook)"
-												className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]"
-											/>
-											<p className="text-[10px] text-muted-foreground mt-1">
-												Para verificar webhooks
-											</p>
-										</div>
+										<p className="text-[11px] text-warning/80 bg-warning/5 border border-warning/20 rounded-[var(--radius-squircle-md)] p-3">
+											⚠️ Ambos secretos son obligatorios. Se obtienen en Wompi →
+											Desarrollo → API Keys (son valores distintos).
+										</p>
 									</div>
-									<p className="text-[11px] text-warning/80 bg-warning/5 border border-warning/20 rounded-[var(--radius-squircle-md)] p-3">
-										⚠️ Ambos secretos son obligatorios. Se obtienen en Wompi →
-										Desarrollo → API Keys (son valores distintos).
-									</p>
-								</div>
 								)}
 							</div>
 						</motion.div>
