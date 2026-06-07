@@ -63,6 +63,7 @@ export default function AvailabilitySearchBar({
   const dateLocale = getDateFnsLocale(appLocale);
   const popoverRef = useRef<HTMLDivElement>(null);
   const datesTriggerRef = useRef<HTMLDivElement>(null);
+  const datesSectionRef = useRef<HTMLDivElement>(null);
   const guestsTriggerRef = useRef<HTMLDivElement>(null);
   const navIoRef = useRef<IntersectionObserver | null>(null);
 
@@ -204,7 +205,7 @@ export default function AvailabilitySearchBar({
             initial={{ opacity: 0, y: -4 }}
             animate={{ opacity: 1, y: 0 }}
             transition={springGentle()}
-            onClick={() => !isPending && setActiveModal('dates')}
+            onClick={() => { if (!isPending) { setActiveModal('dates'); datesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }}
             className="sm:hidden flex items-center justify-center gap-3 w-full px-5 py-3.5 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm active:scale-[0.98] transition-transform"
             aria-label={t('ota.search.selectDates')}
           >
@@ -220,7 +221,7 @@ export default function AvailabilitySearchBar({
           <div className="sm:hidden flex items-center bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm overflow-hidden">
             {/* Dates zone — triggers dates modal */}
             <div
-              onClick={() => !isPending && setActiveModal(activeModal === 'dates' ? null : 'dates')}
+              onClick={() => { if (!isPending) { setActiveModal(activeModal === 'dates' ? null : 'dates'); datesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }}
               role="button" aria-expanded={activeModal === 'dates'} aria-label={t('ota.search.selectDates')}
               className="flex-1 flex items-center gap-3 px-3 py-2.5 cursor-pointer hover:bg-muted/50 transition-colors"
             >
@@ -278,7 +279,7 @@ export default function AvailabilitySearchBar({
           {/* ZONE 1: DATES */}
           <div
             ref={datesTriggerRef}
-            onClick={() => !isPending && setActiveModal(activeModal === 'dates' ? null : 'dates')}
+            onClick={() => { if (!isPending) { setActiveModal(activeModal === 'dates' ? null : 'dates'); datesSectionRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' }); } }}
             role="button" aria-expanded={activeModal === 'dates'} aria-label={t('ota.search.selectDates')}
             className={pillBase('rounded-l-full rounded-r-none')}
           >
