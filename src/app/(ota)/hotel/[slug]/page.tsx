@@ -1,4 +1,5 @@
 import { getHotelDetailsBySlugAction, getReviewStatsAction } from '@/app/actions/ota';
+import { createClient } from '@/utils/supabase/server';
 import { notFound } from 'next/navigation';
 import Image from 'next/image';
 import { MapPin, Star, Search, X } from 'lucide-react';
@@ -67,6 +68,22 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
   const { success, hotel } = await getHotelDetailsBySlugAction(slug, checkin, checkout);
 
   if (!success || !hotel) notFound();
+
+  // M2: Hide booking CTA for guests already checked in at this hotel
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  let isAlreadyCheckedIn = false;
+  if (user?.email) {
+    const { data: booking } = await supabase
+      .from('bookings')
+      .select('id')
+      .eq('hotel_id', hotel.id)
+      .eq('guest_email', user.email)
+      .eq('status', 'checked_in')
+      .limit(1)
+      .maybeSingle();
+    isAlreadyCheckedIn = !!booking;
+  }
 
   const reviewStatsResult = await getReviewStatsAction(hotel.id);
   const reviewStats = reviewStatsResult.success ? reviewStatsResult.data : null;
@@ -282,7 +299,8 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
         </div>
       </div>
 
-      {/* Mobile Sticky CTA */}
+      {/* Mobile Sticky CTA — hidden for checked-in guests (Hick's Law) */}
+      {!isAlreadyCheckedIn && (
       <MobileStickyCta
         minPrice={minPrice}
         availableCount={availableRooms.length}
@@ -290,6 +308,7 @@ export default async function OTAHotelDetailPage({ params, searchParams }: PageP
         checkOut={checkout ?? null}
         taxRate={hotel.tax_rate}
       />
+      )}
     </main>
   );
 }
