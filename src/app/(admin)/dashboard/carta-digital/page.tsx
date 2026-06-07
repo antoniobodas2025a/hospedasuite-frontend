@@ -20,7 +20,7 @@ import {
   ChevronUp, ChevronDown, Star, StarOff,
   ToggleLeft, ToggleRight, X, Save, AlertTriangle,
   Sparkles, Coffee, Wine, Cake, Soup, Fish, Beef,
-  type LucideIcon,
+  
 } from 'lucide-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { cn } from '@/lib/utils'
@@ -48,7 +48,7 @@ type TabId = 'items' | 'categories' | 'qr' | 'analytics'
 interface Tab {
   id: TabId
   label: string
-  icon: LucideIcon
+  icon: React.ElementType
 }
 
 const TABS: Tab[] = [

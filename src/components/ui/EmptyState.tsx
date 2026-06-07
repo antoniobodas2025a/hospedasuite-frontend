@@ -1,11 +1,11 @@
 'use client';
 
 import React from 'react';
-import { Rocket, Calendar, Utensils, AlertCircle, Search, LucideIcon } from 'lucide-react';
+import { Rocket, Calendar, Utensils, AlertCircle, Search } from 'lucide-react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 
-const ICON_MAP: Record<string, LucideIcon> = {
+const ICON_MAP: Record<string, React.ElementType> = {
   rocket: Rocket,
   calendar: Calendar,
   utensils: Utensils,
@@ -14,7 +14,7 @@ const ICON_MAP: Record<string, LucideIcon> = {
 };
 
 interface EmptyStateProps {
-  icon?: LucideIcon;
+  icon?: React.ElementType;
   iconName?: keyof typeof ICON_MAP | string;
   title: string;
   description: string;

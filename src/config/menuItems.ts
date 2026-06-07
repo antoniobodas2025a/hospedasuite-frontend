@@ -11,7 +11,6 @@ import {
   Megaphone,
   CreditCard,
   CheckCircle,
-  type LucideIcon
 } from 'lucide-react';
 
 /**
@@ -23,7 +22,7 @@ export interface MenuItem {
   id: string;
   label: string;
   href: string;
-  icon: LucideIcon;
+  icon: React.ElementType;
   color?: string;
   bg?: string;
   /** Plan mínimo requerido para ver este ítem. Si no se cumple, se muestra bloqueado. */
