@@ -227,7 +227,7 @@ export default function OTADashboard({
 	const [searchStep, setSearchStep] = useState<"location" | "full">("location");
 
 	// PRD-014: Two-stage navigation — cards first, map on demand
-	const [viewMode] = useState<"cards">("cards"); // Production V1: map disabled, lab only
+	const [viewMode] = useState<"cards" | "map">("cards"); // Production V1: map disabled, lab only
 
 	// Judge verdict: map and split-view only exist if search is active
 	const isSearchActive = useMemo(() => !!urlLocation, [urlLocation]);
