@@ -129,7 +129,7 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
     ? (rawGallery as (string | GalleryItem)[]).map((img) => typeof img === 'string' ? { url: img } : img)
     : [];
   if (images.length === 0) {
-    images.push({ url: 'https://images.unsplash.com/photo-1611892440504-42a792e24d32' });
+    images.push({ url: '/logo.png' });
   }
 
   return (
