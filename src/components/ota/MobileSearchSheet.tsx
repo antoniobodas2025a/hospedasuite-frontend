@@ -248,7 +248,7 @@ export default function MobileSearchSheet({
             onDragStart={handleDragStart}
             onDrag={handleDrag}
             onDragEnd={handleDragEnd}
-            onLayoutMeasure={(_, layout) => setSheetHeight((layout as any).height || 600)}
+            onLayoutMeasure={(_, layout) => setSheetHeight(layout?.height || 600)}
             className="absolute bottom-0 left-0 right-0 max-h-[90dvh] flex flex-col bg-background rounded-t-[var(--radius-squircle-2xl)] shadow-2xl overflow-hidden"
             style={{
               y: isDragging ? dragOffset : undefined,
