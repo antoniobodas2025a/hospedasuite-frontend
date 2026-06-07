@@ -1,7 +1,7 @@
 "use client";
+import { useRouter } from "next/navigation";
 
 import React, { useMemo } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
 import {
 	X,
 	ArrowRight,
@@ -13,7 +13,6 @@ import {
 	Clock,
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { extendSearchParams } from "@/lib/handoff-url";
 import { calculateTotalWithTax, DEFAULT_TAX_RATE } from "@/lib/pricing";
 import { format, parseISO } from "date-fns";
 import type { Room, GalleryItem } from "@/types";
@@ -73,15 +72,14 @@ function AmenityGlass({
 
 export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
 	const router = useRouter();
-	const searchParams = useSearchParams();
 	const t = useTranslations();
 	const appLocale = useLocale();
 	const dateLocale = getDateFnsLocale(appLocale);
 
-	const roomId = roomId;
-	const checkIn = checkIn;
-	const checkOut = checkOut;
-	const guests = guests || 0;
+	const roomId = new URLSearchParams(window.location.search).get("showRoom");
+	const checkIn = new URLSearchParams(window.location.search).get("checkin");
+	const checkOut = new URLSearchParams(window.location.search).get("checkout");
+	const guests = Number(new URLSearchParams(window.location.search).get("guests")) || 0;
 
 	// Default guest count for booking (can be adjusted in checkout)
 	const defaultGuests = guests > 0 ? guests : 2;
