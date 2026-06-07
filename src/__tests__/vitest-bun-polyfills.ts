@@ -64,6 +64,28 @@ if (typeof globalThis.sessionStorage === "undefined") {
 		setItem: (key: string, value: string) => store.set(key, value),
 		removeItem: (key: string) => store.delete(key),
 		clear: () => store.clear(),
-		get length() { return store.size; },
+		get length() {
+			return store.size;
+		},
 	};
 }
+
+// ── Leaflet mock for bounds-filter tests (no DOM in Bun) ──────────────────
+
+(globalThis as Record<string, unknown>).L = {
+  LatLngBounds: class {
+    private _sw: { lat: number; lng: number };
+    private _ne: { lat: number; lng: number };
+    constructor(sw: [number, number], ne: [number, number]) {
+      this._sw = { lat: sw[0], lng: sw[1] };
+      this._ne = { lat: ne[0], lng: ne[1] };
+    }
+    contains(point: [number, number] | { lat: number; lng: number }) {
+      const p = Array.isArray(point) ? { lat: point[0], lng: point[1] } : point;
+      return p.lat >= this._sw.lat && p.lat <= this._ne.lat &&
+             p.lng >= this._sw.lng && p.lng <= this._ne.lng;
+    }
+    getSouthWest() { return this._sw; }
+    getNorthEast() { return this._ne; }
+  },
+};
