@@ -145,15 +145,14 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
           <X size={18} strokeWidth={2.5} />
         </button>
 
-        {/* DESKTOP SPLIT PANEL (lg+) */}
-        <div className="hidden lg:flex flex-1 overflow-hidden">
+        {/* DESKTOP: full scroll — gallery + info together */}
+        <div className="hidden lg:flex flex-col flex-1 overflow-y-auto">
           
-          {/* PANEL IZQUIERDO: Galeria (fondo oscuro, sin scroll) */}
-          <div className="w-1/2 bg-foreground relative">
+          {/* Galeria — scrolls with content */}
+          <div className="shrink-0 p-4 bg-foreground">
             <RoomGallery 
               images={images} 
               roomName={room.name ?? t('ota.showcase.fallbackRoom')} 
-              onClose={closeModal}
               variant="compact"
             />
           </div>
@@ -323,7 +322,6 @@ export function RoomShowcaseModal({ hotel }: { hotel: HotelForModal }) {
             <RoomGallery 
               images={images} 
               roomName={room.name ?? t('ota.showcase.fallbackRoom')} 
-              onClose={closeModal}
               variant="compact"
             />
           </div>
