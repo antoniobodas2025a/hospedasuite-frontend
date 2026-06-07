@@ -47,6 +47,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { GlassTooltip } from "@/components/ui/GlassTooltip";
 import { UndoToast } from "@/components/ui/UndoToast";
+import { AMENITY_REGISTRY } from "@/lib/amenity-registry";
 
 
 const HOTEL_AMENITIES = Object.values(AMENITY_REGISTRY);
