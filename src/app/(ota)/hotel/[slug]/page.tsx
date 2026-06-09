@@ -2,7 +2,6 @@ import {
 	getHotelDetailsBySlugAction,
 	getReviewStatsAction,
 } from "@/app/actions/ota";
-import { createClient } from "@/utils/supabase/server";
 import { notFound } from "next/navigation";
 import Image from "next/image";
 import { MapPin, Star } from "lucide-react";
@@ -15,7 +14,6 @@ import type { ImageBlurMeta } from "@/lib/image-config";
 import BookingWidget from "@/components/ota/BookingWidget";
 import ReviewsSection from "@/components/ota/ReviewsSection";
 import HotelInfoSection from "@/components/ota/HotelInfoSection";
-import MobileStickyCta from "@/components/ota/MobileStickyCta";
 import RoomsListWithFilters from "@/components/ota/RoomsListWithFilters";
 import HotelJsonLd from "@/components/seo/HotelJsonLd";
 import ReviewSkeleton from "@/components/ota/ReviewSkeleton";
@@ -97,24 +95,6 @@ export default async function OTAHotelDetailPage({
 
 	if (!success || !hotel) notFound();
 
-	// M2: Hide booking CTA for guests already checked in at this hotel
-	const supabase = await createClient();
-	const {
-		data: { user },
-	} = await supabase.auth.getUser();
-	let isAlreadyCheckedIn = false;
-	if (user?.email) {
-		const { data: booking } = await supabase
-			.from("bookings")
-			.select("id")
-			.eq("hotel_id", hotel.id)
-			.eq("guest_email", user.email)
-			.eq("status", "checked_in")
-			.limit(1)
-			.maybeSingle();
-		isAlreadyCheckedIn = !!booking;
-	}
-
 	const reviewStatsResult = await getReviewStatsAction(hotel.id);
 	const reviewStats = reviewStatsResult.success ? reviewStatsResult.data : null;
 
@@ -152,17 +132,6 @@ export default async function OTAHotelDetailPage({
 
 	// Modal data optimization: pass minimal data when closed
 	const modalHotelData = showRoom ? hotel : { slug: hotel.slug, rooms: [] };
-
-	// Min price for MobileStickyCta
-	const allActiveRooms = (hotel.rooms || []).filter(
-		(r: any) => r.status === "active",
-	);
-	const minPrice =
-		allActiveRooms.length > 0
-			? Math.min(
-					...allActiveRooms.map((r: any) => r.price_per_night || r.price || 0),
-				)
-			: 0;
 
 	// Build search context for banner
 	const searchContext = {
@@ -354,16 +323,6 @@ export default async function OTAHotelDetailPage({
 				</div>
 			</div>
 
-			{/* Mobile Sticky CTA — hidden for checked-in guests (Hick's Law) */}
-			{!isAlreadyCheckedIn && (
-				<MobileStickyCta
-					minPrice={minPrice}
-					availableCount={availableRooms.length}
-					checkIn={checkin ?? null}
-					checkOut={checkout ?? null}
-					taxRate={hotel.tax_rate}
-				/>
-			)}
 		</main>
 	);
 }
