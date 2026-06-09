@@ -7,7 +7,9 @@ import React, {
 	useTransition,
 	useCallback,
 } from "react";
+import { createPortal } from "react-dom";
 import { useRouter, useSearchParams } from "next/navigation";
+import { useScrollLock } from "@/hooks/useScrollLock";
 import {
 	Calendar as CalendarIcon,
 	X,
@@ -164,6 +166,9 @@ export default function AvailabilitySearchBar({
 		if (activeModal === "dates") setPendingDate(date);
 		if (activeModal === "guests") setPendingGuests(guests);
 	}, [activeModal, date, guests]);
+
+	// Lock body scroll when modal is open
+	useScrollLock(!!activeModal);
 
 	// URL sync
 	const pushUrl = useCallback(
@@ -523,232 +528,231 @@ export default function AvailabilitySearchBar({
 			</div>
 
 			{/* ═══════════════════════════════════════════════════════════ */}
-			{/* UNIFIED MODAL SYSTEM — backdrop + glass container          */}
+			{/* UNIFIED MODAL SYSTEM — rendered via portal to avoid parent transform breaking fixed positioning */}
 			{/* ═══════════════════════════════════════════════════════════ */}
-			<AnimatePresence>
-				{activeModal && (
-					<motion.div
-						initial={{ opacity: 0 }}
-						animate={{ opacity: 1 }}
-						exit={{ opacity: 0 }}
-						transition={{ duration: 0.15 }}
-						className="fixed inset-0 z-[var(--z-modal)] flex items-end md:items-center md:justify-center"
-					>
-						{/* Backdrop overlay — click to close */}
-						<div
-							className="absolute inset-0 bg-black/20 backdrop-blur-sm"
-							onClick={() => setActiveModal(null)}
-							aria-hidden="true"
-						/>
-
-						{/* Modal container — bottom sheet on mobile, centered on desktop */}
-						<motion.div
-							initial={{ opacity: 0, y: "100%" }}
-							animate={{ opacity: 1, y: 0 }}
-							exit={{ opacity: 0, y: "100%" }}
-							transition={springModal()}
-							className="relative z-10 w-full md:w-auto md:max-w-md md:mx-4 mb-0"
-						>
-							<GlassPanel
-								intensity="heavy"
-								className="md:rounded-[var(--radius-squircle-2xl)] rounded-t-[var(--radius-squircle-2xl)] rounded-b-none md:rounded-b-[var(--radius-squircle-2xl)] bg-background/95 backdrop-blur-3xl ring-1 ring-foreground/10 shadow-2xl"
+			{typeof document !== "undefined" &&
+				createPortal(
+					<AnimatePresence>
+						{activeModal && (
+							<motion.div
+								initial={{ opacity: 0 }}
+								animate={{ opacity: 1 }}
+								exit={{ opacity: 0 }}
+								transition={{ duration: 0.15 }}
+								className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4"
 							>
-								{/* Mobile drag handle indicator */}
-								<div className="md:hidden flex justify-center pt-3 pb-1">
-									<div className="w-10 h-1 rounded-full bg-foreground/15" />
-								</div>
+								{/* Backdrop overlay — click to close */}
+								<div
+									className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+									onClick={() => setActiveModal(null)}
+									aria-hidden="true"
+								/>
 
-								{/* ── DATES MODAL ──────────────────────────── */}
-								{activeModal === "dates" && (
-									<div className="flex flex-col max-h-[85dvh] md:max-h-[80vh] overflow-hidden">
-										{/* Header — X en esquina superior absoluta */}
-										<div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-3 shrink-0">
-											<h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
-												{t("ota.search.stay")}
-											</h2>
-											{/* Step indicator */}
-											<div className="flex items-center gap-1.5 mt-1">
-												<div
-													className={cn(
-														"size-1.5 rounded-full transition-colors",
-														dateStep === "checkin"
-															? "bg-primary"
-															: "bg-primary/30",
-													)}
-												/>
-												<div
-													className={cn(
-														"h-px w-4 transition-colors",
-														dateStep !== "checkin"
-															? "bg-primary/30"
-															: "bg-muted",
-													)}
-												/>
-												<div
-													className={cn(
-														"size-1.5 rounded-full transition-colors",
-														dateStep === "checkout"
-															? "bg-primary"
-															: dateStep === "complete"
-																? "bg-primary/30"
-																: "bg-muted",
-													)}
-												/>
-												<div
-													className={cn(
-														"h-px w-4 transition-colors",
-														dateStep === "complete"
-															? "bg-primary/30"
-															: "bg-muted",
-													)}
-												/>
-												<div
-													className={cn(
-														"size-1.5 rounded-full transition-colors",
-														dateStep === "complete" ? "bg-primary" : "bg-muted",
-													)}
-												/>
+								{/* Modal container — centered on all viewports */}
+								<motion.div
+									initial={{ opacity: 0, scale: 0.95 }}
+									animate={{ opacity: 1, scale: 1 }}
+									exit={{ opacity: 0, scale: 0.95 }}
+									transition={springModal()}
+									className="relative z-10 w-full max-w-md h-[85dvh] md:h-[80vh]"
+								>
+									<GlassPanel
+										intensity="heavy"
+										className="rounded-[var(--radius-squircle-2xl)] bg-background/95 backdrop-blur-3xl ring-1 ring-foreground/10 shadow-2xl h-full flex flex-col overflow-hidden"
+									>
+										{/* ── DATES MODAL ──────────────────────────── */}
+										{activeModal === "dates" && (
+											<div className="flex flex-col h-full overflow-hidden">
+												{/* Header — X en esquina superior absoluta */}
+												<div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-3 shrink-0">
+													<h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
+														{t("ota.search.stay")}
+													</h2>
+													{/* Step indicator */}
+													<div className="flex items-center gap-1.5 mt-1">
+														<div
+															className={cn(
+																"size-1.5 rounded-full transition-colors",
+																dateStep === "checkin"
+																	? "bg-primary"
+																	: "bg-primary/30",
+															)}
+														/>
+														<div
+															className={cn(
+																"h-px w-4 transition-colors",
+																dateStep !== "checkin"
+																	? "bg-primary/30"
+																	: "bg-muted",
+															)}
+														/>
+														<div
+															className={cn(
+																"size-1.5 rounded-full transition-colors",
+																dateStep === "checkout"
+																	? "bg-primary"
+																	: dateStep === "complete"
+																		? "bg-primary/30"
+																		: "bg-muted",
+															)}
+														/>
+														<div
+															className={cn(
+																"h-px w-4 transition-colors",
+																dateStep === "complete"
+																	? "bg-primary/30"
+																	: "bg-muted",
+															)}
+														/>
+														<div
+															className={cn(
+																"size-1.5 rounded-full transition-colors",
+																dateStep === "complete" ? "bg-primary" : "bg-muted",
+															)}
+														/>
+													</div>
+													<p className="text-[11px] text-muted-foreground/60 mt-1 tracking-tight">
+														{dateStep === "checkin" && t("ota.search.arrival")}
+														{dateStep === "checkout" &&
+															`${format(pendingDate!.from!, "dd MMM", { locale: dateLocale })} → ${t("ota.search.departure")}`}
+														{dateStep === "complete" &&
+															pendingDate?.from &&
+															pendingDate?.to &&
+															`${format(pendingDate.from, "dd MMM")} — ${format(pendingDate.to, "dd MMM")}`}
+													</p>
+
+													{/* X button — esquina superior derecha absoluta */}
+													<motion.button
+														onClick={() => setActiveModal(null)}
+														whileHover={{ scale: 1.08 }}
+														whileTap={{ scale: 0.9 }}
+														transition={springSnappy()}
+														className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
+														aria-label={t("common.close")}
+													>
+														<X size={16} strokeWidth={2.5} />
+													</motion.button>
+												</div>
+
+												{/* Calendar — scrollable */}
+												<div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-3 min-h-0">
+													<div className="modal-calendar">
+														<DayPicker
+															mode="range"
+															selected={pendingDate}
+															onSelect={handleSelectDates}
+															locale={dateLocale}
+															numberOfMonths={1}
+															disabled={{ before: today }}
+															className="text-foreground font-sans"
+															modifiersClassNames={{
+																selected:
+																	"bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]",
+																range_middle:
+																	"bg-brand-50 text-brand-900 rounded-none",
+																range_start: "rounded-l-xl rounded-r-none",
+																range_end: "rounded-r-xl rounded-l-none",
+															}}
+														/>
+													</div>
+												</div>
+
+												{/* Footer: Clear + Confirm — sticky al fondo */}
+												<div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 flex items-center gap-3 shrink-0">
+													<motion.button
+														onClick={handleClearDates}
+														whileTap={{ scale: 0.95 }}
+														transition={springSnappy()}
+														className="px-4 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted transition-colors ring-1 ring-foreground/5"
+													>
+														{t("ota.search.clearDates")}
+													</motion.button>
+													<motion.button
+														onClick={handleConfirmDates}
+														disabled={!pendingDate?.from || !pendingDate?.to}
+														whileHover={
+															pendingDate?.from && pendingDate?.to
+																? { scale: 1.015 }
+																: {}
+														}
+														whileTap={
+															pendingDate?.from && pendingDate?.to
+																? { scale: 0.97 }
+																: {}
+														}
+														transition={springBounce()}
+														className={cn(
+															"flex-1 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight transition-all ring-1",
+															pendingDate?.from && pendingDate?.to
+																? "bg-primary text-primary-foreground shadow-lg ring-primary/20 hover:shadow-xl"
+																: "bg-muted/40 text-muted-foreground/50 ring-foreground/5 cursor-not-allowed",
+														)}
+													>
+														{pendingDate?.from && pendingDate?.to
+															? t("ota.search.confirmDates")
+															: t("ota.search.selectDates")}
+													</motion.button>
+												</div>
 											</div>
-											<p className="text-[11px] text-muted-foreground/60 mt-1 tracking-tight">
-												{dateStep === "checkin" && t("ota.search.arrival")}
-												{dateStep === "checkout" &&
-													`${format(pendingDate!.from!, "dd MMM", { locale: dateLocale })} → ${t("ota.search.departure")}`}
-												{dateStep === "complete" &&
-													pendingDate?.from &&
-													pendingDate?.to &&
-													`${format(pendingDate.from, "dd MMM")} — ${format(pendingDate.to, "dd MMM")}`}
-											</p>
+										)}
 
-											{/* X button — esquina superior derecha absoluta */}
-											<motion.button
-												onClick={() => setActiveModal(null)}
-												whileHover={{ scale: 1.08 }}
-												whileTap={{ scale: 0.9 }}
-												transition={springSnappy()}
-												className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
-												aria-label={t("common.close")}
-											>
-												<X size={16} strokeWidth={2.5} />
-											</motion.button>
-										</div>
+										{/* ─ GUESTS MODAL ─────────────────────────── */}
+										{activeModal === "guests" && (
+											<div className="flex flex-col h-full overflow-hidden">
+												{/* Header — X en esquina superior absoluta */}
+												<div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-2 shrink-0">
+													<h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
+														{t("ota.search.guests")}
+													</h2>
+													<p className="text-xs text-muted-foreground/70 mt-0.5 tracking-tight">
+														{pendingGuests}{" "}
+														{t("ota.search.guest", { count: pendingGuests })}
+													</p>
 
-										{/* Calendar — scrollable */}
-										<div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-3">
-											<div className="modal-calendar">
-												<DayPicker
-													mode="range"
-													selected={pendingDate}
-													onSelect={handleSelectDates}
-													locale={dateLocale}
-													numberOfMonths={1}
-													disabled={{ before: today }}
-													className="text-foreground font-sans"
-													modifiersClassNames={{
-														selected:
-															"bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]",
-														range_middle:
-															"bg-brand-50 text-brand-900 rounded-none",
-														range_start: "rounded-l-xl rounded-r-none",
-														range_end: "rounded-r-xl rounded-l-none",
-													}}
-												/>
+													{/* X button — esquina superior derecha absoluta */}
+													<motion.button
+														onClick={() => setActiveModal(null)}
+														whileHover={{ scale: 1.08 }}
+														whileTap={{ scale: 0.9 }}
+														transition={springSnappy()}
+														className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
+														aria-label={t("common.close")}
+													>
+														<X size={16} strokeWidth={2.5} />
+													</motion.button>
+												</div>
+
+												{/* Guest Selector — scrollable */}
+												<div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 min-h-0">
+													<GuestSelector
+														value={pendingGuests}
+														onChange={handlePendingGuestsChange}
+														min={1}
+														max={20}
+													/>
+												</div>
+
+												{/* Footer: Confirm — sticky al fondo */}
+												<div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 shrink-0">
+													<motion.button
+														onClick={handleConfirmGuests}
+														whileHover={{ scale: 1.015 }}
+														whileTap={{ scale: 0.97 }}
+														transition={springBounce()}
+														className="w-full py-3.5 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight bg-primary text-primary-foreground shadow-lg ring-1 ring-primary/20 hover:shadow-xl transition-all"
+													>
+														{t("ota.search.confirmGuests")}
+													</motion.button>
+												</div>
 											</div>
-										</div>
-
-										{/* Footer: Clear + Confirm — sticky al fondo */}
-										<div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 flex items-center gap-3 shrink-0">
-											<motion.button
-												onClick={handleClearDates}
-												whileTap={{ scale: 0.95 }}
-												transition={springSnappy()}
-												className="px-4 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted transition-colors ring-1 ring-foreground/5"
-											>
-												{t("ota.search.clearDates")}
-											</motion.button>
-											<motion.button
-												onClick={handleConfirmDates}
-												disabled={!pendingDate?.from || !pendingDate?.to}
-												whileHover={
-													pendingDate?.from && pendingDate?.to
-														? { scale: 1.015 }
-														: {}
-												}
-												whileTap={
-													pendingDate?.from && pendingDate?.to
-														? { scale: 0.97 }
-														: {}
-												}
-												transition={springBounce()}
-												className={cn(
-													"flex-1 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight transition-all ring-1",
-													pendingDate?.from && pendingDate?.to
-														? "bg-primary text-primary-foreground shadow-lg ring-primary/20 hover:shadow-xl"
-														: "bg-muted/40 text-muted-foreground/50 ring-foreground/5 cursor-not-allowed",
-												)}
-											>
-												{pendingDate?.from && pendingDate?.to
-													? t("ota.search.confirmDates")
-													: t("ota.search.selectDates")}
-											</motion.button>
-										</div>
-									</div>
-								)}
-
-								{/* ── GUESTS MODAL ─────────────────────────── */}
-								{activeModal === "guests" && (
-									<div className="flex flex-col max-h-[85dvh] md:max-h-[80vh] overflow-hidden">
-										{/* Header — X en esquina superior absoluta */}
-										<div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-2 shrink-0">
-											<h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
-												{t("ota.search.guests")}
-											</h2>
-											<p className="text-xs text-muted-foreground/70 mt-0.5 tracking-tight">
-												{pendingGuests}{" "}
-												{t("ota.search.guest", { count: pendingGuests })}
-											</p>
-
-											{/* X button — esquina superior derecha absoluta */}
-											<motion.button
-												onClick={() => setActiveModal(null)}
-												whileHover={{ scale: 1.08 }}
-												whileTap={{ scale: 0.9 }}
-												transition={springSnappy()}
-												className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
-												aria-label={t("common.close")}
-											>
-												<X size={16} strokeWidth={2.5} />
-											</motion.button>
-										</div>
-
-										{/* Guest Selector — scrollable */}
-										<div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4">
-											<GuestSelector
-												value={pendingGuests}
-												onChange={handlePendingGuestsChange}
-												min={1}
-												max={20}
-											/>
-										</div>
-
-										{/* Footer: Confirm — sticky al fondo */}
-										<div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 shrink-0">
-											<motion.button
-												onClick={handleConfirmGuests}
-												whileHover={{ scale: 1.015 }}
-												whileTap={{ scale: 0.97 }}
-												transition={springBounce()}
-												className="w-full py-3.5 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight bg-primary text-primary-foreground shadow-lg ring-1 ring-primary/20 hover:shadow-xl transition-all"
-											>
-												{t("ota.search.confirmGuests")}
-											</motion.button>
-										</div>
-									</div>
-								)}
-							</GlassPanel>
-						</motion.div>
-					</motion.div>
+										)}
+									</GlassPanel>
+								</motion.div>
+							</motion.div>
+						)}
+					</AnimatePresence>,
+					document.body,
 				)}
-			</AnimatePresence>
 		</div>
 	);
 }
