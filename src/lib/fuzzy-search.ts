@@ -26,6 +26,17 @@ const FUSE_DEFAULTS: IFuseOptions<unknown> = {
   includeScore: true,
 };
 
+/**
+ * Default key weights for OTA location search.
+ * City name is 3x more important than department for ranking.
+ */
+const DEFAULT_KEY_WEIGHTS: Record<string, number> = {
+  city: 3,
+  department: 1,
+  name: 3,
+  location: 1,
+};
+
 // ── Public API ───────────────────────────────────────────────────────────────
 
 /**
@@ -89,9 +100,15 @@ export function fuzzySearch<T>(
   // Resolve synonyms before searching
   const resolved = resolveSynonym(query);
 
+  // Apply default weights to string keys for proper ranking
+  const weightedKeys = keys.map(k => {
+    const weight = DEFAULT_KEY_WEIGHTS[k];
+    return weight ? { name: k, weight } : k;
+  });
+
   const fuse = new Fuse(items, {
     ...FUSE_DEFAULTS,
-    keys,
+    keys: weightedKeys,
   });
 
   const results: FuseResult<T>[] = fuse.search(resolved, { limit });

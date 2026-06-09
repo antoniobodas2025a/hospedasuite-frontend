@@ -69,7 +69,15 @@ function AmenityGlass({
 	);
 }
 
-export function RoomShowcaseModal({ hotel, onClose, onCheckout }: { hotel: HotelForModal; onClose: () => void; onCheckout: (roomId: string, guests: number) => void }) {
+export function RoomShowcaseModal({
+	hotel,
+	onClose,
+	onCheckout,
+}: {
+	hotel: HotelForModal;
+	onClose: () => void;
+	onCheckout: (roomId: string, guests: number) => void;
+}) {
 	const t = useTranslations();
 	const appLocale = useLocale();
 	const dateLocale = getDateFnsLocale(appLocale);
@@ -77,7 +85,8 @@ export function RoomShowcaseModal({ hotel, onClose, onCheckout }: { hotel: Hotel
 	const roomId = new URLSearchParams(window.location.search).get("showRoom");
 	const checkIn = new URLSearchParams(window.location.search).get("checkin");
 	const checkOut = new URLSearchParams(window.location.search).get("checkout");
-	const guests = Number(new URLSearchParams(window.location.search).get("guests")) || 0;
+	const guests =
+		Number(new URLSearchParams(window.location.search).get("guests")) || 0;
 
 	// Default guest count for booking (can be adjusted in checkout)
 	const defaultGuests = guests > 0 ? guests : 2;
@@ -392,20 +401,21 @@ export function RoomShowcaseModal({ hotel, onClose, onCheckout }: { hotel: Hotel
 					</div>
 				</div>
 
-				{/* MOBILE/ TABLET STACKED (< lg) */}
+				{/* MOBILE/ TABLET STACKED (< lg) — Single scroll container */}
 				<div className="lg:hidden flex flex-col flex-1 overflow-hidden bg-gradient-to-b from-muted/80 to-background/60">
-					{/* Galeria compacta */}
-					<div className="shrink-0 p-2">
-						<RoomGallery
-							images={images}
-							roomName={room.name ?? t("ota.showcase.fallbackRoom")}
-							variant="compact"
-						/>
-					</div>
+					{/* Scroll unificado: galería + amenidades + resumen (Miller's Law: 3 chunks, 1 scroll) */}
+					<div className="flex-1 overflow-y-auto custom-scrollbar">
+						{/* Galeria compacta — ahora dentro del flujo de scroll */}
+						<div className="p-2">
+							<RoomGallery
+								images={images}
+								roomName={room.name ?? t("ota.showcase.fallbackRoom")}
+								variant="compact"
+							/>
+						</div>
 
-					{/* Info scrolleable */}
-					<div className="flex-1 overflow-y-auto custom-scrollbar pb-32">
-						<div className="px-4 py-5 space-y-5">
+						{/* Info scrolleable */}
+						<div className="px-4 py-5 space-y-5 pb-32">
 							{/* Nombre + Descripcion */}
 							<div className="space-y-3">
 								<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warm-500/10 backdrop-blur-xl border border-warm-500/20 text-warm-700 text-[10px] font-bold uppercase tracking-widest">

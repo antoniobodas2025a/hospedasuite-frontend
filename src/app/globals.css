@@ -64,6 +64,7 @@
   --radius-squircle-sm: 0.75rem;
   --radius-squircle-md: 1rem;
   --radius-squircle-lg: 1.25rem;
+  --radius-squircle: 1.75rem;       /* 28px — sweet spot for cards */
   --radius-squircle-xl: 1.5rem;
   --radius-squircle-2xl: 2rem;
   --radius-squircle-3xl: 2.5rem;
@@ -85,6 +86,8 @@
   --glass-heavy-border-dark: oklch(0.28 0.04 255 / 0.30);
   --glass-pill-surface-dark: oklch(0.18 0.04 258 / 0.65);
   --glass-pill-border-dark: oklch(0.28 0.04 255 / 0.20);
+  --glass-frosted-surface-dark: oklch(0.20 0.04 255 / 0.60);
+  --glass-frosted-border-dark: oklch(0.30 0.04 255 / 0.25);
 
   /* Glassmorphism 2.0 — Light mode (default) */
   --glass-light-surface: rgba(255,255,255,0.40);
@@ -96,6 +99,10 @@
   --glass-pill-surface: rgba(255,255,255,0.60);
   --glass-pill-border: rgba(255,255,255,0.40);
   --glass-pill-blur: 20px;
+  /* Level 4: Frosted glass — tooltips, popovers, micro-overlays */
+  --glass-frosted-surface: rgba(255,255,255,0.50);
+  --glass-frosted-border: rgba(255,255,255,0.35);
+  --glass-frosted-blur: 12px;
 
   /* Z-index scale — no more wars */
   --z-dropdown: 100;
@@ -396,6 +403,8 @@
   --glass-heavy-border: oklch(from var(--border) l c h / 0.35);
   --glass-pill-surface: oklch(from var(--card) l c h / 0.85);
   --glass-pill-border: oklch(from var(--border) l c h / 0.45);
+  --glass-frosted-surface: oklch(from var(--card) l c h / 0.78);
+  --glass-frosted-border: oklch(from var(--border) l c h / 0.38);
 }
 
 [data-theme="ota"].dark {
@@ -518,6 +527,20 @@
   .dark .glass-pill {
     background: var(--glass-pill-surface-dark);
     border-color: var(--glass-pill-border-dark);
+  }
+
+  /* Level 4: Frosted glass — tooltips, popovers, micro-overlays */
+  .glass-frosted {
+    background: var(--glass-frosted-surface);
+    backdrop-filter: blur(var(--glass-frosted-blur)) saturate(120%);
+    -webkit-backdrop-filter: blur(var(--glass-frosted-blur)) saturate(120%);
+    border: 1px solid var(--glass-frosted-border);
+    box-shadow: var(--shadow-elev-1), var(--shadow-inset);
+    border-radius: var(--radius-squircle-lg);
+  }
+  .dark .glass-frosted {
+    background: var(--glass-frosted-surface-dark);
+    border-color: var(--glass-frosted-border-dark);
   }
 
   /* Text gradient — brand to warm */

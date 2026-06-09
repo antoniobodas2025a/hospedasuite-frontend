@@ -237,6 +237,29 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 							placeholder={t("ota.search.placeholder")}
 						/>
 					</div>
+					{/* Clear button — Heurística #3: Control del usuario */}
+					{location && (
+						<motion.button
+							initial={{ scale: 0, opacity: 0 }}
+							animate={{ scale: 1, opacity: 1 }}
+							exit={{ scale: 0, opacity: 0 }}
+							transition={springSnappy()}
+							onClick={() => {
+								setLocation("");
+								pushUrl({ location: "" });
+								onSearch?.({
+									location: "",
+									checkin: date?.from ? format(date.from, "yyyy-MM-dd") : null,
+									checkout: date?.to ? format(date.to, "yyyy-MM-dd") : null,
+									guests,
+								});
+							}}
+							className="size-6 rounded-full flex items-center justify-center hover:bg-muted transition-colors shrink-0 mr-1"
+							aria-label="Limpiar ubicación"
+						>
+							<X size={12} strokeWidth={2.5} />
+						</motion.button>
+					)}
 				</div>
 
 				{/* ZONE 2: DATES */}

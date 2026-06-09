@@ -28,13 +28,17 @@ describe('handoff-url', () => {
   });
 
   it('preserves only the defined relevant params', () => {
-    const params = new URLSearchParams('checkin=2026-06-01&checkout=2026-06-03&guests=2&category=glamping&max_price=200000');
+    const params = new URLSearchParams('checkin=2026-06-01&checkout=2026-06-03&guests=2&category=glamping&max_price=200000&location=Medellín');
     const result = preserveSearchParams(params, '/hotel/test');
-    // Only checkin, checkout, guests are relevant
+    // All of these are in RELEVANT_PARAMS and should be preserved
     expect(result).toContain('checkin=2026-06-01');
     expect(result).toContain('checkout=2026-06-03');
     expect(result).toContain('guests=2');
-    expect(result).not.toContain('category=glamping');
-    expect(result).not.toContain('max_price=200000');
+    expect(result).toContain('category=glamping');
+    expect(result).toContain('max_price=200000');
+    expect(result).toContain('location=Medell'); // URL-encoded: Medellín → Medell%C3%ADn
+    // These are NOT relevant and should be stripped
+    expect(result).not.toContain('scroll=');
+    expect(result).not.toContain('showRoom=');
   });
 });

@@ -411,7 +411,8 @@ describe('PRD-008: Fallback Chain (Test Area 4)', () => {
     it('does not produce false corrections for valid cities', () => {
       const citiesList = FALLBACK_CITIES.map(c => ({ city: c }));
       const matches = fuzzySearch(citiesList, 'Medellín', ['city'], 5);
-      const exactMatch = matches.filter(m => m.score === 0);
+      // fuse.js returns ~2.22e-16 for exact matches (float precision), not exactly 0
+      const exactMatch = matches.filter(m => m.score < 0.001);
 
       expect(exactMatch.length).toBeGreaterThan(0);
       expect(exactMatch[0].item.city).toBe('Medellín');
