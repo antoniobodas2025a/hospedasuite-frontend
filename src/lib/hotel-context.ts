@@ -66,3 +66,42 @@ export const getCurrentHotel = cache(async (): Promise<Hotel> => {
 
   return hotel;
 });
+
+// ============================================================================
+// Staff Context — Resuelve hotel e identidad desde cookie de sesión operativa
+// ============================================================================
+export interface StaffSession {
+  id: string;
+  name: string;
+  role: string;
+  hotel_id: string;
+}
+
+export const getStaffSession = cache(async (): Promise<StaffSession | null> => {
+  try {
+    const cookieStore = await cookies();
+    const staffCookie = cookieStore.get('hospeda_staff_session');
+    if (!staffCookie) return null;
+    
+    const session = JSON.parse(staffCookie.value) as StaffSession;
+    return session;
+  } catch {
+    return null;
+  }
+});
+
+export const getStaffHotel = cache(async (): Promise<Hotel | null> => {
+  const session = await getStaffSession();
+  if (!session) return null;
+
+  const { supabaseAdmin } = await import('@/lib/supabase-admin');
+  
+  const { data: hotel, error } = await supabaseAdmin
+    .from('hotels')
+    .select('*')
+    .eq('id', session.hotel_id)
+    .single();
+
+  if (error || !hotel) return null;
+  return hotel as Hotel;
+});

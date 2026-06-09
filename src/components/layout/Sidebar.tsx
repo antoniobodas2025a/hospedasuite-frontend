@@ -22,6 +22,11 @@ export interface SidebarViewProps {
 		id: string;
 		email?: string;
 	};
+	staffIdentity?: {
+		id: string;
+		name: string;
+		role: string;
+	};
 	currentPath: string;
 	/** Plan de suscripción actual del hotel. Se usa para gating de menú y badge visual. */
 	subscriptionPlan?: "starter" | "pro" | "enterprise";
@@ -35,6 +40,11 @@ interface SidebarProps {
 		id: string;
 		email?: string;
 	};
+	staffIdentity?: {
+		id: string;
+		name: string;
+		role: string;
+	};
 	subscriptionPlan?: "starter" | "pro" | "enterprise";
 }
 
@@ -45,11 +55,20 @@ const SidebarView: React.FC<SidebarViewProps> = ({
 	subscriptionPlan = "starter",
 	onLogout,
 	onOpenShiftModal,
+	staffIdentity,
+	user,
 }) => {
 	// Ley de Miller: collapse non-essential groups by default
 	const [collapsedGroups, setCollapsedGroups] = useState<Set<string>>(
 		new Set(["services", "management", "system"]),
 	);
+
+	// Identidad visual: Admin (email) o Staff (nombre + rol)
+	const displayIdentity = user?.email
+		? { label: user.email, badge: "Admin", badgeColor: "text-indigo-400" }
+		: staffIdentity
+			? { label: staffIdentity.name, badge: staffIdentity.role, badgeColor: "text-emerald-400" }
+			: null;
 
 	const toggleGroup = (id: string) => {
 		setCollapsedGroups((prev) => {
@@ -66,7 +85,7 @@ const SidebarView: React.FC<SidebarViewProps> = ({
 				<div className="size-10 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20">
 					{hotelName?.[0] || "H"}
 				</div>
-				<div className="flex flex-col min-w-0">
+				<div className="flex flex-col min-w-0 flex-1">
 					<h1 className="font-bold text-sidebar-foreground truncate text-sm tracking-tight">
 						{hotelName}
 					</h1>
@@ -79,6 +98,18 @@ const SidebarView: React.FC<SidebarViewProps> = ({
 							<span className="text-muted-foreground">Starter</span>
 						)}
 					</p>
+					{/* Identidad del usuario activo (Heurística #1: Visibilidad) */}
+					{displayIdentity && (
+						<div className="mt-1.5 flex items-center gap-1.5 truncate">
+							<div className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+							<span className="text-[10px] text-sidebar-foreground/70 truncate font-medium">
+								{displayIdentity.label}
+							</span>
+							<span className={`text-[9px] font-bold uppercase tracking-wider ${displayIdentity.badgeColor}`}>
+								{displayIdentity.badge}
+							</span>
+						</div>
+					)}
 				</div>
 			</div>
 
@@ -217,6 +248,7 @@ export default function Sidebar({
 	
 	user,
 	subscriptionPlan = "starter",
+	staffIdentity,
 }: SidebarProps) {
 	const pathname = usePathname();
 	const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
@@ -240,6 +272,7 @@ export default function Sidebar({
 			<SidebarView
 				hotelName={hotelName}
 				user={user}
+				staffIdentity={staffIdentity}
 				currentPath={pathname}
 				subscriptionPlan={subscriptionPlan}
 				onLogout={handleLogout}

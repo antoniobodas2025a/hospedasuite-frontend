@@ -26,10 +26,20 @@ interface MobileNavViewProps {
   onOpenShiftModal: () => void;
   onRevealDock: () => void;
   onLogout: () => void;
+  staffIdentity?: {
+    id: string;
+    name: string;
+    role: string;
+  };
 }
 
 interface MobileNavProps {
   subscriptionPlan?: 'starter' | 'pro' | 'enterprise';
+  staffIdentity?: {
+    id: string;
+    name: string;
+    role: string;
+  };
 }
 
 // ==========================================
@@ -44,7 +54,8 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
   onToggleMenu,
   onOpenShiftModal,
   onRevealDock,
-  onLogout
+  onLogout,
+  staffIdentity,
 }) => {
   return (
     <nav className="md:hidden">
@@ -150,6 +161,19 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
                 ))}
               </div>
               
+                {/* Identidad del usuario activo (Heurística #1: Visibilidad) */}
+                {staffIdentity && (
+                  <div className="px-4 pt-2 pb-1 flex items-center gap-2">
+                    <div className="size-2 rounded-full bg-emerald-400 animate-pulse" />
+                    <span className="text-xs text-sidebar-foreground/70 font-medium truncate">
+                      {staffIdentity.name}
+                    </span>
+                    <span className="text-[9px] font-bold uppercase tracking-wider text-emerald-400">
+                      {staffIdentity.role}
+                    </span>
+                  </div>
+                )}
+
                 <div className="mt-2 pt-4 border-t border-border">
                   <motion.button 
                     onClick={onOpenShiftModal} 
@@ -184,7 +208,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
 // BLOQUE 3: COMPONENTE CONTENEDOR
 // ==========================================
 
-export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavProps) {
+export default function MobileNav({ subscriptionPlan = 'starter', staffIdentity }: MobileNavProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
@@ -298,6 +322,7 @@ export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavPro
           setIsShiftModalOpen(true);
         }}
         onLogout={handleLogout}
+        staffIdentity={staffIdentity}
       />
 
       <ShiftReportModal 
