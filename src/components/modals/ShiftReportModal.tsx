@@ -1,8 +1,9 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { X, Printer, Calculator, Wallet, Building, CreditCard } from 'lucide-react';
+import { X, Printer, Calculator, Wallet, Building, CreditCard, LogOut } from 'lucide-react';
 import { getShiftReportAction } from '@/app/actions/payments';
+import { logout, logoutStaff } from '@/app/actions/auth';
 
 interface ShiftReportModalProps {
   isOpen: boolean;
@@ -31,6 +32,20 @@ export default function ShiftReportModal({ isOpen, onClose }: ShiftReportModalPr
       alert('❌ Error Crítico de Conexión: ' + error.message);
     } finally {
       setLoading(false); 
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      // Intentamos logout global primero; si falla (sin sesión Supabase),
+      // fallback a logout de staff
+      try {
+        await logout();
+      } catch {
+        await logoutStaff();
+      }
+    } catch (error) {
+      console.error('Error durante el cierre de sesión:', error);
     }
   };
 
@@ -102,6 +117,12 @@ export default function ShiftReportModal({ isOpen, onClose }: ShiftReportModalPr
             className="flex-1 py-4 bg-zinc-900 text-white shadow-xl font-bold rounded-[var(--radius-squircle-2xl)] hover:bg-black active:scale-[0.98] flex items-center justify-center gap-2 disabled:opacity-50 transition-all"
           >
             <Printer size={18} /> Imprimir Reporte Z
+          </button>
+          <button 
+            onClick={handleLogout}
+            className="py-4 px-5 bg-rose-500 text-white shadow-xl font-bold rounded-[var(--radius-squircle-2xl)] hover:bg-rose-600 active:scale-[0.98] flex items-center justify-center gap-2 transition-all"
+          >
+            <LogOut size={18} /> Cerrar Sesión
           </button>
         </div>
       </div>

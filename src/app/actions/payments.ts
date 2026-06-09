@@ -215,7 +215,7 @@ export async function getShiftReportAction() {
     
     let query = supabaseAdmin
       .from('payments')
-      .select('amount, method, created_at, staff_id, staff(name), bookings!inner(hotel_id)')
+      .select('amount, method, created_at, staff_id, bookings!inner(hotel_id)')
       .eq('bookings.hotel_id', currentHotel.id)
       .gte('created_at', shiftStart.toISOString());
 

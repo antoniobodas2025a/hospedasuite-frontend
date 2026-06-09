@@ -9,7 +9,7 @@ import { cn } from '@/lib/utils';
 import { springGentle, springSnappy } from '@/lib/mac2026/spring';
 import ShiftReportModal from '@/components/modals/ShiftReportModal';
 import { MENU_GROUPS, type MenuItem as MenuItemType } from '@/config/menuItems';
-import { logout } from '@/app/actions/auth';
+import { logout, logoutStaff } from '@/app/actions/auth';
 
 interface MenuGroup {
   id: string;
@@ -194,7 +194,13 @@ export default function MobileNav({ subscriptionPlan = 'starter' }: MobileNavPro
 
   const handleLogout = async () => {
     try {
-      await logout();
+      // Intentamos logout global primero; si falla (sin sesión Supabase),
+      // fallback a logout de staff
+      try {
+        await logout();
+      } catch {
+        await logoutStaff();
+      }
     } catch (error) {
       console.error('Error durante la terminación de sesión:', error);
     }

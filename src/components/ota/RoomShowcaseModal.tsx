@@ -18,6 +18,7 @@ import type { Room, GalleryItem } from "@/types";
 import { GlassCard } from "@/components/ui/glass";
 import RoomGallery from "./RoomGallery";
 import { getRoomAmenityById } from "@/lib/amenity-registry";
+import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { getDateFnsLocale } from "@/lib/date-locale";
 
@@ -81,12 +82,12 @@ export function RoomShowcaseModal({
 	const t = useTranslations();
 	const appLocale = useLocale();
 	const dateLocale = getDateFnsLocale(appLocale);
+	const searchParams = useSearchParams();
 
-	const roomId = new URLSearchParams(window.location.search).get("showRoom");
-	const checkIn = new URLSearchParams(window.location.search).get("checkin");
-	const checkOut = new URLSearchParams(window.location.search).get("checkout");
-	const guests =
-		Number(new URLSearchParams(window.location.search).get("guests")) || 0;
+	const roomId = searchParams.get("showRoom");
+	const checkIn = searchParams.get("checkin");
+	const checkOut = searchParams.get("checkout");
+	const guests = Number(searchParams.get("guests")) || 0;
 
 	// Default guest count for booking (can be adjusted in checkout)
 	const defaultGuests = guests > 0 ? guests : 2;

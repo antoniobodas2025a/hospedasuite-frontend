@@ -12,7 +12,7 @@ import {
 import { cn } from "@/lib/utils";
 import NavButton from "../ui/NavButton";
 import { MENU_GROUPS } from "@/config/menuItems";
-import { logout } from "@/app/actions/auth";
+import { logout, logoutStaff } from "@/app/actions/auth";
 import ShiftReportModal from "@/components/modals/ShiftReportModal";
 
 
@@ -223,7 +223,13 @@ export default function Sidebar({
 
 	const handleLogout = async () => {
 		try {
-			await logout();
+			// Si hay usuario de Supabase (admin), logout global
+			// Si no, es staff — logout solo de cookie operativa
+			if (user) {
+				await logout();
+			} else {
+				await logoutStaff();
+			}
 		} catch (error) {
 			console.error("Error durante la terminación de sesión:", error);
 		}

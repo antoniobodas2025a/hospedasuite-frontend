@@ -143,7 +143,7 @@ export default function FeaturedCard({
 						<div className="flex items-center justify-between mt-3">
 							<div>
 								<span className="text-2xl font-bold">
-									${hotel.min_price?.toLocaleString()}
+									${hotel.min_price?.toLocaleString('es-CO')}
 								</span>
 								<span className="text-sm text-white/60 ml-1">/noche</span>
 							</div>

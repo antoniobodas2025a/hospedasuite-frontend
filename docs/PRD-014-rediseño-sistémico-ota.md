@@ -1,9 +1,9 @@
 # PRD Evolutivo: Rediseño Sistémico OTA — Soberanía Técnica Total
 
 **Fecha:** 2026-06-09  
-**Estado:** Fases 1-5 Completas — Rediseño Sistémico OTA Finalizado  
+**Estado:** Fases 1-7 Completas — Rediseño Sistémico OTA Finalizado  
 **Alcance:** OTA completa (10,238 líneas, 44 componentes)  
-**Baseline:** 627→751 tests passing, 5→0 failing, 0 type errors, 0 lint errors
+**Baseline:** 627→793 tests passing, 5→0 failing, 0 type errors, 0 lint errors
 
 ---
 
@@ -266,15 +266,92 @@ $ npm run build       # ✅ exit code 0
 
 ---
 
+## 1g. Resultados Fase 6 — Input Unblocking + HotelCard Navigation
+
+### Auditoría de Coherencia
+
+| Componente | Estado Antes | Acción | Heurística |
+|-----------|-------------|--------|-----------|
+| SearchBarUnified dates zone | `!isPending &&` guard blocked clicks | Removed guard | #3 Control |
+| SearchBarUnified guests zone | `!isPending &&` guard blocked clicks | Removed guard | #3 Control |
+| LocationAutocomplete input | Never blocked | ✅ Verified | #3 Control |
+| MobileSearchSheet input | Never blocked | ✅ Verified | #3 Control |
+| HotelCard | Full-surface clickable | ✅ Already correct | Jakob's Law |
+| MobileSearchSheet | Not automatic (user-tap only) | ✅ Already correct | #8 Minimalismo |
+
+### TDD Input Unblocking Tests (23 tests, 7 mutation)
+
+| Categoría | Tests | Mutación |
+|-----------|-------|----------|
+| Input never blocked | 4 | ✅ Input disabled during loading |
+| Zones never blocked | 2 | ✅ Dates/guests blocked by isPending |
+| HotelCard navigation | 4 | ✅ Wrong slug, param loss |
+| Doherty Threshold | 3 | — |
+| Emergency exit | 4 | ✅ Missing close methods |
+| Search bar coherence | 3 | ✅ Param name inconsistency |
+| **Total** | **23** | **7 mutation tests** |
+
+### Bucle de Validación Final (Exit Code 0 en todos)
+
+```bash
+$ npm run lint        # ✅ 0 errors (519 warnings pre-existent)
+$ npm run typecheck   # ✅ 0 errors
+$ npm run test        # ✅ 774/774 PASS (+142 nuevos en 6 fases)
+$ npm run build       # ✅ exit code 0
+```
+
+---
+
+## 1h. Resultados Fase 7 — No-Interruption Hardening
+
+### Auditoría de Disparo de Eventos
+
+| Componente | Evento | Comportamiento | Estado |
+|-----------|--------|---------------|--------|
+| MobileSearchSheet | `onClick` button tap | Opens sheet | ✅ Correct (explicit user action) |
+| MobileSearchSheet | `onFocus` input | Does NOT open | ✅ Correct (no coupling) |
+| LocationAutocomplete | `onFocus` input | Shows cached suggestions dropdown | ✅ Correct (combobox, not modal) |
+| LocationAutocomplete | `onFocus` empty | Does NOT open dropdown | ✅ Correct |
+
+### Decoupling Verification
+
+| Trigger | MobileSearchSheet | Autocomplete Dropdown |
+|---------|------------------|----------------------|
+| Input focus | ❌ No | ✅ Yes (if cached suggestions) |
+| Button tap | ✅ Yes | ❌ No |
+| Auto/Open | ❌ No | ❌ No |
+
+### TDD No-Interruption Tests (19 tests, 7 mutation)
+
+| Categoría | Tests | Mutación |
+|-----------|-------|----------|
+| Input focus ≠ modal | 3 | ✅ autoOpen, focus-triggered modal |
+| Autocomplete focus | 3 | ✅ Focus opens modal instead of dropdown |
+| Doherty Threshold | 3 | ✅ Heavy component render on focus |
+| Ley de Jakob | 3 | ✅ Forced refinement modal |
+| SRP verification | 3 | ✅ Autocomplete state affecting mobile sheet |
+| **Total** | **19** | **7 mutation tests** |
+
+### Bucle de Validación Final (Exit Code 0 en todos)
+
+```bash
+$ npm run lint        # ✅ 0 errors (522 warnings pre-existent)
+$ npm run typecheck   # ✅ 0 errors
+$ npm run test        # ✅ 793/793 PASS (+161 nuevos en 7 fases)
+$ npm run build       # ✅ exit code 0
+```
+
+---
+
 ## 2. Reporte de Inmunidad (Baseline Actual)
 
 ### Tests Existentes
 | Métrica | Valor |
 |---------|-------|
-| Total tests | 751 |
-| Passing | 751 |
+| Total tests | 793 |
+| Passing | 793 |
 | Failing | 0 |
-| Files | 48 (48 passing, 0 failing) |
+| Files | 50 (50 passing, 0 failing) |
 
 ### Tests Failing (requieren fix antes de cualquier refactor)
 | Test | Línea | Causa Raíz |

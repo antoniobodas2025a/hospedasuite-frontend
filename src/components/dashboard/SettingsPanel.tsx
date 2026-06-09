@@ -30,6 +30,7 @@ import {
 	Image as ImageIcon,
 	Settings2,
 	UtensilsCrossed,
+	Copy,
 } from "lucide-react";
 import {
 	saveSettingsAction,
@@ -46,7 +47,6 @@ import { executeCleanSlateAction } from "@/app/actions/seeding";
 import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { GlassTooltip } from "@/components/ui/GlassTooltip";
-import { UndoToast } from "@/components/ui/UndoToast";
 import { AMENITY_REGISTRY } from "@/lib/amenity-registry";
 
 const HOTEL_AMENITIES = Object.values(AMENITY_REGISTRY);
@@ -127,6 +127,7 @@ export default function SettingsPanel({
 }: SettingsPanelProps) {
 	const [isSaving, setIsSaving] = useState(false);
 	const [isCleaning, setIsCleaning] = useState(false);
+	const [copiedSlug, setCopiedSlug] = useState(false);
 	const [activeTab, setActiveTab] = useState<
 		"general" | "ota" | "staff" | "advanced"
 	>("general");
@@ -344,30 +345,29 @@ export default function SettingsPanel({
 		setIsSaving(false);
 	};
 
+	const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
 	const handleDeleteStaff = async (id: string) => {
 		const staffToDelete = localStaff.find((s) => s.id === id);
 		if (!staffToDelete) return;
 
-		// Optimistic delete
-		setLocalStaff(localStaff.filter((s) => s.id !== id));
-
-		// Show undo toast
-		setPendingUndo({ action: "delete_staff", data: staffToDelete });
+		// Heurística #5: Prevención de errores — 2 clics deliberados
+		setConfirmDeleteId(id);
 	};
 
-	const [pendingUndo, setPendingUndo] = useState<{
-		action: string;
-		data: any;
-	} | null>(null);
-
-	const handleUndo = async () => {
-		if (!pendingUndo) return;
-		if (pendingUndo.action === "delete_staff") {
-			// Restore the deleted staff
-			setLocalStaff((prev) => [...prev, pendingUndo.data]);
+	const confirmDelete = async () => {
+		if (!confirmDeleteId) return;
+		
+		const res = await deleteStaffAction(confirmDeleteId);
+		if (res.success) {
+			setLocalStaff(localStaff.filter((s) => s.id !== confirmDeleteId));
+		} else {
+			alert("Error al eliminar: " + res.error);
 		}
-		setPendingUndo(null);
+		setConfirmDeleteId(null);
 	};
+
+	const cancelDelete = () => setConfirmDeleteId(null);
 
 	const onMasterSave = async (data: any) => {
 		setIsSaving(true);
@@ -479,6 +479,42 @@ export default function SettingsPanel({
 										placeholder="Nombre"
 										className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)]"
 									/>
+
+									{/* Código de Acceso — Solo lectura (Heurística #6: Reconocimiento) */}
+									<div>
+										<label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
+											Código de Acceso
+										</label>
+										<div className="flex items-center gap-2">
+											<input
+												readOnly
+												value={initialData?.slug || ""}
+												aria-label="Código de acceso del hotel para staff login"
+												className="flex-1 p-5 bg-background/50 border border-border rounded-[var(--radius-squircle-2xl)] text-muted-foreground font-mono text-sm cursor-not-allowed"
+											/>
+											<button
+												type="button"
+												onClick={() => {
+													navigator.clipboard.writeText(initialData?.slug || "");
+													setCopiedSlug(true);
+													setTimeout(() => setCopiedSlug(false), 2000);
+												}}
+												className="p-5 bg-muted border border-border rounded-[var(--radius-squircle-2xl)] hover:bg-accent transition-colors"
+												aria-label="Copiar código de acceso"
+											>
+												{copiedSlug ? (
+													<Check size={18} className="text-emerald-400" />
+												) : (
+													<Copy size={18} className="text-muted-foreground" />
+												)}
+											</button>
+										</div>
+										<p className="text-[10px] text-muted-foreground/60 mt-1.5">
+											Dale este código a tus recepcionistas para que ingresen en{" "}
+											<code className="text-foreground/70 bg-muted/50 px-1 rounded">/staff-login</code>
+										</p>
+									</div>
+
 									<div className="grid grid-cols-2 gap-6">
 										<input
 											{...register("city")}
@@ -1306,13 +1342,34 @@ export default function SettingsPanel({
 													</p>
 												</div>
 											</div>
-											<button
-												type="button"
-												onClick={() => handleDeleteStaff(p.id)}
-												className="p-3 text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 rounded-[var(--radius-squircle-lg)]"
-											>
-												<Trash2 size={20} />
-											</button>
+											
+											{confirmDeleteId === p.id ? (
+												<div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-4">
+													<span className="text-xs text-rose-400 font-bold">¿Eliminar?</span>
+													<button
+														type="button"
+														onClick={confirmDelete}
+														className="px-3 py-1.5 bg-rose-500 text-white text-xs font-bold rounded-[var(--radius-squircle-md)] hover:bg-rose-600 transition-colors"
+													>
+														Sí
+													</button>
+													<button
+														type="button"
+														onClick={cancelDelete}
+														className="px-3 py-1.5 bg-muted text-muted-foreground text-xs font-bold rounded-[var(--radius-squircle-md)] hover:text-foreground transition-colors"
+													>
+														No
+													</button>
+												</div>
+											) : (
+												<button
+													type="button"
+													onClick={() => handleDeleteStaff(p.id)}
+													className="p-3 text-muted-foreground hover:text-rose-400 hover:bg-rose-500/10 rounded-[var(--radius-squircle-lg)]"
+												>
+													<Trash2 size={20} />
+												</button>
+											)}
 										</div>
 									))}
 								</div>
@@ -1496,11 +1553,6 @@ export default function SettingsPanel({
 					</button>
 				</div>
 			</div>
-
-			{/* Undo Toast — Mac 2026: Nielsen #3 (Control y libertad) */}
-			{pendingUndo && (
-				<UndoToast message="Miembro eliminado" onUndo={handleUndo} />
-			)}
 		</div>
 	);
 }

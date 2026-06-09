@@ -1036,27 +1036,46 @@ export default function OTADashboard({
 						</AnimatePresence>
 					</div>
 
-					{/* Mobile: Tap to open search sheet */}
-					<button
-						onClick={() => setIsMobileSheetOpen(true)}
-						className="sm:hidden flex items-center gap-3 w-full px-5 py-3.5 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm active:scale-[0.98] transition-transform"
-					>
-						<MapPin size={20} className="text-brand-600 shrink-0" />
-						<div className="flex-1 text-left">
-							<p className="text-xs text-muted-foreground">
-								{urlLocation || t("ota.search.destination")}
-							</p>
-							<p className="text-sm font-bold text-foreground truncate">
-								{urlLocation || t("ota.search.placeholder")}
-							</p>
+					{/* Mobile: Direct input — no modal (Heurística #3: user freedom) */}
+					<div className="sm:hidden flex items-center gap-2 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm p-2">
+						<div className="flex-1 flex items-center gap-3 px-3">
+							<MapPin size={18} className="text-brand-600 shrink-0" />
+							<input
+								ref={inputRef}
+								type="text"
+								placeholder="¿A dónde querés escapar?"
+								value={searchTerm}
+								suppressHydrationWarning
+								onChange={(e) => setSearchTerm(e.target.value)}
+								onKeyDown={(e) => {
+									if (e.key === "Enter" && searchTerm.trim()) {
+										handleCommitLocation();
+									}
+								}}
+								className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none"
+							/>
+							{/* Clear button */}
+							{searchTerm && (
+								<button
+									onClick={() => {
+										setSearchTerm("");
+										syncToUrl({ location: "" });
+										inputRef.current?.focus();
+									}}
+									className="size-6 rounded-full flex items-center justify-center hover:bg-muted transition-colors shrink-0"
+									aria-label="Limpiar búsqueda"
+								>
+									<X size={12} strokeWidth={2.5} />
+								</button>
+							)}
 						</div>
-						{(urlCheckin || urlGuests) && (
-							<div className="flex items-center gap-2 text-xs text-muted-foreground">
-								{urlCheckin && <Calendar size={14} />}
-								{urlGuests && <User size={14} />}
-							</div>
-						)}
-					</button>
+						<button
+							onClick={handleCommitLocation}
+							className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 text-primary-foreground text-sm font-semibold rounded-[var(--radius-squircle-xl)] transition-colors active:scale-[0.97] active:bg-brand-700"
+						>
+							<Search size={14} />
+						</button>
+					</div>
 				</div>
 
 				{/* Judge verdict: split-view only if search active AND map requested */}

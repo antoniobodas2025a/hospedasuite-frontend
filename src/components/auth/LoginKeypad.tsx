@@ -8,6 +8,7 @@ import { Loader2, Lock } from 'lucide-react';
 
 export default function LoginKeypad() {
   const [pin, setPin] = useState('');
+  const [hotelSlug, setHotelSlug] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const router = useRouter();
@@ -23,10 +24,15 @@ export default function LoginKeypad() {
 
   const handleSubmit = async () => {
     if (pin.length !== 4) return;
+    if (!hotelSlug) {
+      setError('Ingresa el código del hotel');
+      return;
+    }
 
     setLoading(true);
     const formData = new FormData();
     formData.append('pin', pin);
+    formData.append('hotel_slug', hotelSlug);
 
     const result = await verifyPin(formData);
 
@@ -62,8 +68,19 @@ export default function LoginKeypad() {
             Hospeda<span className='text-brand-400 font-bold'>Suite</span>
           </h1>
           <p className='text-[10px] text-brand-300 tracking-extreme mt-1 uppercase'>
-            Sistema Forense V27.0
+            Acceso Operativo
           </p>
+        </div>
+
+        {/* Hotel Slug Input */}
+        <div className='w-full max-w-[260px] mb-6'>
+          <input
+            type='text'
+            value={hotelSlug}
+            onChange={(e) => setHotelSlug(e.target.value)}
+            placeholder='Código del Hotel (ej: hotel-candelaria)'
+            className='w-full bg-white/5 border border-white/10 rounded-[var(--radius-squircle-lg)] p-3 text-center text-white outline-none focus:border-brand-500/50 focus:bg-white/10 transition-all placeholder:text-white/20 text-sm'
+          />
         </div>
 
         {/* Display del PIN */}

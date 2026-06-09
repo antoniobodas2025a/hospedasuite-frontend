@@ -112,7 +112,7 @@ export default function BookingWidget({
             <>
               <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">{selectedRoom.name}</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-4xl font-black tracking-tight">${totalPrice.toLocaleString()}</p>
+                <p className="text-4xl font-black tracking-tight">${totalPrice.toLocaleString('es-CO')}</p>
                 <span className="text-primary-foreground/70 text-sm font-medium">{t('ota.booking.totalCOP')}</span>
               </div>
               {nights > 1 && (
