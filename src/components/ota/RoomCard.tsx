@@ -14,7 +14,7 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
-import { calculateTotalWithTax, DEFAULT_TAX_RATE } from '@/lib/pricing';
+import { calculateTotalWithTax, DEFAULT_TAX_RATE, formatPrice } from '@/lib/pricing';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
@@ -243,11 +243,11 @@ function RoomCardInner({
               {isSearchingDates ? (
                 <div className="space-y-1">
                     <p className="text-xs text-muted-foreground">
-                      <span className="font-bold text-foreground">${basePrice.toLocaleString()}</span> x {nights} {t('ota.roomCard.nights', { count: nights })}
+                      <span className="font-bold text-foreground">${formatPrice(basePrice)}</span> x {nights} {t('ota.roomCard.nights', { count: nights })}
                     </p>
                   <div className="flex items-end gap-2 pt-1">
                     <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                      ${totalPrice.toLocaleString()}
+                      ${formatPrice(totalPrice)}
                     </p>
                     <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copTotal')}</span>
                   </div>
@@ -257,7 +257,7 @@ function RoomCardInner({
                   <p className="text-xs text-muted-foreground/60 font-bold uppercase tracking-widest mb-1">{t('ota.roomCard.baseRate')}</p>
                   <div className="flex items-end gap-2">
                     <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                      ${displayPrice.toLocaleString()}
+                      ${formatPrice(displayPrice)}
                     </p>
                     <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copPerNight')}</span>
                   </div>
