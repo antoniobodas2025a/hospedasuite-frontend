@@ -1,16 +1,6 @@
 "use client";
 
-"use client";
-
-"use client";
-
-"use client";
-
-"use client";
-
-"use client";
-
-import { MapPin, Clock, ShieldAlert, Navigation, Phone, ExternalLink } from 'lucide-react';
+import { MapPin, Clock, ShieldAlert, Navigation, Phone, ExternalLink, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import HotelDetailMap from './HotelDetailMapWrapper';
 import { useState } from 'react';
@@ -45,11 +35,13 @@ export default function HotelInfoSection({
 }: HotelInfoSectionProps) {
   const t = useTranslations();
   const [mapError, setMapError] = useState(false);
+  const [showDetails, setShowDetails] = useState(false);
 
   // Build Google Maps navigation URL
   const mapsNavUrl = googleMapsUrl || 
     (latitude && longitude ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}` : null) ||
     (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : null);
+
   return (
     <div className="glass-card overflow-hidden">
       {/* Header */}
@@ -63,7 +55,7 @@ export default function HotelInfoSection({
       <div className="grid grid-cols-1 md:grid-cols-2">
         {/* Columna izquierda: Mapa + Direccion */}
         <div className="p-6 md:p-8 space-y-6">
-          {/* Mapa embebido */}
+          {/* Mapa embebido — siempre visible (Heurística #1) */}
           {googleMapsUrl && !mapError ? (
             <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48 relative">
               <iframe
@@ -89,7 +81,7 @@ export default function HotelInfoSection({
               location={location || ''}
             />
           ) : (
-            /* Fallback: Mapa no disponible + botón de navegación (Heurística #9) */
+            /* Fallback: Mapa no disponible (Heurística #9) */
             <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48 bg-muted flex items-center justify-center">
               <div className="text-center p-4">
                 <MapPin size={32} className="text-muted-foreground/40 mx-auto mb-2" />
@@ -98,44 +90,75 @@ export default function HotelInfoSection({
             </div>
           )}
 
-          {/* Botón "Cómo llegar" — Mayor contraste tras el precio (Heurística #9) */}
-          {mapsNavUrl && (
-            <a
-              href={mapsNavUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-              aria-label={`Abrir ubicación de ${hotelName} en Google Maps`}
-              className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-[var(--radius-squircle-xl)] shadow-lg shadow-brand-600/20 hover:shadow-xl transition-all active:scale-[0.98]"
-            >
-              <Navigation size={16} />
-              {t('ota.hotelInfo.getDirections', { defaultValue: 'Cómo llegar' })}
-              <ExternalLink size={14} className="opacity-70" />
-            </a>
-          )}
-
-          {/* Direccion */}
-          {address && (
+          {/* Zona general — siempre visible (Progressive Disclosure) */}
+          {location && (
             <div className="flex items-start gap-3">
-              <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-brand-50 flex items-center justify-center shrink-0 border border-brand-100">
-                <Navigation size={16} className="text-brand-500" />
+              <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-muted/50 flex items-center justify-center shrink-0 border border-border/50">
+                <MapPin size={16} className="text-muted-foreground" />
               </div>
               <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('ota.hotelInfo.address')}</p>
-                <p className="text-sm text-foreground/80">{address}</p>
+                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">Zona</p>
+                <p className="text-sm text-foreground/80">{location}</p>
               </div>
             </div>
           )}
 
-          {/* Telefono */}
-          {phone && (
-            <div className="flex items-start gap-3">
-              <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-secondary/10 flex items-center justify-center shrink-0 border border-secondary/20">
-                <Phone size={16} className="text-secondary" />
-              </div>
-              <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('ota.hotelInfo.contact')}</p>
-                <p className="text-sm text-foreground/80">{phone}</p>
-              </div>
+          {/* Toggle: Ver detalles de llegada (2 clics deliberados) */}
+          {(address || mapsNavUrl || phone) && (
+            <button
+              type="button"
+              onClick={() => setShowDetails(!showDetails)}
+              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
+              aria-expanded={showDetails}
+            >
+              {showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
+              {showDetails ? 'Ocultar detalles' : 'Ver detalles de llegada'}
+            </button>
+          )}
+
+          {/* Detalles ocultos — Dirección + Teléfono + Cómo llegar */}
+          {showDetails && (
+            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
+              {/* Botón "Cómo llegar" — Visualmente secundario (no compite con CTA primario) */}
+              {mapsNavUrl && (
+                <a
+                  href={mapsNavUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  aria-label={`Abrir ubicación de ${hotelName} en Google Maps`}
+                  className="flex items-center justify-center gap-2 w-full py-3 text-sm font-medium text-muted-foreground hover:text-foreground border border-border hover:border-foreground/20 rounded-[var(--radius-squircle-xl)] transition-all active:scale-[0.98]"
+                >
+                  <Navigation size={14} />
+                  {t('ota.hotelInfo.getDirections', { defaultValue: 'Cómo llegar' })}
+                  <ExternalLink size={12} className="opacity-50" />
+                </a>
+              )}
+
+              {/* Direccion exacta */}
+              {address && (
+                <div className="flex items-start gap-3">
+                  <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-brand-50 flex items-center justify-center shrink-0 border border-brand-100">
+                    <Navigation size={16} className="text-brand-500" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('ota.hotelInfo.address')}</p>
+                    <p className="text-sm text-foreground/80">{address}</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Telefono */}
+              {phone && (
+                <div className="flex items-start gap-3">
+                  <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-secondary/10 flex items-center justify-center shrink-0 border border-secondary/20">
+                    <Phone size={16} className="text-secondary" />
+                  </div>
+                  <div>
+                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('ota.hotelInfo.contact')}</p>
+                    <p className="text-sm text-foreground/80">{phone}</p>
+                  </div>
+                </div>
+              )}
             </div>
           )}
         </div>
