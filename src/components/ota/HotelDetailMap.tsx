@@ -25,7 +25,11 @@ interface HotelDetailMapProps {
 
 export default function HotelDetailMap({ latitude, longitude, hotelName, location }: HotelDetailMapProps) {
   return (
-    <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48">
+    <div 
+      className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48"
+      role="region"
+      aria-label={`Mapa de ubicación de ${hotelName} en ${location}`}
+    >
       <MapContainer
         center={[latitude, longitude]}
         zoom={15}

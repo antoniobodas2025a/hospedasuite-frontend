@@ -1,6 +1,7 @@
-import { MapPin, Clock, ShieldAlert, Navigation, Phone } from 'lucide-react';
+import { MapPin, Clock, ShieldAlert, Navigation, Phone, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import HotelDetailMap from './HotelDetailMapWrapper';
+import { useState } from 'react';
 
 interface HotelInfoSectionProps {
   hotelName: string;
@@ -31,6 +32,12 @@ export default function HotelInfoSection({
   longitude,
 }: HotelInfoSectionProps) {
   const t = useTranslations();
+  const [mapError, setMapError] = useState(false);
+
+  // Build Google Maps navigation URL
+  const mapsNavUrl = googleMapsUrl || 
+    (latitude && longitude ? `https://www.google.com/maps/dir/?api=1&destination=${latitude},${longitude}` : null) ||
+    (address ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address)}` : null);
   return (
     <div className="glass-card overflow-hidden">
       {/* Header */}
@@ -45,8 +52,8 @@ export default function HotelInfoSection({
         {/* Columna izquierda: Mapa + Direccion */}
         <div className="p-6 md:p-8 space-y-6">
           {/* Mapa embebido */}
-          {googleMapsUrl ? (
-            <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48">
+          {googleMapsUrl && !mapError ? (
+            <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48 relative">
               <iframe
                 src={googleMapsUrl.replace('/view?usp=sharing', '/embed?pb=').includes('embed') ? googleMapsUrl : `https://www.google.com/maps?q=${encodeURIComponent(location || '')}&output=embed`}
                 width="100%"
@@ -57,24 +64,42 @@ export default function HotelInfoSection({
                 referrerPolicy="no-referrer-when-downgrade"
                 title={`${t('ota.hotelInfo.mapTitle')} ${hotelName}`}
                 className="grayscale-[0.3] hover:grayscale-0 transition-all"
+                onError={() => setMapError(true)}
               />
+              {/* Skeleton loading state */}
+              <div className="absolute inset-0 bg-muted animate-pulse pointer-events-none" />
             </div>
-          ) : latitude != null && longitude != null ? (
+          ) : latitude != null && longitude != null && !mapError ? (
             <HotelDetailMap
               latitude={latitude}
               longitude={longitude}
               hotelName={hotelName}
               location={location || ''}
             />
-          ) : location ? (
+          ) : (
+            /* Fallback: Mapa no disponible + botón de navegación (Heurística #9) */
             <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48 bg-muted flex items-center justify-center">
               <div className="text-center p-4">
                 <MapPin size={32} className="text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground font-medium">{location}</p>
-                <p className="text-xs text-muted-foreground/60 mt-1">{t('ota.hotelInfo.mapNotAvailable')}</p>
+                <p className="text-sm text-muted-foreground font-medium">{location || address || t('ota.hotelInfo.mapNotAvailable')}</p>
               </div>
             </div>
-          ) : null}
+          )}
+
+          {/* Botón "Cómo llegar" — Mayor contraste tras el precio (Heurística #9) */}
+          {mapsNavUrl && (
+            <a
+              href={mapsNavUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              aria-label={`Abrir ubicación de ${hotelName} en Google Maps`}
+              className="flex items-center justify-center gap-2 w-full py-3.5 bg-brand-600 hover:bg-brand-500 text-white font-bold text-sm rounded-[var(--radius-squircle-xl)] shadow-lg shadow-brand-600/20 hover:shadow-xl transition-all active:scale-[0.98]"
+            >
+              <Navigation size={16} />
+              {t('ota.hotelInfo.getDirections', { defaultValue: 'Cómo llegar' })}
+              <ExternalLink size={14} className="opacity-70" />
+            </a>
+          )}
 
           {/* Direccion */}
           {address && (
