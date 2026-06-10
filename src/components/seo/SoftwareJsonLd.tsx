@@ -21,12 +21,32 @@ export default function SoftwareJsonLd() {
         image: 'https://hospedasuite.com/logo.png',
         applicationCategory: 'BusinessApplication',
         operatingSystem: 'Web',
-        offers: {
-          '@type': 'Offer',
-          price: '49000',
-          priceCurrency: 'COP',
-          description: 'Plan Starter desde $49.000 COP/mes. 1 mes gratis de prueba.',
-        },
+        offers: [
+          {
+            '@type': 'Offer',
+            price: '0',
+            priceCurrency: 'COP',
+            description: 'Plan Free: 1 habitación gratis para siempre. Sin tarjeta de crédito.',
+          },
+          {
+            '@type': 'Offer',
+            price: '49000',
+            priceCurrency: 'COP',
+            description: 'Plan Starter desde $49.000 COP/mes para 1-4 habitaciones. 1 mes gratis.',
+          },
+          {
+            '@type': 'Offer',
+            price: '99000',
+            priceCurrency: 'COP',
+            description: 'Plan Pro desde $99.000 COP/mes para 5-14 habitaciones. Channel Manager incluido.',
+          },
+          {
+            '@type': 'Offer',
+            price: '199000',
+            priceCurrency: 'COP',
+            description: 'Plan Enterprise desde $199.000 COP/mes para 15-30 habitaciones. Soporte prioritario.',
+          },
+        ],
         aggregateRating: {
           '@type': 'AggregateRating',
           ratingValue: '4.8',
@@ -54,6 +74,14 @@ export default function SoftwareJsonLd() {
         mainEntity: [
           {
             '@type': 'Question',
+            name: '¿Cuál es la diferencia entre el Motor Propio y la Red de Descubrimiento?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'El Motor Propio (0% comisión) es tu link personal para compartir en WhatsApp, Instagram o Facebook. Las reservas que llegan por ahí son 100% tuyas. La Red de Descubrimiento (10%) es el marketplace de HospedaSuite donde viajeros nuevos encuentran tu hotel. El 10% es un costo por adquisición de cliente nuevo, no una comisión extractiva como las OTAs tradicionales (15-25%).',
+            },
+          },
+          {
+            '@type': 'Question',
             name: '¿Qué es el Channel Manager?',
             acceptedAnswer: {
               '@type': 'Answer',
@@ -73,7 +101,15 @@ export default function SoftwareJsonLd() {
             name: '¿Cuánto cuesta HospedaSuite?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'El Plan Starter comienza en $49.000 COP/mes para 1-4 unidades. El Plan Pro (recomendado) cuesta $99.000 COP/mes para 5-14 unidades. El Plan Enterprise es $199.000 COP/mes para 15-30 unidades. Todos incluyen 1 mes gratis.',
+              text: 'El Plan Free es gratis para siempre con 1 habitación. El Plan Starter cuesta $49.000 COP/mes para 1-4 habitaciones. El Plan Pro (recomendado) cuesta $99.000 COP/mes para 5-14 habitaciones. El Plan Enterprise es $199.000 COP/mes para 15-30 habitaciones. Todos incluyen 1 mes gratis.',
+            },
+          },
+          {
+            '@type': 'Question',
+            name: '¿Qué pasa si agrego una segunda habitación?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'El Plan Free incluye 1 habitación. Al agregar una segunda, el sistema te sugiere escalar al Plan Starter ($49.000 COP/mes para hasta 4 habitaciones). El upgrade es inmediato y solo pagás desde el mes siguiente.',
             },
           },
           {

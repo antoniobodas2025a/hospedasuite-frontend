@@ -5,49 +5,61 @@
 // unitario sin dependencias de UI.
 // ============================================================================
 
-export const OTA_COMMISSION_RATE = 0.18; // 18% promedio OTA tradicional
+// Constantes declaradas — Soberanía del Dato
+export const TRADITIONAL_OTA_RATE = 0.18; // 18% promedio OTA tradicional (Booking, Airbnb)
+export const HOSPEDASUITE_DISCOVERY_RATE = 0.10; // 10% Red de Descubrimiento (costo de adquisición)
+export const OWN_MOTOR_RATE = 0.0; // 0% Motor Propio (WhatsApp, IG, FB)
 export const PRO_PLAN_COST = 99000; // Plan Pro mensual en COP
+
+// Backwards compatibility aliases
+export const OTA_COMMISSION_RATE = TRADITIONAL_OTA_RATE;
 
 export interface ROICalculation {
   totalRevenue: number;
-  otaCommission: number;
-  hospedaSuiteCost: number;
+  traditionalOtaCommission: number;
+  hospedaSuiteDiscoveryCost: number;
+  ownMotorCost: number;
   netSavings: number;
-  commissionRate: number;
+  traditionalCommissionRate: number;
+  discoveryCommissionRate: number;
   breakEvenBookings: number;
 }
 
 /**
- * Calcula el ahorro mensual al usar reservas directas vs OTA tradicional.
+ * Calcula el ahorro mensual al usar Motor Propio (0%) vs OTA tradicional.
  *
  * @param avgNightlyRate - Tarifa promedio por noche en COP
  * @param directBookingsPerMonth - Cantidad de reservas directas por mes
- * @param otaCommissionRate - Tasa de comisión OTA (default: 0.18)
+ * @param traditionalOtaRate - Tasa OTA tradicional (default: 0.18)
+ * @param discoveryRate - Tasa Red de Descubrimiento (default: 0.10)
  * @param planCost - Costo mensual del plan HospedaSuite (default: 99000)
  */
 export function calculateROI(
   avgNightlyRate: number,
   directBookingsPerMonth: number,
-  otaCommissionRate: number = OTA_COMMISSION_RATE,
+  traditionalOtaRate: number = TRADITIONAL_OTA_RATE,
+  discoveryRate: number = HOSPEDASUITE_DISCOVERY_RATE,
   planCost: number = PRO_PLAN_COST,
 ): ROICalculation {
   const totalRevenue = avgNightlyRate * directBookingsPerMonth;
-  const otaCommission = Math.round(totalRevenue * otaCommissionRate);
-  const netSavings = otaCommission - planCost;
+  const traditionalOtaCommission = Math.round(totalRevenue * traditionalOtaRate);
+  const hospedaSuiteDiscoveryCost = Math.round(totalRevenue * discoveryRate);
+  const ownMotorCost = planCost; // Solo costo del plan, 0% comisión
+  const netSavings = traditionalOtaCommission - planCost;
 
-  // Cuántas reservas directas necesitás para que el ahorro sea positivo
-  // (otaCommission >= planCost) => bookings >= planCost / (avgNightlyRate * commissionRate)
   const breakEvenBookings =
-    avgNightlyRate > 0 && otaCommissionRate > 0
-      ? Math.ceil(planCost / (avgNightlyRate * otaCommissionRate))
+    avgNightlyRate > 0 && traditionalOtaRate > 0
+      ? Math.ceil(planCost / (avgNightlyRate * traditionalOtaRate))
       : Infinity;
 
   return {
     totalRevenue,
-    otaCommission,
-    hospedaSuiteCost: planCost,
+    traditionalOtaCommission,
+    hospedaSuiteDiscoveryCost,
+    ownMotorCost,
     netSavings,
-    commissionRate: otaCommissionRate * 100,
+    traditionalCommissionRate: traditionalOtaRate * 100,
+    discoveryCommissionRate: discoveryRate * 100,
     breakEvenBookings,
   };
 }

@@ -63,6 +63,7 @@ const TIERS = {
     ],
     cta: 'Empezar Gratis',
     popular: false,
+    vonRestorff: false,
   },
   pro: {
     id: 'pro',
@@ -81,6 +82,7 @@ const TIERS = {
     ],
     cta: 'Empezar Gratis',
     popular: true,
+    vonRestorff: false,
   },
   enterprise: {
     id: 'enterprise',
@@ -99,6 +101,7 @@ const TIERS = {
     ],
     cta: 'Empezar Gratis',
     popular: false,
+    vonRestorff: false,
   },
 };
 
@@ -338,7 +341,7 @@ export default function App() {
               Mové los controles y mirá cuánto ahorrás recibiendo reservas directas por WhatsApp con 0% de comisión.
             </p>
           </div>
-          <ROISimulator />
+          <ROISimulator onCtaClick={() => setLeadModalOpen(true)} />
         </div>
       </section>
 
@@ -460,16 +463,36 @@ export default function App() {
           </div>
 
           {/* ─── TRANSPARENCY BLOCK ─── */}
-          <div className="mt-12 bg-[#0071e3]/[0.04] border border-[#0071e3]/[0.08] rounded-[28px] p-8 max-w-4xl mx-auto flex flex-col md:flex-row items-start md:items-center gap-6 shadow-sm">
-            <div className="bg-white p-4 rounded-full shadow-sm shrink-0 border border-black/[0.04]">
-              <Info className="w-6 h-6 text-[#0071e3]" />
+          <div className="mt-12 bg-[#0071e3]/[0.04] border border-[#0071e3]/[0.08] rounded-[28px] p-8 max-w-4xl mx-auto shadow-sm">
+            <div className="flex items-center gap-3 mb-6">
+              <div className="bg-white p-3 rounded-full shadow-sm border border-black/[0.04]">
+                <Info className="w-5 h-5 text-[#0071e3]" />
+              </div>
+              <div>
+                <h4 className="text-lg font-semibold text-[#1d1d1f] tracking-tight">Transparencia en Comisiones</h4>
+                <p className="text-[13px] text-[#1d1d1f]/40">El 10% de la Red de Descubrimiento es un costo por adquisición de cliente nuevo, no una comisión extractiva.</p>
+              </div>
             </div>
-            <div>
-              <h4 className="text-lg font-semibold text-[#1d1d1f] mb-2 tracking-tight">Transparencia en Comisiones</h4>
-              <p className="text-[15px] text-[#1d1d1f]/60 leading-relaxed">
-                Reservas por tus canales propios (WhatsApp, Teléfono, Tu Web): <strong className="text-[#1d1d1f]">0% comisión</strong>.
-                Reservas por HospedaSuite OTA: <strong className="text-[#1d1d1f]">10% comisión</strong>.
-              </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div className="bg-white rounded-[14px] p-4 border border-black/[0.04]">
+                <p className="text-[12px] text-[#1d1d1f]/40 font-semibold uppercase tracking-wide mb-1">Tu Motor Propio</p>
+                <p className="text-3xl font-semibold text-[#34c759]">0%</p>
+                <p className="text-[12px] text-[#1d1d1f]/40 mt-1">WhatsApp, Instagram, Facebook</p>
+              </div>
+              <div className="bg-white rounded-[14px] p-4 border border-[#0071e3]/[0.12]">
+                <p className="text-[12px] text-[#0071e3] font-semibold uppercase tracking-wide mb-1">Red de Descubrimiento</p>
+                <p className="text-3xl font-semibold text-[#0071e3]">10%</p>
+                <p className="text-[12px] text-[#1d1d1f]/40 mt-1">
+                  <a href="https://hospedasuite.com/" target="_blank" rel="noopener noreferrer" className="text-[#0071e3] hover:underline font-medium">
+                    hospedasuite.com
+                  </a>
+                </p>
+              </div>
+              <div className="bg-white rounded-[14px] p-4 border border-black/[0.04] opacity-60">
+                <p className="text-[12px] text-[#1d1d1f]/40 font-semibold uppercase tracking-wide mb-1">OTAs tradicionales</p>
+                <p className="text-3xl font-semibold text-[#1d1d1f]/40">15-25%</p>
+                <p className="text-[12px] text-[#1d1d1f]/40 mt-1">Booking, Airbnb, Expedia</p>
+              </div>
             </div>
           </div>
 
