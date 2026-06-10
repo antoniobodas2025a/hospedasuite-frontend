@@ -35,6 +35,7 @@ export default function HotelInfoSection({
 }: HotelInfoSectionProps) {
   const t = useTranslations();
   const [mapError, setMapError] = useState(false);
+  const [mapLoaded, setMapLoaded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
 
   // Build Google Maps navigation URL
@@ -68,10 +69,13 @@ export default function HotelInfoSection({
                 referrerPolicy="no-referrer-when-downgrade"
                 title={`${t('ota.hotelInfo.mapTitle')} ${hotelName}`}
                 className="grayscale-[0.3] hover:grayscale-0 transition-all"
+                onLoad={() => setMapLoaded(true)}
                 onError={() => setMapError(true)}
               />
-              {/* Skeleton loading state */}
-              <div className="absolute inset-0 bg-muted animate-pulse pointer-events-none" />
+              {/* Skeleton loading state — desaparece al cargar */}
+              {!mapLoaded && (
+                <div className="absolute inset-0 bg-muted animate-pulse pointer-events-none" />
+              )}
             </div>
           ) : latitude != null && longitude != null && !mapError ? (
             <HotelDetailMap
