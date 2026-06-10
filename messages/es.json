@@ -166,7 +166,8 @@
       "checkout": "Salida",
       "reception": "Recepción",
       "cancellationPolicy": "Política de Cancelación",
-      "defaultCancellationPolicy": "Cancelación gratuita hasta 48 horas antes de la llegada. Después de ese plazo se cobra la primera noche."
+      "defaultCancellationPolicy": "Cancelación gratuita hasta 48 horas antes de la llegada. Después de ese plazo se cobra la primera noche.",
+      "getDirections": "Cómo llegar"
     },
     "roomCard": {
       "bestValue": "Mejor Valor",

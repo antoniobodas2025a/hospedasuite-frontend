@@ -166,7 +166,8 @@
       "checkout": "Check-out",
       "reception": "Reception",
       "cancellationPolicy": "Cancellation Policy",
-      "defaultCancellationPolicy": "Free cancellation up to 48 hours before check-in. After that, the first night is charged."
+      "defaultCancellationPolicy": "Free cancellation up to 48 hours before check-in. After that, the first night is charged.",
+      "getDirections": "Get Directions"
     },
     "roomCard": {
       "bestValue": "Best Value",

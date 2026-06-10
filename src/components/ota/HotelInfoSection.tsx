@@ -1,3 +1,15 @@
+"use client";
+
+"use client";
+
+"use client";
+
+"use client";
+
+"use client";
+
+"use client";
+
 import { MapPin, Clock, ShieldAlert, Navigation, Phone, ExternalLink } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import HotelDetailMap from './HotelDetailMapWrapper';
