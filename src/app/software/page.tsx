@@ -16,12 +16,36 @@ import {
   Users,
   CreditCard,
 } from 'lucide-react';
+import SoftwareJsonLd from '@/components/seo/SoftwareJsonLd';
+import ROISimulator from '@/components/public/ROISimulator';
+import LeadCaptureModal from '@/components/public/LeadCaptureModal';
 
 // ============================================================================
-// TIERS — Miller's Law: max 5 features per chunk
+// TIERS — 4 niveles: Free → Starter → Pro → Enterprise
+// Miller's Law: max 5 features per chunk. Von Restorff: Starter destaca.
+// Heurística #2: "habitaciones" (modelo mental del hotelero).
 // ============================================================================
 
 const TIERS = {
+  free: {
+    id: 'free',
+    label: 'Free',
+    shortLabel: 'Free',
+    title: 'Free',
+    price: '0',
+    description: 'Probá el PMS con 1 habitación. Sin tarjeta, sin compromiso.',
+    rooms: '1 habitación',
+    features: [
+      'PMS Core completo',
+      '1 habitación activa',
+      'Link Directo (WhatsApp + Wompi)',
+      'OTA bilingüe (ES/EN)',
+      '1 mes gratis ilimitado',
+    ],
+    cta: 'Empezar Gratis',
+    popular: false,
+    vonRestorff: true, // Entry point visual — Von Restorff Effect
+  },
   starter: {
     id: 'starter',
     label: 'Starter',
@@ -29,13 +53,13 @@ const TIERS = {
     title: 'Starter',
     price: '49.000',
     description: 'Ideal para arrancar con lo esencial. 1 mes gratis.',
-    units: '1-4 unidades',
+    rooms: '1-4 habitaciones',
     features: [
-      'PMS Core completo',
-      'OTA bilingüe (ES/EN)',
+      'Todo lo de Free',
+      'Hasta 4 habitaciones',
       'Link Directo (WhatsApp + Wompi)',
+      'OTA bilingüe (ES/EN)',
       'Reviews moderadas',
-      '1 mes gratis',
     ],
     cta: 'Empezar Gratis',
     popular: false,
@@ -47,7 +71,7 @@ const TIERS = {
     title: 'Pro',
     price: '99.000',
     description: 'El estándar para hoteles boutique. Todo lo esencial + más.',
-    units: '5-14 unidades',
+    rooms: '5-14 habitaciones',
     features: [
       'Todo lo de Starter',
       'Channel Manager (3 OTAs)',
@@ -65,10 +89,10 @@ const TIERS = {
     title: 'Enterprise',
     price: '199.000',
     description: 'Para hoteles que necesitan más capacidad y soporte.',
-    units: '15-30 unidades',
+    rooms: '15-30 habitaciones',
     features: [
       'Todo lo de Pro',
-      'Hasta 30 unidades',
+      'Hasta 30 habitaciones',
       '6 OTAs conectadas',
       '15 cuentas de staff',
       'Soporte prioritario',
@@ -95,6 +119,7 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
+  const [leadModalOpen, setLeadModalOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30);
@@ -120,6 +145,9 @@ export default function App() {
 
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans antialiased selection:bg-[#0071e3]/20">
+
+      {/* JSON-LD Structured Data — SoftwareApplication + FAQPage */}
+      <SoftwareJsonLd />
 
       {/* Ambient cursor glow — Glassmorphism 2.0 */}
       <div
@@ -160,7 +188,7 @@ export default function App() {
 
           <div className="flex items-center gap-4">
             <button
-              onClick={() => router.push('/software/onboarding?plan=pro')}
+              onClick={() => setLeadModalOpen(true)}
               className="bg-[#0071e3] text-white px-4 py-1.5 rounded-full text-[13px] font-medium hover:bg-[#0077ED] transition-all duration-200 shadow-[0_2px_8px_rgba(0,113,227,0.2)] hover:shadow-[0_4px_16px_rgba(0,113,227,0.3)] active:scale-[0.97]"
             >
               Iniciar 1 Mes Gratis
@@ -188,19 +216,26 @@ export default function App() {
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-black/[0.04] mb-8 backdrop-blur-sm border border-black/[0.04]">
             <span className="w-1.5 h-1.5 rounded-full bg-[#34c759] animate-pulse" />
             <span className="text-[11px] font-semibold text-[#1d1d1f]/50 tracking-wide uppercase">
-              Nuevo Modelo 2026 — OTA Bilingüe
+              El Cerebro Operativo de tu Hotel
             </span>
           </div>
 
           <h1 className="text-5xl sm:text-6xl md:text-7xl lg:text-8xl font-semibold tracking-tighter mb-6 leading-[1.05] text-[#1d1d1f]">
-            Tu hotel, <br className="hidden sm:block" />
-            <span className="text-[#0071e3]">sin fronteras.</span>
+            Gestión total,<br className="hidden sm:block" />
+            <span className="text-[#0071e3]">cero comisiones.</span>
           </h1>
 
-          <p className="text-lg sm:text-xl md:text-2xl text-[#1d1d1f]/60 max-w-2xl mx-auto mb-10 font-normal leading-relaxed">
-            PMS + OTA bilingüe + Channel Manager. <strong className="text-[#1d1d1f]/80">1 mes gratis</strong>.<br className="hidden sm:block" />
+          <p className="text-lg sm:text-xl md:text-2xl text-[#1d1d1f]/60 max-w-2xl mx-auto mb-6 font-normal leading-relaxed">
+            PMS + Channel Manager + Reservas directas por WhatsApp. <strong className="text-[#1d1d1f]/80">1 mes gratis</strong>.<br className="hidden sm:block" />
             Instalación VIP incluida. Tu suscripción empieza en el mes 2.
           </p>
+
+          {/* GEO Citation Block — 40-60 words for RAG / Answer Engine Optimization */}
+          <div className="max-w-2xl mx-auto mb-10 p-5 bg-white/60 backdrop-blur-sm rounded-[16px] border border-black/[0.06] text-left">
+            <p className="text-[14px] text-[#1d1d1f]/60 leading-relaxed">
+              HospedaSuite es un PMS y Channel Manager diseñado para que hoteles boutique y glampings centralicen su operación. Funciona como el cerebro del hotel, permitiendo recibir reservas directas vía WhatsApp con cero por ciento de comisión y bloqueando automáticamente el inventario en plataformas como Booking y Airbnb para evitar sobreventas.
+            </p>
+          </div>
 
           {/* Hick's Law: ONE primary decision */}
           <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
@@ -292,6 +327,21 @@ export default function App() {
         </div>
       </section>
 
+      {/* ─── ROI SIMULATOR — Interactive savings calculator ─── */}
+      <section className="py-16 px-6 relative z-10">
+        <div className="max-w-[720px] mx-auto">
+          <div className="text-center mb-10">
+            <h2 className="text-2xl sm:text-3xl font-semibold tracking-tight mb-3">
+              ¿Cuánto te cuestan las comisiones?
+            </h2>
+            <p className="text-[15px] text-[#1d1d1f]/50 max-w-lg mx-auto">
+              Mové los controles y mirá cuánto ahorrás recibiendo reservas directas por WhatsApp con 0% de comisión.
+            </p>
+          </div>
+          <ROISimulator />
+        </div>
+      </section>
+
       {/* ─── PRICING — Progressive Disclosure: tabs → details ─── */}
       <section id="precios" className="py-24 px-6 bg-white border-t border-black/[0.04] relative">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
@@ -328,7 +378,9 @@ export default function App() {
           </div>
 
           {/* Pricing Card — Progressive Disclosure: details only on selection */}
-          <div className={`bg-[#f5f5f7] rounded-[28px] p-8 sm:p-12 md:p-16 shadow-inner border border-white/50 relative overflow-hidden transition-all duration-500 ${selectedTier === 'pro' ? 'ring-2 ring-[#0071e3]' : ''}`}>
+          <div className={`bg-[#f5f5f7] rounded-[28px] p-8 sm:p-12 md:p-16 shadow-inner border border-white/50 relative overflow-hidden transition-all duration-500 ${
+            selectedTier === 'pro' ? 'ring-2 ring-[#0071e3]' : ''
+          } ${TIERS[selectedTier as keyof typeof TIERS].vonRestorff ? 'ring-2 ring-[#34c759] shadow-[0_8px_40px_rgba(52,199,89,0.15)]' : ''}`}>
             <div className="absolute top-0 right-0 p-32 bg-white/40 blur-3xl rounded-full pointer-events-none" />
 
             <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-12 relative z-10">
@@ -339,12 +391,17 @@ export default function App() {
                     <span className="text-[11px] font-bold tracking-wide uppercase">Más Popular</span>
                   </div>
                 )}
+                {TIERS[selectedTier as keyof typeof TIERS].vonRestorff && (
+                  <div className="inline-flex items-center gap-2 bg-[#0071e3] text-white px-3 py-1 rounded-full mb-6 shadow-sm">
+                    <span className="text-[11px] font-bold tracking-wide uppercase">Sin Tarjeta de Crédito</span>
+                  </div>
+                )}
 
                 <h3 className="text-3xl sm:text-4xl font-semibold mb-2 tracking-tight text-[#1d1d1f]">
                   {TIERS[selectedTier as keyof typeof TIERS].title}
                 </h3>
                 <p className="text-[13px] text-[#0071e3] font-semibold mb-3">
-                  {TIERS[selectedTier as keyof typeof TIERS].units}
+                  {TIERS[selectedTier as keyof typeof TIERS].rooms}
                 </p>
                 <p className="text-[17px] text-[#1d1d1f]/50 mb-10 font-medium">
                   {TIERS[selectedTier as keyof typeof TIERS].description}
@@ -366,18 +423,28 @@ export default function App() {
 
               {/* Right — Price + CTA (Visual Salience: 80% attention) */}
               <div className="md:text-right flex flex-col md:items-end">
-                <div className="flex items-start justify-start md:justify-end gap-1 mb-1">
-                  <span className="text-2xl font-normal text-[#1d1d1f]/30 mt-3">$</span>
-                  <span className="text-6xl sm:text-7xl lg:text-8xl font-semibold tracking-tighter text-[#1d1d1f]">
-                    {TIERS[selectedTier as keyof typeof TIERS].price}
-                  </span>
-                </div>
+                {TIERS[selectedTier as keyof typeof TIERS].price === '0' ? (
+                  <div className="mb-1">
+                    <span className="text-6xl sm:text-7xl lg:text-8xl font-semibold tracking-tighter text-[#34c759]">
+                      Gratis
+                    </span>
+                  </div>
+                ) : (
+                  <div className="flex items-start justify-start md:justify-end gap-1 mb-1">
+                    <span className="text-2xl font-normal text-[#1d1d1f]/30 mt-3">$</span>
+                    <span className="text-6xl sm:text-7xl lg:text-8xl font-semibold tracking-tighter text-[#1d1d1f]">
+                      {TIERS[selectedTier as keyof typeof TIERS].price}
+                    </span>
+                  </div>
+                )}
                 <p className="text-[13px] text-[#1d1d1f]/30 mb-10 font-medium">
-                  COP / mes (después del mes gratis)
+                  {TIERS[selectedTier as keyof typeof TIERS].price === '0'
+                    ? 'Para siempre. Sin tarjeta.'
+                    : 'COP / mes (después del mes gratis)'}
                 </p>
 
                 <button
-                  onClick={() => router.push(`/software/onboarding?plan=${selectedTier}`)}
+                  onClick={() => setLeadModalOpen(true)}
                   className="w-full md:w-auto bg-[#1d1d1f] text-white px-10 py-5 rounded-full font-semibold text-[15px] hover:bg-black transition-all duration-200 shadow-[0_4px_16px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] hover:-translate-y-0.5 active:scale-[0.97] flex items-center justify-center gap-2"
                 >
                   {TIERS[selectedTier as keyof typeof TIERS].cta}
@@ -413,8 +480,9 @@ export default function App() {
               {[
                 { id: 'q1', q: '¿Cómo funciona el pago?', a: 'Tu hotel recibe el 100% del dinero de las reservas directamente en tu cuenta de Wompi. Al finalizar cada mes, HospedaSuite genera una factura con el costo de tu plan + comisiones aplicables.' },
                 { id: 'q2', q: '¿Qué es el Channel Manager?', a: 'Es un seguro anti-sobreventa. Nuestro sistema se conecta con Booking.com y Airbnb. Si vendés una habitación en HospedaSuite, se bloquea automáticamente en las otras plataformas.' },
-                { id: 'q3', q: '¿La OTA es bilingüe?', a: 'Sí. Tu página de hotel se muestra automáticamente en español o inglés según el idioma del visitante. Los turistas extranjeros ven tu hotel en su idioma.' },
-                { id: 'q4', q: '¿Qué pasa si tengo más de 30 unidades?', a: 'Contactanos para un plan personalizado. El plan Enterprise cubre hasta 30 unidades, pero podemos adaptar una solución para hoteles más grandes.' },
+                { id: 'q3', q: '¿Qué pasa si agrego una segunda habitación?', a: 'El Plan Free incluye 1 habitación. Al agregar una segunda, el sistema te sugiere automáticamente escalar al Plan Starter ($49.000 COP/mes para hasta 4 habitaciones). El upgrade es inmediato y solo pagás desde el mes siguiente.' },
+                { id: 'q4', q: '¿La OTA es bilingüe?', a: 'Sí. Tu página de hotel se muestra automáticamente en español o inglés según el idioma del visitante. Los turistas extranjeros ven tu hotel en su idioma.' },
+                { id: 'q5', q: '¿Qué pasa si tengo más de 30 habitaciones?', a: 'Contactanos para un plan personalizado. El plan Enterprise cubre hasta 30 habitaciones, pero podemos adaptar una solución para hoteles más grandes.' },
               ].map((faq) => (
                 <div key={faq.id} className="bg-white rounded-[20px] border border-black/[0.04] shadow-[0_1px_4px_rgba(0,0,0,0.02)] overflow-hidden">
                   <button
@@ -460,6 +528,13 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      {/* ─── LEAD CAPTURE MODAL ─── */}
+      <LeadCaptureModal
+        isOpen={leadModalOpen}
+        onClose={() => setLeadModalOpen(false)}
+        defaultPlan={selectedTier}
+      />
     </div>
   );
 }
