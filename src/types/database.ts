@@ -1117,6 +1117,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      dark_funnel_events: {
+        Row: {
+          id: string
+          created_at?: string
+          hotel_id?: string
+          event_type: string // 'ai_referral' | 'lead_captured' | 'trend_intercept'
+          source?: string // 'chatgpt.com' | 'perplexity.ai' | 'trend-webhook'
+          city?: string
+          attack_line?: string
+          payload?: Json
+        };
+        Insert: {
+          id?: string
+          created_at?: string
+          hotel_id?: string
+          event_type: string
+          source?: string
+          city?: string
+          attack_line?: string
+          payload?: Json
+        };
+        Update: {
+          id?: string
+          created_at?: string
+          hotel_id?: string
+          event_type?: string
+          source?: string
+          city?: string
+          attack_line?: string
+          payload?: Json
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
