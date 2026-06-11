@@ -149,6 +149,9 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       whatsapp_number: state.settings.whatsappNumber || null,
       google_maps_url: state.settings.googleMapsUrl || null,
       tax_rate: state.settings.taxRate ?? 0,
+      // Soberanía Financiera: claves de Wompi del hotel
+      wompi_public_key: state.settings.wompi_public_key || null,
+      wompi_integrity_secret: state.settings.wompi_integrity_secret || null,
     };
 
     if (isManual) {

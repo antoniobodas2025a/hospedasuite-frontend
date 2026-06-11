@@ -117,13 +117,15 @@ export default function PaymentStep() {
                 isSubscription={true}
                 onSuccess={(txId) => { setPaymentTransactionId(txId); }}
               />
-              {/* Demo bypass */}
-              <button
-                onClick={() => setPaymentTransactionId(`DEMO-${Date.now()}`)}
-                className="w-full py-3 text-xs font-bold text-zinc-600 hover:text-zinc-400 transition-colors border border-dashed border-zinc-800 hover:border-zinc-600 rounded-[var(--radius-squircle-lg)]"
-              >
-                {t('demoBypass')}
-              </button>
+              {/* Demo bypass — SOLO en desarrollo (Heurística #5: Prevención de Errores) */}
+              {process.env.NODE_ENV !== 'production' && (
+                <button
+                  onClick={() => setPaymentTransactionId(`DEMO-${Date.now()}`)}
+                  className="w-full py-3 text-xs font-bold text-zinc-600 hover:text-zinc-400 transition-colors border border-dashed border-zinc-800 hover:border-zinc-600 rounded-[var(--radius-squircle-lg)]"
+                >
+                  {t('demoBypass')}
+                </button>
+              )}
             </div>
           ) : (
             <ManualPaymentCard />

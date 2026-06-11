@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, ChevronDown, ChevronUp, Clock, MessageCircle, Shield, Sparkles, Banknote } from 'lucide-react';
+import { Settings, ChevronDown, Clock, Shield, Sparkles, Banknote, CreditCard } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
@@ -13,7 +13,7 @@ const springs = {
   medium: { type: 'spring' as const, stiffness: 300, damping: 24, mass: 1.0 },
 };
 
-type Section = 'hours' | 'policy' | 'amenities' | 'tax' | null;
+type Section = 'hours' | 'policy' | 'amenities' | 'tax' | 'wompi' | null;
 
 export default function SettingsStep() {
   const t = useTranslations('onboarding.settings');
@@ -160,6 +160,49 @@ export default function SettingsStep() {
             <p className="text-sm font-bold text-white">Ordinario</p>
             <p className="text-[10px] text-zinc-500 mt-1">IVA 19% incluido</p>
           </button>
+        </div>
+      </SectionCard>
+
+      {/* Section 5: Pasarela de Pagos (Soberanía Financiera) */}
+      <SectionCard
+        icon={CreditCard}
+        title="Pasarela de Pagos"
+        isOpen={openSection === 'wompi'}
+        onToggle={() => toggleSection('wompi')}
+        badge={settings.wompi_public_key && settings.wompi_integrity_secret ? '✓' : undefined}
+      >
+        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-3">
+          Conectá tu cuenta de Wompi para recibir pagos directos
+        </p>
+        <div className="space-y-4">
+          <div>
+            <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">
+              Clave Pública (Public Key)
+            </label>
+            <input
+              type="text"
+              value={settings.wompi_public_key || ''}
+              onChange={(e) => updateSettings({ wompi_public_key: e.target.value })}
+              placeholder="pub_prod_..."
+              className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-lg)] p-3 text-white outline-none focus:border-indigo-500/50 placeholder:text-zinc-700 font-mono text-sm"
+            />
+          </div>
+          <div>
+            <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">
+              Secreto de Integridad (Integrity Secret)
+            </label>
+            <input
+              type="password"
+              value={settings.wompi_integrity_secret || ''}
+              onChange={(e) => updateSettings({ wompi_integrity_secret: e.target.value })}
+              placeholder="integ_..."
+              className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-lg)] p-3 text-white outline-none focus:border-indigo-500/50 placeholder:text-zinc-700 font-mono text-sm"
+            />
+          </div>
+          <p className="text-[10px] text-zinc-600 leading-relaxed">
+            Obtené estas claves en tu <span className="text-zinc-400">Dashboard de Wompi → Desarrollo → Integración</span>.
+            Sin estas claves, tus huéspedes no podrán pagarte.
+          </p>
         </div>
       </SectionCard>
     </motion.div>

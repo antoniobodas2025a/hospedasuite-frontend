@@ -35,6 +35,8 @@ function makeValidState(overrides?: Record<string, unknown>) {
 			checkInTime: "15:00",
 			checkOutTime: "12:00",
 			taxRate: 0,
+			wompi_public_key: "pub_prod_test",
+			wompi_integrity_secret: "integ_prod_test",
 		},
 		payment: {
 			price: 89900,

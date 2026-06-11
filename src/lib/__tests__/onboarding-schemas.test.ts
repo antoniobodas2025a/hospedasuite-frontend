@@ -32,6 +32,8 @@ function makeValidState(
 			checkInTime: "15:00",
 			checkOutTime: "12:00",
 			taxRate: 0,
+			wompi_public_key: "pub_prod_test123",
+			wompi_integrity_secret: "integ_prod_test456",
 		},
 		payment: {
 			price: 89900,
@@ -216,7 +218,7 @@ describe("fullWizardStateSchema.galleryImages", () => {
 					imageUrls: ["https://cdn.example.com/room-b.webp"],
 				},
 			],
-			settings: { checkInTime: "15:00", checkOutTime: "12:00", taxRate: 0.19 },
+			settings: { checkInTime: "15:00", checkOutTime: "12:00", taxRate: 0.19, wompi_public_key: "pub_prod_test", wompi_integrity_secret: "integ_prod_test" },
 			payment: {
 				price: 89900,
 				paymentMethod: "wompi" as const,

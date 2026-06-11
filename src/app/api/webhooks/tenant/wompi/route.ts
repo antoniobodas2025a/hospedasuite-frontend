@@ -33,16 +33,16 @@ export async function POST(request: Request) {
     // 3. RECUPERACIÓN DE SECRETO POR TENANT (Multi-tenant Security)
     const { data: hotel, error: hotelErr } = await supabaseAdmin
       .from('hotels')
-      .select('wompi_events_secret, name')
+      .select('wompi_integrity_secret, name')
       .eq('id', booking.hotel_id)
       .single();
 
-    if (hotelErr || !hotel?.wompi_events_secret) {
+    if (hotelErr || !hotel?.wompi_integrity_secret) {
       return NextResponse.json({ error: 'Configuración de seguridad incompleta' }, { status: 500 });
     }
 
     // 4. BARRERA CRIPTOGRÁFICA (Anti-Spoofing)
-    const isAuthentic = verifyWompiSignature(payload, hotel.wompi_events_secret);
+    const isAuthentic = verifyWompiSignature(payload, hotel.wompi_integrity_secret);
     if (!isAuthentic) {
       console.error(`🚨 [SecOps] Firma Inválida detectada en TX: ${dataObj.id}`);
       return NextResponse.json({ error: 'Falsificación de firma bloqueada' }, { status: 403 });

@@ -107,6 +107,8 @@ const defaultSettings: SettingsData = {
 	checkInTime: "15:00",
 	checkOutTime: "11:00",
 	taxRate: 0.19,
+	wompi_public_key: "",
+	wompi_integrity_secret: "",
 };
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({

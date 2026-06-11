@@ -124,7 +124,8 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     }
 
     const amountInCents = Math.round(Number(grandTotal) * 100);
-    const rawKey = process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY || '';
+    // Soberanía Financiera: usar la clave del hotel, NO la de la plataforma
+    const rawKey = hotel.wompi_public_key || process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY || '';
     const cleanPublicKey = rawKey.replace(/['"\s\r\n]+/g, '');
 
     if (!cleanPublicKey) {
