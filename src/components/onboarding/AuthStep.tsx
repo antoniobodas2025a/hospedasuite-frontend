@@ -1,8 +1,9 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Loader2, ArrowRight, AlertCircle } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { springGentle, springSnappy } from '@/lib/mac2026/spring';
 
@@ -11,11 +12,18 @@ interface AuthStepProps {
 }
 
 export default function AuthStep({ onSuccess }: AuthStepProps) {
-  const [email, setEmail] = useState('');
+  const searchParams = useSearchParams();
+  const prefillEmail = searchParams.get('email') || '';
+  const prefillRooms = searchParams.get('rooms') || '';
+
+  const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
+
+  // S2: Lock pre-filled email to prevent typo re-entry
+  const isEmailPrefilled = prefillEmail.length > 0;
 
   const handleSignUp = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -53,6 +61,7 @@ export default function AuthStep({ onSuccess }: AuthStepProps) {
       </div>
 
       <form onSubmit={handleSignUp} className="space-y-4">
+        {/* Email — S2: Read-only if pre-filled from Dark Funnel */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-zinc-400 ml-1">Email</label>
           <div className="relative group">
@@ -62,12 +71,26 @@ export default function AuthStep({ onSuccess }: AuthStepProps) {
               required
               value={email}
               onChange={(e) => setEmail(e.target.value)}
+              readOnly={isEmailPrefilled}
               placeholder="tu@email.com"
-              className="w-full bg-zinc-900/50 border border-white/10 rounded-[var(--radius-squircle-md)] py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+              className={`w-full bg-zinc-900/50 border rounded-[var(--radius-squircle-md)] py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:ring-1 transition-all ${
+                isEmailPrefilled
+                  ? 'border-indigo-500/30 text-indigo-300 cursor-not-allowed opacity-80'
+                  : 'border-white/10 focus:border-indigo-500/50 focus:ring-indigo-500/20'
+              }`}
             />
+            {isEmailPrefilled && (
+              <ShieldCheck className="absolute right-3 top-1/2 -translate-y-1/2 text-indigo-400" size={16} />
+            )}
           </div>
+          {isEmailPrefilled && (
+            <p className="text-[11px] text-indigo-400/60 ml-1">
+              ✓ Pre-llenado desde tu solicitud · No requiere reingreso
+            </p>
+          )}
         </div>
 
+        {/* Password */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-zinc-400 ml-1">Contraseña</label>
           <div className="relative group">
@@ -83,6 +106,16 @@ export default function AuthStep({ onSuccess }: AuthStepProps) {
             />
           </div>
         </div>
+
+        {/* Room capacity indicator — S1: Show pre-filled room count */}
+        {prefillRooms && (
+          <div className="bg-white/5 border border-white/10 rounded-[var(--radius-squircle-md)] p-3 flex items-center gap-3">
+            <ShieldCheck className="text-indigo-400 flex-shrink-0" size={16} />
+            <p className="text-xs text-zinc-400">
+              Capacidad operativa: <span className="text-white font-semibold">{prefillRooms} habitación{prefillRooms !== '1' ? 'es' : ''}</span>
+            </p>
+          </div>
+        )}
 
         {error && (
           <motion.div

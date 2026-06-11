@@ -132,12 +132,12 @@ export default function ROISimulator({ onCtaClick }: ROISimulatorProps) {
             <p className="text-[13px] font-semibold text-[#34c759] uppercase tracking-wide">
               Tu Motor Propio (0%)
             </p>
-            <div className="flex items-center gap-1.5 mt-0.5">
-              <p className="text-[13px] text-[#1d1d1f]/30">
-                WhatsApp, IG, FB → Solo el plan ({formatCOP(PRO_PLAN_COST)}/mes)
-              </p>
-              <Info size={12} className="text-[#1d1d1f]/20" />
-            </div>
+            <p className="text-[13px] text-[#1d1d1f]/40 mt-0.5 leading-snug">
+              Tu link personal para WhatsApp, IG y Facebook. Tus clientes reservan directo, <strong className="text-[#34c759]/80">sin que nadie te quite comisión</strong>.
+            </p>
+            <p className="text-[11px] text-[#1d1d1f]/25 mt-1">
+              Solo el plan ({formatCOP(PRO_PLAN_COST)}/mes) — el resto es tuyo.
+            </p>
           </div>
           <p className="text-xl font-semibold text-[#34c759]">
             −{formatCOP(savings.ownMotorCost)}
@@ -148,16 +148,27 @@ export default function ROISimulator({ onCtaClick }: ROISimulatorProps) {
       {/* ─── FÓRMULA EXPLICADA — Ley de Postel: salida matemática clara ─── */}
       <div className="mb-6 px-5 py-4 bg-[#34c759]/[0.06] rounded-[16px] border border-[#34c759]/[0.12]">
         <p className="text-[11px] text-[#34c759]/70 font-semibold uppercase tracking-wider mb-2">
-          ¿Cómo se calcula tu ahorro?
+          ¿Cuánto te deja cada reserva?
         </p>
-        <div className="flex items-center gap-2 text-[13px] text-[#1d1d1f]/60 font-mono flex-wrap">
+        <div className="space-y-1.5">
+          <div className="flex items-center gap-2 text-[13px] text-[#1d1d1f]/50">
+            <span className="text-red-500/60">✕</span>
+            <span>Con OTA: te quedás con <span className="text-red-500/70 font-semibold">{formatCOP(savings.totalRevenue - savings.traditionalOtaCommission)}</span> de {formatCOP(savings.totalRevenue)}</span>
+          </div>
+          <div className="flex items-center gap-2 text-[13px] text-[#34c759]">
+            <span>✓</span>
+            <span>Con tu link: te quedás con <span className="font-bold">{formatCOP(savings.totalRevenue - PRO_PLAN_COST)}</span> de {formatCOP(savings.totalRevenue)}</span>
+          </div>
+        </div>
+        <div className="mt-3 pt-3 border-t border-[#34c759]/[0.10] flex items-center gap-2 text-[13px] text-[#1d1d1f]/60 font-mono flex-wrap">
           <span className="text-red-500/70 font-semibold">{formatCOP(savings.traditionalOtaCommission)}</span>
-          <span>comisión OTA</span>
+          <span>que le das a la OTA</span>
           <span className="text-[#1d1d1f]/25">−</span>
           <span className="text-[#34c759] font-semibold">{formatCOP(PRO_PLAN_COST)}</span>
           <span>tu plan</span>
           <span className="text-[#1d1d1f]/25">=</span>
           <span className="text-[#34c759] font-bold text-[15px]">{formatCOP(savings.netSavings)}</span>
+          <span className="text-[#1d1d1f]/40">más en tu bolsillo</span>
         </div>
       </div>
 

@@ -1,128 +1,31 @@
 'use client';
 import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import {
   Smartphone,
   Globe,
-  Check,
-  ShieldCheck,
   LayoutGrid,
   Menu,
   X,
   ArrowUpRight,
-  Info,
-  Zap,
-  Calendar,
-  Users,
-  CreditCard,
 } from 'lucide-react';
 import SoftwareJsonLd from '@/components/seo/SoftwareJsonLd';
+import DatasetJsonLd from '@/components/seo/DatasetJsonLd';
 import ROISimulator from '@/components/public/ROISimulator';
 import LeadCaptureModal from '@/components/public/LeadCaptureModal';
-
-// ============================================================================
-// TIERS — 4 niveles: Free → Starter → Pro → Enterprise
-// Miller's Law: max 5 features per chunk. Von Restorff: Starter destaca.
-// Heurística #2: "habitaciones" (modelo mental del hotelero).
-// ============================================================================
-
-const TIERS = {
-  free: {
-    id: 'free',
-    label: 'Free',
-    shortLabel: 'Free',
-    title: 'Free',
-    price: '0',
-    description: 'Probá el PMS con 1 habitación. Sin tarjeta, sin compromiso.',
-    rooms: '1 habitación',
-    features: [
-      'PMS Core completo',
-      '1 habitación activa',
-      'Link Directo (WhatsApp + Wompi)',
-      'OTA bilingüe (ES/EN)',
-      '1 mes gratis ilimitado',
-    ],
-    cta: 'Empezar Gratis',
-    popular: false,
-    vonRestorff: true, // Entry point visual — Von Restorff Effect
-  },
-  starter: {
-    id: 'starter',
-    label: 'Starter',
-    shortLabel: 'Starter',
-    title: 'Starter',
-    price: '49.000',
-    description: 'Ideal para arrancar con lo esencial. 1 mes gratis.',
-    rooms: '1-4 habitaciones',
-    features: [
-      'Todo lo de Free',
-      'Hasta 4 habitaciones',
-      'Link Directo (WhatsApp + Wompi)',
-      'OTA bilingüe (ES/EN)',
-      'Reviews moderadas',
-    ],
-    cta: 'Empezar Gratis',
-    popular: false,
-    vonRestorff: false,
-  },
-  pro: {
-    id: 'pro',
-    label: 'Pro (Recomendado)',
-    shortLabel: 'Pro',
-    title: 'Pro',
-    price: '99.000',
-    description: 'El estándar para hoteles boutique. Todo lo esencial + más.',
-    rooms: '5-14 habitaciones',
-    features: [
-      'Todo lo de Starter',
-      'Channel Manager (3 OTAs)',
-      'Carta Digital QR',
-      'POS (Punto de Venta)',
-      'Libro Registro Forense',
-    ],
-    cta: 'Empezar Gratis',
-    popular: true,
-    vonRestorff: false,
-  },
-  enterprise: {
-    id: 'enterprise',
-    label: 'Enterprise',
-    shortLabel: 'Enterprise',
-    title: 'Enterprise',
-    price: '199.000',
-    description: 'Para hoteles que necesitan más capacidad y soporte.',
-    rooms: '15-30 habitaciones',
-    features: [
-      'Todo lo de Pro',
-      'Hasta 30 habitaciones',
-      '6 OTAs conectadas',
-      '15 cuentas de staff',
-      'Soporte prioritario',
-    ],
-    cta: 'Empezar Gratis',
-    popular: false,
-    vonRestorff: false,
-  },
-};
-
-// ============================================================================
-// SPRING PHYSICS — Mac 2026 micro-interactions
-// ============================================================================
-
-const springConfig = { type: 'spring' as const, stiffness: 400, damping: 25 };
+import InteractivePricingSlider from '@/components/InteractivePricingSlider';
 
 // ============================================================================
 // COMPONENT
 // ============================================================================
 
 export default function App() {
-  const router = useRouter();
   const [scrolled, setScrolled] = useState(false);
-  const [selectedTier, setSelectedTier] = useState('pro');
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [expandedFaq, setExpandedFaq] = useState<string | null>(null);
   const [leadModalOpen, setLeadModalOpen] = useState(false);
+  const [sliderTier, setSliderTier] = useState('starter');
+  const [sliderRoomCount, setSliderRoomCount] = useState(2);
 
   useEffect(() => {
     const handleScroll = () => setScrolled(window.scrollY > 30);
@@ -146,11 +49,20 @@ export default function App() {
     setExpandedFaq(expandedFaq === id ? null : id);
   };
 
+  const handleSliderCtaClick = (tierId: string, roomCount: number) => {
+    setSliderTier(tierId);
+    setSliderRoomCount(roomCount);
+    setLeadModalOpen(true);
+  };
+
   return (
     <div className="min-h-screen bg-[#f5f5f7] text-[#1d1d1f] font-sans antialiased selection:bg-[#0071e3]/20">
 
       {/* JSON-LD Structured Data — SoftwareApplication + FAQPage */}
       <SoftwareJsonLd />
+
+      {/* JSON-LD Dataset — Certified B2B Performance Data (E-E-A-T) */}
+      <DatasetJsonLd />
 
       {/* Ambient cursor glow — Glassmorphism 2.0 */}
       <div
@@ -266,7 +178,7 @@ export default function App() {
             Un sistema. Dos motores.
           </h2>
           <p className="text-[17px] text-[#1d1d1f]/50 text-center max-w-xl mx-auto mb-16">
-            Tu PMS gestiona. Tu OTA vende. Todo conectado automáticamente.
+            Tu PMS gestiona. Tu motor de reservas vende. Todo conectado automáticamente.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -309,20 +221,20 @@ export default function App() {
               </div>
             </div>
 
-            {/* HospedaSuite OTA */}
+            {/* Motor de Reservas */}
             <div className="group bg-white rounded-[28px] p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)] hover:shadow-[0_8px_40px_rgba(0,0,0,0.08)] transition-all duration-500 border border-black/[0.04] relative overflow-hidden">
               <div className="absolute inset-0 bg-gradient-to-bl from-transparent to-black/[0.03] opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
               <div className="relative z-10">
                 <div className="w-12 h-12 rounded-[18px] bg-[#f5f5f7] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300" style={{ transitionTimingFunction: 'cubic-bezier(0.34, 1.56, 0.64, 1)' }}>
                   <Globe size={22} className="text-[#1d1d1f]" strokeWidth={1.5} />
                 </div>
-                <h3 className="text-xl font-semibold mb-3 tracking-tight">HospedaSuite OTA</h3>
+                <h3 className="text-xl font-semibold mb-3 tracking-tight">Motor de Reservas</h3>
                 <p className="text-[15px] text-[#1d1d1f]/50 mb-8 leading-relaxed">
                   Publicación automática bilingüe. Si estás en el PMS, estás visible al mundo.
                 </p>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-5xl font-semibold tracking-tight">10%</span>
-                  <span className="text-sm text-[#1d1d1f]/30 font-medium uppercase tracking-wide">Comisión OTA</span>
+                  <span className="text-sm text-[#1d1d1f]/30 font-medium uppercase tracking-wide">Costo de adquisición</span>
                 </div>
               </div>
             </div>
@@ -345,7 +257,7 @@ export default function App() {
         </div>
       </section>
 
-      {/* ─── PRICING — Progressive Disclosure: tabs → details ─── */}
+      {/* ─── PRICING — Interactive Slider (Progressive Disclosure) ─── */}
       <section id="precios" className="py-24 px-6 bg-white border-t border-black/[0.04] relative">
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[1000px] h-[400px] bg-gradient-to-b from-[#f5f5f7] to-transparent opacity-50" />
@@ -359,142 +271,7 @@ export default function App() {
             <p className="text-lg text-[#1d1d1f]/50">1 mes gratis en todos los planes. Sin pagos de instalación.</p>
           </div>
 
-          {/* Tier Selector — Sticky, Miller's Law: 3 options max */}
-          <div className="sticky top-[72px] z-50 flex justify-center mb-16 px-2 py-4 -mt-4">
-            <div className="inline-flex bg-[#f5f5f7]/90 backdrop-blur-[20px] p-1.5 rounded-full border border-black/[0.08] max-w-full shadow-[0_2px_8px_rgba(0,0,0,0.04)] overflow-x-auto custom-scrollbar">
-              {Object.values(TIERS).map((tier) => (
-                <button
-                  key={tier.id}
-                  onClick={() => setSelectedTier(tier.id)}
-                  className={`
-                    px-4 sm:px-6 py-2.5 rounded-full text-[13px] font-medium transition-all duration-300 whitespace-nowrap
-                    ${selectedTier === tier.id
-                      ? 'bg-white text-[#1d1d1f] shadow-[0_2px_8px_rgba(0,0,0,0.08)]'
-                      : 'text-[#1d1d1f]/40 hover:text-[#1d1d1f]/70'}
-                  `}
-                >
-                  <span className="hidden sm:inline">{tier.label}</span>
-                  <span className="sm:hidden">{tier.shortLabel}</span>
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Pricing Card — Progressive Disclosure: details only on selection */}
-          <div className={`bg-[#f5f5f7] rounded-[28px] p-8 sm:p-12 md:p-16 shadow-inner border border-white/50 relative overflow-hidden transition-all duration-500 ${
-            selectedTier === 'pro' ? 'ring-2 ring-[#0071e3]' : ''
-          } ${TIERS[selectedTier as keyof typeof TIERS].vonRestorff ? 'ring-2 ring-[#34c759] shadow-[0_8px_40px_rgba(52,199,89,0.15)]' : ''}`}>
-            <div className="absolute top-0 right-0 p-32 bg-white/40 blur-3xl rounded-full pointer-events-none" />
-
-            <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-12 relative z-10">
-              {/* Left — Features (Miller's Law: max 5) */}
-              <div className="flex-1">
-                {TIERS[selectedTier as keyof typeof TIERS].popular && (
-                  <div className="inline-flex items-center gap-2 bg-[#34c759] text-white px-3 py-1 rounded-full mb-6 shadow-sm">
-                    <span className="text-[11px] font-bold tracking-wide uppercase">Más Popular</span>
-                  </div>
-                )}
-                {TIERS[selectedTier as keyof typeof TIERS].vonRestorff && (
-                  <div className="inline-flex items-center gap-2 bg-[#0071e3] text-white px-3 py-1 rounded-full mb-6 shadow-sm">
-                    <span className="text-[11px] font-bold tracking-wide uppercase">Sin Tarjeta de Crédito</span>
-                  </div>
-                )}
-
-                <h3 className="text-3xl sm:text-4xl font-semibold mb-2 tracking-tight text-[#1d1d1f]">
-                  {TIERS[selectedTier as keyof typeof TIERS].title}
-                </h3>
-                <p className="text-[13px] text-[#0071e3] font-semibold mb-3">
-                  {TIERS[selectedTier as keyof typeof TIERS].rooms}
-                </p>
-                <p className="text-[17px] text-[#1d1d1f]/50 mb-10 font-medium">
-                  {TIERS[selectedTier as keyof typeof TIERS].description}
-                </p>
-
-                <div className="h-px bg-black/[0.06] w-full mb-10" />
-
-                <ul className="space-y-4">
-                  {TIERS[selectedTier as keyof typeof TIERS].features.map((feat, i) => (
-                    <li key={i} className="flex items-center gap-3 text-[15px] text-[#1d1d1f]/70">
-                      <div className="w-5 h-5 rounded-full bg-[#34c759]/15 flex items-center justify-center flex-shrink-0">
-                        <Check size={12} className="text-[#34c759]" strokeWidth={3} />
-                      </div>
-                      <span className="font-medium">{feat}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-
-              {/* Right — Price + CTA (Visual Salience: 80% attention) */}
-              <div className="md:text-right flex flex-col md:items-end">
-                {TIERS[selectedTier as keyof typeof TIERS].price === '0' ? (
-                  <div className="mb-1">
-                    <span className="text-6xl sm:text-7xl lg:text-8xl font-semibold tracking-tighter text-[#34c759]">
-                      Gratis
-                    </span>
-                  </div>
-                ) : (
-                  <div className="flex items-start justify-start md:justify-end gap-1 mb-1">
-                    <span className="text-2xl font-normal text-[#1d1d1f]/30 mt-3">$</span>
-                    <span className="text-6xl sm:text-7xl lg:text-8xl font-semibold tracking-tighter text-[#1d1d1f]">
-                      {TIERS[selectedTier as keyof typeof TIERS].price}
-                    </span>
-                  </div>
-                )}
-                <p className="text-[13px] text-[#1d1d1f]/30 mb-10 font-medium">
-                  {TIERS[selectedTier as keyof typeof TIERS].price === '0'
-                    ? 'Para siempre. Sin tarjeta.'
-                    : 'COP / mes (después del mes gratis)'}
-                </p>
-
-                <button
-                  onClick={() => setLeadModalOpen(true)}
-                  className="w-full md:w-auto bg-[#1d1d1f] text-white px-10 py-5 rounded-full font-semibold text-[15px] hover:bg-black transition-all duration-200 shadow-[0_4px_16px_rgba(0,0,0,0.12)] hover:shadow-[0_8px_32px_rgba(0,0,0,0.16)] hover:-translate-y-0.5 active:scale-[0.97] flex items-center justify-center gap-2"
-                >
-                  {TIERS[selectedTier as keyof typeof TIERS].cta}
-                  <ArrowUpRight size={16} className="text-white/50" />
-                </button>
-
-                <div className="mt-4 flex items-center gap-2 text-[13px] text-[#1d1d1f]/40 font-medium justify-end w-full">
-                  <ShieldCheck size={16} className="text-[#34c759]" />
-                  Cancelá en cualquier momento
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* ─── TRANSPARENCY BLOCK ─── */}
-          <div className="mt-12 bg-[#0071e3]/[0.04] border border-[#0071e3]/[0.08] rounded-[28px] p-8 max-w-4xl mx-auto shadow-sm">
-            <div className="flex items-center gap-3 mb-6">
-              <div className="bg-white p-3 rounded-full shadow-sm border border-black/[0.04]">
-                <Info className="w-5 h-5 text-[#0071e3]" />
-              </div>
-              <div>
-                <h4 className="text-lg font-semibold text-[#1d1d1f] tracking-tight">Transparencia en Comisiones</h4>
-                <p className="text-[13px] text-[#1d1d1f]/40">El 10% de la Red de Descubrimiento es un costo por adquisición de cliente nuevo, no una comisión extractiva.</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-              <div className="bg-white rounded-[14px] p-4 border border-black/[0.04]">
-                <p className="text-[12px] text-[#1d1d1f]/40 font-semibold uppercase tracking-wide mb-1">Tu Motor Propio</p>
-                <p className="text-3xl font-semibold text-[#34c759]">0%</p>
-                <p className="text-[12px] text-[#1d1d1f]/40 mt-1">WhatsApp, Instagram, Facebook</p>
-              </div>
-              <div className="bg-white rounded-[14px] p-4 border border-[#0071e3]/[0.12]">
-                <p className="text-[12px] text-[#0071e3] font-semibold uppercase tracking-wide mb-1">Red de Descubrimiento</p>
-                <p className="text-3xl font-semibold text-[#0071e3]">10%</p>
-                <p className="text-[12px] text-[#1d1d1f]/40 mt-1">
-                  <a href="https://hospedasuite.com/" target="_blank" rel="noopener noreferrer" className="text-[#0071e3] hover:underline font-medium">
-                    hospedasuite.com
-                  </a>
-                </p>
-              </div>
-              <div className="bg-white rounded-[14px] p-4 border border-black/[0.04] opacity-60">
-                <p className="text-[12px] text-[#1d1d1f]/40 font-semibold uppercase tracking-wide mb-1">OTAs tradicionales</p>
-                <p className="text-3xl font-semibold text-[#1d1d1f]/40">15-25%</p>
-                <p className="text-[12px] text-[#1d1d1f]/40 mt-1">Booking, Airbnb, Expedia</p>
-              </div>
-            </div>
-          </div>
+          <InteractivePricingSlider onCtaClick={handleSliderCtaClick} />
 
           {/* ─── FAQ — Progressive Disclosure ─── */}
           <div className="mt-20 max-w-3xl mx-auto">
@@ -504,7 +281,7 @@ export default function App() {
                 { id: 'q1', q: '¿Cómo funciona el pago?', a: 'Tu hotel recibe el 100% del dinero de las reservas directamente en tu cuenta de Wompi. Al finalizar cada mes, HospedaSuite genera una factura con el costo de tu plan + comisiones aplicables.' },
                 { id: 'q2', q: '¿Qué es el Channel Manager?', a: 'Es un seguro anti-sobreventa. Nuestro sistema se conecta con Booking.com y Airbnb. Si vendés una habitación en HospedaSuite, se bloquea automáticamente en las otras plataformas.' },
                 { id: 'q3', q: '¿Qué pasa si agrego una segunda habitación?', a: 'El Plan Free incluye 1 habitación. Al agregar una segunda, el sistema te sugiere automáticamente escalar al Plan Starter ($49.000 COP/mes para hasta 4 habitaciones). El upgrade es inmediato y solo pagás desde el mes siguiente.' },
-                { id: 'q4', q: '¿La OTA es bilingüe?', a: 'Sí. Tu página de hotel se muestra automáticamente en español o inglés según el idioma del visitante. Los turistas extranjeros ven tu hotel en su idioma.' },
+                { id: 'q4', q: '¿El motor de reservas es bilingüe?', a: 'Sí. Tu página de hotel se muestra automáticamente en español o inglés según el idioma del visitante. Los turistas extranjeros ven tu hotel en su idioma.' },
                 { id: 'q5', q: '¿Qué pasa si tengo más de 30 habitaciones?', a: 'Contactanos para un plan personalizado. El plan Enterprise cubre hasta 30 habitaciones, pero podemos adaptar una solución para hoteles más grandes.' },
               ].map((faq) => (
                 <div key={faq.id} className="bg-white rounded-[20px] border border-black/[0.04] shadow-[0_1px_4px_rgba(0,0,0,0.02)] overflow-hidden">
@@ -556,7 +333,8 @@ export default function App() {
       <LeadCaptureModal
         isOpen={leadModalOpen}
         onClose={() => setLeadModalOpen(false)}
-        defaultPlan={selectedTier}
+        defaultPlan={sliderTier}
+        roomCount={sliderRoomCount}
       />
     </div>
   );

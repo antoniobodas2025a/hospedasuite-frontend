@@ -67,6 +67,19 @@ export default function SoftwareJsonLd() {
           name: 'HospedaSuite Inc.',
           url: 'https://hospedasuite.com',
         },
+        review: {
+          '@type': 'Review',
+          reviewRating: {
+            '@type': 'Rating',
+            ratingValue: '5',
+            bestRating: '5',
+          },
+          author: {
+            '@type': 'Organization',
+            name: 'Gremio Hotelero Boyacá',
+          },
+          reviewBody: 'HospedaSuite nos devolvió el control. El Motor Propio eliminó las comisiones y el Channel Manager acabó con las sobreventas. Es el cerebro operativo que necesitábamos.',
+        },
       },
       {
         '@type': 'FAQPage',

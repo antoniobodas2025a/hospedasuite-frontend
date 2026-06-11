@@ -17,12 +17,14 @@ interface LeadCaptureModalProps {
   isOpen: boolean;
   onClose: () => void;
   defaultPlan?: string;
+  roomCount?: number; // S3: Dynamic room count from slider
 }
 
 export default function LeadCaptureModal({
   isOpen,
   onClose,
   defaultPlan = 'pro',
+  roomCount = 1,
 }: LeadCaptureModalProps) {
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
@@ -55,11 +57,28 @@ export default function LeadCaptureModal({
       const result = await createPublicLeadAction({
         ...formData,
         plan_interest: defaultPlan,
+        room_count: roomCount, // S3: Inject room count into payload
       });
 
       if (result.success) {
-        // Lead capturado → redirect al wizard de configuración del hotel
-        router.push(`/software/onboarding?plan=${defaultPlan}`);
+        // Cierre del bucle: Inyectar evento en dataLayer para Analytics/Klaviyo
+        if (typeof window !== 'undefined' && window.dataLayer) {
+          window.dataLayer.push({
+            event: 'lead_captured',
+            city: formData.city,
+            roomCount: roomCount,
+            plan: defaultPlan,
+            attackLine: result.attackLine, // Viene del server action
+          });
+        }
+
+        // S1: Lead capturado → redirect al wizard con datos pre-hidratados
+        const params = new URLSearchParams({
+          plan: defaultPlan,
+          email: formData.email,
+          rooms: String(roomCount),
+        });
+        router.push(`/software/onboarding?${params.toString()}`);
       } else {
         setErrors({ form: result.error || 'Error al enviar. Intentá de nuevo.' });
       }

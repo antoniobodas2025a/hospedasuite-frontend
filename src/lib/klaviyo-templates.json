@@ -1,0 +1,28 @@
+{
+  "flows": {
+    "orgullo_local": {
+      "id": "boyaca_orgullo_local",
+      "trigger": "attack_line == 'LINE_1_ORGULLO'",
+      "emails": [
+        {
+          "id": 1,
+          "subject": "Tu hotel en {{ person|lookup:'city' }} merece controlar su destino",
+          "preview_text": "Deja de regalar tus comisiones a plataformas externas.",
+          "body_html": "<p>Hola {{ person|lookup:'first_name' }},</p><p>Sabemos que el turismo en <strong>{{ person|lookup:'city' }}</strong> es especial. Los fines de semana desde Bogotá buscan experiencias auténticas, no depender de plataformas externas.</p><p>Con HospedaSuite, recuperas el control:</p><ul><li><strong>Motor de Reservas Propio:</strong> 0% comisión en tus redes.</li><li><strong>Pagos locales:</strong> Todo directo a tu Wompi.</li><li><strong>Seguro anti-sobreventa:</strong> Tu inventario siempre perfecto.</li></ul><p>Es hora de que tu esfuerzo se quede en Boyacá.</p><p>Un abrazo,<br>El equipo de HospedaSuite</p>"
+        }
+      ]
+    },
+    "cero_riesgo": {
+      "id": "prueba_sin_riesgo",
+      "trigger": "attack_line == 'LINE_2_CERO_RIESGO'",
+      "emails": [
+        {
+          "id": 1,
+          "subject": "Prueba tu Motor de Reservas gratis (sin tarjeta)",
+          "preview_text": "Activa tu Link Directo hoy mismo.",
+          "body_html": "<p>Hola {{ person|lookup:'first_name' }},</p><p>Empezar no debería ser complicado ni costoso. Por eso te damos tu <strong>Motor de Reservas</strong> totalmente gratis para tu primera habitación.</p><p>Sin tarjetas de crédito. Sin letras pequeñas.</p><p>Solo configura tu Link Directo para WhatsApp, conecta Wompi y empieza a recibir pagos directos hoy mismo.</p><p>¿Listo para operar sin comisiones?</p><p>Un abrazo,<br>El equipo de HospedaSuite</p>"
+        }
+      ]
+    }
+  }
+}
