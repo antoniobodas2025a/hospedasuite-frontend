@@ -172,6 +172,40 @@ export async function approveManualPayment(
 
     if (updateHotelError) throw updateHotelError;
 
+    // Send approval email to hotelier
+    try {
+      const { data: hotel } = await supabaseAdmin
+        .from('hotels')
+        .select('name, email, slug')
+        .eq('id', payment.hotel_id)
+        .single();
+
+      if (hotel?.email) {
+        const { Resend } = await import('resend');
+        const { ManualPaymentApproved } = await import('@/emails/ManualPaymentApproved');
+        const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_for_build');
+        const { html } = await import('@react-email/render');
+        
+        const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hospedasuite.com';
+        const emailHtml = await html(ManualPaymentApproved({
+          hotelName: hotel.name,
+          amount: 89900, // Default onboarding amount
+          method: 'Nequi/Daviplata',
+          approvedAt: new Date().toLocaleDateString('es-CO'),
+          dashboardUrl: `${baseUrl}/dashboard`,
+        }));
+
+        await resend.emails.send({
+          from: 'HospedaSuite <pagos@hospedasuite.com>',
+          to: hotel.email,
+          subject: `¡Tu pago para ${hotel.name} fue verificado!`,
+          html: emailHtml,
+        });
+      }
+    } catch (emailErr) {
+      console.warn('📧 Error enviando email de aprobación de pago:', emailErr);
+    }
+
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };
