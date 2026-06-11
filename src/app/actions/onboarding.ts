@@ -299,7 +299,33 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       }
     }
 
-    // 5. Revalidate
+    // 5. Welcome Email to Hotelier
+    try {
+      const { Resend } = await import('resend');
+      const { WelcomeHotelier } = await import('@/emails/WelcomeHotelier');
+      const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_for_build');
+      
+      const { html } = await import('@react-email/render');
+      const emailHtml = await html(WelcomeHotelier({
+        hotelName: state.hotelIdentity.name,
+        hotelSlug,
+        ownerEmail: user.email || state.hotelIdentity.email || '',
+        wompiConfigured: !!state.settings.wompi_public_key,
+      }));
+
+      await resend.emails.send({
+        from: 'HospedaSuite <bienvenida@hospedasuite.com>',
+        to: user.email || state.hotelIdentity.email || '',
+        subject: `¡${state.hotelIdentity.name} ya está activo en HospedaSuite!`,
+        html: emailHtml,
+      });
+
+      console.log(`📧 [Onboarding] Email de bienvenida enviado a ${user.email}`);
+    } catch (emailErr) {
+      console.warn('📧 [Onboarding] Error enviando email de bienvenida:', emailErr);
+    }
+
+    // 6. Revalidate
     revalidatePath('/software/onboarding');
     revalidatePath('/admin/dashboard');
     revalidatePath(`/hotel/${hotelSlug}`);

@@ -514,3 +514,84 @@ export async function verifyBookingAction(bookingId: string) {
     return { success: false, error: getErrorMessage(error) };
   }
 }
+
+/**
+ * Simula una reserva de prueba para que el hotelero vea el flujo completo.
+ * Crea una reserva CONFIRMED con un pago TEST de $1.000 COP.
+ */
+export async function simulateBookingAction() {
+  try {
+    const currentHotel = await getCurrentHotel();
+    if (!currentHotel) {
+      return { success: false, error: 'Hotel no encontrado' };
+    }
+
+    // Get first active room
+    const { data: room, error: roomError } = await supabaseAdmin
+      .from('rooms')
+      .select('id, name, price')
+      .eq('hotel_id', currentHotel.id)
+      .eq('status', 'active')
+      .single();
+
+    if (roomError || !room) {
+      return { success: false, error: 'No hay habitaciones activas para simular' };
+    }
+
+    // Create test guest
+    const { data: guest, error: guestError } = await supabaseAdmin
+      .from('guests')
+      .insert([{
+        full_name: 'Huésped de Prueba',
+        doc_number: 'TEST-000',
+        phone: '+570000000000',
+        email: 'test@hospedasuite.com',
+        hotel_id: currentHotel.id,
+      }])
+      .select('id')
+      .single();
+
+    if (guestError) {
+      return { success: false, error: 'Error creando huésped de prueba' };
+    }
+
+    // Create test booking for tomorrow
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const checkIn = tomorrow.toISOString().split('T')[0];
+    const checkOut = new Date(tomorrow.getTime() + 86400000).toISOString().split('T')[0];
+
+    const { data: booking, error: bookingError } = await supabaseAdmin
+      .from('bookings')
+      .insert([{
+        hotel_id: currentHotel.id,
+        room_id: room.id,
+        guest_id: guest.id,
+        check_in: checkIn,
+        check_out: checkOut,
+        status: 'CONFIRMED',
+        total_price: 1000, // $1.000 COP test amount
+        source: 'direct',
+        staff_id: null,
+      }])
+      .select('id')
+      .single();
+
+    if (bookingError) {
+      return { success: false, error: bookingError.message };
+    }
+
+    // Create test payment record
+    await supabaseAdmin.from('payments').insert({
+      booking_id: booking.id,
+      amount: 1000,
+      method: 'test',
+      notes: 'RESERVA DE PRUEBA - No es un pago real',
+      staff_id: null,
+    });
+
+    return { success: true, bookingId: booking.id, roomName: room.name };
+  } catch (error: unknown) {
+    return { success: false, error: getErrorMessage(error) };
+  }
+}

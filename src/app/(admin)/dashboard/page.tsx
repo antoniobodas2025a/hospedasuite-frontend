@@ -6,7 +6,8 @@ import OtaSyncWidget from '@/components/dashboard/OtaSyncWidget';
 import ReadinessMiniWidget from '@/components/dashboard/ReadinessMiniWidget';
 import { getOtaSyncStatusAction } from '@/app/actions/ota-sync';
 import { getReadinessAction } from '@/app/actions/readiness';
-import { Clock, MessageCircle, AlertTriangle, AlertOctagon, XCircle } from 'lucide-react';
+import { simulateBookingAction } from '@/app/actions/bookings';
+import { Clock, MessageCircle, AlertTriangle, AlertOctagon, XCircle, PlayCircle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -224,6 +225,32 @@ export default async function DashboardPage() {
           <OtaSyncWidget initialStatus={otaStatus} hotelId={hotel.id} />
         </div>
       )}
+
+      {/* Simulador de Reserva — Para que el hotelero pruebe el flujo */}
+      <div className="mt-8 p-6 bg-gradient-to-r from-brand-500/10 to-purple-500/10 border border-brand-500/20 rounded-[var(--radius-squircle-2xl)]">
+        <div className="flex items-start gap-4">
+          <div className="size-12 bg-brand-500/20 text-brand-400 rounded-[var(--radius-squircle-xl)] flex items-center justify-center border border-brand-500/30 shrink-0">
+            <PlayCircle size={24} />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-brand-400 font-bold text-sm uppercase tracking-wide mb-1">
+              Simulador de Reserva
+            </h3>
+            <p className="text-white/70 text-sm leading-relaxed mb-4">
+              Probá el flujo completo de reserva con $1.000 COP de prueba. 
+              Esto crea una reserva CONFIRMED y un pago TEST para que veas cómo funciona el sistema.
+            </p>
+            <form action={simulateBookingAction}>
+              <button
+                type="submit"
+                className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-bold rounded-[var(--radius-squircle-lg)] transition-all shadow-lg shadow-brand-500/20 active:scale-95"
+              >
+                Simular Reserva de Prueba
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
     </div>
   );
 }
