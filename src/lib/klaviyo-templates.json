@@ -23,6 +23,18 @@
           "body_html": "<p>Hola {{ person|lookup:'first_name' }},</p><p>Empezar no debería ser complicado ni costoso. Por eso te damos tu <strong>Motor de Reservas</strong> totalmente gratis para tu primera habitación.</p><p>Sin tarjetas de crédito. Sin letras pequeñas.</p><p>Solo configura tu Link Directo para WhatsApp, conecta Wompi y empieza a recibir pagos directos hoy mismo.</p><p>¿Listo para operar sin comisiones?</p><p>Un abrazo,<br>El equipo de HospedaSuite</p>"
         }
       ]
+    },
+    "rescate_operativo": {
+      "id": "rescate_operativo",
+      "trigger": "attack_line == 'RESCATE_OPERATIVO'",
+      "emails": [
+        {
+          "id": 1,
+          "subject": "¿Problemas con tu plataforma de reservas? Te ayudamos",
+          "preview_text": "Tu negocio no tiene que detenerse. Activa tu Motor Propio.",
+          "body_html": "<p>Hola {{ person|lookup:'first_name' }},</p><p>Entendemos que los problemas con las plataformas de reservas pueden ser frustrantes. Tu hotel en <strong>{{ person|lookup:'city' }}</strong> merece seguir operando sin interrupciones.</p><p>Con HospedaSuite podés:</p><ul><li><strong>Activar tu Motor de Reservas propio</strong> en minutos.</li><li><strong>Recibir reservas directas</strong> por WhatsApp sin depender de sistemas externos.</li><li><strong>Cobrar directamente</strong> con Wompi, sin comisiones.</li></ul><p>Tu negocio no tiene que detenerse. Estamos acá para ayudarte.</p><p>Un abrazo,<br>El equipo de HospedaSuite</p>"
+        }
+      ]
     }
   }
 }

@@ -92,13 +92,14 @@ describe('Klaviyo Integration - Real Data Flow (Green Phase)', () => {
     expect(result.success).toBe(false);
   });
 
-  it('S8: Klaviyo templates JSON es parseable y tiene 2 flujos', () => {
+  it('S8: Klaviyo templates JSON es parseable y tiene al menos 2 flujos', () => {
     const TEMPLATES_PATH = path.resolve(__dirname, '../../lib/klaviyo-templates.json');
     const content = fs.readFileSync(TEMPLATES_PATH, 'utf8');
     const config = JSON.parse(content);
     expect(config.flows).toBeDefined();
-    expect(Object.keys(config.flows).length).toBe(2);
+    expect(Object.keys(config.flows).length).toBeGreaterThanOrEqual(2);
     expect(config.flows.orgullo_local).toBeDefined();
     expect(config.flows.cero_riesgo).toBeDefined();
+    expect(config.flows.rescate_operativo).toBeDefined();
   });
 });

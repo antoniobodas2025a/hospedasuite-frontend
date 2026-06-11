@@ -5,6 +5,7 @@ import { Geist } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
 import { cn } from "@/lib/utils";
+import AIReferralTracker from '@/components/analytics/AIReferralTracker';
 
 // Geist Variable: una sola fuente para todo el sistema (zero layout shift)
 const geist = Geist({
@@ -71,6 +72,7 @@ export default async function RootLayout({
         </noscript>
 
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <AIReferralTracker />
           {children}
         </NextIntlClientProvider>
       </body>

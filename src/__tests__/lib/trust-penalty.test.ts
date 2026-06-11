@@ -3,7 +3,7 @@ import templates from '@/lib/klaviyo-templates.json';
 
 describe('Mitigación del Trust Penalty (Brand Core OS)', () => {
   const forbiddenWords = [
-    'OTA',
+    '\\bOTA\\b', // Word boundary to avoid false positives like "tota"lmente
     'Online Travel Agency',
     'Campañas genéricas',
     'Montaje manual',
@@ -15,11 +15,8 @@ describe('Mitigación del Trust Penalty (Brand Core OS)', () => {
   it('S1: Los templates de Klaviyo NO deben contener palabras prohibidas', () => {
     const jsonContent = JSON.stringify(templates);
 
-    // Debug: Print content to see what's being tested
-    console.log('JSON Content:', jsonContent);
-
     forbiddenWords.forEach((word) => {
-      // Case-insensitive check
+      // Case-insensitive check with word boundaries where specified
       const regex = new RegExp(word, 'i');
       expect(jsonContent).not.toMatch(regex);
     });
