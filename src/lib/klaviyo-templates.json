@@ -35,6 +35,18 @@
           "body_html": "<p>Hola {{ person|lookup:'first_name' }},</p><p>Entendemos que los problemas con las plataformas de reservas pueden ser frustrantes. Tu hotel en <strong>{{ person|lookup:'city' }}</strong> merece seguir operando sin interrupciones.</p><p>Con HospedaSuite podés:</p><ul><li><strong>Activar tu Motor de Reservas propio</strong> en minutos.</li><li><strong>Recibir reservas directas</strong> por WhatsApp sin depender de sistemas externos.</li><li><strong>Cobrar directamente</strong> con Wompi, sin comisiones.</li></ul><p>Tu negocio no tiene que detenerse. Estamos acá para ayudarte.</p><p>Un abrazo,<br>El equipo de HospedaSuite</p>"
         }
       ]
+    },
+    "escudo_legal": {
+      "id": "escudo_legal_ventas_extra",
+      "trigger": "attack_line == 'ESCUDO_LEGAL'",
+      "emails": [
+        {
+          "id": 1,
+          "subject": "Blindaje legal y multiplicación de ingresos para tu glamping",
+          "preview_text": "Automatiza el SIRE y gana $40 USD extra por reserva.",
+          "body_html": "<p>Hola {{ person|lookup:'first_name' }},</p><p>Tu glamping en <strong>{{ person|lookup:'city' }}</strong> merece operar con paz mental y máxima rentabilidad.</p><p>HospedaSuite es tu Escudo Regulatorio:</p><ul><li><strong>Automatización SIRE:</strong> Cero multas, cero papeleo manual.</li><li><strong>Upselling Agéntico:</strong> Genera $40 USD extra por huésped.</li><li><strong>Pagos Seguros:</strong> Wompi nativo bloquea estafas cibernéticas.</li></ul><p>Protegé tu inversión y multiplicá tus ingresos hoy mismo.</p><p>Un abrazo,<br>El equipo de HospedaSuite</p>"
+        }
+      ]
     }
   }
 }
