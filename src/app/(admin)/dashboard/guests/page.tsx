@@ -1,5 +1,6 @@
 import { createClient } from '@/utils/supabase/server';
 import GuestsPanel from '@/components/dashboard/GuestsPanel';
+import GuestExportButton from '@/components/dashboard/GuestExportButton';
 import { getCurrentHotel } from '@/lib/hotel-context';
 
 export const dynamic = 'force-dynamic';
@@ -18,7 +19,12 @@ export default async function GuestsPage() {
     .limit(100);
 
   return (
-    <div>
+    <div className="space-y-4">
+      {/* Botón de Exportación para SIRE/TRA */}
+      <div className="flex justify-end">
+        <GuestExportButton hotelId={hotel.id} />
+      </div>
+
       {/* 👇 CORRECCIÓN: Pasamos el hotelId al panel */}
       <GuestsPanel initialGuests={guests || []} hotelId={hotel.id} />
     </div>

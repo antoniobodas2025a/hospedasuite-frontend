@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Copy, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Plus, Calendar as CalendarIcon, Copy, Clock, Tent, Home, Building2, BedDouble } from 'lucide-react';
 import BookingWizardModal from '@/components/modals/BookingWizardModal';
 import { useCalendar, Booking } from '@/hooks/useCalendar';
 import { cn } from '@/lib/utils';
@@ -13,6 +13,18 @@ import {
 // ==========================================
 // BLOQUE 1: MICRO-COMPONENTES (Lógica Gantt)
 // ==========================================
+
+/**
+ * Get icon for room type (Heurística #6: Reconocimiento visual)
+ * Differentiates domes, cabins, hotels, etc. at a glance
+ */
+const getRoomTypeIcon = (roomType?: string) => {
+  const type = roomType?.toLowerCase() || '';
+  if (type.includes('domo') || type.includes('glamping')) return { icon: Tent, color: 'text-amber-400', bg: 'bg-amber-500/10' };
+  if (type.includes('cabaña') || type.includes('cabana') || type.includes('cabanas')) return { icon: Home, color: 'text-emerald-400', bg: 'bg-emerald-500/10' };
+  if (type.includes('hostal') || type.includes('hostel')) return { icon: Building2, color: 'text-blue-400', bg: 'bg-blue-500/10' };
+  return { icon: BedDouble, color: 'text-indigo-400', bg: 'bg-indigo-500/10' };
+};
 
 const CalendarCell = ({ dateStr, roomId, children }: { dateStr: string, roomId: string, children: React.ReactNode }) => {
   const cellId = `${roomId}|${dateStr}`;
@@ -165,14 +177,20 @@ const MobileRoomCard = ({
 }) => {
   const todayStr = new Date().toISOString().split('T')[0];
   const todayBooking = getBookingForDate(String(room.id), new Date());
+  const { icon: RoomIcon, color: iconColor, bg: iconBg } = getRoomTypeIcon(room.type);
 
   return (
     <div className="glass-card p-4 rounded-[var(--radius-squircle-2xl)] border border-border space-y-3">
       {/* Room header */}
       <div className="flex items-center justify-between">
-        <div>
-          <h3 className="text-sm font-bold text-foreground">{room.name}</h3>
-          <p className="text-[11px] text-muted-foreground font-mono">${(room.price || 0).toLocaleString()} / noche</p>
+        <div className="flex items-center gap-2">
+          <div className={cn("p-1.5 rounded-lg", iconBg)}>
+            <RoomIcon size={16} className={iconColor} />
+          </div>
+          <div>
+            <h3 className="text-sm font-bold text-foreground">{room.name}</h3>
+            <p className="text-[11px] text-muted-foreground font-mono">${(room.price || 0).toLocaleString()} / noche</p>
+          </div>
         </div>
         {todayBooking ? (
           <span className="flex items-center gap-1 text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-1 rounded-full">
@@ -329,12 +347,19 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
                   </div>
 
                   <div className='bg-card'>
-                    {rooms.map((room) => (
-                      <div key={room.id} className='flex group hover:bg-accent/10 transition-colors'>
-                        <div className='w-48 shrink-0 p-4 border-r border-border border-b flex flex-col justify-center bg-muted sticky left-0 z-10 group-hover:bg-card'>
-                          <span className='text-sm font-bold text-foreground truncate'>{room.name}</span>
-                          <span className='text-[10px] text-muted-foreground font-mono uppercase'>${(room.price || 0).toLocaleString()}</span>
-                        </div>
+                    {rooms.map((room) => {
+                      const { icon: RoomIcon, color: iconColor, bg: iconBg } = getRoomTypeIcon(room.type);
+                      return (
+                        <div key={room.id} className='flex group hover:bg-accent/10 transition-colors'>
+                          <div className='w-48 shrink-0 p-4 border-r border-border border-b flex flex-col justify-center bg-muted sticky left-0 z-10 group-hover:bg-card'>
+                            <div className="flex items-center gap-2">
+                              <div className={cn("p-1 rounded", iconBg)}>
+                                <RoomIcon size={14} className={iconColor} />
+                              </div>
+                              <span className='text-sm font-bold text-foreground truncate'>{room.name}</span>
+                            </div>
+                            <span className='text-[10px] text-muted-foreground font-mono uppercase'>${(room.price || 0).toLocaleString()}</span>
+                          </div>
                         
                         {dateRange.map((date, idx) => {
                           const dateStr = date.toISOString().split('T')[0];
@@ -363,7 +388,8 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
                           );
                         })}
                       </div>
-                    ))}
+                    );
+                  })}
                   </div>
                 </div>
               </div>

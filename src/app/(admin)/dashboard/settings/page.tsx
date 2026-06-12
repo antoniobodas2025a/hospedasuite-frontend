@@ -1,4 +1,5 @@
 import SettingsPanel from '@/components/dashboard/SettingsPanel';
+import AlegraConfigPanel from '@/components/dashboard/AlegraConfigPanel';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { createClient } from '@supabase/supabase-js';
 
@@ -35,10 +36,16 @@ export default async function SettingsPage() {
 
     // 3. Renderizamos el panel blindado
     return (
-      <div className="w-full">
+      <div className="w-full space-y-6">
         <SettingsPanel 
           initialData={hotelResponse.data || {}} 
           initialStaff={staffResponse.data || []} 
+        />
+        
+        {/* Conector de Facturación Electrónica (Alegra) */}
+        <AlegraConfigPanel 
+          hotelId={hotel.id}
+          initialEmail={hotelResponse.data?.alegra_email || undefined}
         />
       </div>
     );
