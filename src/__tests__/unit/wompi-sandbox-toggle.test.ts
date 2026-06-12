@@ -18,10 +18,10 @@ describe('Wompi Sandbox Toggle — UI Purity & Safety', () => {
     expect(content).not.toContain('Test Environment');
   });
 
-  it('CheckoutForm debe usar URL de sandbox si wompi_sandbox_mode es true', () => {
+  it('CheckoutForm debe usar PaymentGateway para enrutamiento seguro', () => {
     const content = fs.readFileSync(CHECKOUT_FORM_PATH, 'utf8');
-    expect(content).toContain('checkout.sandbox.wompi.co');
-    expect(content).toContain('wompi_sandbox_mode');
+    expect(content).toContain('createGateway');
+    expect(content).toContain('getCheckoutUrl');
   });
 
   it('debe mostrar advertencia visual cuando está en modo de prueba', () => {

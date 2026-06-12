@@ -124,10 +124,20 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     }
 
     const amountInCents = Math.round(Number(grandTotal) * 100);
-    // Soberanía Financiera: usar la clave del hotel, NO la de la plataforma
-    const rawKey = hotel.wompi_public_key || process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY || '';
-    const cleanPublicKey = rawKey.replace(/['"\s\r\n]+/g, '');
+    
+    // 🧠 CEREBRO OPERATIVO: Soberanía Financiera
+    // Usar la interfaz PaymentGateway para enrutamiento directo al hotel
+    const { createGateway } = await import('@/lib/payment-gateway');
+    const gateway = createGateway('wompi');
+    
+    const config = {
+      hotelId: hotel.id,
+      hotelPublicKey: hotel.wompi_public_key || process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY || '',
+      hotelSecretKey: hotel.wompi_integrity_secret || '',
+      isSandbox: hotel.wompi_sandbox_mode === true,
+    };
 
+    const cleanPublicKey = config.hotelPublicKey.replace(/['"\s\r\n]+/g, '');
     if (!cleanPublicKey) {
       setFormError("Error del sistema: Pasarela de pago no configurada.");
       shakeHaptic();
@@ -137,19 +147,14 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
 
     const redirectUrl = `${window.location.origin}/book/success?id=${result.bookingId}`;
 
-    // 🧠 CEREBRO OPERATIVO: Modo de Prueba
-    // Si el hotel está en modo de prueba, usa la URL de sandbox de Wompi
-    const isSandbox = hotel.wompi_sandbox_mode === true;
-    const wompiBaseUrl = isSandbox ? 'https://checkout.sandbox.wompi.co/p/' : 'https://checkout.wompi.co/p/';
+    const checkoutUrl = gateway.getCheckoutUrl(config, {
+      amountInCents,
+      currency: 'COP',
+      reference: result.bookingId,
+      redirectUrl,
+    });
 
-    const wompiUrl = new URL(wompiBaseUrl);
-    wompiUrl.searchParams.append('public-key', cleanPublicKey);
-    wompiUrl.searchParams.append('currency', 'COP');
-    wompiUrl.searchParams.append('amount-in-cents', amountInCents.toString());
-    wompiUrl.searchParams.append('reference', result.bookingId);
-    wompiUrl.searchParams.append('redirect-url', redirectUrl);
-
-    window.location.href = wompiUrl.toString();
+    window.location.href = checkoutUrl;
   };
 
   return (

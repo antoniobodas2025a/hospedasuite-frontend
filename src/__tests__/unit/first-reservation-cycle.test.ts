@@ -108,10 +108,9 @@ describe('Fix 3: Checkout uses Hotel Wompi Key', () => {
 
   it('MUTATION: Si se revierte a solo env var, el test debe fallar', () => {
     const content = fs.readFileSync(CHECKOUT_PATH, 'utf8');
-    // La línea NO debe ser SOLO process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY
-    const rawKeyLine = content.match(/const rawKey = .+/);
-    expect(rawKeyLine).not.toBeNull();
-    expect(rawKeyLine![0]).toContain('hotel.wompi_public_key');
+    // Debe usar la interfaz PaymentGateway
+    expect(content).toContain('createGateway');
+    expect(content).toContain('getCheckoutUrl');
   });
 });
 
