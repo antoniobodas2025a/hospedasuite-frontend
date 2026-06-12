@@ -176,11 +176,12 @@ describe('bookingDatesSchema', () => {
   });
 
   it('rejects past checkin date', () => {
-    const yesterday = new Date(today);
-    yesterday.setDate(yesterday.getDate() - 1);
+    // Use a date that's unambiguously in the past regardless of timezone
+    const pastDate = new Date(today);
+    pastDate.setDate(pastDate.getDate() - 2);
 
     const result = bookingDatesSchema.safeParse({
-      checkin: fmt(yesterday),
+      checkin: fmt(pastDate),
       checkout: fmt(tomorrow),
     });
 

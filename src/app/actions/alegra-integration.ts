@@ -16,6 +16,7 @@ import {
   createElectronicInvoice,
   AlegraInvoicePayload,
   AlegraContactPayload,
+  ensureHospedajeItemExists,
 } from '@/lib/alegra-connector';
 
 const ALEGRA_BASE_URL = 'https://api.alegra.com/api/v1';
@@ -39,6 +40,15 @@ export async function saveAlegraCredentials(
     const testResult = await testAlegraConnection(config);
     if (!testResult.success) {
       return { success: false, error: `Conexión fallida: ${testResult.error}` };
+    }
+
+    // 🧠 CEREBRO OPERATIVO: Crear ítem "Hospedaje" automáticamente si no existe
+    // Esto evita que el hotelero tenga que salir de HospedaSuite para configurarlo
+    try {
+      await ensureHospedajeItemExists(config);
+    } catch {
+      // No fallar la conexión si no se puede crear el ítem
+      console.warn('⚠️ [Alegra] No se pudo crear el ítem "Hospedaje" automáticamente');
     }
 
     // Save to database
@@ -126,15 +136,20 @@ export async function createInvoiceOnCheckout(
     }
 
     // Create invoice
-    // Note: In production, you'd need to map to actual Alegra item IDs
-    // For now, we'll use a generic "Hospedaje" item
+    // First, get the actual "Hospedaje" item ID from Alegra
+    const { ensureHospedajeItemExists } = await import('@/lib/alegra-connector');
+    const itemResult = await ensureHospedajeItemExists(config);
+    if (!itemResult.success || !itemResult.itemId) {
+      return { success: false, error: `No se encontró el ítem "Hospedaje" en Alegra: ${itemResult.error}` };
+    }
+
     const invoicePayload: AlegraInvoicePayload = {
       date: checkInDate,
       dueDate: checkOutDate,
       client: { id: contactResult.contactId },
       items: [
         {
-          id: '1', // This should be the actual Alegra item ID for "Hospedaje"
+          id: itemResult.itemId, // Actual Alegra item ID for "Hospedaje"
           price: totalAmount,
           quantity: 1,
           description: `Hospedaje del ${checkInDate} al ${checkOutDate}`,

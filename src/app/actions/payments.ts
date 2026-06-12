@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { createInvoiceOnCheckout } from './alegra-integration';
 
 async function getActiveStaff() {
   try {
@@ -165,6 +166,38 @@ export async function finalizeCheckoutAction(bookingId: string, roomId: string, 
 
     if (!data?.success) {
       throw new Error(data?.error || 'CHECKOUT_FAILED: Error desconocido en la transacción.');
+    }
+
+    // 🧠 CEREBRO OPERATIVO: Facturación electrónica automática (Alegra)
+    // Se ejecuta en segundo plano sin bloquear el checkout
+    try {
+      const { data: bookingDetails } = await supabase
+        .from('bookings')
+        .select('total_price, check_in, check_out, guests(full_name, doc_number, email)')
+        .eq('id', bookingId)
+        .single();
+
+      if (bookingDetails) {
+        const hotel = await getCurrentHotel();
+        if (hotel) {
+          const guest = (bookingDetails.guests as any[])?.[0];
+          if (guest?.full_name && guest?.doc_number) {
+            await createInvoiceOnCheckout(
+              hotel.id,
+              bookingId,
+              guest.full_name,
+              guest.doc_number,
+              guest.email || '',
+              bookingDetails.total_price || 0,
+              bookingDetails.check_in,
+              bookingDetails.check_out,
+            );
+          }
+        }
+      }
+    } catch (invoiceError) {
+      // No bloquear el checkout si falla la facturación
+      console.warn('⚠️ [Alegra] Facturación automática fallida:', invoiceError);
     }
 
     // 🛡️ PROTOCOLO FORENSE: Purga de Datos Global

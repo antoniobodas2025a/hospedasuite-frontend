@@ -191,6 +191,69 @@ export async function getAlegraItems(config: AlegraConfig): Promise<{ success: b
 }
 
 /**
+ * Create a service item in Alegra (e.g., "Hospedaje")
+ */
+export async function createAlegraItem(
+  config: AlegraConfig,
+  name: string,
+  price: number = 0,
+  description: string = ''
+): Promise<{ success: boolean; itemId?: string; error?: string }> {
+  const itemPayload = {
+    name,
+    description: description || `Servicio de ${name}`,
+    price: [{ price: price || 1 }], // Alegra requires at least one price
+    inventory: {
+      unit: 'unit',
+      availableQuantity: 999999,
+    },
+    category: { name: 'Servicios' },
+  };
+
+  const result = await alegraApiCall<any>(config, '/items', 'POST', itemPayload);
+
+  if (result.success && result.data) {
+    return { success: true, itemId: result.data.id };
+  }
+
+  return { success: false, error: result.error };
+}
+
+/**
+ * Ensure "Hospedaje" item exists in Alegra account
+ * Creates it automatically if not found
+ */
+export async function ensureHospedajeItemExists(
+  config: AlegraConfig
+): Promise<{ success: boolean; itemId?: string; error?: string; created?: boolean }> {
+  // First, try to find existing item
+  const itemsResult = await getAlegraItems(config);
+  if (itemsResult.success && itemsResult.items) {
+    const hospedajeItem = itemsResult.items.find(
+      (item: any) => item.name?.toLowerCase().includes('hospedaje') || item.name?.toLowerCase().includes('alojamiento')
+    );
+    if (hospedajeItem) {
+      return { success: true, itemId: hospedajeItem.id, created: false };
+    }
+  }
+
+  // Create "Hospedaje" item
+  const createResult = await createAlegraItem(
+    config,
+    'Hospedaje',
+    0, // Price will be set per invoice
+    'Servicio de hospedaje por noche'
+  );
+
+  return {
+    success: createResult.success,
+    itemId: createResult.itemId,
+    error: createResult.error,
+    created: createResult.success,
+  };
+}
+
+/**
  * Get Alegra contacts
  */
 export async function getAlegraContacts(config: AlegraConfig): Promise<{ success: boolean; contacts?: any[]; error?: string }> {
