@@ -25,7 +25,11 @@ interface PublicLeadInput {
 // REGIONAL TAGGING — Boyacá-Centro capture zone & Bouncer
 // ============================================================================
 
-const BOYACA_CENTRO_CITIES = ['paipa', 'tibasosa', 'sogamoso', 'tota', 'sugamuxi', 'duitama', 'firavitoba', 'nobsa'];
+const BOYACA_CENTRO_CITIES = [
+  'paipa', 'tibasosa', 'sogamoso', 'tota', 'sugamuxi', 'duitama', 'firavitoba', 'nobsa',
+  'villa de leyva', 'tunja', 'ramiriqui', 'chiquinquira', 'moniquira', 'sachica',
+  'raquira', 'arcabuco', 'gachantiva', 'santa sofia', 'beteitiva', 'paz de rio'
+];
 
 function detectRegionalHub(city?: string): string {
   if (!city) return 'General'; // Default fallback
