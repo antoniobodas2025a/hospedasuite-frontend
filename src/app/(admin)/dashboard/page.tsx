@@ -7,7 +7,7 @@ import ReadinessMiniWidget from '@/components/dashboard/ReadinessMiniWidget';
 import { getOtaSyncStatusAction } from '@/app/actions/ota-sync';
 import { getReadinessAction } from '@/app/actions/readiness';
 import { simulateBookingAction } from '@/app/actions/bookings';
-import { Clock, MessageCircle, AlertTriangle, AlertOctagon, XCircle, PlayCircle } from 'lucide-react';
+import { Clock, MessageCircle, AlertTriangle, AlertOctagon, XCircle, PlayCircle, ArrowUpRight, CheckCircle } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -237,6 +237,50 @@ export default async function DashboardPage() {
             >
               Ver pasos pendientes →
             </a>
+          </div>
+        </div>
+      )}
+
+      {/* Botón Maestro de Activación (Ley de Hick) — Solo si Readiness 100% y no está activo */}
+      {readinessRes.success && readinessRes.data && readinessRes.data.score === 100 && !hotel.go_live && (
+        <div className="mt-6 p-8 bg-gradient-to-r from-brand-500/20 to-emerald-500/20 border-2 border-brand-500/40 rounded-[var(--radius-squircle-3xl)] relative overflow-hidden shadow-2xl shadow-brand-500/10">
+          <div className="absolute top-0 right-0 p-24 bg-brand-500/10 blur-3xl rounded-full pointer-events-none" />
+          <div className="relative z-10 flex flex-col md:flex-row items-center gap-6">
+            <div className="flex-1 text-center md:text-left">
+              <h3 className="text-brand-300 font-bold text-lg uppercase tracking-widest mb-2">
+                🟢 Todo listo para el Go-Live
+              </h3>
+              <p className="text-white/80 text-base leading-relaxed">
+                Tu Motor Propio está configurado y verificado. 
+                Un solo clic para empezar a recibir reservas reales.
+              </p>
+            </div>
+            <form action={async () => {
+              'use server';
+              const { setGoLiveAction } = await import('@/app/actions/readiness');
+              await setGoLiveAction(hotel.id);
+            }}>
+              <button
+                type="submit"
+                className="px-8 py-4 bg-brand-500 hover:bg-brand-400 text-white text-lg font-bold rounded-[var(--radius-squircle-xl)] transition-all shadow-xl shadow-brand-500/30 active:scale-95 flex items-center gap-3"
+              >
+                <span>Activar Motor Propio</span>
+                <ArrowUpRight size={20} />
+              </button>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Banner de Estado "En Vivo" */}
+      {hotel.go_live && (
+        <div className="mt-6 p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-[var(--radius-squircle-2xl)] flex items-center gap-4">
+          <div className="size-10 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center animate-pulse">
+            <CheckCircle size={20} />
+          </div>
+          <div>
+            <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">Motor Propio Activo</h3>
+            <p className="text-white/60 text-sm">Tu ecosistema está operando y recibiendo reservas.</p>
           </div>
         </div>
       )}
