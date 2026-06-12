@@ -199,24 +199,8 @@ export default function LeadCaptureModal({
             </div>
           </div>
 
-          {/* Ciudad (opcional) */}
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1d1d1f]/60 mb-1.5 uppercase tracking-wide">
-              Ciudad <span className="text-[#1d1d1f]/25 normal-case">(opcional)</span>
-            </label>
-            <input
-              type="text"
-              value={formData.city}
-              onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-              className="w-full px-4 py-3 rounded-[14px] bg-[#f5f5f7] border border-black/[0.06] text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/25 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 transition-all"
-              placeholder="Ej: Salento, Eje Cafetero"
-            />
-          </div>
-
-          {/* Form error */}
-          {errors.form && (
-            <p className="text-[13px] text-red-500 text-center">{errors.form}</p>
-          )}
+          {/* Ciudad Hidden / Immutable */}
+          <input type="hidden" name="region" value="Boyacá-Centro" />
 
           {/* Submit */}
           <button

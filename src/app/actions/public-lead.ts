@@ -22,13 +22,13 @@ interface PublicLeadInput {
 }
 
 // ============================================================================
-// REGIONAL TAGGING — Boyacá-Centro capture zone
+// REGIONAL TAGGING — Boyacá-Centro capture zone & Bouncer
 // ============================================================================
 
 const BOYACA_CENTRO_CITIES = ['paipa', 'tibasosa', 'sogamoso', 'tota', 'sugamuxi', 'duitama', 'firavitoba', 'nobsa'];
 
 function detectRegionalHub(city?: string): string {
-  if (!city) return 'General';
+  if (!city) return 'General'; // Default fallback
   const normalized = city.toLowerCase().trim();
   if (BOYACA_CENTRO_CITIES.some((c) => normalized.includes(c))) {
     return 'Boyacá-Centro';
@@ -55,7 +55,14 @@ export async function createPublicLeadAction(lead: PublicLeadInput) {
     return { success: false, error: 'El nombre del alojamiento es requerido' };
   }
 
-  const regionalHub = detectRegionalHub(lead.city);
+  // Cuarentena Operativa: Forzar región si no se provee
+  const detectedRegion = lead.city || 'Boyacá';
+  const regionalHub = detectRegionalHub(detectedRegion);
+  
+  // Lógica de Rechazo Silencioso (Bouncer)
+  const isLocal = regionalHub === 'Boyacá-Centro' || detectedRegion === 'Boyacá';
+  const waitlistTag = isLocal ? 'activo' : 'waitlist_silenciosa';
+  
   const triggerUpsell = lead.plan_interest === 'free' && (lead.room_count || 1) > 1;
 
   // Mapeo al schema existente de hunted_leads
@@ -65,28 +72,33 @@ export async function createPublicLeadAction(lead: PublicLeadInput) {
     `Plan interés: ${lead.plan_interest || 'No especificado'}`,
     `Habitaciones: ${lead.room_count || 1}`,
     `Regional Hub: ${regionalHub}`,
+    `Status: ${waitlistTag}`,
     `Trigger Upsell: ${triggerUpsell}`,
     `Fuente: Landing /software`,
   ].join(' | ');
 
-  // 1. Guardar en DB interna
+  // 1. Guardar en DB interna (Siempre guardamos, incluso waitlist para análisis futuro)
   const dbResult = createLeadAction({
     business_name: lead.business_name,
     phone: lead.phone,
     notes,
-    city_search: lead.city,
+    city_search: detectedRegion,
   });
 
-  // 2. Push a Klaviyo Real API (async, non-blocking)
-  pushToKlaviyoMcp({
-    email: lead.email,
-    phone: lead.phone,
-    properties: {
-      city: lead.city,
-      roomCount: lead.room_count || 1,
-      attackLine: triggerUpsell ? 'UPSELL' : regionalHub === 'Boyacá-Centro' ? 'LINE_1_ORGULLO' : 'LINE_2_CERO_RIESGO',
-    },
-  }).catch((err) => console.error('[Klaviyo] Sync failed:', err));
+  // 2. Push a Klaviyo Real API -> SOLO SI ES LOCAL (Cuarentena Operativa)
+  if (isLocal) {
+    pushToKlaviyoMcp({
+      email: lead.email,
+      phone: lead.phone,
+      properties: {
+        city: detectedRegion,
+        roomCount: lead.room_count || 1,
+        attackLine: triggerUpsell ? 'UPSELL' : 'LINE_1_ORGULLO',
+      },
+    }).catch((err) => console.error('[Klaviyo] Sync failed:', err));
+  } else {
+    console.log(`[Bouncer] Lead externo (${detectedRegion}) enviado a lista de espera silenciosa.`);
+  }
 
   return dbResult;
 }
