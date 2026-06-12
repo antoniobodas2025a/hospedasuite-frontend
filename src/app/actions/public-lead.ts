@@ -25,10 +25,10 @@ interface PublicLeadInput {
 // REGIONAL TAGGING — Boyacá-Centro capture zone & Bouncer
 // ============================================================================
 
+// Epicentro Paipa + Radio Inmediato (Estrategia Fase 1)
 const BOYACA_CENTRO_CITIES = [
-  'paipa', 'tibasosa', 'sogamoso', 'tota', 'sugamuxi', 'duitama', 'firavitoba', 'nobsa',
-  'villa de leyva', 'tunja', 'ramiriqui', 'chiquinquira', 'moniquira', 'sachica',
-  'raquira', 'arcabuco', 'gachantiva', 'santa sofia', 'beteitiva', 'paz de rio'
+  'paipa', 'tibasosa', 'sogamoso', 'tota', 'sugamuxi', 
+  'duitama', 'firavitoba', 'nobsa'
 ];
 
 function detectRegionalHub(city?: string): string {
