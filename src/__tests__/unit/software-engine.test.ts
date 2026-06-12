@@ -341,7 +341,7 @@ describe('formatCOP', () => {
 // ============================================================================
 
 describe('Mutation Tests — Domain Identity Leakage', () => {
-  const FORBIDDEN_TERMS = ['Channel', 'unidad', 'unidades', 'Red de Descubrimiento'];
+  const FORBIDDEN_TERMS = ['OTA', 'unidad', 'unidades', 'Red de Descubrimiento'];
 
   const LANDING_STRINGS = [
     'Motor de reservas bilingüe (ES/EN)',
@@ -362,8 +362,8 @@ describe('Mutation Tests — Domain Identity Leakage', () => {
     });
   });
 
-  it('🛡️ Si se inyecta "Channel" en las cadenas, el test falla', () => {
-    const sabotaged = 'Channel bilingüe (ES/EN)';
+  it('🛡️ Si se inyecta "OTA" en las cadenas, el test falla', () => {
+    const sabotaged = 'OTA bilingüe (ES/EN)';
     const hasLeakage = FORBIDDEN_TERMS.some((term) =>
       sabotaged.toLowerCase().includes(term.toLowerCase()),
     );

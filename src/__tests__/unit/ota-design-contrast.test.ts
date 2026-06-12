@@ -154,8 +154,8 @@ describe("AC5 — Zero text-white on status badges (T6, T7)", () => {
 		expect(roomCard).not.toMatch(/bg-urgent\s+text-white/);
 	});
 
-	it("ChannelDashboard has no text-white on brand bg (T6)", () => {
-		const dashboard = readOtaComponent("ChannelDashboard.tsx");
+	it("OTADashboard has no text-white on brand bg (T6)", () => {
+		const dashboard = readOtaComponent("OTADashboard.tsx");
 		// text-white on brand bg should be text-primary-foreground
 		expect(dashboard).toMatch(/text-primary-foreground/);
 	});
@@ -169,7 +169,7 @@ describe("AC6 — Zero hover:bg-brand- in Channel CTA buttons (T8-T15)", () => {
 		"BookingWidget.tsx",
 		"MobileStickyCta.tsx",
 		"ReviewForm.tsx",
-		"ChannelDashboard.tsx",
+		"OTADashboard.tsx",
 	];
 
 	for (const filename of otaFiles) {
