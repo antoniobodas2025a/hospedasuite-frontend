@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import SoftwareJsonLd from '@/components/seo/SoftwareJsonLd';
 import DatasetJsonLd from '@/components/seo/DatasetJsonLd';
-import ROISimulator from '@/components/public/ROISimulator';
+import RoiSimulatorV2 from '@/components/public/RoiSimulatorV2';
 import LeadCaptureModal from '@/components/public/LeadCaptureModal';
 import InteractivePricingSlider from '@/components/InteractivePricingSlider';
 
@@ -253,7 +253,49 @@ export default function App() {
               Mové los controles y mirá cuánto ahorrás recibiendo reservas directas por WhatsApp con 0% de comisión.
             </p>
           </div>
-          <ROISimulator onCtaClick={() => setLeadModalOpen(true)} />
+          <RoiSimulatorV2 onCtaClick={() => setLeadModalOpen(true)} />
+        </div>
+      </section>
+
+      {/* ─── REGULATORY SHIELD — SIRE/TRA Automation ─── */}
+      <section className="py-16 px-6 bg-[#f5f5f7]/50 border-t border-black/[0.04]">
+        <div className="max-w-[980px] mx-auto">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-12 items-center">
+            <div>
+              <h2 className="text-3xl font-semibold tracking-tight mb-4 text-[#1d1d1f]">
+                Tu escudo contra multas de 20 SMLMV
+              </h2>
+              <p className="text-[17px] text-[#1d1d1f]/60 leading-relaxed mb-6">
+                Cumplir con la Tarjeta de Registro de Alojamiento y el SIRE toma 15 minutos manuales por huésped. 
+                HospedaSuite automatiza este reporte gubernamental en tiempo real.
+              </p>
+              <ul className="space-y-3 text-[15px] text-[#1d1d1f]/70">
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#34c759]" />
+                  <span>Reportes automáticos a Migración Colombia</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#34c759]" />
+                  <span>Cero riesgo de sanciones por olvido</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <span className="w-1.5 h-1.5 rounded-full bg-[#34c759]" />
+                  <span>Blindaje contra estafas cibernéticas</span>
+                </li>
+              </ul>
+            </div>
+            <div className="bg-white rounded-[28px] p-8 shadow-[0_2px_12px_rgba(0,0,0,0.04)] border border-black/[0.04]">
+              <div className="flex items-center gap-3 mb-4">
+                <div className="w-10 h-10 rounded-[14px] bg-[#f5f5f7] flex items-center justify-center">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+                </div>
+                <span className="text-sm font-bold text-[#1d1d1f]/40 uppercase tracking-wide">Automatización Legal</span>
+              </div>
+              <p className="text-[15px] text-[#1d1d1f]/70 leading-relaxed">
+                "Su pasarela nativa Wompi elimina comisiones y bloquea estafas cibernéticas frecuentes en glampings de Colombia."
+              </p>
+            </div>
+          </div>
         </div>
       </section>
 
