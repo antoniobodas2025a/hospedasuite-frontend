@@ -203,6 +203,30 @@ export default function SettingsStep() {
             Obtené estas claves en tu <span className="text-zinc-400">Dashboard de Wompi → Desarrollo → Integración</span>.
             Sin estas claves, tus huéspedes no podrán pagarte.
           </p>
+          
+          {/* Toggle: Modo de Prueba */}
+          <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
+            <div>
+              <p className="text-sm font-bold text-white">Modo de Prueba</p>
+              <p className="text-[10px] text-zinc-500">Activá para hacer cobros de prueba sin riesgo</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => updateSettings({ wompi_sandbox_mode: !settings.wompi_sandbox_mode })}
+              className={`relative w-12 h-6 rounded-full transition-colors ${
+                settings.wompi_sandbox_mode ? 'bg-amber-500' : 'bg-zinc-700'
+              }`}
+            >
+              <span className={`absolute top-1 left-1 w-4 h-4 bg-white rounded-full transition-transform ${
+                settings.wompi_sandbox_mode ? 'translate-x-6' : 'translate-x-0'
+              }`} />
+            </button>
+          </div>
+          {settings.wompi_sandbox_mode && (
+            <p className="text-[10px] text-amber-400 mt-2 flex items-center gap-1">
+              ⚠️ Estás en modo de prueba. No uses tarjetas reales.
+            </p>
+          )}
         </div>
       </SectionCard>
     </motion.div>

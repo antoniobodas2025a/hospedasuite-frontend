@@ -44,6 +44,7 @@ export interface Hotel {
   wompi_integrity_secret?: string;
   wompi_events_secret?: string;
   wompi_public_key?: string;
+  wompi_sandbox_mode?: boolean;
   reviewStats?: ReviewStats;
   /** Coordenadas del hotel (PRD-009: Mapa Inteligente) */
   latitude?: number | null;

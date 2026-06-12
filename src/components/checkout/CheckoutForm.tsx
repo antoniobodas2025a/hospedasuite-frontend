@@ -137,7 +137,12 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
 
     const redirectUrl = `${window.location.origin}/book/success?id=${result.bookingId}`;
 
-    const wompiUrl = new URL('https://checkout.wompi.co/p/');
+    // 🧠 CEREBRO OPERATIVO: Modo de Prueba
+    // Si el hotel está en modo de prueba, usa la URL de sandbox de Wompi
+    const isSandbox = hotel.wompi_sandbox_mode === true;
+    const wompiBaseUrl = isSandbox ? 'https://checkout.sandbox.wompi.co/p/' : 'https://checkout.wompi.co/p/';
+
+    const wompiUrl = new URL(wompiBaseUrl);
     wompiUrl.searchParams.append('public-key', cleanPublicKey);
     wompiUrl.searchParams.append('currency', 'COP');
     wompiUrl.searchParams.append('amount-in-cents', amountInCents.toString());

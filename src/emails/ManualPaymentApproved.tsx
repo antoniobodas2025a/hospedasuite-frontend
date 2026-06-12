@@ -3,13 +3,23 @@ import * as React from 'react';
 
 interface ManualPaymentApprovedProps {
   hotelName: string;
-  amount: number;
-  method: string;
-  approvedAt: string;
-  dashboardUrl: string;
+  guestName: string;
+  bookingId: string;
+  checkIn: string;
+  checkOut: string;
+  totalAmount: number;
+  voucherUrl: string;
 }
 
-export const ManualPaymentApproved = ({ hotelName, amount, method, approvedAt, dashboardUrl }: ManualPaymentApprovedProps) => (
+export const ManualPaymentApproved = ({
+  hotelName,
+  guestName,
+  bookingId,
+  checkIn,
+  checkOut,
+  totalAmount,
+  voucherUrl,
+}: ManualPaymentApprovedProps) => (
   <Html>
     <Head />
     <Body style={{ backgroundColor: '#f9fafb', fontFamily: 'sans-serif' }}>
@@ -18,28 +28,32 @@ export const ManualPaymentApproved = ({ hotelName, amount, method, approvedAt, d
           ¡Pago Verificado!
         </Heading>
         <Text style={{ fontSize: '16px', color: '#4b5563' }}>
-          Tu pago para <strong>{hotelName}</strong> ha sido verificado exitosamente.
+          Hola {guestName}, tu reserva en <strong>{hotelName}</strong> ha sido confirmada.
         </Text>
         
         <Section style={{ margin: '24px 0', padding: '20px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
           <Text style={{ margin: '0 0 10px 0', color: '#166534' }}>
-            <strong>Monto:</strong> ${amount.toLocaleString('es-CO')} COP
+            <strong>Reserva:</strong> #{bookingId}
           </Text>
           <Text style={{ margin: '0 0 10px 0', color: '#166534' }}>
-            <strong>Método:</strong> {method}
+            <strong>Check-in:</strong> {checkIn}
+          </Text>
+          <Text style={{ margin: '0 0 10px 0', color: '#166534' }}>
+            <strong>Check-out:</strong> {checkOut}
           </Text>
           <Text style={{ margin: '0', color: '#166534' }}>
-            <strong>Verificado el:</strong> {approvedAt}
+            <strong>Total pagado:</strong> ${totalAmount.toLocaleString('es-CO')} COP
           </Text>
         </Section>
 
         <Text style={{ fontSize: '14px', color: '#4b5563' }}>
-          Tu propiedad ya está completamente activa. Podés recibir reservas y gestionar tu hotel desde el dashboard.
+          Tu Motor de Reservas Propio ha procesado tu pago exitosamente. 
+          Presenta este correo o tu voucher al llegar.
         </Text>
 
         <Section style={{ marginTop: '30px', textAlign: 'center' }}>
-          <Link href={dashboardUrl} style={{ backgroundColor: '#10b981', color: '#ffffff', padding: '12px 24px', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' }}>
-            Ir al Dashboard
+          <Link href={voucherUrl} style={{ backgroundColor: '#10b981', color: '#ffffff', padding: '12px 24px', borderRadius: '6px', textDecoration: 'none', fontWeight: 'bold', display: 'inline-block' }}>
+            Ver mi Voucher
           </Link>
         </Section>
         

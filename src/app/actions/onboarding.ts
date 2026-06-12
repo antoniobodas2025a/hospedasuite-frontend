@@ -152,6 +152,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       // Soberanía Financiera: claves de Wompi del hotel
       wompi_public_key: state.settings.wompi_public_key || null,
       wompi_integrity_secret: state.settings.wompi_integrity_secret || null,
+      wompi_sandbox_mode: state.settings.wompi_sandbox_mode || false,
     };
 
     if (isManual) {

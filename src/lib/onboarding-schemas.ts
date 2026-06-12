@@ -86,6 +86,7 @@ export const settingsSchema = z.object({
 	// Soberanía Financiera: claves de Wompi para recibir pagos directos
 	wompi_public_key: z.string().min(10, "La clave pública de Wompi es requerida"),
 	wompi_integrity_secret: z.string().min(10, "El secreto de integridad de Wompi es requerido"),
+	wompi_sandbox_mode: z.boolean().default(false),
 });
 
 // Step 6: Payment
