@@ -219,6 +219,28 @@ export default async function DashboardPage() {
         </div>
       )}
 
+      {/* Guía de Activación rápida si falta Wompi */}
+      {readinessRes.success && readinessRes.data && readinessRes.data.score < 100 && (
+        <div className="mt-6 p-6 bg-emerald-500/5 border border-emerald-500/20 rounded-[var(--radius-squircle-2xl)] relative overflow-hidden">
+          <div className="absolute top-0 right-0 p-12 bg-emerald-500/5 blur-2xl rounded-full pointer-events-none" />
+          <div className="relative z-10">
+            <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide mb-2 flex items-center gap-2">
+              🚀 Completá tu configuración para activar el Motor Propio
+            </h3>
+            <p className="text-white/70 text-sm leading-relaxed mb-4">
+              Te falta poco para empezar a recibir reservas directas. 
+              Revisá qué pasos están pendientes:
+            </p>
+            <a
+              href="/dashboard/readiness"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-[var(--radius-squircle-lg)] bg-emerald-600 hover:bg-emerald-500 text-white text-sm font-bold transition-all shadow-lg shadow-emerald-500/20 active:scale-95"
+            >
+              Ver pasos pendientes →
+            </a>
+          </div>
+        </div>
+      )}
+
       {/* OTA Sync Widget — solo si hay iCal configurado */}
       {otaStatus && (
         <div className="mt-6 max-w-md">
