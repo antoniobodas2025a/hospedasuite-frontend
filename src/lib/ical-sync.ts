@@ -1,7 +1,7 @@
 /**
- * Channel Manager — OTA Sync Engine
+ * Channel Manager — Channel Sync Engine
  *
- * Orchestrates iCal synchronization with OTAs (Booking.com, Airbnb, Expedia).
+ * Orchestrates iCal synchronization with Channels (Booking.com, Airbnb, Expedia).
  * Implements all mitigations: jitter, ETag cache, circuit breaker, alerts.
  *
  * Architecture:
@@ -20,7 +20,7 @@
 import { fetchICS, parseICS, IcsEvent, IcsFetchResult } from './ical-parser';
 import { canRequest, recordSuccess, recordFailure, forceOpen } from './circuit-breaker';
 import {
-  sendOTAAlert,
+  sendChannelAlert,
   createRateLimitAlert,
   createCircuitAlert,
   createSyncFailureAlert,
@@ -66,7 +66,7 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// ─── Cache Store (ETag / Last-Modified per OTA connection) ────────
+// ─── Cache Store (ETag / Last-Modified per Channel connection) ────────
 
 interface CacheEntry {
   etag: string | null;
@@ -90,15 +90,15 @@ function setCache(hotelId: string, otaId: string, entry: CacheEntry): void {
   cacheStore.set(getCacheKey(hotelId, otaId), entry);
 }
 
-// ─── OTA Connection Interface ─────────────────────────────────────
+// ─── Channel Connection Interface ─────────────────────────────────────
 
-export interface OTAConnection {
+export interface ChannelConnection {
   id: string;
   hotelId: string;
   hotelName: string;
   otaName: string; // 'booking.com', 'airbnb', 'expedia', etc.
   icalUrl: string;
-  pushUrl?: string; // Optional: for pushing availability back to OTA
+  pushUrl?: string; // Optional: for pushing availability back to Channel
   lastSyncAt: Date | null;
   isActive: boolean;
 }
@@ -121,13 +121,13 @@ export interface SyncResult {
 // ─── Main Sync Engine ─────────────────────────────────────────────
 
 /**
- * Sync a single hotel's OTA connections.
+ * Sync a single hotel's Channel connections.
  * Called by QStash cron endpoint.
  */
-export async function syncHotelOTAs(
+export async function syncHotelChannels(
   hotelId: string,
   hotelName: string,
-  connections: OTAConnection[]
+  connections: ChannelConnection[]
 ): Promise<SyncResult[]> {
   const results: SyncResult[] = [];
   const jitterMs = getJitterOffset(hotelId) * 1000;
@@ -142,7 +142,7 @@ export async function syncHotelOTAs(
 
   for (const chunk of chunks) {
     const chunkResults = await Promise.allSettled(
-      chunk.map(conn => syncSingleOTA(conn, hotelName))
+      chunk.map(conn => syncSingleChannel(conn, hotelName))
     );
 
     for (const result of chunkResults) {
@@ -169,10 +169,10 @@ export async function syncHotelOTAs(
 }
 
 /**
- * Sync a single OTA connection.
+ * Sync a single Channel connection.
  */
-async function syncSingleOTA(
-  connection: OTAConnection,
+async function syncSingleChannel(
+  connection: ChannelConnection,
   hotelName: string
 ): Promise<SyncResult> {
   const startTime = Date.now();
@@ -210,10 +210,10 @@ async function syncSingleOTA(
   // Rate limited
   if (fetchResult.httpStatus === 429) {
     recordFailure(otaName, 'rate-limited');
-    forceOpen(otaName, 'Rate limited by OTA');
+    forceOpen(otaName, 'Rate limited by Channel');
 
     const retryAfter = parseRetryAfter(fetchResult.errorMessage);
-    await sendOTAAlert(createRateLimitAlert(hotelId, hotelName, otaName, retryAfter));
+    await sendChannelAlert(createRateLimitAlert(hotelId, hotelName, otaName, retryAfter));
 
     return {
       hotelId,
@@ -233,7 +233,7 @@ async function syncSingleOTA(
   if (fetchResult.status === 'error') {
     recordFailure(otaName, fetchResult.errorMessage);
 
-    await sendOTAAlert(createSyncFailureAlert(
+    await sendChannelAlert(createSyncFailureAlert(
       hotelId,
       hotelName,
       otaName,
@@ -376,7 +376,7 @@ async function processEvents(
       // Check for overbooking conflicts
       const conflict = await checkOverbooking(hotelId, event);
       if (conflict) {
-        await sendOTAAlert(createOverbookingAlert(
+        await sendChannelAlert(createOverbookingAlert(
           hotelId,
           hotelName,
           otaName,
@@ -449,7 +449,7 @@ function parseRetryAfter(errorMessage?: string): number {
 // ─── Sync All Hotels (QStash Cron Entry Point) ───────────────────
 
 /**
- * Fetch all active hotels and their OTA connections, then sync.
+ * Fetch all active hotels and their Channel connections, then sync.
  * This is the main entry point for the QStash cron job.
  */
 export async function syncAllHotels(): Promise<{
@@ -473,18 +473,18 @@ export async function syncAllHotels(): Promise<{
   let totalConnections = 0;
 
   for (const hotel of hotels) {
-    // Fetch OTA connections for this hotel
+    // Fetch Channel connections for this hotel
     // const { data: connections } = await supabase
     //   .from('ota_connections')
     //   .select('*')
     //   .eq('hotel_id', hotel.id)
     //   .eq('is_active', true);
 
-    const connections: OTAConnection[] = [];
+    const connections: ChannelConnection[] = [];
     totalConnections += connections.length;
 
     if (connections.length > 0) {
-      const results = await syncHotelOTAs(hotel.id, hotel.name, connections);
+      const results = await syncHotelChannels(hotel.id, hotel.name, connections);
       allResults.push(...results);
     }
   }

@@ -17,10 +17,10 @@ import path from 'path';
 
 const FORBIDDEN_WORDS = [
   'Aprovechando tu desgracia',
-  'Comisión OTA',
+  'Comisión Channel',
   'Te lo dijimos',
   'Campaña viral',
-  'OTA',
+  'Channel',
 ];
 
 describe('Trend-Jacking — Brand Core (Empathy Mutation Tests)', () => {
@@ -230,7 +230,7 @@ describe('Crisis Page — GEO Block Word Count (Mutation Protection)', () => {
 
   it('el bloque GEO no debe contener palabras prohibidas', () => {
     const content = fs.readFileSync(CRISIS_PAGE_PATH, 'utf8');
-    const forbidden = ['OTA', 'comisión OTA', 'aprovechando', 'viral'];
+    const forbidden = ['Channel', 'comisión Channel', 'aprovechando', 'viral'];
     for (const word of forbidden) {
       expect(content.toLowerCase()).not.toContain(word.toLowerCase());
     }

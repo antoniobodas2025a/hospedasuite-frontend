@@ -106,7 +106,7 @@ const HomeLanding = ({ hotel, rooms }: { hotel: HotelInfo; rooms: Room[] }) => {
           </motion.p>
         </div>
 
-        {/* 3. WIDGET DE BUSQUEDA FLOTANTE */}
+        {/* 3. WIDGET DE BUSQUEDA FLChannelNTE */}
         <motion.div
           initial={{ opacity: 0, y: 40 }}
           animate={{ opacity: 1, y: 0 }}

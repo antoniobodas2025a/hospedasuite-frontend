@@ -5,14 +5,14 @@
 // sea matemáticamente coherente y respete las constantes declaradas:
 // - Motor Propio: 0%
 // - Red de Descubrimiento: 10%
-// - OTAs tradicionales: 18%
+// - Channels tradicionales: 18%
 // ============================================================================
 
 import { describe, it, expect } from 'vitest';
 import {
   calculateROI,
   formatCOP,
-  TRADITIONAL_OTA_RATE,
+  TRADITIONAL_Channel_RATE,
   HOSPEDASUITE_DISCOVERY_RATE,
   OWN_MOTOR_RATE,
   PRO_PLAN_COST,
@@ -31,8 +31,8 @@ describe('Constantes de comisión', () => {
     expect(HOSPEDASUITE_DISCOVERY_RATE).toBe(0.10);
   });
 
-  it('OTAs tradicionales debe ser 18%', () => {
-    expect(TRADITIONAL_OTA_RATE).toBe(0.18);
+  it('Channels tradicionales debe ser 18%', () => {
+    expect(TRADITIONAL_Channel_RATE).toBe(0.18);
   });
 
   it('Plan Pro debe ser $99.000 COP', () => {
@@ -49,13 +49,13 @@ describe('calculateROI', () => {
     const result = calculateROI(250000, 15);
 
     expect(result.totalRevenue).toBe(3750000);
-    // OTA tradicional: 3750000 * 0.18 = 675000
+    // Channel tradicional: 3750000 * 0.18 = 675000
     expect(result.traditionalOtaCommission).toBe(675000);
     // Red de Descubrimiento: 3750000 * 0.10 = 375000
     expect(result.hospedaSuiteDiscoveryCost).toBe(375000);
     // Motor Propio: solo costo del plan
     expect(result.ownMotorCost).toBe(PRO_PLAN_COST);
-    // Ahorro vs OTA: 675000 - 99000 = 576000
+    // Ahorro vs Channel: 675000 - 99000 = 576000
     expect(result.netSavings).toBe(576000);
   });
 
@@ -86,7 +86,7 @@ describe('calculateROI', () => {
     expect(result.netSavings).toBe(-PRO_PLAN_COST);
   });
 
-  it('🔧 tasas custom: OTA 15%, Discovery 8%', () => {
+  it('🔧 tasas custom: Channel 15%, Discovery 8%', () => {
     const result = calculateROI(200000, 10, 0.15, 0.08);
     expect(result.traditionalCommissionRate).toBe(15);
     expect(result.discoveryCommissionRate).toBe(8);
@@ -128,12 +128,12 @@ describe('calculateROI', () => {
 // ============================================================================
 
 describe('Mutation tests — inmunidad de constantes', () => {
-  it('🛡️ si OTA fuera 0%, el test de savings falla', () => {
-    // Simulamos: si TRADITIONAL_OTA_RATE fuera 0, no habría ahorro
+  it('🛡️ si Channel fuera 0%, el test de savings falla', () => {
+    // Simulamos: si TRADITIONAL_Channel_RATE fuera 0, no habría ahorro
     const sabotaged = calculateROI(250000, 15, 0.0);
-    // Con OTA=0%, netSavings = 0 - 99000 = -99000 (negativo)
+    // Con Channel=0%, netSavings = 0 - 99000 = -99000 (negativo)
     expect(sabotaged.netSavings).toBe(-99000);
-    // Esto demuestra que el test detectaría si alguien pone OTA=0%
+    // Esto demuestra que el test detectaría si alguien pone Channel=0%
     expect(sabotaged.netSavings).toBeLessThan(0);
   });
 
@@ -147,7 +147,7 @@ describe('Mutation tests — inmunidad de constantes', () => {
   it('🛡️ Motor Propio SIEMPRE debe ser 0%', () => {
     expect(OWN_MOTOR_RATE).toBe(0);
     expect(OWN_MOTOR_RATE).toBeLessThan(HOSPEDASUITE_DISCOVERY_RATE);
-    expect(HOSPEDASUITE_DISCOVERY_RATE).toBeLessThan(TRADITIONAL_OTA_RATE);
+    expect(HOSPEDASUITE_DISCOVERY_RATE).toBeLessThan(TRADITIONAL_Channel_RATE);
   });
 });
 
@@ -176,7 +176,7 @@ describe('Mutation test — fórmula del ahorro', () => {
     expect(result.netSavings).toBe(wrongSavings - PRO_PLAN_COST);
   });
 
-  it('🛡️ si la fórmula usa otro % de OTA, el test falla', () => {
+  it('🛡️ si la fórmula usa otro % de Channel, el test falla', () => {
     const revenue = 250000 * 15;
     const wrongCommission = Math.round(revenue * 0.15); // 15% en vez de 18%
 

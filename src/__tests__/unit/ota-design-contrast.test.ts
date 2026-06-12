@@ -3,8 +3,8 @@ import { readFileSync } from "fs";
 import { resolve } from "path";
 
 // ============================================================================
-// OTA Design Contrast — TDD Test Suite
-// Validates token presence in globals.css and semantic classNames in OTA components.
+// Channel Design Contrast — TDD Test Suite
+// Validates token presence in globals.css and semantic classNames in Channel components.
 // These are file-content contract tests — the spec requires specific CSS tokens
 // to exist and specific className patterns to be present/absent in source files.
 // ============================================================================
@@ -54,7 +54,7 @@ function getOtaThemeBlock(css: string): string {
 // ACCEPTANCE CRITERIA
 // ============================================================================
 
-describe("AC1 — OTA Glass Override Variables (T1)", () => {
+describe("AC1 — Channel Glass Override Variables (T1)", () => {
 	const otaBlock = getOtaThemeBlock(globalsCss);
 
 	const requiredVars = [
@@ -88,7 +88,7 @@ describe("AC1 — OTA Glass Override Variables (T1)", () => {
 	});
 });
 
-describe("AC2 — OTA Status Foreground Tokens (T2)", () => {
+describe("AC2 — Channel Status Foreground Tokens (T2)", () => {
 	const otaBlock = getOtaThemeBlock(globalsCss);
 
 	const requiredVars = [
@@ -154,14 +154,14 @@ describe("AC5 — Zero text-white on status badges (T6, T7)", () => {
 		expect(roomCard).not.toMatch(/bg-urgent\s+text-white/);
 	});
 
-	it("OTADashboard has no text-white on brand bg (T6)", () => {
-		const dashboard = readOtaComponent("OTADashboard.tsx");
+	it("ChannelDashboard has no text-white on brand bg (T6)", () => {
+		const dashboard = readOtaComponent("ChannelDashboard.tsx");
 		// text-white on brand bg should be text-primary-foreground
 		expect(dashboard).toMatch(/text-primary-foreground/);
 	});
 });
 
-describe("AC6 — Zero hover:bg-brand- in OTA CTA buttons (T8-T15)", () => {
+describe("AC6 — Zero hover:bg-brand- in Channel CTA buttons (T8-T15)", () => {
 	const otaFiles = [
 		"RoomShowcaseModal.tsx",
 		"RoomCard.tsx",
@@ -169,7 +169,7 @@ describe("AC6 — Zero hover:bg-brand- in OTA CTA buttons (T8-T15)", () => {
 		"BookingWidget.tsx",
 		"MobileStickyCta.tsx",
 		"ReviewForm.tsx",
-		"OTADashboard.tsx",
+		"ChannelDashboard.tsx",
 	];
 
 	for (const filename of otaFiles) {
@@ -180,7 +180,7 @@ describe("AC6 — Zero hover:bg-brand- in OTA CTA buttons (T8-T15)", () => {
 	}
 });
 
-describe("AC7 — Zero shadow-black/ in OTA components (T17)", () => {
+describe("AC7 — Zero shadow-black/ in Channel components (T17)", () => {
 	const filesWithShadowChanges = [
 		"StickySubNav.tsx",
 		"MobileStickyCta.tsx",
@@ -225,7 +225,7 @@ describe("AC9 — RoomShowcaseModal uses imported GlassCard (T3)", () => {
 // SEMANTIC TOKEN PRESENCE (positive checks)
 // ============================================================================
 
-describe("Semantic hover tokens in OTA components", () => {
+describe("Semantic hover tokens in Channel components", () => {
 	it("BookingWidget uses hover:bg-primary/90", () => {
 		const content = readOtaComponent("BookingWidget.tsx");
 		expect(content).toMatch(/hover:bg-primary\/90/);
@@ -247,7 +247,7 @@ describe("Semantic hover tokens in OTA components", () => {
 	});
 });
 
-describe("Semantic shadow tokens in OTA components", () => {
+describe("Semantic shadow tokens in Channel components", () => {
 	it("StickySubNav uses shadow-elev-1", () => {
 		const content = readOtaComponent("StickySubNav.tsx");
 		expect(content).toMatch(/shadow-elev-1/);

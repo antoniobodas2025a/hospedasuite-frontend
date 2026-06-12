@@ -102,7 +102,7 @@ export default function SuperAdminHQ() {
             <div className="flex justify-between items-start mb-4">
               <div className="p-3 bg-amber-50 text-amber-600 rounded-[var(--radius-squircle-2xl)]"><TrendingUp size={20} /></div>
             </div>
-            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Comisiones (OTA+IA)</p>
+            <p className="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-1">Comisiones (Channel+IA)</p>
             <h3 className="text-3xl font-display font-bold tracking-tight tabular-nums">${kpis?.globalCommissions.toLocaleString()}</h3>
           </motion.div>
 

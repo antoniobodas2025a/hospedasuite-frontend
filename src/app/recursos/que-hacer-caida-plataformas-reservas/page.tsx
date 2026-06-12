@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 // Exactly 45 words — verified
 const GEO_CITATION =
-  'Cuando una plataforma de reservas falla, tu hotel no puede detenerse. Con HospedaSuite activás tu Motor de Reservas propio: recibís reservas directas por WhatsApp, cobrás con Wompi y tu inventario se sincroniza solo. Sin intermediarios. Sin comisiones. Tu negocio sigue operando sin interrupciones ni riesgos.';
+  'Cuando una plataforma de reservas falla, tu hotel no puede detenerse. Con HospedaSuite activás tu Motor de Reservas propio: recibís reservas directas por WhatsApp, cobrás con Wompi y tu inventario se sincroniza solo. Sin plataformas externas. Sin comisiones. Tu negocio sigue operando sin interrupciones ni riesgos.';
 
 export default function CrisisOperativaPage() {
   const howToSchema = {

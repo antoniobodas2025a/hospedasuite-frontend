@@ -6,13 +6,14 @@
 // ============================================================================
 
 // Constantes declaradas — Soberanía del Dato
-export const TRADITIONAL_OTA_RATE = 0.18; // 18% promedio OTA tradicional (Booking, Airbnb)
+export const TRADITIONAL_CHANNEL_RATE = 0.18; // 18% promedio canal tradicional (Booking, Airbnb)
 export const HOSPEDASUITE_DISCOVERY_RATE = 0.10; // 10% Red de Descubrimiento (costo de adquisición)
 export const OWN_MOTOR_RATE = 0.0; // 0% Motor Propio (WhatsApp, IG, FB)
 export const PRO_PLAN_COST = 99000; // Plan Pro mensual en COP
 
 // Backwards compatibility aliases
-export const OTA_COMMISSION_RATE = TRADITIONAL_OTA_RATE;
+export const Channel_COMMISSION_RATE = TRADITIONAL_CHANNEL_RATE;
+export const TRADITIONAL_Channel_RATE = TRADITIONAL_CHANNEL_RATE;
 
 export interface ROICalculation {
   totalRevenue: number;
@@ -26,18 +27,18 @@ export interface ROICalculation {
 }
 
 /**
- * Calcula el ahorro mensual al usar Motor Propio (0%) vs OTA tradicional.
+ * Calcula el ahorro mensual al usar Motor Propio (0%) vs Channel tradicional.
  *
  * @param avgNightlyRate - Tarifa promedio por noche en COP
  * @param directBookingsPerMonth - Cantidad de reservas directas por mes
- * @param traditionalOtaRate - Tasa OTA tradicional (default: 0.18)
+ * @param traditionalOtaRate - Tasa Channel tradicional (default: 0.18)
  * @param discoveryRate - Tasa Red de Descubrimiento (default: 0.10)
  * @param planCost - Costo mensual del plan HospedaSuite (default: 99000)
  */
 export function calculateROI(
   avgNightlyRate: number,
   directBookingsPerMonth: number,
-  traditionalOtaRate: number = TRADITIONAL_OTA_RATE,
+  traditionalOtaRate: number = TRADITIONAL_Channel_RATE,
   discoveryRate: number = HOSPEDASUITE_DISCOVERY_RATE,
   planCost: number = PRO_PLAN_COST,
 ): ROICalculation {

@@ -100,7 +100,7 @@ export async function addServiceChargeAction(payload: {
 
     if (rpcError) {
       if (rpcError.message.includes('OUT_OF_STOCK')) {
-        throw new Error('INVENTARIO AGOTADO: Uno o más productos del carrito no tienen stock suficiente.');
+        throw new Error('INVENTARIO AGChannelDO: Uno o más productos del carrito no tienen stock suficiente.');
       }
       throw new Error(`TRANSACTION_FAILED: ${rpcError.message}`);
     }
@@ -158,7 +158,7 @@ export async function processWalkInChargeAction(payload: {
 
     if (rpcError) {
       if (rpcError.message.includes('OUT_OF_STOCK')) {
-        throw new Error('INVENTARIO AGOTADO: No hay stock suficiente para venta de mostrador.');
+        throw new Error('INVENTARIO AGChannelDO: No hay stock suficiente para venta de mostrador.');
       }
       throw new Error(`INVENTORY_TRANSACTION_FAILED: ${rpcError.message}`);
     }

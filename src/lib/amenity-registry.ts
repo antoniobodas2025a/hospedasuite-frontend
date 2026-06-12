@@ -4,8 +4,8 @@ import { Wifi, Car, Waves, Coffee, Snowflake, Tv, Dumbbell, Utensils, Wine, Bath
 // AMENITY REGISTRY — Fuente unica de verdad para amenidades del hotel
 //
 // Usado por:
-// - SettingsPanel.tsx (tab Perfil OTA — botones de amenidades)
-// - OTA page (hotel/[slug]/page.tsx — renderizado de amenidades)
+// - SettingsPanel.tsx (tab Perfil Channel — botones de amenidades)
+// - Channel page (hotel/[slug]/page.tsx — renderizado de amenidades)
 //
 // Para agregar una nueva amenidad:
 // 1. Agregar entrada aqui con id, label, icon
@@ -55,15 +55,15 @@ export function getAmenityIcon(id: string): React.ElementType {
 //
 // Usado por:
 // - RoomEditorModal.tsx (seleccion de comodidades)
-// - AvailabilitySearchBar.tsx (filtros de amenidades OTA unificados)
-// - RoomComparison.tsx (tabla comparativa OTA)
-// - RoomCard.tsx (badges de storytelling OTA)
-// - RoomShowcaseModal.tsx (amenity glass OTA)
+// - AvailabilitySearchBar.tsx (filtros de amenidades Channel unificados)
+// - RoomComparison.tsx (tabla comparativa Channel)
+// - RoomCard.tsx (badges de storytelling Channel)
+// - RoomShowcaseModal.tsx (amenity glass Channel)
 // - onboarding/page.tsx (wizard de aprovisionamiento)
 //
 // Para agregar una nueva amenidad de habitacion:
 // 1. Agregar entrada aqui con id, label, icon
-// 2. Opcional: agregar storyTitle y storyDescription para OTA storytelling
+// 2. Opcional: agregar storyTitle y storyDescription para Channel storytelling
 // ============================================================================
 
 export interface RoomAmenityDefinition {

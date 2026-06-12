@@ -5,7 +5,7 @@ import { logAuditEvent } from '@/lib/audit-logger';
 import { getJitterOffset } from '@/lib/ical-sync';
 import { canRequest, recordSuccess, recordFailure, forceOpen } from '@/lib/circuit-breaker';
 import {
-  sendOTAAlert,
+  sendChannelAlert,
   createRateLimitAlert,
   createCircuitAlert,
   createSyncFailureAlert,
@@ -28,8 +28,8 @@ type AdminClient = any;
 // 4. ALERTS: Deduplicated notifications to hotelero + internal team
 //
 // Diff algorithm:
-// - UID en iCal pero NO en DB → NUEVA reserva OTA → INSERT
-// - UID en DB pero NO en iCal → CANCELADA en OTA → UPDATE status
+// - UID en iCal pero NO en DB → NUEVA reserva Channel → INSERT
+// - UID en DB pero NO en iCal → CANCELADA en Channel → UPDATE status
 // - UID en ambos → Sin cambios (skip)
 // ============================================================================
 
@@ -110,7 +110,7 @@ async function fetchIcalEvents(
       recordFailure(otaSource, 'rate-limited');
       forceOpen(otaSource, `Rate limited (Retry-After: ${retrySeconds}s)`);
 
-      await sendOTAAlert(createRateLimitAlert(hotelId, hotelName, otaSource, retrySeconds));
+      await sendChannelAlert(createRateLimitAlert(hotelId, hotelName, otaSource, retrySeconds));
 
       return {
         events: [],
@@ -132,7 +132,7 @@ async function fetchIcalEvents(
     // ─── HTTP Error ──────────────────────────────────────────────
     if (!response.ok) {
       recordFailure(otaSource, `HTTP ${response.status}`);
-      await sendOTAAlert(createSyncFailureAlert(
+      await sendChannelAlert(createSyncFailureAlert(
         hotelId, hotelName, otaSource, `HTTP ${response.status}: ${response.statusText}`
       ));
       return { events: [], cacheHit: false, error: `HTTP ${response.status}` };
@@ -172,13 +172,13 @@ async function fetchIcalEvents(
       return { events: [], cacheHit: false, error: 'Request timeout (10s)' };
     }
 
-    await sendOTAAlert(createSyncFailureAlert(hotelId, hotelName, otaSource, error.message));
+    await sendChannelAlert(createSyncFailureAlert(hotelId, hotelName, otaSource, error.message));
     return { events: [], cacheHit: false, error: error.message };
   }
 }
 
 /**
- * Obtiene todas las reservas OTA existentes para un hotel.
+ * Obtiene todas las reservas Channel existentes para un hotel.
  * Retorna un Map de external_id → booking para lookup O(1).
  */
 async function fetchExistingOtaBookings(
@@ -216,7 +216,7 @@ async function fetchExistingOtaBookings(
 }
 
 /**
- * Obtiene o crea el huésped genérico para reservas OTA.
+ * Obtiene o crea el huésped genérico para reservas Channel.
  */
 async function ensureOtaGuest(
   supabaseAdmin: AdminClient,
@@ -226,7 +226,7 @@ async function ensureOtaGuest(
     .from('guests')
     .select('id')
     .eq('hotel_id', hotelId)
-    .eq('doc_number', 'OTA-GUEST-000')
+    .eq('doc_number', 'Channel-GUEST-000')
     .single();
 
   if (otaGuest) return otaGuest.id;
@@ -236,7 +236,7 @@ async function ensureOtaGuest(
     .insert([{
       hotel_id: hotelId,
       full_name: 'Reserva Externa (Booking/Airbnb)',
-      doc_number: 'OTA-GUEST-000',
+      doc_number: 'Channel-GUEST-000',
       phone: 'N/A',
     }])
     .select('id')
@@ -247,7 +247,7 @@ async function ensureOtaGuest(
 }
 
 /**
- * Determina el source OTA basado en la URL del iCal.
+ * Determina el source Channel basado en la URL del iCal.
  */
 function detectOtaSource(icalUrl: string): string {
   const url = icalUrl.toLowerCase();
@@ -304,11 +304,11 @@ async function handler(req: Request) {
       }, { status: 200 });
     }
 
-    // 2. Asegurar huésped OTA
+    // 2. Asegurar huésped Channel
     const guestId = await ensureOtaGuest(supabaseAdmin, hotelId);
-    if (!guestId) throw new Error('No se pudo resolver huésped OTA');
+    if (!guestId) throw new Error('No se pudo resolver huésped Channel');
 
-    // 3. Cargar reservas OTA existentes (para diff)
+    // 3. Cargar reservas Channel existentes (para diff)
     const existingBookings = await fetchExistingOtaBookings(supabaseAdmin, hotelId);
 
     const result: SyncResult = {
@@ -375,7 +375,7 @@ async function handler(req: Request) {
           const existing = existingBookings.get(event.uid);
 
           if (!existing) {
-            // NUEVA reserva OTA → INSERT
+            // NUEVA reserva Channel → INSERT
             const otaSource = detectOtaSource(room.ical_import_url);
             const { error: insertError } = await supabaseAdmin
               .from('bookings')
@@ -392,11 +392,11 @@ async function handler(req: Request) {
               }]);
 
             if (insertError) {
-              console.error(`[SYNC] Error insertando reserva OTA ${event.uid}:`, insertError.message);
+              console.error(`[SYNC] Error insertando reserva Channel ${event.uid}:`, insertError.message);
               result.errors.push(`Insert failed for ${event.uid}: ${insertError.message}`);
             } else {
               result.bookingsCreated++;
-              console.log(`[SYNC] Nueva reserva OTA: ${event.uid} → Room ${room.name}`);
+              console.log(`[SYNC] Nueva reserva Channel: ${event.uid} → Room ${room.name}`);
 
               // Audit log
               await logAuditEvent({
@@ -444,7 +444,7 @@ async function handler(req: Request) {
     // 5. Detectar cancelaciones: UIDs en DB que NO están en el iCal
     for (const [externalId, booking] of existingBookings.entries()) {
       if (!uidsFromIcal.has(externalId)) {
-        // La reserva fue cancelada/removida de la OTA
+        // La reserva fue cancelada/removida de la Channel
         const { error: cancelError } = await supabaseAdmin
           .from('bookings')
           .update({ status: 'cancelled' })
@@ -455,7 +455,7 @@ async function handler(req: Request) {
           result.errors.push(`Cancel failed for ${booking.id}`);
         } else {
           result.bookingsCancelled++;
-          console.log(`[SYNC] Reserva OTA cancelada: ${externalId} (Booking ${booking.id})`);
+          console.log(`[SYNC] Reserva Channel cancelada: ${externalId} (Booking ${booking.id})`);
 
           await logAuditEvent({
             actor_type: 'cron',

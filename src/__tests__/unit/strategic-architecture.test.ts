@@ -21,7 +21,7 @@ describe('Strategic Architecture: ROI V2 & GEO Block', () => {
   // 2. Forbidden Words in GEO Block
   it('el bloque GEO no debe contener palabras prohibidas', () => {
     const content = fs.readFileSync(GEO_PAGE_PATH, 'utf8');
-    const forbidden = ['OTA', 'Gasto operativo', 'Digitación manual', 'Pague en dólares', 'Intermediarios'];
+    const forbidden = ['Channel', 'Gasto operativo', 'Digitación manual', 'Pague en dólares', 'Intermediarios'];
     for (const word of forbidden) {
       expect(content.toLowerCase()).not.toContain(word.toLowerCase());
     }

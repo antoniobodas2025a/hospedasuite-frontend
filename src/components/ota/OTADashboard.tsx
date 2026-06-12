@@ -43,7 +43,7 @@ const HotelMapView = dynamic(() => import("./HotelMapView"), {
 });
 import Link from "next/link";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
-import { fetchOTAHotelsAction } from "@/app/actions/ota";
+import { fetchChannelHotelsAction } from "@/app/actions/ota";
 import { useTranslations } from "next-intl";
 import { springSnappy, springGentle } from "@/lib/mac2026/spring";
 import { preserveSearchParams } from "@/lib/handoff-url";
@@ -141,15 +141,15 @@ const POPULAR_DESTINATIONS = [
 	{ city: "Villa de Leyva", hotelCount: 12 },
 ];
 
-interface OTADashboardProps {
+interface ChannelDashboardProps {
 	initialHotels: any[];
 	initialHasMore?: boolean;
 }
 
-export default function OTADashboard({
+export default function ChannelDashboard({
   initialHotels,
   initialHasMore = false,
-}: OTADashboardProps) {
+}: ChannelDashboardProps) {
   const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
@@ -464,7 +464,7 @@ export default function OTADashboard({
 				}
 
 				// Revalidate in background
-				fetchOTAHotelsAction(
+				fetchChannelHotelsAction(
 					cacheParams.page,
 					cacheParams.limit,
 					cacheParams.category,
@@ -499,7 +499,7 @@ export default function OTADashboard({
 			// Cache miss — fetch fresh
 			setIsSearching(true);
 			try {
-				const response = await fetchOTAHotelsAction(
+				const response = await fetchChannelHotelsAction(
 					0,
 					24,
 					activeCategory,
@@ -524,7 +524,7 @@ export default function OTADashboard({
 				}
 			} catch (error) {
 				if (isMounted) setIsSearching(false);
-				console.error("OTA search error:", error);
+				console.error("Channel search error:", error);
 			}
 		}, 300); // Reduced from 500ms to 300ms since cache provides instant feedback
 
@@ -571,7 +571,7 @@ export default function OTADashboard({
 		setIsLoadingMore(true);
 
 		const nextPage = page + 1;
-		const response = await fetchOTAHotelsAction(
+		const response = await fetchChannelHotelsAction(
 			nextPage,
 			24,
 			activeCategory,

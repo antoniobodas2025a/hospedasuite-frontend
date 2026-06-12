@@ -37,7 +37,7 @@ const CATEGORY_META: Record<
   policies: { label: 'Políticas', icon: ScrollText, order: 2 },
   payment: { label: 'Pagos', icon: Wallet, order: 3 },
   communication: { label: 'Comunicación', icon: MessageCircle, order: 4 },
-  ota: { label: 'OTA', icon: Globe, order: 5 },
+  ota: { label: 'Canales', icon: Globe, order: 5 },
   pro_features: { label: 'Funciones Pro', icon: Sparkles, order: 6 },
   team: { label: 'Equipo', icon: Users, order: 7 },
 };

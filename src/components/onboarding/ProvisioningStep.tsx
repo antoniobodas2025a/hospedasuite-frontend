@@ -368,7 +368,7 @@ export default function ProvisioningStep() {
 	// --------------------------------------------------------------------------
 	// SUCCESS STATE — Both Wompi and Manual: hotel published immediately
 	// Chunk 1: Confirmation + Hotel identity
-	// Chunk 2: Access links (OTA page + Dashboard)
+	// Chunk 2: Access links (Channel page + Dashboard)
 	// Chunk 3: Credentials (email used for auth)
 	// --------------------------------------------------------------------------
 	const hotelUrl = `${typeof window !== "undefined" ? window.location.origin : ""}/hotel/${hotelSlug}`;
@@ -502,7 +502,7 @@ export default function ProvisioningStep() {
 					<div className="text-left">
 						<p className="text-white text-sm font-bold">Ir al Dashboard</p>
 						<p className="text-zinc-500 text-xs">
-							Administrar reservas, tarifas y OTAs
+							Administrar reservas, tarifas y Channels
 						</p>
 					</div>
 					<ExternalLink

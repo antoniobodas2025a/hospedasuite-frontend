@@ -23,7 +23,7 @@ export async function generateMetadata(): Promise<Metadata> {
   };
 }
 
-export default function OTALayout({ children }: { children: React.ReactNode }) {
+export default function ChannelLayout({ children }: { children: React.ReactNode }) {
   return (
     <div data-theme="ota" className={`${calistoga.variable} font-sans bg-background text-foreground min-h-screen`}>
       <AttributionTracker />

@@ -88,7 +88,7 @@ export async function checkPlanFeature(
   const limits = PLAN_LIMITS[plan]
 
   const featureAvailability: Record<PlanFeature, { available: boolean; minPlan: PlanKey }> = {
-    channel_manager: { available: limits.maxOTAs > 0, minPlan: 'pro' },
+    channel_manager: { available: limits.maxChannels > 0, minPlan: 'pro' },
     carta_digital: { available: plan !== 'starter', minPlan: 'pro' },
     forensic_book: { available: plan !== 'starter', minPlan: 'pro' },
     pos: { available: plan !== 'starter', minPlan: 'pro' },
@@ -111,9 +111,9 @@ export async function checkPlanFeature(
 }
 
 /**
- * Check OTA connection limit and return remaining slots.
+ * Check Channel connection limit and return remaining slots.
  */
-export async function checkOTALimit(hotelId: string): Promise<{
+export async function checkChannelLimit(hotelId: string): Promise<{
   ok: boolean
   currentCount: number
   maxAllowed: number
@@ -130,14 +130,14 @@ export async function checkOTALimit(hotelId: string): Promise<{
   const plan = normalizePlan(hotel.subscription_plan)
   const limits = PLAN_LIMITS[plan]
 
-  if (limits.maxOTAs === 0) {
+  if (limits.maxChannels === 0) {
     return {
       ok: false,
       currentCount: 0,
       maxAllowed: 0,
       remaining: 0,
       plan,
-      reason: `Tu plan ${SAAS_PLANS[plan].label} no incluye Channel Manager. Subí a Pro para conectar OTAs.`,
+      reason: `Tu plan ${SAAS_PLANS[plan].label} no incluye Channel Manager. Subí a Pro para conectar Channels.`,
     }
   }
 
@@ -154,28 +154,28 @@ export async function checkOTALimit(hotelId: string): Promise<{
     .not('ical_import_url', 'is', null)
 
   if (error) {
-    console.error('[PlanGuard] Error counting OTA connections:', error)
-    return { ok: false, currentCount: 0, maxAllowed: limits.maxOTAs, remaining: 0, plan, reason: 'Error verificando límites' }
+    console.error('[PlanGuard] Error counting Channel connections:', error)
+    return { ok: false, currentCount: 0, maxAllowed: limits.maxChannels, remaining: 0, plan, reason: 'Error verificando límites' }
   }
 
   const currentCount = count || 0
-  const remaining = limits.maxOTAs - currentCount
+  const remaining = limits.maxChannels - currentCount
 
   if (remaining <= 0) {
     return {
       ok: false,
       currentCount,
-      maxAllowed: limits.maxOTAs,
+      maxAllowed: limits.maxChannels,
       remaining: 0,
       plan,
-      reason: `Alcanzaste el límite de ${limits.maxOTAs} OTAs de tu plan ${SAAS_PLANS[plan].label}.`,
+      reason: `Alcanzaste el límite de ${limits.maxChannels} Channels de tu plan ${SAAS_PLANS[plan].label}.`,
     }
   }
 
   return {
     ok: true,
     currentCount,
-    maxAllowed: limits.maxOTAs,
+    maxAllowed: limits.maxChannels,
     remaining,
     plan,
   }

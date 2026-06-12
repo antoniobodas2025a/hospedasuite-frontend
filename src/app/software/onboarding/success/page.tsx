@@ -31,7 +31,7 @@ export default function OnboardingSuccess() {
             onClick={() => router.push('/')}
             className="flex items-center justify-center gap-3 px-8 py-4 bg-zinc-800 hover:bg-zinc-700 text-white rounded-[var(--radius-squircle-xl)] font-bold text-sm transition-all border border-white/10"
           >
-            Ver mi OTA <ExternalLink size={16} />
+            Ver mi Channel <ExternalLink size={16} />
           </button>
         </div>
       </motion.div>

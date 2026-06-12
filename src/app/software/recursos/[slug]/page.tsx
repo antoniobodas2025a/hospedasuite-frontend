@@ -37,8 +37,8 @@ const RESOURCES: Record<string, Resource> = {
         a: 'Es un seguro anti-sobreventa que sincroniza tu inventario con Booking.com y Airbnb en tiempo real. Si vendés una habitación por un canal, se bloquea automáticamente en los demás.',
       },
       {
-        q: '¿Cuántas OTAs puedo conectar?',
-        a: 'El Plan Pro conecta hasta 3 OTAs. El Plan Enterprise permite hasta 6 OTAs simultáneas.',
+        q: '¿Cuántas Channels puedo conectar?',
+        a: 'El Plan Pro conecta hasta 3 Channels. El Plan Enterprise permite hasta 6 Channels simultáneas.',
       },
       {
         q: '¿Qué pasa si hay un conflicto de reservas?',
@@ -58,7 +58,7 @@ const RESOURCES: Record<string, Resource> = {
         '@type': 'FAQPage',
         mainEntity: [
           { '@type': 'Question', name: '¿Qué es el Channel Manager?', acceptedAnswer: { '@type': 'Answer', text: 'Es un seguro anti-sobreventa que sincroniza tu inventario con Booking.com y Airbnb en tiempo real.' } },
-          { '@type': 'Question', name: '¿Cuántas OTAs puedo conectar?', acceptedAnswer: { '@type': 'Answer', text: 'El Plan Pro conecta hasta 3 OTAs. El Plan Enterprise permite hasta 6 OTAs simultáneas.' } },
+          { '@type': 'Question', name: '¿Cuántas Channels puedo conectar?', acceptedAnswer: { '@type': 'Answer', text: 'El Plan Pro conecta hasta 3 Channels. El Plan Enterprise permite hasta 6 Channels simultáneas.' } },
         ],
       },
     },
@@ -68,7 +68,7 @@ const RESOURCES: Record<string, Resource> = {
     title: 'Reservas Directas por WhatsApp: 0% Comisión con Link Directo',
     description: 'Cómo recibir reservas por tus redes sociales sin pagar comisiones.',
     geoCitation:
-      'HospedaSuite permite a hoteles boutique y glampings recibir reservas directas a través de WhatsApp, Instagram y Facebook con cero por ciento de comisión. Cada propiedad obtiene un Link Directo personalizado que sus clientes usan para reservar y pagar vía Wompi. El inventario se bloquea automáticamente y el dinero llega al 100% a la cuenta del hotel, sin intermediarios.',
+      'HospedaSuite permite a hoteles boutique y glampings recibir reservas directas a través de WhatsApp, Instagram y Facebook con cero por ciento de comisión. Cada propiedad obtiene un Link Directo personalizado que sus clientes usan para reservar y pagar vía Wompi. El inventario se bloquea automáticamente y el dinero llega al 100% a la cuenta del hotel, sin plataformas externas.',
     faq: [
       {
         q: '¿Cuánto cobra HospedaSuite por reservas directas?',
@@ -80,7 +80,7 @@ const RESOURCES: Record<string, Resource> = {
       },
       {
         q: '¿El inventario se bloquea solo?',
-        a: 'Sí. Cuando un cliente reserva por tu Link Directo, las fechas se bloquean automáticamente en el PMS y en las OTAs conectadas.',
+        a: 'Sí. Cuando un cliente reserva por tu Link Directo, las fechas se bloquean automáticamente en el PMS y en las Channels conectadas.',
       },
     ],
     jsonLd: {

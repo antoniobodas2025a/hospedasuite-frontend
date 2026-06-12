@@ -35,7 +35,7 @@ export const RoomSchema = z.object({
   bed_type: z.enum(['sencilla', 'doble', 'queen', 'king']).optional(),
   beds: z.number().min(1).max(10).optional().nullable(),
   
-  // 🌐 Sincronización OTA (Null-safe)
+  // 🌐 Sincronización Channel (Null-safe)
   ical_import_url: z.string()
     .url("Formato de URL iCal no válido.")
     .or(z.literal(""))

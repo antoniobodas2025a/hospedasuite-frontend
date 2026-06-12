@@ -2,12 +2,12 @@
  * ROI Calculator Logic V2 — Pedagogical Simulator
  * 
  * Calculates the total value of HospedaSuite based on three pillars:
- * 1. Commission Savings (vs Traditional OTAs)
+ * 1. Commission Savings (vs Traditional Channels)
  * 2. Regulatory Time Savings (SIRE/TRA automation)
  * 3. Agentic Upselling (Ancillary revenue)
  */
 
-export const TRADITIONAL_OTA_RATE = 0.18; // 18% average commission
+export const TRADITIONAL_CHANNEL_RATE = 0.18; // 18% average commission
 export const PRO_PLAN_COST = 99000; // COP per month
 export const UPSSELLING_PER_RESERVATION_USD = 40; // $40 USD potential
 export const USD_TO_COP = 4000; // Conservative exchange rate
@@ -30,7 +30,7 @@ export function calculateROIV2(
   const totalRevenue = avgNightlyRate * reservationsPerMonth;
   
   // 1. Commission Savings
-  const commissionSavings = totalRevenue * TRADITIONAL_OTA_RATE;
+  const commissionSavings = totalRevenue * TRADITIONAL_CHANNEL_RATE;
   
   // 2. Time Savings (SIRE/TRA)
   const timeSavedMinutes = reservationsPerMonth * SIRE_TIME_PER_RESERVATION_MINS;

@@ -113,7 +113,7 @@ export default async function InvoiceHistoryPage() {
                     </span>
                   </div>
                   <div>
-                    <span className="text-muted-foreground">Comisiones OTA:</span>
+                    <span className="text-muted-foreground">Comisiones Channel:</span>
                     <span className="ml-2 text-sidebar-foreground font-medium">
                       {formatCOP(invoice.otaCommissions)}
                     </span>

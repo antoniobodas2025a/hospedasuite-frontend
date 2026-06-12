@@ -1,7 +1,7 @@
 /**
  * useSorting hook — TDD Test Suite
  *
- * Tests the sorting algorithm extracted from OTADashboard (SRP compliance).
+ * Tests the sorting algorithm extracted from ChannelDashboard (SRP compliance).
  * Validates price asc/desc, rating, and recommended sorting.
  *
  * Mutation testing: Each test is designed to fail if sorting operators

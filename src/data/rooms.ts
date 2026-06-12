@@ -223,7 +223,7 @@ export async function deleteRoom(
 }
 
 /**
- * Update room iCal URLs (for OTA connections).
+ * Update room iCal URLs (for Channel connections).
  */
 export async function updateRoomICal(
   roomId: string,

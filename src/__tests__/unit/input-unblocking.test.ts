@@ -335,8 +335,8 @@ describe('Emergency Exit (Heuristic #3)', () => {
 
 describe('Search Bar Coherence (Home vs Results)', () => {
   it('Home page uses same URL params as Results page', () => {
-    // Home: OTADashboard with progressive disclosure
-    // Results: OTADashboard with full SearchBarUnified
+    // Home: ChannelDashboard with progressive disclosure
+    // Results: ChannelDashboard with full SearchBarUnified
     // Both should use the same URL params
 
     const homeParams = {

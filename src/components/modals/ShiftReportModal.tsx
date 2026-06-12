@@ -101,7 +101,7 @@ export default function ShiftReportModal({ isOpen, onClose }: ShiftReportModalPr
               </div>
 
               <div className="pt-4 border-t border-slate-100 flex justify-between items-center">
-                <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">TOTAL TURNADO</span>
+                <span className="text-slate-400 font-bold uppercase text-[10px] tracking-widest">TChannelL TURNADO</span>
                 <span className="text-3xl font-bold text-slate-900 tracking-tighter">${report.total.toLocaleString()}</span>
               </div>
             </div>
@@ -150,7 +150,7 @@ export default function ShiftReportModal({ isOpen, onClose }: ShiftReportModalPr
           <div className="border-t-2 border-dashed border-black w-full my-4"></div>
 
           <div className="text-right mb-10">
-            <p className="text-sm"><strong>TOTAL LIQUIDADO: ${report.total.toLocaleString()}</strong></p>
+            <p className="text-sm"><strong>TChannelL LIQUIDADO: ${report.total.toLocaleString()}</strong></p>
           </div>
 
           {/* Firmas en físico para control interno */}

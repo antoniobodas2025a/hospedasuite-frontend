@@ -1,7 +1,7 @@
 import React from 'react';
 
 /**
- * Mac 2026 — OTA Marketplace Skeleton
+ * Mac 2026 — Channel Ecosistema Skeleton
  * Glass primitives + squircle tokens for consistent loading state.
  * Uses semantic theme colors (bg-muted) instead of hardcoded grays.
  */
@@ -34,7 +34,7 @@ function SearchBarSkeleton() {
   );
 }
 
-export default function OTALoading() {
+export default function ChannelLoading() {
   return (
     <main className="min-h-screen bg-background">
       <div className="max-w-7xl mx-auto px-4 py-8 space-y-8">

@@ -1,5 +1,5 @@
 /**
- * OTA Alert System — Channel Manager
+ * Channel Alert System — Channel Manager
  *
  * Sends notifications when sync issues occur:
  * - Rate limiting detected
@@ -12,7 +12,7 @@
 
 export type AlertSeverity = 'info' | 'warning' | 'critical';
 
-export interface OTAAlert {
+export interface ChannelAlert {
   hotelId: string;
   hotelName: string;
   otaName: string;
@@ -24,7 +24,7 @@ export interface OTAAlert {
 }
 
 // ─── Alert Queue (in-memory, use Redis/Bull in production) ────────
-const alertQueue: OTAAlert[] = [];
+const alertQueue: ChannelAlert[] = [];
 const MAX_QUEUE_SIZE = 100;
 
 // ─── Deduplication: prevent spam ──────────────────────────────────
@@ -49,14 +49,14 @@ const MAX_ALERTS_PER_HOTEL_PER_HOUR = 5;
 /**
  * Create a deduplication key for an alert.
  */
-function getCooldownKey(alert: OTAAlert): string {
+function getCooldownKey(alert: ChannelAlert): string {
   return `${alert.hotelId}:${alert.otaName}:${alert.type}`;
 }
 
 /**
  * Check if an alert should be suppressed (cooldown or rate limit).
  */
-function shouldSuppress(alert: OTAAlert): boolean {
+function shouldSuppress(alert: ChannelAlert): boolean {
   const key = getCooldownKey(alert);
   const now = Date.now();
 
@@ -93,7 +93,7 @@ function shouldSuppress(alert: OTAAlert): boolean {
 /**
  * Record that an alert was sent (for deduplication).
  */
-function recordSent(alert: OTAAlert): void {
+function recordSent(alert: ChannelAlert): void {
   const key = getCooldownKey(alert);
   cooldowns.set(key, {
     key,
@@ -118,10 +118,10 @@ function recordSent(alert: OTAAlert): void {
 // ─── Alert Dispatch ───────────────────────────────────────────────
 
 /**
- * Queue and dispatch an OTA alert.
+ * Queue and dispatch an Channel alert.
  * Handles deduplication automatically.
  */
-export async function sendOTAAlert(alert: OTAAlert): Promise<void> {
+export async function sendChannelAlert(alert: ChannelAlert): Promise<void> {
   // Deduplication check
   if (shouldSuppress(alert)) {
     return;
@@ -160,7 +160,7 @@ export async function sendOTAAlert(alert: OTAAlert): Promise<void> {
 /**
  * Critical alerts: both hotelero AND internal team.
  */
-async function dispatchCritical(alert: OTAAlert): Promise<void> {
+async function dispatchCritical(alert: ChannelAlert): Promise<void> {
   console.error(`[Alert:CRITICAL] ${alert.hotelName} — ${alert.otaName}: ${alert.message}`);
 
   // Parallel dispatch — don't wait for one to finish before starting the other
@@ -173,7 +173,7 @@ async function dispatchCritical(alert: OTAAlert): Promise<void> {
 /**
  * Warning alerts: hotelero notified, internal team logged.
  */
-async function dispatchWarning(alert: OTAAlert): Promise<void> {
+async function dispatchWarning(alert: ChannelAlert): Promise<void> {
   console.warn(`[Alert:WARNING] ${alert.hotelName} — ${alert.otaName}: ${alert.message}`);
 
   await sendEmailToHotelier(alert);
@@ -182,13 +182,13 @@ async function dispatchWarning(alert: OTAAlert): Promise<void> {
 /**
  * Info alerts: internal log only.
  */
-async function dispatchInfo(alert: OTAAlert): Promise<void> {
+async function dispatchInfo(alert: ChannelAlert): Promise<void> {
   console.info(`[Alert:INFO] ${alert.hotelName} — ${alert.otaName}: ${alert.message}`);
 }
 
 // ─── Email to Hotelier ────────────────────────────────────────────
 
-async function sendEmailToHotelier(alert: OTAAlert): Promise<void> {
+async function sendEmailToHotelier(alert: ChannelAlert): Promise<void> {
   // In production: use Resend, SendGrid, or Supabase Edge Function
   // For now: log the email that would be sent
 
@@ -206,14 +206,14 @@ async function sendEmailToHotelier(alert: OTAAlert): Promise<void> {
   console.log(`[EmailQueued] To: hotel ${alert.hotelId} | Subject: ${subject}`);
 }
 
-function getAlertSubject(alert: OTAAlert): string {
+function getAlertSubject(alert: ChannelAlert): string {
   const prefix = {
     critical: '🚨',
     warning: '⚠️',
     info: 'ℹ️',
   }[alert.severity];
 
-  const typeLabels: Record<OTAAlert['type'], string> = {
+  const typeLabels: Record<ChannelAlert['type'], string> = {
     rate_limited: 'Rate Limit Detectado',
     circuit_opened: 'Sync Pausado',
     sync_failed: 'Error de Sincronización',
@@ -224,12 +224,12 @@ function getAlertSubject(alert: OTAAlert): string {
   return `${prefix} ${typeLabels[alert.type]} — ${alert.otaName}`;
 }
 
-function getAlertEmailBody(alert: OTAAlert): string {
+function getAlertEmailBody(alert: ChannelAlert): string {
   return `
     <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto;">
       <h2 style="color: #1d1d1f;">HospedaSuite — Channel Manager</h2>
       <p><strong>Hotel:</strong> ${alert.hotelName}</p>
-      <p><strong>OTA:</strong> ${alert.otaName}</p>
+      <p><strong>Channel:</strong> ${alert.otaName}</p>
       <p><strong>Problema:</strong> ${alert.message}</p>
       <p><strong>Hora:</strong> ${alert.timestamp.toLocaleString('es-CO', { timeZone: 'America/Bogota' })}</p>
       <hr style="border: none; border-top: 1px solid #e5e5e5; margin: 24px 0;" />
@@ -244,7 +244,7 @@ function getAlertEmailBody(alert: OTAAlert): string {
 
 // ─── Internal Team Notification ───────────────────────────────────
 
-async function sendInternalNotification(alert: OTAAlert): Promise<void> {
+async function sendInternalNotification(alert: ChannelAlert): Promise<void> {
   // In production: Slack webhook, Discord, or PagerDuty
   const webhookUrl = process.env.SLACK_WEBHOOK_URL || process.env.DISCORD_WEBHOOK_URL;
 
@@ -295,14 +295,14 @@ export function createRateLimitAlert(
   hotelName: string,
   otaName: string,
   retryAfterSeconds: number
-): OTAAlert {
+): ChannelAlert {
   return {
     hotelId,
     hotelName,
     otaName,
     severity: 'warning',
     type: 'rate_limited',
-    message: `OTA ${otaName} nos rate-limited. Reintentando en ${retryAfterSeconds}s.`,
+    message: `Channel ${otaName} nos rate-limited. Reintentando en ${retryAfterSeconds}s.`,
     timestamp: new Date(),
     metadata: { retryAfterSeconds },
   };
@@ -317,7 +317,7 @@ export function createCircuitAlert(
   otaName: string,
   state: 'opened' | 'closed' | 'half-open',
   failureCount: number
-): OTAAlert {
+): ChannelAlert {
   return {
     hotelId,
     hotelName,
@@ -341,7 +341,7 @@ export function createOverbookingAlert(
   otaName: string,
   roomId: string,
   conflictDate: string
-): OTAAlert {
+): ChannelAlert {
   return {
     hotelId,
     hotelName,
@@ -362,7 +362,7 @@ export function createSyncFailureAlert(
   hotelName: string,
   otaName: string,
   error: string
-): OTAAlert {
+): ChannelAlert {
   return {
     hotelId,
     hotelName,
@@ -378,7 +378,7 @@ export function createSyncFailureAlert(
 /**
  * Get recent alerts for dashboard/monitoring.
  */
-export function getRecentAlerts(hotelId?: string, limit: number = 20): OTAAlert[] {
+export function getRecentAlerts(hotelId?: string, limit: number = 20): ChannelAlert[] {
   let alerts = alertQueue;
   if (hotelId) {
     alerts = alerts.filter(a => a.hotelId === hotelId);

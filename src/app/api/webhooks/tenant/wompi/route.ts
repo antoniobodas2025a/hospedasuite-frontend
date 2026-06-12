@@ -65,7 +65,7 @@ export async function POST(request: Request) {
         }
 
         const amount = (dataObj.amount_in_cents || 0) / 100;
-        const attribution = booking.source === 'ota' ? 'OTA [Fee 10%]' : 'DIRECTO [Fee 0%]';
+        const attribution = booking.source === 'ota' ? 'Channel [Fee 10%]' : 'DIRECTO [Fee 0%]';
 
         /**
          * 🧪 TRANSACCIÓN SECUENCIAL PROTEGIDA

@@ -26,7 +26,7 @@ import HotelCard from "./HotelCard";
 /** Collapsed: only the drag handle is visible. */
 const SNAP_COLLAPSED_HEIGHT = 60;
 
-/** Category definitions (mirrors OTADashboard for standalone use). */
+/** Category definitions (mirrors ChannelDashboard for standalone use). */
 const CATEGORIES = [
 	{
 		id: "all",

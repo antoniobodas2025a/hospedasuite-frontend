@@ -84,7 +84,7 @@ export async function saveSettingsAction(settings: HotelSettings) {
 }
 
 // ============================================================================
-// 🌍 ACCIÓN 2: PERFIL OTA Y MOTOR DE VENTAS (La Nueva)
+// 🌍 ACCIÓN 2: PERFIL Channel Y MOTOR DE VENTAS (La Nueva)
 // ============================================================================
 
 // 🚨 VALIDACIÓN ZOD: Protección contra inyección de datos corruptos

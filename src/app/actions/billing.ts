@@ -12,8 +12,8 @@ export interface BillingStatement {
   hotelName: string;
   planName: string;
   subscriptionFee: number;
-  platformFeesTotal: number; // Suma de OTA (10%)
-  otaCommissionDetails: OtaCommission[]; // Detalle de cada comisión OTA
+  platformFeesTotal: number; // Suma de Channel (10%)
+  otaCommissionDetails: OtaCommission[]; // Detalle de cada comisión Channel
   totalDue: number;
   bookingsCount: number;
   period: string;
@@ -52,10 +52,10 @@ export async function getHotelBillingAction() {
 
     if (bookingsError) throw new Error('Error al calcular el libro mayor de comisiones.');
 
-    // 5. Consolidación de Deuda + cálculo de comisiones OTA (10%)
+    // 5. Consolidación de Deuda + cálculo de comisiones Channel (10%)
     const platformFeesTotal = bookings.reduce((sum: number, b: any) => sum + Number(b.platform_fee || 0), 0);
 
-    // Detalle de comisiones OTA: 10% sobre total_price de reservas con source='ota'
+    // Detalle de comisiones Channel: 10% sobre total_price de reservas con source='ota'
     const otaCommissionDetails: OtaCommission[] = (bookings || [])
       .filter((b: any) => b.source === 'ota')
       .map((b: any) => ({
@@ -120,7 +120,7 @@ export interface MonthlyInvoice {
 
 /**
  * Calcula la factura mensual para un hotel.
- * Incluye costo del plan + comisiones OTA + comisiones Upsell del ciclo actual.
+ * Incluye costo del plan + comisiones Channel + comisiones Upsell del ciclo actual.
  */
 export async function calculateMonthlyInvoiceAction(
   hotelId: string
@@ -152,7 +152,7 @@ export async function calculateMonthlyInvoiceAction(
     const colTime = new Date(colTimeStr);
     const startOfMonth = new Date(colTime.getFullYear(), colTime.getMonth(), 1, 0, 0, 0);
 
-    // 4. Comisiones OTA (reservas de source='ota' en el ciclo) — 10% sobre total_price
+    // 4. Comisiones Channel (reservas de source='ota' en el ciclo) — 10% sobre total_price
     const { data: otaBookings, error: otaError } = await supabaseAdmin
       .from('bookings')
       .select('id, total_price, source')
@@ -162,7 +162,7 @@ export async function calculateMonthlyInvoiceAction(
       .gte('created_at', startOfMonth.toISOString());
 
     if (otaError) {
-      console.error('Error al calcular comisiones OTA:', otaError.message);
+      console.error('Error al calcular comisiones Channel:', otaError.message);
     }
 
     const otaCommissionDetails: OtaCommission[] = (otaBookings || []).map((b: any) => ({

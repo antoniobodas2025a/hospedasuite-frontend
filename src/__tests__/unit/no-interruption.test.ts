@@ -261,7 +261,7 @@ describe('Ley de Jakob (Mobile Input Behavior)', () => {
 
 describe('SRP Verification', () => {
   it('MobileSearchSheet is only triggered by explicit user action', () => {
-    // In OTADashboard.tsx line 1041:
+    // In ChannelDashboard.tsx line 1041:
     // onClick={() => setIsMobileSheetOpen(true)}
     // This is the ONLY place where setIsMobileSheetOpen(true) is called
     const triggerCount = 1; // Only one trigger point

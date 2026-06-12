@@ -1,7 +1,7 @@
 /**
  * Mac 2026 Spring Physics Configuration
  * 
- * Centralized spring presets for consistent, organic motion across the OTA.
+ * Centralized spring presets for consistent, organic motion across the Channel.
  * Every spring uses physics-based parameters (stiffness, damping, mass)
  * instead of linear time curves.
  *

@@ -21,7 +21,7 @@ export interface IcsEvent {
   created: Date | undefined;
   lastModified: Date | undefined;
   location: string;
-  // OTA-specific metadata
+  // Channel-specific metadata
   guestName?: string;
   guestCount?: number;
   bookingReference?: string;
@@ -116,12 +116,12 @@ export function parseICS(text: string): IcsCalendar {
       if (parsed) currentEvent.lastModified = parsed;
     }
 
-    // Extract OTA-specific data from description/summary
+    // Extract Channel-specific data from description/summary
     if (trimmed.startsWith('DESCRIPTION:') || trimmed.startsWith('SUMMARY:')) {
       const value = trimmed.includes('DESCRIPTION:')
         ? trimmed.slice(12)
         : trimmed.slice(8);
-      const extracted = extractOTAMetadata(value);
+      const extracted = extractChannelMetadata(value);
       if (extracted.guestName) currentEvent.guestName = extracted.guestName;
       if (extracted.guestCount) currentEvent.guestCount = extracted.guestCount;
       if (extracted.bookingReference) currentEvent.bookingReference = extracted.bookingReference;
@@ -227,9 +227,9 @@ function finalizeEvent(partial: Partial<IcsEvent>): IcsEvent {
 }
 
 /**
- * Extract OTA-specific metadata from description/summary text.
+ * Extract Channel-specific metadata from description/summary text.
  */
-function extractOTAMetadata(text: string): {
+function extractChannelMetadata(text: string): {
   guestName?: string;
   guestCount?: number;
   bookingReference?: string;
@@ -244,7 +244,7 @@ function extractOTAMetadata(text: string): {
   const guestMatch = text.match(/(\d+)\s*(?:guest|adult|child|huésped|persona)/i);
   if (guestMatch) result.guestCount = parseInt(guestMatch[1]);
 
-  // Guest name patterns (varies by OTA)
+  // Guest name patterns (varies by Channel)
   const nameMatch = text.match(/(?:Guest|Huésped|Nombre|Name)[:\s]+([A-Za-zÀ-ÿ\s]+)/i);
   if (nameMatch) result.guestName = nameMatch[1].trim();
 
@@ -262,7 +262,7 @@ export interface AvailabilitySlot {
 
 /**
  * Generate an ICS calendar from availability slots.
- * Used to push availability to OTAs that support iCal import.
+ * Used to push availability to Channels that support iCal import.
  */
 export function generateICS(
   hotelName: string,
@@ -312,7 +312,7 @@ function formatICSDateOnly(date: Date): string {
 // ─── Fetch with Cache Support ─────────────────────────────────────
 
 /**
- * Fetch ICS from OTA URL with ETag/Last-Modified cache support.
+ * Fetch ICS from Channel URL with ETag/Last-Modified cache support.
  * Returns 'not-modified' if the calendar hasn't changed.
  */
 export async function fetchICS(
@@ -340,7 +340,7 @@ export async function fetchICS(
     const response = await fetch(url, {
       headers,
       signal: controller.signal,
-      // Don't follow redirects automatically for OTA URLs
+      // Don't follow redirects automatically for Channel URLs
       redirect: 'follow',
     });
 
@@ -365,7 +365,7 @@ export async function fetchICS(
         etag: null,
         lastModified: null,
         httpStatus: 429,
-        errorMessage: 'Rate limited by OTA',
+        errorMessage: 'Rate limited by Channel',
       };
     }
 

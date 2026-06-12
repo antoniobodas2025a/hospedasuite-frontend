@@ -126,7 +126,7 @@ export async function searchLocationsAction(
 	}
 }
 
-export async function fetchOTAHotelsAction(
+export async function fetchChannelHotelsAction(
 	page: number = 0,
 	limit: number = 24,
 	category: string = "all",
@@ -163,7 +163,7 @@ export async function fetchOTAHotelsAction(
 		const { data: allHotels, error } = result;
 
 		if (error) {
-			console.error("🚨 ERROR CRÍTICO DE SUPABASE EN OTA:", error.message);
+			console.error("🚨 ERROR CRÍTICO DE SUPABASE EN Channel:", error.message);
 			throw new Error(error.message);
 		}
 
@@ -229,7 +229,7 @@ export async function fetchOTAHotelsAction(
 			}
 		}
 
-		// 4. Map to OTA response shape
+		// 4. Map to Channel response shape
 		let otaHotels = filteredHotels.map((h: any) => {
 			const roomPrices = h.rooms?.map((r: { price: number }) => r.price) || [];
 			const coords = coordsMap.get(h.id);
@@ -369,8 +369,8 @@ export async function fetchOTAHotelsAction(
 		return { success: true, data: pagedHotels, hasMore };
 	} catch (error: unknown) {
 		const message =
-			error instanceof Error ? error.message : "Error desconocido en OTA";
-		console.error("❌ FALLO EN ACCIÓN OTA:", message);
+			error instanceof Error ? error.message : "Error desconocido en Channel";
+		console.error("❌ FALLO EN ACCIÓN Channel:", message);
 		return { success: false, error: message, data: [], hasMore: false };
 	}
 }

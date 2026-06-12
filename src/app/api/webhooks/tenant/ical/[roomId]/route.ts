@@ -51,7 +51,7 @@ export async function GET(
     icalString += `CALSCALE:GREGORIAN\r\n`;
     icalString += `METHOD:PUBLISH\r\n`;
     icalString += `X-WR-CALNAME:${hotelName} - Habitación ${room.name}\r\n`;
-    // Le dice a las OTAs que refresquen cada 15 minutos (estándar de la industria)
+    // Le dice a las Channels que refresquen cada 15 minutos (estándar de la industria)
     icalString += `REFRESH-INTERVAL;VALUE=DURATION:PT15M\r\n`;
     icalString += `X-PUBLISHED-TTL:PT15M\r\n`;
 

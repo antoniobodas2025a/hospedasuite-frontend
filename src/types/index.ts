@@ -184,7 +184,7 @@ export interface ServiceItem {
 }
 
 // --------------------------------------------------------------------------
-// OTA SYNC LOG (Registro de sincronización iCal)
+// Channel SYNC LOG (Registro de sincronización iCal)
 // --------------------------------------------------------------------------
 export interface OtaSyncLog {
   id: string;
@@ -201,7 +201,7 @@ export interface OtaSyncLog {
 }
 
 // --------------------------------------------------------------------------
-// OTA COMMISSION (Comisión por reserva OTA)
+// Channel COMMISSION (Comisión por reserva Channel)
 // --------------------------------------------------------------------------
 export interface OtaCommission {
   booking_id: string;

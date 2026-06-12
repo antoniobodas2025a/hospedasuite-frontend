@@ -22,7 +22,7 @@ export const SAAS_PLANS: Record<PlanKey, SaasPlan> = {
     label: 'Starter',
     priceCOP: 49_000,
     level: 0,
-    features: ['PMS Core', 'Agenda', 'Inventario', 'Limpieza', 'Huéspedes', 'OTA bilingüe (ES/EN)', '1 mes gratis'],
+    features: ['PMS Core', 'Agenda', 'Inventario', 'Limpieza', 'Huéspedes', 'Channel bilingüe (ES/EN)', '1 mes gratis'],
   },
   pro: {
     key: 'pro',
@@ -36,7 +36,7 @@ export const SAAS_PLANS: Record<PlanKey, SaasPlan> = {
     label: 'Enterprise',
     priceCOP: 199_000,
     level: 2,
-    features: ['Todo Pro', 'Hasta 30 unidades', '6 OTAs', '15 staff', '20 GB storage', 'Soporte prioritario', '1 mes gratis'],
+    features: ['Todo Pro', 'Hasta 30 unidades', '6 Channels', '15 staff', '20 GB storage', 'Soporte prioritario', '1 mes gratis'],
   },
 };
 
@@ -49,9 +49,9 @@ export const PLAN_LEVELS: Record<PlanKey, number> = {
 
 /** Límites por plan */
 export const PLAN_LIMITS = {
-  starter: { maxUnits: 4, maxOTAs: 0, maxStaff: 2, storageMB: 500 },
-  pro: { maxUnits: 14, maxOTAs: 3, maxStaff: 5, storageMB: 5120 },
-  enterprise: { maxUnits: 30, maxOTAs: 6, maxStaff: 15, storageMB: 20480 },
+  starter: { maxUnits: 4, maxChannels: 0, maxStaff: 2, storageMB: 500 },
+  pro: { maxUnits: 14, maxChannels: 3, maxStaff: 5, storageMB: 5120 },
+  enterprise: { maxUnits: 30, maxChannels: 6, maxStaff: 15, storageMB: 20480 },
 };
 
 /** Labels para UI */

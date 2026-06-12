@@ -14,7 +14,7 @@ describe('Post-Go-Live Monitoring — UI & Brand Core', () => {
 
   it('no debe usar jerga técnica en el panel de monitoreo', () => {
     const content = fs.readFileSync(METRICS_PATH, 'utf8');
-    expect(content).not.toContain('OTA');
+    expect(content).not.toContain('Channel');
     expect(content).not.toContain('intermediario');
     expect(content).not.toContain('Sandbox');
   });

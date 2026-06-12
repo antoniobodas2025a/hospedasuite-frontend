@@ -9,7 +9,7 @@ import { describe, it, expect } from 'vitest';
 import {
   calculateROI,
   formatCOP,
-  TRADITIONAL_OTA_RATE,
+  TRADITIONAL_Channel_RATE,
   HOSPEDASUITE_DISCOVERY_RATE,
   OWN_MOTOR_RATE,
   PRO_PLAN_COST,
@@ -27,14 +27,14 @@ const RESOURCES = {
       'El Channel Manager de HospedaSuite es un sistema de sincronización de inventario en tiempo real que conecta tu propiedad con Booking.com, Airbnb y otras plataformas. Cuando recibes una reserva por cualquier canal, el sistema bloquea automáticamente las fechas en todas las demás plataformas, eliminando el riesgo de sobreventa y protegiendo la reputación de tu hotel.',
     faq: [
       { q: '¿Qué es el Channel Manager?', a: 'Es un seguro anti-sobreventa.' },
-      { q: '¿Cuántas OTAs puedo conectar?', a: 'El Plan Pro conecta hasta 3 OTAs.' },
+      { q: '¿Cuántas Channels puedo conectar?', a: 'El Plan Pro conecta hasta 3 Channels.' },
       { q: '¿Qué pasa si hay un conflicto de reservas?', a: 'El sistema prioriza la primera reserva.' },
     ],
   },
   'reservas-directas': {
     slug: 'reservas-directas',
     geoCitation:
-      'HospedaSuite permite a hoteles boutique y glampings recibir reservas directas a través de WhatsApp, Instagram y Facebook con cero por ciento de comisión. Cada propiedad obtiene un Link Directo personalizado que sus clientes usan para reservar y pagar vía Wompi. El inventario se bloquea automáticamente y el dinero llega al 100% a la cuenta del hotel, sin intermediarios.',
+      'HospedaSuite permite a hoteles boutique y glampings recibir reservas directas a través de WhatsApp, Instagram y Facebook con cero por ciento de comisión. Cada propiedad obtiene un Link Directo personalizado que sus clientes usan para reservar y pagar vía Wompi. El inventario se bloquea automáticamente y el dinero llega al 100% a la cuenta del hotel, sin plataformas externas.',
     faq: [
       { q: '¿Cuánto cobra HospedaSuite por reservas directas?', a: '0%.' },
       { q: '¿Cómo funciona el pago con Wompi?', a: 'El cliente paga directamente a tu cuenta.' },
@@ -61,7 +61,7 @@ describe('Pricing Matrix Hotfix — Free Plan text correction', () => {
     'PMS Core completo',
     '1 habitación activa',
     'Link Directo (WhatsApp + Wompi)',
-    'OTA bilingüe (ES/EN)',
+    'Channel bilingüe (ES/EN)',
     'Gratis para siempre (1 habitación)',
   ];
 
@@ -233,8 +233,8 @@ describe('Constantes inmutables — Soberanía del Dato', () => {
     expect(HOSPEDASUITE_DISCOVERY_RATE).toBe(0.10);
   });
 
-  it('🔒 OTAs tradicionales = 18%', () => {
-    expect(TRADITIONAL_OTA_RATE).toBe(0.18);
+  it('🔒 Channels tradicionales = 18%', () => {
+    expect(TRADITIONAL_Channel_RATE).toBe(0.18);
   });
 
   it('🔒 Plan Pro = $99.000', () => {
@@ -243,7 +243,7 @@ describe('Constantes inmutables — Soberanía del Dato', () => {
 
   it('🔒 Invariante: 0% < 10% < 18%', () => {
     expect(OWN_MOTOR_RATE).toBeLessThan(HOSPEDASUITE_DISCOVERY_RATE);
-    expect(HOSPEDASUITE_DISCOVERY_RATE).toBeLessThan(TRADITIONAL_OTA_RATE);
+    expect(HOSPEDASUITE_DISCOVERY_RATE).toBeLessThan(TRADITIONAL_Channel_RATE);
   });
 });
 
@@ -252,7 +252,7 @@ describe('Constantes inmutables — Soberanía del Dato', () => {
 // ============================================================================
 
 describe('Mutation Testing — Kill Rate 100%', () => {
-  it('🛡️ Si OTA = 0%, netSavings es negativo (detectado)', () => {
+  it('🛡️ Si Channel = 0%, netSavings es negativo (detectado)', () => {
     const sabotaged = calculateROI(250000, 15, 0.0);
     expect(sabotaged.netSavings).toBe(-99000);
     expect(sabotaged.netSavings).toBeLessThan(0);
@@ -267,7 +267,7 @@ describe('Mutation Testing — Kill Rate 100%', () => {
   it('🛡️ Si se rompe el invariante de comisiones, el test falla', () => {
     expect(OWN_MOTOR_RATE).toBe(0);
     expect(OWN_MOTOR_RATE).toBeLessThan(HOSPEDASUITE_DISCOVERY_RATE);
-    expect(HOSPEDASUITE_DISCOVERY_RATE).toBeLessThan(TRADITIONAL_OTA_RATE);
+    expect(HOSPEDASUITE_DISCOVERY_RATE).toBeLessThan(TRADITIONAL_Channel_RATE);
   });
 });
 
@@ -341,7 +341,7 @@ describe('formatCOP', () => {
 // ============================================================================
 
 describe('Mutation Tests — Domain Identity Leakage', () => {
-  const FORBIDDEN_TERMS = ['OTA', 'unidad', 'unidades', 'Red de Descubrimiento'];
+  const FORBIDDEN_TERMS = ['Channel', 'unidad', 'unidades', 'Red de Descubrimiento'];
 
   const LANDING_STRINGS = [
     'Motor de reservas bilingüe (ES/EN)',
@@ -362,8 +362,8 @@ describe('Mutation Tests — Domain Identity Leakage', () => {
     });
   });
 
-  it('🛡️ Si se inyecta "OTA" en las cadenas, el test falla', () => {
-    const sabotaged = 'OTA bilingüe (ES/EN)';
+  it('🛡️ Si se inyecta "Channel" en las cadenas, el test falla', () => {
+    const sabotaged = 'Channel bilingüe (ES/EN)';
     const hasLeakage = FORBIDDEN_TERMS.some((term) =>
       sabotaged.toLowerCase().includes(term.toLowerCase()),
     );

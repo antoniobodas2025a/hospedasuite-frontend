@@ -19,7 +19,7 @@ interface State {
 }
 
 /**
- * Reusable Error Boundary for OTA components.
+ * Reusable Error Boundary for Channel components.
  * Catches render errors in child tree and displays a graceful fallback
  * instead of crashing the entire page.
  */

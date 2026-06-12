@@ -2,7 +2,7 @@
 
 import React, { useState, useMemo } from 'react';
 import { Calculator, ArrowRight, TrendingUp, Info } from 'lucide-react';
-import { calculateROI, formatCOP, TRADITIONAL_OTA_RATE, PRO_PLAN_COST } from '@/lib/roi-calculator';
+import { calculateROI, formatCOP, TRADITIONAL_Channel_RATE, PRO_PLAN_COST } from '@/lib/roi-calculator';
 
 // ============================================================================
 // ROI SIMULATOR — Calculadora educativa de ahorro por canal de adquisición
@@ -84,7 +84,7 @@ export default function ROISimulator({ onCtaClick }: ROISimulatorProps) {
         </div>
       </div>
 
-      {/* ─── INGRESO TOTAL — Heurística #1: base del cálculo visible ─── */}
+      {/* ─── INGRESO TChannelL — Heurística #1: base del cálculo visible ─── */}
       <div className="mb-6 px-4 py-3 bg-[#f5f5f7]/50 rounded-[12px] border border-black/[0.04] flex items-center justify-between">
         <span className="text-[13px] text-[#1d1d1f]/50 font-medium">Ingreso total mensual</span>
         <span className="text-[15px] font-semibold text-[#1d1d1f]">{formatCOP(savings.totalRevenue)}</span>
@@ -92,11 +92,11 @@ export default function ROISimulator({ onCtaClick }: ROISimulatorProps) {
 
       {/* ─── RESULTADOS — 3 canales ─── */}
       <div className="bg-[#f5f5f7] rounded-[20px] p-6 space-y-4 mb-6">
-        {/* Canal 1: OTAs tradicionales */}
+        {/* Canal 1: Canales tradicionales */}
         <div className="flex items-center justify-between">
           <div>
             <p className="text-[13px] font-semibold text-[#1d1d1f]/40 uppercase tracking-wide">
-              OTAs tradicionales ({savings.traditionalCommissionRate}%)
+              Canales tradicionales ({savings.traditionalCommissionRate}%)
             </p>
             <p className="text-[13px] text-[#1d1d1f]/30 mt-0.5">
               Booking, Airbnb, Expedia
@@ -153,7 +153,7 @@ export default function ROISimulator({ onCtaClick }: ROISimulatorProps) {
         <div className="space-y-1.5">
           <div className="flex items-center gap-2 text-[13px] text-[#1d1d1f]/50">
             <span className="text-red-500/60">✕</span>
-            <span>Con OTA: te quedás con <span className="text-red-500/70 font-semibold">{formatCOP(savings.totalRevenue - savings.traditionalOtaCommission)}</span> de {formatCOP(savings.totalRevenue)}</span>
+            <span>Con Channel: te quedás con <span className="text-red-500/70 font-semibold">{formatCOP(savings.totalRevenue - savings.traditionalOtaCommission)}</span> de {formatCOP(savings.totalRevenue)}</span>
           </div>
           <div className="flex items-center gap-2 text-[13px] text-[#34c759]">
             <span>✓</span>
@@ -162,7 +162,7 @@ export default function ROISimulator({ onCtaClick }: ROISimulatorProps) {
         </div>
         <div className="mt-3 pt-3 border-t border-[#34c759]/[0.10] flex items-center gap-2 text-[13px] text-[#1d1d1f]/60 font-mono flex-wrap">
           <span className="text-red-500/70 font-semibold">{formatCOP(savings.traditionalOtaCommission)}</span>
-          <span>que le das a la OTA</span>
+          <span>que le das a la Channel</span>
           <span className="text-[#1d1d1f]/25">−</span>
           <span className="text-[#34c759] font-semibold">{formatCOP(PRO_PLAN_COST)}</span>
           <span>tu plan</span>
@@ -179,7 +179,7 @@ export default function ROISimulator({ onCtaClick }: ROISimulatorProps) {
             <TrendingUp size={18} className="text-[#34c759]" strokeWidth={2.5} />
           </div>
           <p className="text-[14px] font-bold text-[#34c759] uppercase tracking-wider">
-            Tu ahorro mensual vs OTAs
+            Tu ahorro mensual vs Channels
           </p>
         </div>
         <p className="text-5xl sm:text-6xl font-bold text-[#34c759] tracking-tighter">

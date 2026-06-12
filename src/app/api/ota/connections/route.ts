@@ -1,14 +1,14 @@
 /**
- * OTA Connections API — Channel Manager
+ * Channel Connections API — Channel Manager
  *
- * POST /api/ota/connections — Connect a new OTA (with plan limit validation)
+ * POST /api/ota/connections — Connect a new Channel (with plan limit validation)
  * GET  /api/ota/connections?hotelId=xxx — List active connections
- * DELETE /api/ota/connections?id=xxx — Disconnect an OTA
+ * DELETE /api/ota/connections?id=xxx — Disconnect an Channel
  *
  * Plan Limits (from saas-plans.ts):
- * - Starter: 0 OTAs (Link Directo only)
- * - Pro: 3 OTAs max
- * - Enterprise: 6 OTAs max
+ * - Starter: 0 Channels (Link Directo only)
+ * - Pro: 3 Channels max
+ * - Enterprise: 6 Channels max
  */
 
 export const dynamic = 'force-dynamic';
@@ -33,7 +33,7 @@ interface ConnectRequest {
   roomId?: string; // Optional: specific room, or null for hotel-wide
 }
 
-// ─── POST: Connect a new OTA ─────────────────────────────────────
+// ─── POST: Connect a new Channel ─────────────────────────────────────
 export async function POST(req: Request) {
   try {
     const supabase = getAdminClient();
@@ -62,17 +62,17 @@ export async function POST(req: Request) {
     const plan = normalizePlan(hotel.subscription_plan);
     const limits = PLAN_LIMITS[plan];
 
-    if (limits.maxOTAs === 0) {
+    if (limits.maxChannels === 0) {
       return NextResponse.json({
-        error: `Tu plan ${plan} no incluye Channel Manager. Subí a Pro para conectar OTAs.`,
+        error: `Tu plan ${plan} no incluye Channel Manager. Subí a Pro para conectar Channels.`,
         upgradeRequired: true,
         currentPlan: plan,
         requiredPlan: 'pro',
-        limit: limits.maxOTAs,
+        limit: limits.maxChannels,
       }, { status: 403 });
     }
 
-    // ─── Step 3: Count existing OTA connections ──────────────────
+    // ─── Step 3: Count existing Channel connections ──────────────────
     const { count: existingCount, error: countError } = await supabase
       .from('rooms')
       .select('*', { count: 'exact', head: true })
@@ -80,18 +80,18 @@ export async function POST(req: Request) {
       .not('ical_import_url', 'is', null);
 
     if (countError) {
-      console.error('[OTA] Error counting connections:', countError);
+      console.error('[Channel] Error counting connections:', countError);
     }
 
     const currentCount = existingCount || 0;
 
-    if (currentCount >= limits.maxOTAs) {
+    if (currentCount >= limits.maxChannels) {
       return NextResponse.json({
-        error: `Tu plan ${plan} permite hasta ${limits.maxOTAs} OTAs. Ya tenés ${currentCount} conectadas.`,
+        error: `Tu plan ${plan} permite hasta ${limits.maxChannels} Channels. Ya tenés ${currentCount} conectadas.`,
         limitExceeded: true,
         currentPlan: plan,
         currentCount,
-        maxAllowed: limits.maxOTAs,
+        maxAllowed: limits.maxChannels,
         upgradeTo: plan === 'pro' ? 'enterprise' : 'pro',
       }, { status: 403 });
     }
@@ -135,9 +135,9 @@ export async function POST(req: Request) {
     const { data: updated, error: updateError } = await updateQuery.select().single();
 
     if (updateError) {
-      console.error('[OTA] Error updating room:', updateError);
+      console.error('[Channel] Error updating room:', updateError);
       return NextResponse.json(
-        { error: 'Error al conectar la OTA. Verificá que la habitación exista.' },
+        { error: 'Error al conectar la Channel. Verificá que la habitación exista.' },
         { status: 500 }
       );
     }
@@ -157,22 +157,22 @@ export async function POST(req: Request) {
         room_id: updated.id,
         plan: hotel.subscription_plan,
         ota_count: currentCount + 1,
-        ota_limit: limits.maxOTAs,
+        ota_limit: limits.maxChannels,
       },
     });
 
     return NextResponse.json({
       success: true,
-      message: `OTA ${otaName} conectada exitosamente.`,
+      message: `Channel ${otaName} conectada exitosamente.`,
       roomId: updated.id,
       roomName: updated.name,
       otaCount: currentCount + 1,
-      otaLimit: limits.maxOTAs,
+      otaLimit: limits.maxChannels,
       plan: hotel.subscription_plan,
     }, { status: 200 });
 
   } catch (error: any) {
-    console.error('[OTA] Error connecting OTA:', error);
+    console.error('[Channel] Error connecting Channel:', error);
     return NextResponse.json(
       { error: error.message || 'Error interno del servidor' },
       { status: 500 }
@@ -180,7 +180,7 @@ export async function POST(req: Request) {
   }
 }
 
-// ─── GET: List OTA connections for a hotel ───────────────────────
+// ─── GET: List Channel connections for a hotel ───────────────────────
 export async function GET(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -226,9 +226,9 @@ export async function GET(req: Request) {
       success: true,
       connections,
       count: connections.length,
-      limit: limits.maxOTAs,
+      limit: limits.maxChannels,
       plan,
-      remaining: limits.maxOTAs - connections.length,
+      remaining: limits.maxChannels - connections.length,
     }, { status: 200 });
 
   } catch (error: any) {
@@ -236,7 +236,7 @@ export async function GET(req: Request) {
   }
 }
 
-// ─── DELETE: Disconnect an OTA ───────────────────────────────────
+// ─── DELETE: Disconnect an Channel ───────────────────────────────────
 export async function DELETE(req: Request) {
   try {
     const { searchParams } = new URL(req.url);
@@ -291,7 +291,7 @@ export async function DELETE(req: Request) {
 
     return NextResponse.json({
       success: true,
-      message: `OTA desconectada de "${room.name}".`,
+      message: `Channel desconectada de "${room.name}".`,
       roomId: room.id,
     }, { status: 200 });
 
@@ -310,5 +310,5 @@ function detectOtaName(url: string): string {
   if (lower.includes('expedia') || lower.includes('vrbo')) return 'Expedia/VRBO';
   if (lower.includes('homeaway')) return 'HomeAway';
   if (lower.includes('tripadvisor')) return 'TripAdvisor';
-  return 'Other OTA';
+  return 'Other Channel';
 }

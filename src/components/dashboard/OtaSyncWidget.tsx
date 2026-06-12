@@ -86,7 +86,7 @@ export default function OtaSyncWidget({ initialStatus, hotelId }: OtaSyncWidgetP
           </div>
           <div>
             <h3 className="text-muted-foreground text-xs font-bold uppercase tracking-widest">
-              Sincronización OTA
+              Sincronización de Canales
             </h3>
             <p className="text-xs text-muted-foreground">
               {status.roomsWithIcal}/{status.totalRooms} habitaciones conectadas

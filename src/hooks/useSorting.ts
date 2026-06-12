@@ -1,11 +1,11 @@
 /**
- * useSorting — Hotel sorting and display logic for OTA Dashboard.
+ * useSorting — Hotel sorting and display logic for Channel Dashboard.
  *
  * Encapsulates sorting by price (asc/desc), rating, and recommended (server ranking).
  * Also manages visible count pagination ("Mostrar más" button).
  *
  * SRP: This hook owns the sorting algorithm and visible slice.
- * OTADashboard should not contain sort logic directly.
+ * ChannelDashboard should not contain sort logic directly.
  *
  * Ley de Miller: The hook exposes 7±2 properties for maintainability.
  */

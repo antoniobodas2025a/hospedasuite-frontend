@@ -177,7 +177,7 @@ export const GuestDeletedEventSchema = z.object({
   metadata: EventMetadataSchema,
 });
 
-// ── OTA Events ──────────────────────────────────────────────────
+// ── Channel Events ──────────────────────────────────────────────────
 export const OtaSyncRequestedEventSchema = z.object({
   type: z.literal('ota.sync.requested'),
   payload: z.object({
@@ -292,9 +292,9 @@ export const EVENT_TYPES = {
   GUEST_CREATED: 'guest.created',
   GUEST_UPDATED: 'guest.updated',
   GUEST_DELETED: 'guest.deleted',
-  OTA_SYNC_REQUESTED: 'ota.sync.requested',
-  OTA_BOOKING_CREATED: 'ota.booking_created',
-  OTA_BOOKING_CANCELLED: 'ota.booking_cancelled',
+  Channel_SYNC_REQUESTED: 'ota.sync.requested',
+  Channel_BOOKING_CREATED: 'ota.booking_created',
+  Channel_BOOKING_CANCELLED: 'ota.booking_cancelled',
   TRIAL_EXPIRED: 'trial.expired',
   TRIAL_EXPIRING_SOON: 'trial.expiring_soon',
   PLAN_DOWNGRADE_REQUESTED: 'plan.downgrade_requested',

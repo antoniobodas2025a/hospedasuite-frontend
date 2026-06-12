@@ -2,8 +2,8 @@
 // 🧪 Tests Unitarios: iCal Sync Diff Algorithm
 //
 // Verifica la lógica de comparación entre eventos iCal y reservas existentes:
-// - UID en iCal pero NO en DB → NUEVA reserva OTA → INSERT
-// - UID en DB pero NO en iCal → CANCELADA en OTA → UPDATE status
+// - UID en iCal pero NO en DB → NUEVA reserva Channel → INSERT
+// - UID en DB pero NO en iCal → CANCELADA en Channel → UPDATE status
 // - UID en ambos → Sin cambios (skip)
 // ============================================================================
 
@@ -76,7 +76,7 @@ describe('iCal Sync Diff Algorithm', () => {
   const nextWeek = new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0];
   const yesterday = new Date(Date.now() - 86400000).toISOString().split('T')[0];
 
-  describe('Nueva reserva OTA (UID en iCal pero NO en DB)', () => {
+  describe('Nueva reserva Channel (UID en iCal pero NO en DB)', () => {
     it('detecta evento nuevo para crear', () => {
       const icalEvents: IcalEvent[] = [
         {
@@ -108,7 +108,7 @@ describe('iCal Sync Diff Algorithm', () => {
     });
   });
 
-  describe('Reserva cancelada en OTA (UID en DB pero NO en iCal)', () => {
+  describe('Reserva cancelada en Channel (UID en DB pero NO en iCal)', () => {
     it('detecta reserva para cancelar', () => {
       const icalEvents: IcalEvent[] = [];
       const existingBookings = new Map<string, ExistingBooking>();
@@ -194,7 +194,7 @@ describe('iCal Sync Diff Algorithm', () => {
   });
 
   describe('iCal vacío', () => {
-    it('cancela todas las reservas OTA existentes', () => {
+    it('cancela todas las reservas Channel existentes', () => {
       const icalEvents: IcalEvent[] = [];
       const existingBookings = new Map<string, ExistingBooking>();
       existingBookings.set('uid-1', { id: 'b1', room_id: 'r1', status: 'blocked_ota' });

@@ -12,7 +12,7 @@
 
 'use server'
 
-import { checkPlanFeature, requirePlan, checkOTALimit, checkUnitLimit, checkStaffLimit, type PlanKey } from '@/data/plan-guard'
+import { checkPlanFeature, requirePlan, checkChannelLimit, checkUnitLimit, checkStaffLimit, type PlanKey } from '@/data/plan-guard'
 
 // ─── Feature Access ───────────────────────────────────────────
 
@@ -53,10 +53,10 @@ export async function requirePlanAction(
 // ─── Limit Checks ─────────────────────────────────────────────
 
 /**
- * Check OTA connection limit.
+ * Check Channel connection limit.
  */
-export async function checkOTALimitAction(hotelId: string) {
-  return await checkOTALimit(hotelId)
+export async function checkChannelLimitAction(hotelId: string) {
+  return await checkChannelLimit(hotelId)
 }
 
 /**

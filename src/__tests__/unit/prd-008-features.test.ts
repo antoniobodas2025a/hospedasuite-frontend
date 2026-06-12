@@ -377,7 +377,7 @@ describe('PRD-008: applyDiversity (Test Area 3)', () => {
 
 // ── Test Area 4: Fallback Chain Logic ─────────────────────────────────────────
 //
-// The fallback chain is implemented in OTADashboard.tsx as React effects.
+// The fallback chain is implemented in ChannelDashboard.tsx as React effects.
 // These tests verify the pure functions and contracts that power each level.
 
 describe('PRD-008: Fallback Chain (Test Area 4)', () => {

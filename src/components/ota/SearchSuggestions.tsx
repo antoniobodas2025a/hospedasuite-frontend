@@ -1,7 +1,7 @@
 'use client';
 
 /**
- * SearchSuggestions — Smart fallback UI for OTA search.
+ * SearchSuggestions — Smart fallback UI for Channel search.
  *
  * Three display modes:
  *   - 'typo':        "¿Querías decir X?" — fuzzy correction suggestion

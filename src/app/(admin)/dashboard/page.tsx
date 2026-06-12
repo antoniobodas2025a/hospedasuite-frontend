@@ -48,7 +48,7 @@ export default async function DashboardPage() {
       .gte('created_at', startOfDay.toISOString())
       .lt('created_at', endOfDay.toISOString()),
 
-    // OTA Sync Status
+    // Channel Sync Status
     getOtaSyncStatusAction(hotel.id),
 
     // Readiness
@@ -291,7 +291,7 @@ export default async function DashboardPage() {
         </div>
       )}
 
-      {/* OTA Sync Widget — solo si hay iCal configurado */}
+      {/* Channel Sync Widget — solo si hay iCal configurado */}
       {otaStatus && (
         <div className="mt-6 max-w-md">
           <OtaSyncWidget initialStatus={otaStatus} hotelId={hotel.id} />

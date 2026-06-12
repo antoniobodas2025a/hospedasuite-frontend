@@ -11,7 +11,7 @@ import { useIsMobile } from '@/hooks/useIsMediaQuery';
 import { useTranslations } from 'next-intl';
 
 // ============================================================================
-// HERO GALLERY — Grid estilo Airbnb para pagina de hotel OTA
+// HERO GALLERY — Grid estilo Airbnb para pagina de hotel Channel
 //
 // Mac 2026 Design System:
 // - Squircle radii via CSS custom properties

@@ -1,5 +1,5 @@
 /**
- * useFallbackChain — 5-level search relaxation cascade for OTA.
+ * useFallbackChain — 5-level search relaxation cascade for Channel.
  *
  * When primary search returns zero results, this hook progressively relaxes
  * filters to find alternatives:
@@ -9,7 +9,7 @@
  *   Level 4: All filters off + popular suggestions
  *   Level 5: Pure suggestions (no results at all)
  *
- * SRP: This hook owns the fallback cascade logic. OTADashboard should not
+ * SRP: This hook owns the fallback cascade logic. ChannelDashboard should not
  * contain fallback state or cascade effects directly.
  *
  * Heurística #9 (Nielsen): Recovery from errors — user never sees a dead end.
@@ -18,7 +18,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { fuzzySearch } from "@/lib/fuzzy-search";
-import { fetchOTAHotelsAction } from "@/app/actions/ota";
+import { fetchChannelHotelsAction } from "@/app/actions/ota";
 import type { SearchSuggestion } from "@/components/ota/SearchSuggestions";
 
 // ── Fallback cities for typo detection ──────────────────────────────────────
@@ -143,7 +143,7 @@ export function useFallbackChain({
         }
         case 2: {
           if (activeCategory === "all") break;
-          const response = await fetchOTAHotelsAction(0, 24, "all", searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests);
+          const response = await fetchChannelHotelsAction(0, 24, "all", searchTerm, urlLocation, urlCheckin, urlCheckout, urlGuests);
           if (response.success && response.data.length > 0) {
             newHotels = response.data;
             resultCount = response.data.length;
@@ -153,7 +153,7 @@ export function useFallbackChain({
         }
         case 3: {
           if (!urlLocation) break;
-          const response = await fetchOTAHotelsAction(0, 24, activeCategory, searchTerm, "", urlCheckin, urlCheckout, urlGuests);
+          const response = await fetchChannelHotelsAction(0, 24, activeCategory, searchTerm, "", urlCheckin, urlCheckout, urlGuests);
           if (response.success && response.data.length > 0) {
             newHotels = response.data;
             resultCount = response.data.length;
@@ -162,7 +162,7 @@ export function useFallbackChain({
           break;
         }
         case 4: {
-          const response = await fetchOTAHotelsAction(0, 24, "all", searchTerm, "", urlCheckin, urlCheckout, urlGuests);
+          const response = await fetchChannelHotelsAction(0, 24, "all", searchTerm, "", urlCheckin, urlCheckout, urlGuests);
           if (response.success && response.data.length > 0) {
             newHotels = response.data;
             resultCount = response.data.length;

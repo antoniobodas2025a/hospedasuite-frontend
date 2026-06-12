@@ -1,5 +1,5 @@
 /**
- * Fuzzy Search — Client-side fuzzy matching for OTA locations.
+ * Fuzzy Search — Client-side fuzzy matching for Channel locations.
  *
  * Wraps fuse.js (v7) with accent-insensitive normalization, synonym
  * resolution, and typed convenience exports for city/entity search.
@@ -15,7 +15,7 @@ import synonymGraph from './synonym-graph.json' with { type: 'json' };
 
 const SYNONYMS: Record<string, string> = synonymGraph.synonyms;
 
-// ── Default fuse.js options for OTA location search ──────────────────────────
+// ── Default fuse.js options for Channel location search ──────────────────────────
 
 const FUSE_DEFAULTS: IFuseOptions<unknown> = {
   threshold: 0.4,
@@ -27,7 +27,7 @@ const FUSE_DEFAULTS: IFuseOptions<unknown> = {
 };
 
 /**
- * Default key weights for OTA location search.
+ * Default key weights for Channel location search.
  * City name is 3x more important than department for ranking.
  */
 const DEFAULT_KEY_WEIGHTS: Record<string, number> = {

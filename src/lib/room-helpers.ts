@@ -1,7 +1,7 @@
 /**
  * 🛏️ Room formatting helpers
  *
- * Shared utilities for room display across OTA and dashboard.
+ * Shared utilities for room display across Channel and dashboard.
  */
 
 export function formatBedType(

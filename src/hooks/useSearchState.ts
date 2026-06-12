@@ -1,10 +1,10 @@
 /**
- * useSearchState — Search state management for OTA Dashboard.
+ * useSearchState — Search state management for Channel Dashboard.
  *
  * Encapsulates all search-related state: term, step (progressive disclosure),
  * category, and the commit action that transitions from location-only to full search.
  *
- * SRP: This hook owns the search UI state. OTADashboard should not manage
+ * SRP: This hook owns the search UI state. ChannelDashboard should not manage
  * searchTerm, searchStep, or category directly.
  *
  * Ley de Miller: The hook exposes 7±2 properties for maintainability.

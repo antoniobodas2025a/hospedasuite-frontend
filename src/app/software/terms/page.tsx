@@ -16,7 +16,7 @@ const SECTIONS = [
           de reservas, calendario, gestión de huéspedes, channel manager, POS y facturación.
         </p>
         <p className="mb-3">
-          <strong>OTA (Online Travel Agency):</strong> Motor de búsqueda y reserva global de HospedaSuite
+          <strong>Channel (Online Travel Agency):</strong> Motor de búsqueda y reserva global de HospedaSuite
           (<em>hospedasuite.com</em>) donde los viajeros encuentran y reservan propiedades.
         </p>
         <p>
@@ -75,7 +75,7 @@ const SECTIONS = [
         </p>
         <p className="mb-3">
           <strong>Garantía de Extensión:</strong> Si durante los 30 días de prueba el hotel no recibe
-          al menos 1 reserva a través de la OTA de HospedaSuite, el período de prueba se extiende
+          al menos 1 reserva a través de la Channel de HospedaSuite, el período de prueba se extiende
           automáticamente 1 mes adicional sin costo.
         </p>
         <p>
@@ -101,7 +101,7 @@ const SECTIONS = [
         </p>
         <ul className="list-disc list-inside space-y-1 mb-3 ml-2">
           <li>El costo del plan de suscripción contratado</li>
-          <li>Las comisiones por reservas generadas a través de la OTA (10%)</li>
+          <li>Las comisiones por reservas generadas a través de la Channel (10%)</li>
         </ul>
         <p>
           Las facturas se emiten en pesos colombianos (COP) y se envían al correo electrónico
@@ -131,7 +131,7 @@ const SECTIONS = [
           </li>
           <li className="flex items-start gap-3">
             <span className="font-semibold min-w-[120px] text-sm bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full text-center">
-              OTA HospedaSuite
+              Channel HospedaSuite
             </span>
             <span>
               <strong>10% de comisión</strong> sobre reservas generadas a través del motor de
@@ -372,7 +372,7 @@ export default function TermsPage() {
           <div className="mt-8 pt-6 border-t border-black/5">
             <p className="text-[13px] text-[#1d1d1f]/50 leading-relaxed">
               <strong className="text-[#1d1d1f]/70">Comisiones:</strong> 0% en canales propios
-              (WhatsApp, Link Directo, tu web) y 10% en reservas por OTA HospedaSuite. El hotel siempre recibe el 100% del
+              (WhatsApp, Link Directo, tu web) y 10% en reservas por Channel HospedaSuite. El hotel siempre recibe el 100% del
               dinero de las reservas en su Wompi.
             </p>
           </div>

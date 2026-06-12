@@ -422,7 +422,7 @@ export default function SettingsPanel({
 				<div className="flex bg-background/60 p-1.5 rounded-[var(--radius-squircle-3xl)] border border-border gap-1.5">
 					{[
 						{ id: "general", label: "Operación", icon: Building },
-						{ id: "ota", label: "Perfil OTA", icon: Globe },
+						{ id: "ota", label: "Perfil de Canales", icon: Globe },
 						{ id: "staff", label: "Equipo", icon: Users },
 					].map((tab) => (
 						<button
@@ -666,7 +666,7 @@ export default function SettingsPanel({
 							exit={{ opacity: 0, x: -20 }}
 							className="grid grid-cols-1 lg:grid-cols-3 gap-[var(--space-breath)]"
 						>
-							{/* LEFT: Tier 1 — Core OTA profile (always visible, high visual weight) */}
+							{/* LEFT: Tier 1 — Core Channel profile (always visible, high visual weight) */}
 							<div className="lg:col-span-2 space-y-[var(--space-breath)]">
 								{/* TIER 1: ESENCIAL — Identidad del hotel */}
 								<div className="glass-card p-[var(--space-breath)]">
@@ -942,7 +942,7 @@ export default function SettingsPanel({
 														<input
 															{...register("trust_badge_1_subtitle")}
 															className="w-full p-3 bg-background border border-border rounded-[var(--radius-squircle-lg)] text-xs"
-															placeholder="Sin intermediarios"
+															placeholder="Sin plataformas externas"
 														/>
 													</div>
 												</div>
@@ -1463,7 +1463,7 @@ export default function SettingsPanel({
 									</h4>
 									<div className="p-6 bg-muted rounded-[var(--radius-squircle-2xl)] border border-border">
 										<p className="text-xs text-muted-foreground mb-4">
-											Conecta con OTAs externas para sincronización automática
+											Conecta con canales externos para sincronización automática
 											de inventario.
 										</p>
 										<div className="flex items-center gap-4">

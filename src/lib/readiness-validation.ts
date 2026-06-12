@@ -156,7 +156,7 @@ export function checkCancellationPolicy(data: ReadinessData, _limits: PlanLimits
   return !!data.hotel.cancellation_policy
 }
 
-/** Check 8: At least one room must have iCal/OTA import URL configured */
+/** Check 8: At least one room must have iCal/Channel import URL configured */
 export function checkIcalOta(data: ReadinessData, _limits: PlanLimits): boolean {
   return data.rooms.some((r) => !!r.ical_import_url)
 }
@@ -250,11 +250,11 @@ function resolveCancellationPolicy(data: ReadinessData, _limits: PlanLimits) {
 function resolveIcalOta(data: ReadinessData, _limits: PlanLimits) {
   const roomsWithIcal = data.rooms.filter((r) => !!r.ical_import_url)
   return {
-    details: `Habitaciones con iCal/OTA: ${roomsWithIcal.length} de ${data.rooms.length}.`,
+    details: `Habitaciones con iCal/Channel: ${roomsWithIcal.length} de ${data.rooms.length}.`,
     suggestedAction:
       data.rooms.length === 0
         ? 'Primero creá al menos una habitación, luego configurá la URL iCal en la habitación.'
-        : 'Configurá una URL de importación iCal en al menos una habitación para sincronizar con OTAs.',
+        : 'Configurá una URL de importación iCal en al menos una habitación para sincronizar con Channels.',
   }
 }
 
@@ -367,7 +367,7 @@ export const READINESS_CHECKS: ReadinessCheck[] = [
   },
   {
     id: 'ical_ota',
-    label: 'Sincronización iCal/OTA',
+    label: 'Sincronización iCal/Channel',
     description: 'URL de importación iCal configurada en al menos una habitación',
     category: 'ota',
     weight: 5,
@@ -421,7 +421,7 @@ export function computeReadiness(data: ReadinessData, plan: PlanKey): ReadinessR
     const isApplicable = check.applicablePlans.includes(plan)
     const isRequired = check.requiredForPlans.includes(plan)
 
-    // N/A checks: not shown, not scored (e.g., iCal/OTA for Starter)
+    // N/A checks: not shown, not scored (e.g., iCal/Channel for Starter)
     if (!isApplicable) {
       items.push({
         id: check.id,

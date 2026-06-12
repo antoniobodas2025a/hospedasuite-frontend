@@ -1,6 +1,6 @@
 /**
  * MAC 2026 — Spring Physics Animation Config
- * Centralized spring presets for consistent motion across the OTA.
+ * Centralized spring presets for consistent motion across the Channel.
  * All values tuned for natural, physics-based feel.
  *
  * Usage: import { springSnappy, springGentle, springBounce } from '@/lib/animations'

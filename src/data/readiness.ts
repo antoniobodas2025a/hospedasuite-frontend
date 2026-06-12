@@ -210,7 +210,7 @@ export async function resolveCheckData(
 
 /** Result of a go-live gate check */
 export interface GoLiveGateResult {
-  /** Whether the hotel is allowed to publish / receive OTA bookings */
+  /** Whether the hotel is allowed to publish / receive Channel bookings */
   allowed: boolean
   /** Human-readable reason when blocked */
   reason?: string
@@ -223,7 +223,7 @@ export interface GoLiveGateResult {
 /**
  * Guard that checks whether a hotel has been explicitly activated for public sale.
  *
- * Used before OTA publish, public-booking creation, and other post-live features.
+ * Used before Channel publish, public-booking creation, and other post-live features.
  * Admin-originated bookings (source='admin' or created by staff) bypass this gate.
  *
  * @param hotelId - UUID of the hotel to check

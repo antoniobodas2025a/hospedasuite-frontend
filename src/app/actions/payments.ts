@@ -122,7 +122,7 @@ export async function processPaymentAction(payload: {
       .single();
 
     const isOta = booking?.source === 'ota';
-    const attributionTag = isOta ? '[Comisión: OTA 10%]' : '[Comisión: Directo 0%]';
+    const attributionTag = isOta ? '[Comisión: Channel 10%]' : '[Comisión: Directo 0%]';
     
     const safeNotes = payload.notes?.trim() || "";
     const forensicNotes = safeNotes ? `${safeNotes} | ${attributionTag}` : attributionTag;

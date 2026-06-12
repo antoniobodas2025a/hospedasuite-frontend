@@ -1,5 +1,5 @@
 /**
- * SearchContextManager — URL sync + sessionStorage backup for OTA search.
+ * SearchContextManager — URL sync + sessionStorage backup for Channel search.
  *
  * Ensures search context (location, dates, guests, category, filters)
  * survives navigation, page refresh, and even tab close/reopen.

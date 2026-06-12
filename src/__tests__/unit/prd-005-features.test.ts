@@ -1,5 +1,5 @@
 /**
- * PRD-005 Sprint 2-4: Tests for new OTA features
+ * PRD-005 Sprint 2-4: Tests for new Channel features
  *
  * Covers:
  * - Featured hotel selection logic

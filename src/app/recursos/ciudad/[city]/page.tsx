@@ -9,7 +9,7 @@ const CITY_DATA: Record<string, { name: string; description: string; hotels: str
     hotels: 'más de 120 hoteles y hostales',
     tourism: 'Termas de Paipá, Lago de Tota, Parque de la Granja',
     geoBlock:
-      'En Paipá, el turismo termal atrae miles de visitantes cada fin de semana desde Bogotá. Los hoteleros independientes pierden hasta un 18% de cada reserva por comisiones de plataformas externas. Con HospedaSuite, los hoteles de Paipá activan su Motor de Reservas propio: reciben reservas directas por WhatsApp, cobran con Wompi y mantienen el control total de su inventario sin intermediarios.',
+      'En Paipá, el turismo termal atrae miles de visitantes cada fin de semana desde Bogotá. Los hoteleros independientes pierden hasta un 18% de cada reserva por comisiones de plataformas externas. Con HospedaSuite, los hoteles de Paipá activan su Motor de Reservas propio: reciben reservas directas por WhatsApp, cobran con Wompi y mantienen el control total de su inventario sin plataformas externas.',
   },
   'villa-de-leyva': {
     name: 'Villa de Leyva',
@@ -25,7 +25,7 @@ const CITY_DATA: Record<string, { name: string; description: string; hotels: str
     hotels: 'más de 50 hoteles ejecutivos y turísticos',
     tourism: 'Casa del Fundador, Pozo de Hunzahúa, Catedral Basílica',
     geoBlock:
-      'Tunja concentra la actividad empresarial y gubernamental de Boyacá, con demanda constante de hoteles ejecutivos. Los hoteleros tunjanos pierden visibilidad directa frente a intermediarios digitales. Con HospedaSuite, los hoteles de Tunja recuperan el control: Motor de Reservas propio, pagos directos por Wompi y gestión de reservas sin depender de plataformas externas.',
+      'Tunja concentra la actividad empresarial y gubernamental de Boyacá, con demanda constante de hoteles ejecutivos. Los hoteleros tunjanos pierden visibilidad directa frente a plataformas externas digitales. Con HospedaSuite, los hoteles de Tunja recuperan el control: Motor de Reservas propio, pagos directos por Wompi y gestión de reservas sin depender de plataformas externas.',
   },
   sogamoso: {
     name: 'Sogamoso',
@@ -33,7 +33,7 @@ const CITY_DATA: Record<string, { name: string; description: string; hotels: str
     hotels: 'más de 40 hoteles y alojamientos',
     tourism: 'Templo del Sol, Parque Arqueológico, Laguna de Tota cercana',
     geoBlock:
-      'Sogamoso combina turismo histórico con actividad industrial, generando demanda constante de alojamiento. Los hoteleros sogamoseños enfrentan el desafío de competir con plataformas globales que extraen comisiones. HospedaSuite ofrece a los hoteles de Sogamoso una alternativa soberana: reservas directas, pagos locales con Wompi y gestión operativa sin intermediarios.',
+      'Sogamoso combina turismo histórico con actividad industrial, generando demanda constante de alojamiento. Los hoteleros sogamoseños enfrentan el desafío de competir con plataformas globales que extraen comisiones. HospedaSuite ofrece a los hoteles de Sogamoso una alternativa soberana: reservas directas, pagos locales con Wompi y gestión operativa sin plataformas externas.',
   },
   duitama: {
     name: 'Duitama',
@@ -41,7 +41,7 @@ const CITY_DATA: Record<string, { name: string; description: string; hotels: str
     hotels: 'más de 35 hoteles y posadas turísticas',
     tourism: 'Laguna de Tota, Parque Nacional Natural, Centro Histórico',
     geoBlock:
-      'Duitama es puerta de entrada a la Laguna de Tota y destino deportivo de Boyacá. Los hoteleros duitamenses necesitan visibilidad directa sin depender de intermediarios costosos. Con HospedaSuite, los hoteles de Duitama activan su Motor de Reservas propio: Link Directo para WhatsApp, cobros con Wompi y control total de su operación hotelera.',
+      'Duitama es puerta de entrada a la Laguna de Tota y destino deportivo de Boyacá. Los hoteleros duitamenses necesitan visibilidad directa sin depender de plataformas externas costosos. Con HospedaSuite, los hoteles de Duitama activan su Motor de Reservas propio: Link Directo para WhatsApp, cobros con Wompi y control total de su operación hotelera.',
   },
 };
 

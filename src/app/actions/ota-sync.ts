@@ -13,7 +13,7 @@ export interface OtaSyncStatus {
 }
 
 /**
- * Obtiene el estado de sincronización OTA de un hotel.
+ * Obtiene el estado de sincronización Channel de un hotel.
  */
 export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success: boolean; status?: OtaSyncStatus; error?: string }> {
   try {
@@ -28,7 +28,7 @@ export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success
       .eq('hotel_id', hotelId);
 
     if (roomsError) {
-      console.error('[OTA SYNC] Error rooms query:', roomsError.message, roomsError.details);
+      console.error('[Channel SYNC] Error rooms query:', roomsError.message, roomsError.details);
       // Si falla, retornamos status básico en lugar de lanzar error
       return {
         success: true,
@@ -106,7 +106,7 @@ export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success
 
     return { success: true, status };
   } catch (error: any) {
-    console.error('[OTA SYNC] Error obteniendo estado:', error.message);
+    console.error('[Channel SYNC] Error obteniendo estado:', error.message);
     return { success: false, error: error.message };
   }
 }
@@ -141,7 +141,7 @@ export async function triggerManualSyncAction(hotelId: string): Promise<{ succes
 
     return { success: true };
   } catch (error: any) {
-    console.error('[OTA SYNC] Error disparando sync manual:', error.message);
+    console.error('[Channel SYNC] Error disparando sync manual:', error.message);
     return { success: false, error: error.message };
   }
 }

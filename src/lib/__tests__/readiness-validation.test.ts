@@ -403,7 +403,7 @@ describe('computeReadiness', () => {
       expect(result.totalCount).toBe(7)
     })
 
-    it('should mark iCal/OTA and Carta Digital as N/A for Starter', () => {
+    it('should mark iCal/Channel and Carta Digital as N/A for Starter', () => {
       const ical = result.items.find((i) => i.id === 'ical_ota')!
       const carta = result.items.find((i) => i.id === 'carta_digital')!
       expect(ical.status).toBe('na')
@@ -430,7 +430,7 @@ describe('computeReadiness', () => {
       expect(result.score).toBe(100)
     })
 
-    it('should show iCal/OTA and Carta Digital as Optional (not N/A)', () => {
+    it('should show iCal/Channel and Carta Digital as Optional (not N/A)', () => {
       const ical = result.items.find((i) => i.id === 'ical_ota')!
       const carta = result.items.find((i) => i.id === 'carta_digital')!
       expect(ical.status).not.toBe('na')
@@ -565,7 +565,7 @@ describe('computeReadiness', () => {
   // ─── Skip Logic for N/A Items ──────────────────────────────
 
   describe('skip logic — N/A items', () => {
-    it('Starter: iCal/OTA and Carta Digital should be N/A', () => {
+    it('Starter: iCal/Channel and Carta Digital should be N/A', () => {
       const result = computeReadiness(fullPassData(), 'starter')
       const ical = result.items.find((i) => i.id === 'ical_ota')!
       const carta = result.items.find((i) => i.id === 'carta_digital')!
@@ -573,7 +573,7 @@ describe('computeReadiness', () => {
       expect(carta.status).toBe('na')
     })
 
-    it('Pro: iCal/OTA and Carta Digital should show as Optional (not N/A)', () => {
+    it('Pro: iCal/Channel and Carta Digital should show as Optional (not N/A)', () => {
       const result = computeReadiness(fullPassData(), 'pro')
       const ical = result.items.find((i) => i.id === 'ical_ota')!
       const carta = result.items.find((i) => i.id === 'carta_digital')!
@@ -641,7 +641,7 @@ describe('resolveCheck', () => {
   })
 
   describe('N/A check for plan', () => {
-    it('should return na status for iCal/OTA on Starter', () => {
+    it('should return na status for iCal/Channel on Starter', () => {
       const result = resolveCheck(fullPassData(), 'starter', 'ical_ota')
       expect(result!.status).toBe('na')
       expect(result!.details).toMatch(/no aplica/i)
@@ -654,14 +654,14 @@ describe('resolveCheck', () => {
   })
 
   describe('Optional check — pass and fail', () => {
-    it('should resolve iCal/OTA as incomplete when no URL set (Pro)', () => {
+    it('should resolve iCal/Channel as incomplete when no URL set (Pro)', () => {
       const data = fullPassData()
       data.rooms.forEach((r) => (r.ical_import_url = null))
       const result = resolveCheck(data, 'pro', 'ical_ota')
       expect(result!.status).toBe('incomplete')
     })
 
-    it('should resolve iCal/OTA as complete when URL is set (Pro)', () => {
+    it('should resolve iCal/Channel as complete when URL is set (Pro)', () => {
       const data = fullPassData()
       data.rooms[0].ical_import_url = 'https://ical.example.com/feed.ics'
       const result = resolveCheck(data, 'pro', 'ical_ota')

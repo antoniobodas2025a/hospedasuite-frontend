@@ -72,7 +72,7 @@ export async function generateMetadata({
 	};
 }
 
-export default async function OTAHotelDetailPage({
+export default async function ChannelHotelDetailPage({
 	params,
 	searchParams,
 }: PageProps) {

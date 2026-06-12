@@ -1,12 +1,12 @@
 /**
- * OTA Connections — DAL Module
+ * Channel Connections — DAL Module
  *
- * Server-only data access layer for OTA (Online Travel Agency) connections.
- * Enforces plan-based OTA limits on connection.
+ * Server-only data access layer for Channel (Online Travel Agency) connections.
+ * Enforces plan-based Channel limits on connection.
  *
  * Pattern (Next.js best practice):
  *   1. Auth → verify user owns the hotel
- *   2. Authorization → check OTA limit
+ *   2. Authorization → check Channel limit
  *   3. Execute → perform the operation
  *   4. Revalidate → revalidateTag for cache invalidation
  */
@@ -14,12 +14,12 @@
 import 'server-only'
 
 import { createClient } from '@supabase/supabase-js'
-import { checkOTALimit } from './plan-guard'
+import { checkChannelLimit } from './plan-guard'
 import { verifyHotelOwnership } from './hotels'
 
 // ─── Types ────────────────────────────────────────────────────
 
-export interface OTAConnectionDTO {
+export interface ChannelConnectionDTO {
   roomId: string
   roomName: string
   hotelId: string
@@ -30,7 +30,7 @@ export interface OTAConnectionDTO {
   otaName: string
 }
 
-export interface ConnectOTAInput {
+export interface ConnectChannelInput {
   hotelId: string
   roomId: string
   icalImportUrl: string
@@ -48,7 +48,7 @@ function detectOtaName(url: string): string {
   if (lower.includes('homeaway')) return 'HomeAway'
   if (lower.includes('tripadvisor')) return 'TripAdvisor'
   if (lower.includes('despegar')) return 'Despegar'
-  return 'Other OTA'
+  return 'Other Channel'
 }
 
 function getAdminClient() {
@@ -61,9 +61,9 @@ function getAdminClient() {
 // ─── Queries ──────────────────────────────────────────────────
 
 /**
- * Get all OTA connections for a hotel.
+ * Get all Channel connections for a hotel.
  */
-export async function getHotelOTAConnections(hotelId: string): Promise<OTAConnectionDTO[]> {
+export async function getHotelChannelConnections(hotelId: string): Promise<ChannelConnectionDTO[]> {
   const supabase = getAdminClient()
 
   const { data, error } = await supabase
@@ -87,9 +87,9 @@ export async function getHotelOTAConnections(hotelId: string): Promise<OTAConnec
 }
 
 /**
- * Get a single OTA connection by room ID.
+ * Get a single Channel connection by room ID.
  */
-export async function getOTAConnection(roomId: string): Promise<OTAConnectionDTO | null> {
+export async function getChannelConnection(roomId: string): Promise<ChannelConnectionDTO | null> {
   const supabase = getAdminClient()
 
   const { data, error } = await supabase
@@ -116,20 +116,20 @@ export async function getOTAConnection(roomId: string): Promise<OTAConnectionDTO
 // ─── Mutations ────────────────────────────────────────────────
 
 /**
- * Connect an OTA to a room with plan limit validation.
- * Returns error if the hotel has reached its OTA limit.
+ * Connect an Channel to a room with plan limit validation.
+ * Returns error if the hotel has reached its Channel limit.
  */
-export async function connectOTA(
-  input: ConnectOTAInput
-): Promise<{ ok: boolean; data?: OTAConnectionDTO; error?: string }> {
+export async function connectChannel(
+  input: ConnectChannelInput
+): Promise<{ ok: boolean; data?: ChannelConnectionDTO; error?: string }> {
   // 1. Auth: verify ownership
   const isOwner = await verifyHotelOwnership(input.hotelId)
   if (!isOwner) {
     return { ok: false, error: 'Unauthorized: you do not own this hotel' }
   }
 
-  // 2. Authorization: check OTA limit
-  const limitCheck = await checkOTALimit(input.hotelId)
+  // 2. Authorization: check Channel limit
+  const limitCheck = await checkChannelLimit(input.hotelId)
   if (!limitCheck.ok) {
     return { ok: false, error: limitCheck.reason }
   }
@@ -175,7 +175,7 @@ export async function connectOTA(
     .eq('id', input.roomId)
 
   if (error) {
-    console.error('[OTA DAL] Error connecting OTA:', error)
+    console.error('[Channel DAL] Error connecting Channel:', error)
     return { ok: false, error: error.message }
   }
 
@@ -195,9 +195,9 @@ export async function connectOTA(
 }
 
 /**
- * Disconnect an OTA from a room.
+ * Disconnect an Channel from a room.
  */
-export async function disconnectOTA(
+export async function disconnectChannel(
   roomId: string
 ): Promise<{ ok: boolean; error?: string }> {
   // 1. Auth: verify ownership
@@ -228,7 +228,7 @@ export async function disconnectOTA(
     .eq('id', roomId)
 
   if (error) {
-    console.error('[OTA DAL] Error disconnecting OTA:', error)
+    console.error('[Channel DAL] Error disconnecting Channel:', error)
     return { ok: false, error: error.message }
   }
 

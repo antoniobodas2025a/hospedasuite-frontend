@@ -44,7 +44,7 @@ export async function syncChannelManagerAction(hotelId: string) {
     }
 
     // ─── Use the new sync engine with circuit breaker + jitter + cache ──
-    const { syncHotelOTAs } = await import('@/lib/ical-sync');
+    const { syncHotelChannels } = await import('@/lib/ical-sync');
     const { supabaseAdmin } = await import('@/lib/supabase-admin');
 
     // Fetch hotel name for alerts
@@ -54,7 +54,7 @@ export async function syncChannelManagerAction(hotelId: string) {
       .eq('id', hotelId)
       .single();
 
-    // Fetch OTA connections for this hotel
+    // Fetch Channel connections for this hotel
     const { data: rooms } = await supabaseAdmin
       .from('rooms')
       .select('id, name, hotel_id, ical_import_url, ical_export_url, last_ical_sync, ical_sync_status')
@@ -65,7 +65,7 @@ export async function syncChannelManagerAction(hotelId: string) {
       return { success: true, message: 'No hay enlaces iCal de Booking/Airbnb configurados en las habitaciones.' };
     }
 
-    // Map rooms to OTAConnection format
+    // Map rooms to ChannelConnection format
     const connections = rooms.map((room: any) => ({
       id: room.id,
       hotelId: room.hotel_id,
@@ -78,7 +78,7 @@ export async function syncChannelManagerAction(hotelId: string) {
     }));
 
     // Run sync through the new engine (jitter + circuit breaker + cache + alerts)
-    const results = await syncHotelOTAs(hotelId, hotelData?.name || hotelId, connections);
+    const results = await syncHotelChannels(hotelId, hotelData?.name || hotelId, connections);
 
     // Aggregate results
     const totalNew = results.reduce((sum, r) => sum + r.eventsNew, 0);
@@ -116,7 +116,7 @@ export async function syncChannelManagerAction(hotelId: string) {
     return {
       success: true,
       message: totalNew > 0
-        ? `Sincronización exitosa. Se bloquearon ${totalNew} nuevas fechas desde las OTAs.`
+        ? `Sincronización exitosa. Se bloquearon ${totalNew} nuevas fechas desde las Channels.`
         : `Inventario sincronizado. No hay nuevas reservas externas.`,
       bookingsCreated: totalNew,
       bookingsCancelled: totalCancelled,

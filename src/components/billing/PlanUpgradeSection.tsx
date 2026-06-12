@@ -24,7 +24,7 @@ interface PlanCard {
   price: string;
   period: string;
   features: string[];
-  limits: { maxUnits: number; maxOTAs: number; maxStaff: number; storageMB: number };
+  limits: { maxUnits: number; maxChannels: number; maxStaff: number; storageMB: number };
   badgeClass: string;
   recommended?: boolean;
 }
@@ -208,7 +208,7 @@ export default function PlanUpgradeSection({
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-muted-foreground">🌐</span>
-                      <span className="text-sidebar-foreground">{plan.limits.maxOTAs} OTAs</span>
+                      <span className="text-sidebar-foreground">{plan.limits.maxChannels} Canales</span>
                     </div>
                     <div className="flex items-center gap-1.5">
                       <span className="text-muted-foreground">👥</span>

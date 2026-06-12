@@ -1,5 +1,5 @@
 /**
- * Intent Detection — Semantic query classification for OTA search.
+ * Intent Detection — Semantic query classification for Channel search.
  *
  * Extracts travel intents from natural language queries using regex patterns.
  * Enables automatic filter application without explicit UI controls.

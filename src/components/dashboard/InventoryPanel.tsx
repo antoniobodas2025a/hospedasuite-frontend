@@ -86,7 +86,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
             Matriz de Inventario
             <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-full border border-indigo-500/30 uppercase tracking-widest">{rooms.length} Unidades</span>
           </h2>
-          <p className='text-muted-foreground font-medium text-sm mt-1'>Control topológico de la propiedad y sincronización OTA.</p>
+          <p className='text-muted-foreground font-medium text-sm mt-1'>Control topológico de la propiedad y sincronización de canales.</p>
         </div>
         
         <div className='flex flex-wrap items-center gap-3 w-full lg:w-auto bg-muted p-2 rounded-[var(--radius-squircle-3xl)] border border-border shadow-inner'>
@@ -184,7 +184,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                         </div>
                         {room.ical_import_url && (
                           <div className='mt-3 flex items-center justify-center text-[9px] font-bold text-sky-400 uppercase tracking-widest glass-card py-2 border-sky-500/20 bg-sky-500/10'>
-                            <Link2 className='size-3 mr-2' /> OTA Sync Activa
+                            <Link2 className='size-3 mr-2' /> Sincronización Activa
                           </div>
                         )}
                         
@@ -283,7 +283,7 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
   const handleManualSync = async () => {
     setIsSyncing(true);
     try { await syncChannelManagerAction(hotelId); await syncRooms(); } 
-    catch (error) { console.error('Fallo OTA:', error); } 
+    catch (error) { console.error('Fallo de sincronización:', error); } 
     finally { setIsSyncing(false); }
   };
 

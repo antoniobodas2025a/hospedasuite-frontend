@@ -96,7 +96,7 @@ export default async function HQFinancialPage() {
             Deuda por Hotel
           </h2>
           <p className="text-xs text-muted-foreground mt-1">
-            Ordenado por mayor deuda. Incluye suscripción + comisiones OTA.
+            Ordenado por mayor deuda. Incluye suscripción + comisiones Channel.
           </p>
         </div>
 

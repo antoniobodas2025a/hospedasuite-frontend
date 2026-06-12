@@ -1,17 +1,17 @@
 /**
- * Circuit Breaker Pattern — Channel Manager OTA Sync
+ * Circuit Breaker Pattern — Channel Manager Channel Sync
  *
- * Prevents cascading failures when an OTA endpoint is down or rate-limiting.
+ * Prevents cascading failures when an Channel endpoint is down or rate-limiting.
  *
  * States:
  * - CLOSED: Normal operation, requests pass through
  * - OPEN: Circuit tripped, requests fail fast (cooldown period)
- * - HALF-OPEN: Testing if OTA recovered, one request allowed
+ * - HALF-OPEN: Testing if Channel recovered, one request allowed
  *
  * Usage:
  *   const cb = getCircuitBreaker('booking.com');
  *   if (!cb.canRequest()) return; // fail fast
- *   try { await fetchOTA(); cb.recordSuccess(); }
+ *   try { await fetchChannel(); cb.recordSuccess(); }
  *   catch { cb.recordFailure(); }
  */
 
@@ -62,7 +62,7 @@ function getEntry(otaName: string): CircuitEntry {
 }
 
 /**
- * Check if a request to the OTA should be allowed.
+ * Check if a request to the Channel should be allowed.
  */
 export function canRequest(otaName: string): boolean {
   const entry = getEntry(otaName);

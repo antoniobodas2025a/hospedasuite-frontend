@@ -1,5 +1,5 @@
 /**
- * SearchCache — Client-side cache for OTA search results.
+ * SearchCache — Client-side cache for Channel search results.
  *
  * Implements stale-while-revalidate pattern with request deduplication:
  * - Returns cached results immediately (stale)

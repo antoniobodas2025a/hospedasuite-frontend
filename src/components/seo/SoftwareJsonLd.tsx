@@ -90,7 +90,7 @@ export default function SoftwareJsonLd() {
             name: '¿Cuál es la diferencia entre el Motor Propio y la Red de Descubrimiento?',
             acceptedAnswer: {
               '@type': 'Answer',
-              text: 'El Motor Propio (0% comisión) es tu link personal para compartir en WhatsApp, Instagram o Facebook. Las reservas que llegan por ahí son 100% tuyas. La Red de Descubrimiento (10%) es el marketplace de HospedaSuite donde viajeros nuevos encuentran tu hotel. El 10% es un costo por adquisición de cliente nuevo, no una comisión extractiva como las OTAs tradicionales (15-25%).',
+              text: 'El Motor Propio (0% comisión) es tu link personal para compartir en WhatsApp, Instagram o Facebook. Las reservas que llegan por ahí son 100% tuyas. La Red de Descubrimiento (10%) es el marketplace de HospedaSuite donde viajeros nuevos encuentran tu hotel. El 10% es un costo por adquisición de cliente nuevo, no una comisión extractiva como las Channels tradicionales (15-25%).',
             },
           },
           {
