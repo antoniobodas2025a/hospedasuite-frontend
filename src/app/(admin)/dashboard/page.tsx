@@ -4,6 +4,7 @@ import { redirect } from 'next/navigation';
 import DashboardPanel from '@/components/dashboard/DashboardPanel';
 import OtaSyncWidget from '@/components/dashboard/OtaSyncWidget';
 import ReadinessMiniWidget from '@/components/dashboard/ReadinessMiniWidget';
+import PostGoLiveMetrics from '@/components/dashboard/PostGoLiveMetrics';
 import { getOtaSyncStatusAction } from '@/app/actions/ota-sync';
 import { getReadinessAction } from '@/app/actions/readiness';
 import { simulateBookingAction } from '@/app/actions/bookings';
@@ -274,14 +275,19 @@ export default async function DashboardPage() {
 
       {/* Banner de Estado "En Vivo" */}
       {hotel.go_live && (
-        <div className="mt-6 p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-[var(--radius-squircle-2xl)] flex items-center gap-4">
-          <div className="size-10 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center animate-pulse">
-            <CheckCircle size={20} />
+        <div className="space-y-6">
+          <div className="mt-6 p-6 bg-emerald-500/10 border border-emerald-500/30 rounded-[var(--radius-squircle-2xl)] flex items-center gap-4">
+            <div className="size-10 bg-emerald-500/20 text-emerald-400 rounded-full flex items-center justify-center animate-pulse">
+              <CheckCircle size={20} />
+            </div>
+            <div>
+              <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">Motor Propio Activo</h3>
+              <p className="text-white/60 text-sm">Tu ecosistema está operando y recibiendo reservas.</p>
+            </div>
           </div>
-          <div>
-            <h3 className="text-emerald-400 font-bold text-sm uppercase tracking-wide">Motor Propio Activo</h3>
-            <p className="text-white/60 text-sm">Tu ecosistema está operando y recibiendo reservas.</p>
-          </div>
+
+          {/* Post-Go-Live Monitoring Dashboard */}
+          <PostGoLiveMetrics hotelId={hotel.id} />
         </div>
       )}
 
