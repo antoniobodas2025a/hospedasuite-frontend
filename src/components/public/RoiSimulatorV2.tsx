@@ -93,7 +93,7 @@ export default function RoiSimulatorV2({ onCtaClick }: RoiSimulatorV2Props) {
             <Shield size={20} className="text-purple-600" />
           </div>
           <p className="text-[11px] font-bold text-[#1d1d1f]/40 uppercase tracking-wide mb-1">
-            Ingresos Extra (Upselling)
+            Ganancia Extra (Para tu bolsillo)
           </p>
           <p className="text-xl font-bold text-purple-600">
             {formatCOP(roi.upsellingRevenue)}

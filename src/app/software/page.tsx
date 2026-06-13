@@ -151,7 +151,7 @@ export default function SoftwarePage() {
               </h2>
               <p className="text-[17px] text-[#1d1d1f]/60 leading-relaxed mb-6">
                 Cumplir con la Tarjeta de Registro de Alojamiento y el SIRE toma 15 minutos manuales por huésped. 
-                HospedaSuite automatiza este reporte gubernamental en tiempo real.
+                HospedaSuite genera el reporte gubernamental automáticamente, listo para que lo subas en segundos.
               </p>
               <ul className="space-y-3 text-[15px] text-[#1d1d1f]/70">
                 <li className="flex items-center gap-2">
