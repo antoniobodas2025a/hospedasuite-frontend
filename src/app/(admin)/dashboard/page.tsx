@@ -256,15 +256,13 @@ export default async function DashboardPage() {
                 Un solo clic para empezar a recibir reservas reales.
               </p>
             </div>
-            <form action={setGoLiveAction.bind(null, hotel.id)}>
-              <button
-                type="submit"
-                className="px-8 py-4 bg-brand-500 hover:bg-brand-400 text-white text-lg font-bold rounded-2xl transition-all shadow-xl shadow-brand-500/30 active:scale-95 flex items-center gap-3"
-              >
-                <span>Activar Motor Propio</span>
-                <ArrowUpRight size={20} />
-              </button>
-            </form>
+            {/* TODO: Re-enable Go Live action after build fix */}
+            <button
+              disabled
+              className="px-8 py-4 bg-gray-500 text-white text-lg font-bold rounded-2xl cursor-not-allowed flex items-center gap-3"
+            >
+              <span>Activar Motor Propio (Mantenimiento)</span>
+            </button>
           </div>
         </div>
       )}
