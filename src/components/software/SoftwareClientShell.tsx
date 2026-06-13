@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { Menu, X, ArrowUpRight } from 'lucide-react';
+import { Menu, X, ArrowUpRight, Instagram } from 'lucide-react';
 import LeadCaptureModal from '@/components/public/LeadCaptureModal';
 import RoiSimulatorV2 from '@/components/public/RoiSimulatorV2';
 import InteractivePricingSlider from '@/components/InteractivePricingSlider';
@@ -194,6 +194,17 @@ export default function SoftwareClientShell({ children }: SoftwareClientShellPro
               <img src="/logo.png" alt="HospedaSuite Logo" className="w-6 h-6 rounded-[8px] object-cover" />
               <span className="font-semibold text-[15px] tracking-tight text-[#1d1d1f]">HospedaSuite</span>
             </div>
+            
+            <a 
+              href="https://instagram.com/suitehospeda" 
+              target="_blank" 
+              rel="noopener noreferrer"
+              className="flex items-center gap-2 text-[#1d1d1f]/50 hover:text-[#0071e3] transition-colors"
+            >
+              <Instagram size={18} />
+              <span className="text-[13px] font-medium">@suitehospeda</span>
+            </a>
+
             <p className="text-[12px] text-[#1d1d1f]/30 font-medium">
               © 2026 HospedaSuite Inc. Todos los derechos reservados.
             </p>

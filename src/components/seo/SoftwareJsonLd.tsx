@@ -87,6 +87,14 @@ export default function SoftwareJsonLd() {
         mainEntity: [
           {
             '@type': 'Question',
+            name: '¿Qué diferencia a HospedaSuite de Airbnb?',
+            acceptedAnswer: {
+              '@type': 'Answer',
+              text: 'Airbnb cobra una "renta eterna" del 15% por cada reserva, incluso las que tú mismo conseguiste. HospedaSuite ofrece un Motor Propio con 0% de comisión para ventas directas, premiando tu esfuerzo propio y garantizando soberanía financiera para glampings y hoteles en Boyacá.',
+            },
+          },
+          {
+            '@type': 'Question',
             name: '¿Cuál es la diferencia entre el Motor Propio y la Red de Descubrimiento?',
             acceptedAnswer: {
               '@type': 'Answer',

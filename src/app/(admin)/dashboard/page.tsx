@@ -8,7 +8,7 @@ import PostGoLiveMetrics from '@/components/dashboard/PostGoLiveMetrics';
 import { getOtaSyncStatusAction } from '@/app/actions/ota-sync';
 import { getReadinessAction } from '@/app/actions/readiness';
 import { simulateBookingAction } from '@/app/actions/bookings';
-import { Clock, MessageCircle, AlertTriangle, AlertOctagon, XCircle, PlayCircle, ArrowUpRight, CheckCircle } from 'lucide-react';
+import { Clock, MessageCircle, AlertTriangle, AlertOctagon, XCircle, PlayCircle, ArrowUpRight, CheckCircle, TrendingUp } from 'lucide-react';
 
 export const dynamic = 'force-dynamic';
 
@@ -288,6 +288,22 @@ export default async function DashboardPage() {
 
           {/* Post-Go-Live Monitoring Dashboard */}
           <PostGoLiveMetrics hotelId={hotel.id} />
+
+          {/* Upselling Module — Coming Soon */}
+          <div className="mt-6 p-6 bg-purple-500/10 border border-purple-500/20 rounded-[var(--radius-squircle-2xl)] flex items-center gap-4">
+            <div className="size-10 bg-purple-500/20 text-purple-400 rounded-full flex items-center justify-center">
+              <TrendingUp size={20} />
+            </div>
+            <div className="flex-1">
+              <h3 className="text-purple-400 font-bold text-sm uppercase tracking-wide flex items-center gap-2">
+                Upselling Agéntico
+                <span className="px-2 py-0.5 bg-purple-500/20 text-purple-300 text-[10px] rounded-full font-bold">PRÓXIMAMENTE</span>
+              </h3>
+              <p className="text-white/60 text-sm mt-1">
+                Prepárate para vender paquetes, experiencias y servicios extra. El sistema te avisará cuando esté listo para generar esos $40 USD adicionales por reserva.
+              </p>
+            </div>
+          </div>
         </div>
       )}
 

@@ -1,6 +1,7 @@
 import { Smartphone, Globe, LayoutGrid, ArrowUpRight } from 'lucide-react';
 import SoftwareJsonLd from '@/components/seo/SoftwareJsonLd';
 import DatasetJsonLd from '@/components/seo/DatasetJsonLd';
+import OrganizationJsonLd from '@/components/seo/OrganizationJsonLd';
 import SoftwareClientShell from '@/components/software/SoftwareClientShell';
 import AntiAirbnbShield from '@/components/software/AntiAirbnbShield';
 
@@ -19,6 +20,9 @@ export default function SoftwarePage() {
 
       {/* JSON-LD Dataset — Certified B2B Performance Data (E-E-A-T) */}
       <DatasetJsonLd />
+
+      {/* JSON-LD Organization — Brand Identity & Social Profiles */}
+      <OrganizationJsonLd />
 
       {/* ─── HERO — Hick's Law: single CTA focus ─── */}
       <section className="relative pt-40 pb-20 px-6 z-10">
