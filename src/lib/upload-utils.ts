@@ -34,7 +34,33 @@ export const THUMBNAIL_COMPRESSION = {
 export async function compressImage(file: File, opts = DEFAULT_COMPRESSION): Promise<File> {
   // Si ya es pequeña, skip compression
   if (file.size < 500 * 1024 && file.type === 'image/webp') return file;
-  return imageCompression(file, opts);
+  
+  try {
+    return await imageCompression(file, opts);
+  } catch (workerError) {
+    console.warn('[Cerebro Operativo] WebWorker falló, activando fallback Canvas para Activación Visual...');
+    // Fallback síncrono con Canvas API
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        const scale = Math.min(1, opts.maxWidthOrHeight / Math.max(img.width, img.height));
+        canvas.width = img.width * scale;
+        canvas.height = img.height * scale;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return reject(new Error('Canvas context unavailable'));
+        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob((blob) => {
+          if (!blob) return reject(new Error('Canvas toBlob failed'));
+          const fallbackFile = new File([blob], file.name.replace(/\.[^/.]+$/, '.webp'), { type: 'image/webp' });
+          resolve(fallbackFile);
+        }, 'image/webp', 0.85);
+        URL.revokeObjectURL(img.src);
+      };
+      img.onerror = () => reject(workerError);
+      img.src = URL.createObjectURL(file);
+    });
+  }
 }
 
 /**

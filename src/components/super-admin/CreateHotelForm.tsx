@@ -3,8 +3,12 @@ import { Activity } from 'lucide-react';
 import { createHotelAction } from '@/app/actions/super-admin';
 
 export default function CreateHotelForm() {
+  const handleFormAction = async (formData: FormData) => {
+    await createHotelAction(formData);
+  };
+
   return (
-    <form action={createHotelAction} className='grid grid-cols-1 md:grid-cols-5 gap-4 items-end'>
+    <form action={handleFormAction} className='grid grid-cols-1 md:grid-cols-5 gap-4 items-end'>
       <div className='space-y-2'>
         <label className='text-xs font-bold text-white/50 uppercase ml-2'>Hotel</label>
         <input name='name' required placeholder='Ej: Hotel Alpha' className='w-full bg-black/40 border border-white/10 rounded-[var(--radius-squircle-lg)] p-3 text-white outline-none focus:border-emerald-500/50' />

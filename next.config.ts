@@ -41,6 +41,7 @@ const nextConfig = {
 			process.env.NEXT_PUBLIC_APP_URL || "https://hospedasuite.com";
 		const wompiDomain = "https://checkout.wompi.co";
 		const r2Domain = "https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev";
+		const r2UploadDomain = "https://*.r2.cloudflarestorage.com";
 		const supabaseDomain = "https://auaqpomuivfhomlkvhju.supabase.co";
 		const sentryDomain = "https://o450*.ingest.sentry.io";
 
@@ -62,9 +63,9 @@ const nextConfig = {
 							`default-src 'self'`,
 							`script-src 'self' 'unsafe-inline' 'unsafe-eval' ${wompiDomain} ${sentryDomain}`,
 							`style-src 'self' 'unsafe-inline' https://unpkg.com`,
-							`img-src 'self' blob: data: ${r2Domain} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
+							`img-src 'self' blob: data: ${r2Domain} ${r2UploadDomain} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
 							`font-src 'self' data:`,
-							`connect-src 'self' ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org`,
+							`connect-src 'self' ${r2UploadDomain} ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org`,
 							`media-src 'self' blob:`,
 							`object-src 'none'`,
 							`frame-src ${wompiDomain} https://www.google.com https://maps.google.com`,
