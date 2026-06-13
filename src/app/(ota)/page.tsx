@@ -1,4 +1,4 @@
-import ChannelDashboard from '@/components/ota/ChannelDashboard';
+import OTADashboard from '@/components/ota/OTADashboard';
 import { fetchChannelHotelsAction } from '@/app/actions/ota'; // Importamos la nueva acción
 
 export const dynamic = 'force-dynamic';
@@ -19,7 +19,7 @@ export default async function ChannelEcosistemaPage({
 
   return (
     <main>
-      <ChannelDashboard 
+      <OTADashboard 
         initialHotels={initialHotels} 
         initialHasMore={initialHasMore} // Pasamos la nueva propiedad al cliente
       />

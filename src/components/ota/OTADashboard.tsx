@@ -141,15 +141,15 @@ const POPULAR_DESTINATIONS = [
 	{ city: "Villa de Leyva", hotelCount: 12 },
 ];
 
-interface ChannelDashboardProps {
+interface OTADashboardProps {
 	initialHotels: any[];
 	initialHasMore?: boolean;
 }
 
-export default function ChannelDashboard({
+export default function OTADashboard({
   initialHotels,
   initialHasMore = false,
-}: ChannelDashboardProps) {
+}: OTADashboardProps) {
   const t = useTranslations();
   const router = useRouter();
   const pathname = usePathname();
