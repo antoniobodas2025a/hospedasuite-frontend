@@ -6,7 +6,7 @@ import OtaSyncWidget from '@/components/dashboard/OtaSyncWidget';
 import ReadinessMiniWidget from '@/components/dashboard/ReadinessMiniWidget';
 import PostGoLiveMetrics from '@/components/dashboard/PostGoLiveMetrics';
 import { getOtaSyncStatusAction } from '@/app/actions/ota-sync';
-import { getReadinessAction, setGoLiveAction } from '@/app/actions/readiness';
+import { getReadinessAction } from '@/app/actions/readiness';
 import { simulateBookingAction } from '@/app/actions/bookings';
 import { Clock, MessageCircle, AlertTriangle, AlertOctagon, XCircle, PlayCircle, ArrowUpRight, CheckCircle, TrendingUp } from 'lucide-react';
 
