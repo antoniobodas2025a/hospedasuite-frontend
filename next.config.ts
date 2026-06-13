@@ -61,17 +61,13 @@ const nextConfig = {
 						key: "Content-Security-Policy",
 						value: [
 							`default-src 'self'`,
-							`script-src 'self' 'unsafe-inline' 'unsafe-eval' ${wompiDomain} ${sentryDomain} https://www.googletagmanager.com`,
+							`script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com ${wompiDomain} ${sentryDomain}`,
 							`style-src 'self' 'unsafe-inline' https://unpkg.com`,
-							`img-src 'self' blob: data: ${r2Domain} ${r2UploadDomain} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
+							`img-src 'self' blob: data: ${r2Domain} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
 							`font-src 'self' data:`,
 							`connect-src 'self' ${r2UploadDomain} ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org`,
-							`worker-src 'self' blob:`
-			`worker-src 'self' blob:`
-			`worker-src 'self' blob:`
-			`worker-src 'self' blob:`
-			`worker-src 'self' blob:`
-			`media-src 'self' blob:`,
+							`worker-src 'self' blob:`,
+							`media-src 'self' blob:`,
 							`object-src 'none'`,
 							`frame-src ${wompiDomain} https://www.google.com https://maps.google.com`,
 							`frame-ancestors 'self'`,

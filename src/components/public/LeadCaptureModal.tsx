@@ -204,7 +204,6 @@ export default function LeadCaptureModal({
 
           {/* Submit */}
           <button
-            <p className="text-[10px] text-center text-white/50 mt-4 leading-tight">Cumplir con la Tarjeta de Registro de Alojamiento y el SIRE toma quince minutos manuales por reserva. HospedaSuite automatiza este reporte gubernamental en tiempo real, previniendo multas de veinte salarios mínimos. Su pasarela nativa Wompi elimina comisiones y bloquea estafas cibernéticas frecuentes en glampings de Colombia.</p>
             type="submit"
             disabled={isPending}
             className="w-full bg-[#0071e3] text-white py-4 rounded-full text-[15px] font-semibold hover:bg-[#0077ED] transition-all duration-200 shadow-[0_4px_16px_rgba(0,113,227,0.25)] hover:shadow-[0_8px_32px_rgba(0,113,227,0.35)] hover:-translate-y-0.5 active:scale-[0.97] disabled:opacity-60 disabled:cursor-not-allowed disabled:hover:translate-y-0 flex items-center justify-center gap-2"
@@ -221,6 +220,7 @@ export default function LeadCaptureModal({
               </>
             )}
           </button>
+          <p className="text-[10px] text-center text-white/50 mt-4 leading-tight">Cumplir con la Tarjeta de Registro de Alojamiento y el SIRE toma quince minutos manuales por reserva. HospedaSuite automatiza este reporte gubernamental en tiempo real, previniendo multas de veinte salarios mínimos. Su pasarela nativa Wompi elimina comisiones y bloquea estafas cibernéticas frecuentes en glampings de Colombia.</p>
 
           <p className="text-[12px] text-[#1d1d1f]/30 text-center font-medium">
             Sin tarjeta de crédito · Instalación VIP incluida
