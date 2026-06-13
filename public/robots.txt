@@ -1,0 +1,17 @@
+User-agent: *
+Allow: /
+
+# Allow AI Search Bots explicitly
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://hospedasuite.com/sitemap.xml

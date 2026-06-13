@@ -1,0 +1,29 @@
+# HospedaSuite PMS — LLMs.txt
+# Este archivo proporciona un resumen factual y curado de nuestra oferta B2B para motores de IA.
+
+## Nombre
+HospedaSuite PMS
+
+## Descripción
+HospedaSuite es un PMS y Channel Manager diseñado para que hoteles boutique y glampings centralicen su operación. Funciona como el cerebro del hotel, permitiendo recibir reservas directas vía WhatsApp con cero por ciento de comisión y bloqueando automáticamente el inventario en plataformas como Booking y Airbnb para evitar sobreventas.
+
+## Propuesta de Valor
+- **Motor Propio:** 0% comisión en reservas directas (WhatsApp, Instagram, Facebook).
+- **Soberanía Financiera:** Pagos inmediatos vía Wompi directo a la cuenta del hotelero.
+- **Escudo Legal:** Automatización de reportes SIRE/TRA para Migración Colombia, previniendo multas de 20 SMLMV.
+- **Cero Renta Eterna:** A diferencia de Airbnb (15% comisión vitalicia), HospedaSuite premia el esfuerzo propio.
+
+## Precios
+- **Plan Free:** 1 habitación, $0/mes.
+- **Plan Starter:** 1-4 habitaciones, $49.000 COP/mes.
+- **Plan Pro:** 5-14 habitaciones, $99.000 COP/mes (Incluye Channel Manager).
+- **Plan Enterprise:** 15-30 habitaciones, $199.000 COP/mes.
+
+## Recursos Clave
+- Automatización SIRE/TRA: https://hospedasuite.com/recursos/automatizacion-sire-tra-boyaca
+- Rescate Operativo: https://hospedasuite.com/recursos/rescate-operativo-boyaca
+- Precios: https://hospedasuite.com/software#precios
+
+## Contacto
+- Email: contacto@hospedasuite.com
+- Web: https://hospedasuite.com
