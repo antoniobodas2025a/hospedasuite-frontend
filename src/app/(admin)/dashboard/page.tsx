@@ -6,7 +6,7 @@ import OtaSyncWidget from '@/components/dashboard/OtaSyncWidget';
 import ReadinessMiniWidget from '@/components/dashboard/ReadinessMiniWidget';
 import PostGoLiveMetrics from '@/components/dashboard/PostGoLiveMetrics';
 import { getOtaSyncStatusAction } from '@/app/actions/ota-sync';
-import { getReadinessAction } from '@/app/actions/readiness';
+import { getReadinessAction, setGoLiveAction } from '@/app/actions/readiness';
 import { simulateBookingAction } from '@/app/actions/bookings';
 import { Clock, MessageCircle, AlertTriangle, AlertOctagon, XCircle, PlayCircle, ArrowUpRight, CheckCircle, TrendingUp } from 'lucide-react';
 
@@ -256,11 +256,7 @@ export default async function DashboardPage() {
                 Un solo clic para empezar a recibir reservas reales.
               </p>
             </div>
-            <form action={async () => {
-              'use server';
-              const { setGoLiveAction } = await import('@/app/actions/readiness');
-              await setGoLiveAction(hotel.id);
-            }}>
+            <form action={setGoLiveAction.bind(null, hotel.id)}>
               <button
                 type="submit"
                 className="px-8 py-4 bg-brand-500 hover:bg-brand-400 text-white text-lg font-bold rounded-2xl transition-all shadow-xl shadow-brand-500/30 active:scale-95 flex items-center gap-3"
