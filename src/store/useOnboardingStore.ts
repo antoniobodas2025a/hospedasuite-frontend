@@ -109,6 +109,7 @@ const defaultSettings: SettingsData = {
 	taxRate: 0.19,
 	wompi_public_key: "",
 	wompi_integrity_secret: "",
+	wompi_sandbox_mode: false,
 };
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({

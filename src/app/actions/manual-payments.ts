@@ -184,15 +184,17 @@ export async function approveManualPayment(
         const { Resend } = await import('resend');
         const { ManualPaymentApproved } = await import('@/emails/ManualPaymentApproved');
         const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_for_build');
-        const { html } = await import('@react-email/render');
+        const { render } = await import('@react-email/render');
         
         const baseUrl = process.env.NEXT_PUBLIC_APP_URL || 'https://hospedasuite.com';
-        const emailHtml = await html(ManualPaymentApproved({
+        const emailHtml = await render(ManualPaymentApproved({
           hotelName: hotel.name,
-          amount: 89900, // Default onboarding amount
-          method: 'Nequi/Daviplata',
-          approvedAt: new Date().toLocaleDateString('es-CO'),
-          dashboardUrl: `${baseUrl}/dashboard`,
+          guestName: 'Huésped',
+          bookingId: payment.booking_id,
+          checkIn: new Date().toISOString().split('T')[0],
+          checkOut: new Date().toISOString().split('T')[0],
+          totalAmount: 89900,
+          voucherUrl: `${baseUrl}/dashboard`,
         }));
 
         await resend.emails.send({

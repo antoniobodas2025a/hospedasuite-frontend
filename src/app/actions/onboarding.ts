@@ -306,8 +306,8 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       const { WelcomeHotelier } = await import('@/emails/WelcomeHotelier');
       const resend = new Resend(process.env.RESEND_API_KEY || 're_dummy_for_build');
       
-      const { html } = await import('@react-email/render');
-      const emailHtml = await html(WelcomeHotelier({
+      const { render } = await import('@react-email/render');
+      const emailHtml = await render(WelcomeHotelier({
         hotelName: state.hotelIdentity.name,
         hotelSlug,
         ownerEmail: user.email || state.hotelIdentity.email || '',

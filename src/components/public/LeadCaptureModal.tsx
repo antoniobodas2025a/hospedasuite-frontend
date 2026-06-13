@@ -68,7 +68,7 @@ export default function LeadCaptureModal({
             city: formData.city,
             roomCount: roomCount,
             plan: defaultPlan,
-            attackLine: result.attackLine, // Viene del server action
+            attackLine: (result as any).attackLine, // Viene del server action
           });
         }
 

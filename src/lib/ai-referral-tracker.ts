@@ -67,7 +67,7 @@ export function trackAIReferrer() {
   }
 
   const event = buildAIReferralEvent(aiSource, referrer, window.location.pathname);
-  window.dataLayer.push(event);
+  (window.dataLayer as any).push(event);
 }
 
 declare global {

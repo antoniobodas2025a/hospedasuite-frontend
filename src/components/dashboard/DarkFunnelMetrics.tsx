@@ -1,7 +1,8 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { getDarkFunnelMetrics, DarkFunnelMetrics } from '@/app/actions/dark-funnel';
+import { getDarkFunnelMetrics } from '@/app/actions/dark-funnel';
+import type { DarkFunnelMetrics } from '@/app/actions/dark-funnel';
 import { TrendingUp, Users, MapPin, Bot, AlertTriangle } from 'lucide-react';
 
 export default function DarkFunnelMetrics() {
@@ -9,7 +10,7 @@ export default function DarkFunnelMetrics() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    getDarkFunnelMetrics().then((res) => {
+    getDarkFunnelMetrics().then((res: any) => {
       if (res.success && res.data) {
         setMetrics(res.data);
       }

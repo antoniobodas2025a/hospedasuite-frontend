@@ -49,7 +49,7 @@ export async function getDarkFunnelMetrics(): Promise<{ success: boolean; data?:
     // 2. Aggregate metrics
     const totalLeads = leads?.length || 0;
     const cityCounts: Record<string, number> = {};
-    leads?.forEach((lead) => {
+    leads?.forEach((lead: any) => {
       const city = lead.city || 'Desconocida';
       cityCounts[city] = (cityCounts[city] || 0) + 1;
     });
@@ -59,7 +59,7 @@ export async function getDarkFunnelMetrics(): Promise<{ success: boolean; data?:
       .sort((a, b) => b.leads - a.leads)
       .slice(0, 5);
 
-    const recentLeads = (leads || []).slice(0, 10).map((lead) => ({
+    const recentLeads = (leads || []).slice(0, 10).map((lead: any) => ({
       id: lead.id,
       email: lead.email || '',
       city: lead.city || 'Desconocida',

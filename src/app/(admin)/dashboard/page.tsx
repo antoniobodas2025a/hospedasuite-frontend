@@ -322,7 +322,9 @@ export default async function DashboardPage() {
               Probá el flujo completo de reserva con $1.000 COP de prueba. 
               Esto crea una reserva CONFIRMED y un pago TEST para que veas cómo funciona el sistema.
             </p>
-            <form action={simulateBookingAction}>
+            <form action={async () => {
+              await simulateBookingAction();
+            }}>
               <button
                 type="submit"
                 className="px-6 py-3 bg-brand-600 hover:bg-brand-500 text-white text-sm font-bold rounded-[var(--radius-squircle-lg)] transition-all shadow-lg shadow-brand-500/20 active:scale-95"

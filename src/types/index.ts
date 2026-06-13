@@ -50,6 +50,8 @@ export interface Hotel {
   latitude?: number | null;
   longitude?: number | null;
   precision?: string | null;
+  go_live?: boolean;
+  go_live_at?: string;
 }
 
 // --------------------------------------------------------------------------

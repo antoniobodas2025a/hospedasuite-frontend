@@ -26,7 +26,7 @@ export function trackLeadCaptured(city: string, roomCount: number, attackLine: s
     attack_line: attackLine,
   };
 
-  window.dataLayer.push(payload);
+  (window.dataLayer as any).push(payload);
 }
 
 // Type augmentation for window.dataLayer
