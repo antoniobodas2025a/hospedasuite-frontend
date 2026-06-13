@@ -69,3 +69,53 @@ export async function pushToKlaviyoMcp(payload: KlaviyoPayload) {
     return { success: false, error };
   }
 }
+
+/**
+ * Enrolls a profile in a specific Klaviyo Flow (e.g., Escudo Legal)
+ * Updates profile properties and triggers flow entry.
+ */
+export async function enrollInKlaviyoFlow(
+  email: string,
+  flowId: string,
+  properties: Record<string, any> = {}
+): Promise<{ success: boolean; error?: string }> {
+  const apiKey = process.env.KLAVIYO_API_KEY;
+  if (!apiKey) {
+    console.warn('[Klaviyo MCP] API Key not configured for flow enrollment.');
+    return { success: false, error: 'Missing API Key' };
+  }
+
+  try {
+    const response = await fetch(`https://a.klaviyo.com/api/flows/${flowId}/flow-actions/subscribe`, {
+      method: 'POST',
+      headers: {
+        accept: 'application/json',
+        'content-type': 'application/json',
+        Authorization: `Klaviyo-API-Key ${apiKey}`,
+        revision: '2024-05-15',
+      },
+      body: JSON.stringify({
+        data: {
+          type: 'flow-action-subscribe',
+          attributes: {
+            profile: {
+              data: {
+                type: 'profile',
+                attributes: { email, properties },
+              },
+            },
+          },
+        },
+      }),
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      return { success: false, error: errorData.detail || 'Flow enrollment failed' };
+    }
+
+    return { success: true };
+  } catch (error) {
+    return { success: false, error: 'Network error during flow enrollment' };
+  }
+}
