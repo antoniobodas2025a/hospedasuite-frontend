@@ -1,4 +1,3 @@
-'use client';
 import { Activity } from 'lucide-react';
 import { createHotelAction } from '@/app/actions/super-admin';
 

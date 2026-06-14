@@ -140,6 +140,15 @@ export async function setGoLiveAction(
 }
 
 /**
+ * Form-compatible wrapper for setGoLiveAction.
+ * Accepts FormData so it can be used directly as <form action>.
+ */
+export async function setGoLiveFormAction(formData: FormData): Promise<void> {
+  const id = formData.get('hotelId') as string
+  await setGoLiveAction(id)
+}
+
+/**
  * Get detailed diagnostic info for a single readiness check.
  *
  * 1. Auth       — Verify the current user is authenticated and has a hotel

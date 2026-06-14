@@ -88,3 +88,14 @@ export async function rejectReviewAction(reviewId: string) {
     return { success: false, error: message };
   }
 }
+
+/** Form-compatible wrappers for review actions */
+export async function approveReviewFormAction(formData: FormData): Promise<void> {
+  const id = formData.get('reviewId') as string;
+  await approveReviewAction(id);
+}
+
+export async function rejectReviewFormAction(formData: FormData): Promise<void> {
+  const id = formData.get('reviewId') as string;
+  await rejectReviewAction(id);
+}

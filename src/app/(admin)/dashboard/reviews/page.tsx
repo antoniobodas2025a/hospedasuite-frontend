@@ -1,7 +1,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { redirect } from 'next/navigation';
 import { Check, X, Clock, Star, Mail, MapPin } from 'lucide-react';
-import { approveReviewAction, rejectReviewAction, getPendingReviewsAction } from '@/app/actions/admin-reviews';
+import { approveReviewAction, rejectReviewAction, getPendingReviewsAction, approveReviewFormAction, rejectReviewFormAction } from '@/app/actions/admin-reviews';
 
 export const dynamic = 'force-dynamic';
 
@@ -106,10 +106,8 @@ export default async function AdminReviewsPage() {
 
               {/* Actions */}
               <div className="flex items-center gap-3">
-                <form action={async () => {
-                  'use server';
-                  await approveReviewAction(review.id);
-                }}>
+                <form action={approveReviewFormAction}>
+                  <input type="hidden" name="reviewId" value={review.id} />
                   <button
                     type="submit"
                     className="flex items-center gap-2 px-4 py-2.5 bg-secondary/10 hover:bg-secondary/20 text-secondary font-bold text-sm rounded-[var(--radius-squircle-lg)] transition-all border border-secondary/20"
@@ -117,10 +115,8 @@ export default async function AdminReviewsPage() {
                     <Check size={16} /> Aprobar
                   </button>
                 </form>
-                <form action={async () => {
-                  'use server';
-                  await rejectReviewAction(review.id);
-                }}>
+                <form action={rejectReviewFormAction}>
+                  <input type="hidden" name="reviewId" value={review.id} />
                   <button
                     type="submit"
                     className="flex items-center gap-2 px-4 py-2.5 bg-destructive/10 hover:bg-destructive/20 text-destructive font-bold text-sm rounded-[var(--radius-squircle-lg)] transition-all border border-destructive/20"

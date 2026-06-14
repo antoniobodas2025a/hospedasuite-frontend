@@ -595,3 +595,8 @@ export async function simulateBookingAction() {
     return { success: false, error: getErrorMessage(error) };
   }
 }
+
+/** Form-compatible wrapper for simulateBookingAction */
+export async function simulateBookingFormAction(): Promise<void> {
+  await simulateBookingAction();
+}
