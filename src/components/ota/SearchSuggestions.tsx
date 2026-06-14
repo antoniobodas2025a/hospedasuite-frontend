@@ -194,13 +194,13 @@ export default function SearchSuggestions({
       {isTypo && suggestions.length > 1 && (
         <div className='mt-3 pt-3 border-t border-border/20'>
           <p className='text-xs text-muted-foreground text-center'>
-            ¿No es lo que buscás? Probá con otra búsqueda arriba
+            ¿No es lo que buscas? Probá con otra búsqueda arriba
           </p>
         </div>
       )}
       {isEmpty && (
         <p className='mt-4 text-xs text-muted-foreground text-center'>
-          También podés buscar en toda Colombia sin filtro de ubicación
+          También puedes buscar en toda Colombia sin filtro de ubicación
         </p>
       )}
     </motion.div>

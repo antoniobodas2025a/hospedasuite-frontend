@@ -1,5 +1,5 @@
 /**
- * Channel Alert System — Channel Manager
+ * Sistema de Alertas — Seguro Anti-Sobreventa
  *
  * Sends notifications when sync issues occur:
  * - Rate limiting detected
@@ -227,7 +227,7 @@ function getAlertSubject(alert: ChannelAlert): string {
 function getAlertEmailBody(alert: ChannelAlert): string {
   return `
     <div style="font-family: system-ui, sans-serif; max-width: 480px; margin: 0 auto;">
-      <h2 style="color: #1d1d1f;">HospedaSuite — Channel Manager</h2>
+      <h2 style="color: #1d1d1f;">HospedaSuite — Seguro Anti-Sobreventa</h2>
       <p><strong>Hotel:</strong> ${alert.hotelName}</p>
       <p><strong>Channel:</strong> ${alert.otaName}</p>
       <p><strong>Problema:</strong> ${alert.message}</p>
@@ -262,7 +262,7 @@ async function sendInternalNotification(alert: ChannelAlert): Promise<void> {
   const payload = {
     attachments: [{
       color,
-      title: `Channel Manager Alert — ${alert.otaName}`,
+      title: `Alerta del Seguro Anti-Sobreventa — ${alert.otaName}`,
       text: alert.message,
       fields: [
         { title: 'Hotel', value: `${alert.hotelName} (\`${alert.hotelId}\`)`, short: true },
@@ -270,7 +270,7 @@ async function sendInternalNotification(alert: ChannelAlert): Promise<void> {
         { title: 'Type', value: alert.type, short: true },
         { title: 'Time', value: alert.timestamp.toISOString(), short: true },
       ],
-      footer: 'HospedaSuite Channel Manager',
+      footer: 'HospedaSuite Seguro Anti-Sobreventa',
     }],
   };
 

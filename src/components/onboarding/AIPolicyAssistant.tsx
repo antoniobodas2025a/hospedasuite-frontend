@@ -39,7 +39,7 @@ export default function AIPolicyAssistant({ type, context, onAccept, hotelName, 
     const hasGenericHint = genericHints.some(h => lower.includes(h));
 
     if (hasGenericHint && !hasTopicHint) {
-      return 'Este asistente solo redacta texto para este campo. Escribí una instrucción relacionada.';
+      return 'Este asistente solo redacta texto para este campo. Escribe una instrucción relacionada.';
     }
     return null;
   };
@@ -139,7 +139,7 @@ export default function AIPolicyAssistant({ type, context, onAccept, hotelName, 
               {type === 'roomDescription' && 'Ej: "Habitación amplia con vista al jardín, ideal para parejas"'}
               {type === 'hotelDescription' && 'Ej: "Hotel boutique en el centro, ambiente acogedor y moderno"'}
             </p>
-            <p className="text-[10px] text-zinc-700">Generá todas las versiones que quieras</p>
+            <p className="text-[10px] text-zinc-700">Genera todas las versiones que quieras</p>
           </div>
         )}
         {messages.map((msg, i) => (
@@ -184,7 +184,7 @@ export default function AIPolicyAssistant({ type, context, onAccept, hotelName, 
             ) : isApplied ? (
               <>
                 <Check size={12} />
-                Aplicado — podés generar otra versión
+                Aplicado — puedes generar otra versión
               </>
             ) : (
               <>
@@ -210,7 +210,7 @@ export default function AIPolicyAssistant({ type, context, onAccept, hotelName, 
           value={input}
           onChange={(e) => setInput(e.target.value)}
           onKeyDown={(e) => e.key === 'Enter' && handleSend()}
-          placeholder="Pedí otra versión o ajustá algo..."
+          placeholder="Pide otra versión o ajusta algo..."
           className="flex-1 bg-transparent text-xs text-white outline-none placeholder:text-zinc-700"
           disabled={isLoading}
         />

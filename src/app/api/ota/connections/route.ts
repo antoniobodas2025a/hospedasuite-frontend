@@ -64,7 +64,7 @@ export async function POST(req: Request) {
 
     if (limits.maxChannels === 0) {
       return NextResponse.json({
-        error: `Tu plan ${plan} no incluye Channel Manager. Subí a Pro para conectar Channels.`,
+        error: `Tu plan ${plan} no incluye el Seguro Anti-Sobreventa. Subí a Pro para conectar Channels.`,
         upgradeRequired: true,
         currentPlan: plan,
         requiredPlan: 'pro',
@@ -87,7 +87,7 @@ export async function POST(req: Request) {
 
     if (currentCount >= limits.maxChannels) {
       return NextResponse.json({
-        error: `Tu plan ${plan} permite hasta ${limits.maxChannels} Channels. Ya tenés ${currentCount} conectadas.`,
+        error: `Tu plan ${plan} permite hasta ${limits.maxChannels} conexiones. Ya tienes ${currentCount} conectadas.`,
         limitExceeded: true,
         currentPlan: plan,
         currentCount,

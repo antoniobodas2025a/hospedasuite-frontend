@@ -122,7 +122,7 @@ export default function SoftwareClientShell({ children }: SoftwareClientShellPro
               ¿Cuánto te cuestan las comisiones?
             </h2>
             <p className="text-[15px] text-[#1d1d1f]/50 max-w-lg mx-auto">
-              Mové los controles y mirá cuánto ahorrás recibiendo reservas directas por WhatsApp con 0% de comisión.
+              Mueve los controles y mira cuánto ahorras recibiendo reservas directas por WhatsApp con 0% de comisión.
             </p>
           </div>
           <RoiSimulatorV2 onCtaClick={() => setLeadModalOpen(true)} />
@@ -151,10 +151,10 @@ export default function SoftwareClientShell({ children }: SoftwareClientShellPro
             <div className="space-y-3">
               {[
                 { id: 'q1', q: '¿Cómo funciona el pago?', a: 'Tu hotel recibe el 100% del dinero de las reservas directamente en tu cuenta de Wompi. Al finalizar cada mes, HospedaSuite genera una factura con el costo de tu plan + comisiones aplicables.' },
-                { id: 'q2', q: '¿Qué es el Channel Manager?', a: 'Es un seguro anti-sobreventa. Nuestro sistema se conecta con Booking.com y Airbnb. Si vendés una habitación en HospedaSuite, se bloquea automáticamente en las otras plataformas.' },
+                { id: 'q2', q: '¿Qué es el Seguro Anti-Sobreventa?', a: 'Es un seguro anti-sobreventa. Nuestro sistema se conecta con Booking.com y Airbnb. Si vendes una habitación en HospedaSuite, se bloquea automáticamente en las otras plataformas.' },
                 { id: 'q3', q: '¿Qué pasa si agrego una segunda habitación?', a: 'El Plan Free incluye 1 habitación. Al agregar una segunda, el sistema te sugiere automáticamente escalar al Plan Starter ($49.000 COP/mes para hasta 4 habitaciones). El upgrade es inmediato y solo pagás desde el mes siguiente.' },
                 { id: 'q4', q: '¿El motor de reservas es bilingüe?', a: 'Sí. Tu página de hotel se muestra automáticamente en español o inglés según el idioma del visitante. Los turistas extranjeros ven tu hotel en su idioma.' },
-                { id: 'q5', q: '¿Qué pasa si tengo más de 30 habitaciones?', a: 'Contactanos para un plan personalizado. El plan Enterprise cubre hasta 30 habitaciones, pero podemos adaptar una solución para hoteles más grandes.' },
+                { id: 'q5', q: '¿Qué pasa si tengo más de 30 habitaciones?', a: 'Contáctanos para un plan personalizado. El plan Enterprise cubre hasta 30 habitaciones, pero podemos adaptar una solución para hoteles más grandes.' },
               ].map((faq) => (
                 <div key={faq.id} className="bg-white rounded-[20px] border border-black/[0.04] shadow-[0_1px_4px_rgba(0,0,0,0.02)] overflow-hidden">
                   <button

@@ -221,7 +221,7 @@ export default async function BillingPage() {
                 ¿Listo para pagar?
               </h2>
               <p className="text-sm text-muted-foreground">
-                La facturación es manual vía Wompi. Más abajo podés elegir tu plan
+                La facturación es manual vía Wompi. Más abajo puedes elegir tu plan
                 y pagar directamente con Wompi.
               </p>
             </div>

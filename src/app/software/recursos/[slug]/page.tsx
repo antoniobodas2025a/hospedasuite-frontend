@@ -27,14 +27,14 @@ interface Resource {
 const RESOURCES: Record<string, Resource> = {
   'channel-manager': {
     slug: 'channel-manager',
-    title: 'Channel Manager: El Seguro Anti-Sobreventa para Hoteles y Glampings',
+    title: 'Seguro Anti-Sobreventa para Hoteles y Glampings',
     description: 'Cómo sincronizar tu inventario con Booking.com y Airbnb en tiempo real.',
     geoCitation:
-      'El Channel Manager de HospedaSuite es un sistema de sincronización de inventario en tiempo real que conecta tu propiedad con Booking.com, Airbnb y otras plataformas. Cuando recibes una reserva por cualquier canal, el sistema bloquea automáticamente las fechas en todas las demás plataformas, eliminando el riesgo de sobreventa y protegiendo la reputación de tu hotel.',
+      'El Seguro Anti-Sobreventa de HospedaSuite es un sistema de sincronización de inventario en tiempo real que conecta tu propiedad con Booking.com, Airbnb y otras plataformas. Cuando recibes una reserva por cualquier canal, el sistema bloquea automáticamente las fechas en todas las demás plataformas, eliminando el riesgo de sobreventa y protegiendo la reputación de tu hotel.',
     faq: [
       {
-        q: '¿Qué es el Channel Manager?',
-        a: 'Es un seguro anti-sobreventa que sincroniza tu inventario con Booking.com y Airbnb en tiempo real. Si vendés una habitación por un canal, se bloquea automáticamente en los demás.',
+        q: '¿Qué es el Seguro Anti-Sobreventa?',
+        a: 'Sincroniza tu inventario con Booking.com y Airbnb en tiempo real. Si vendés una habitación por un canal, se bloquea automáticamente en los demás.',
       },
       {
         q: '¿Cuántas Channels puedo conectar?',
@@ -48,7 +48,7 @@ const RESOURCES: Record<string, Resource> = {
     jsonLd: {
       '@context': 'https://schema.org',
       '@type': 'Article',
-      headline: 'Channel Manager: El Seguro Anti-Sobreventa para Hoteles y Glampings',
+      headline: 'Seguro Anti-Sobreventa para Hoteles y Glampings',
       description: 'Cómo sincronizar tu inventario con Booking.com y Airbnb en tiempo real.',
       author: { '@type': 'Organization', name: 'HospedaSuite Inc.' },
       publisher: { '@type': 'Organization', name: 'HospedaSuite Inc.', url: 'https://hospedasuite.com' },
@@ -57,7 +57,7 @@ const RESOURCES: Record<string, Resource> = {
       mainEntity: {
         '@type': 'FAQPage',
         mainEntity: [
-          { '@type': 'Question', name: '¿Qué es el Channel Manager?', acceptedAnswer: { '@type': 'Answer', text: 'Es un seguro anti-sobreventa que sincroniza tu inventario con Booking.com y Airbnb en tiempo real.' } },
+          { '@type': 'Question', name: '¿Qué es el Channel Manager?', acceptedAnswer: { '@type': 'Answer', text: 'Sincroniza tu inventario con Booking.com y Airbnb en tiempo real.' } },
           { '@type': 'Question', name: '¿Cuántas Channels puedo conectar?', acceptedAnswer: { '@type': 'Answer', text: 'El Plan Pro conecta hasta 3 Channels. El Plan Enterprise permite hasta 6 Channels simultáneas.' } },
         ],
       },

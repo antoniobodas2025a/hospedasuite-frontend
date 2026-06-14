@@ -38,7 +38,7 @@ const TIERS: TierConfig[] = [
     minRooms: 1,
     maxRooms: 1,
     features: [
-      'PMS Core completo',
+      'Cerebro Operativo completo',
       '1 habitación activa',
       'Link Directo (WhatsApp + Wompi)',
       'Motor de reservas bilingüe (ES/EN)',
@@ -73,7 +73,7 @@ const TIERS: TierConfig[] = [
     maxRooms: 14,
     features: [
       'Todo lo de Starter',
-      'Channel Manager (3 canales)',
+      'Seguro Anti-Sobreventa (3 canales)',
       'Carta Digital QR',
       'POS (Punto de Venta)',
       'Libro Registro Forense',
@@ -148,10 +148,10 @@ export default function InteractivePricingSlider({ onCtaClick }: InteractivePric
         {/* Header */}
         <div className="text-center mb-10">
           <h3 className="text-3xl sm:text-4xl font-semibold tracking-tight text-[#1d1d1f] mb-3">
-            ¿Cuántas habitaciones tenés?
+            ¿Cuántas habitaciones tienes?
           </h3>
           <p className="text-[17px] text-[#1d1d1f]/50">
-            Mové el control y mirá cómo se adapta tu plan automáticamente.
+            Mueve el control y mira cómo se adapta tu plan automáticamente.
           </p>
         </div>
 
@@ -222,7 +222,7 @@ export default function InteractivePricingSlider({ onCtaClick }: InteractivePric
               <p className="text-[13px] text-[#0071e3] font-semibold mb-3">{tier.rooms}</p>
               <p className="text-[17px] text-[#1d1d1f]/50 mb-8 font-medium">
                 {tier.id === 'free'
-                  ? 'Probá el PMS con 1 habitación. Sin tarjeta, sin compromiso.'
+                  ? 'Probá el Cerebro Operativo con 1 habitación. Sin tarjeta, sin compromiso.'
                   : tier.id === 'starter'
                   ? 'Ideal para arrancar con lo esencial. 1 mes gratis.'
                   : tier.id === 'pro'
@@ -270,7 +270,7 @@ export default function InteractivePricingSlider({ onCtaClick }: InteractivePric
 
               <div className="mt-4 flex items-center gap-2 text-[13px] text-[#1d1d1f]/40 font-medium justify-end w-full">
                 <ShieldCheck size={16} className="text-[#34c759]" />
-                Cancelá en cualquier momento
+                Cancela en cualquier momento
               </div>
             </div>
           </div>

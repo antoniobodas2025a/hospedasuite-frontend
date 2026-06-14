@@ -385,7 +385,7 @@ async function processEvents(
         ));
       }
 
-      // Block room in local PMS
+      // Bloquear habitación en sistema local
       // await blockRoom(hotelId, event);
       console.log(`[Sync] ${otaName}: New booking ${event.uid} (${event.summary}) ${event.startDate.toISOString()} → ${event.endDate.toISOString()}`);
     }

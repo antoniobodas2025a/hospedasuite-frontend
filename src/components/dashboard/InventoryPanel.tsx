@@ -115,7 +115,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
             </select>
           </div>
           <div className="w-px h-8 bg-muted mx-1 hidden sm:block"></div>
-          <button onClick={onSync} disabled={isSyncing} className='p-3 bg-muted hover:bg-accent text-foreground rounded-[var(--radius-squircle-2xl)] transition-all disabled:opacity-50 active:scale-95' title="Sincronizar Channel Manager">
+          <button onClick={onSync} disabled={isSyncing} className='p-3 bg-muted hover:bg-accent text-foreground rounded-[var(--radius-squircle-2xl)] transition-all disabled:opacity-50 active:scale-95' title="Sincronizar inventario">
             <RefreshCw className={cn("size-5 stroke-[2]", isSyncing && "animate-spin")} />
           </button>
           <button onClick={() => onOpenEditor()} className='flex items-center gap-2 px-6 py-3 bg-foreground hover:bg-accent text-black rounded-[var(--radius-squircle-2xl)] font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all active:scale-95'>

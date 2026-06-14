@@ -8,7 +8,7 @@
  *   const { hasAccess, loading, currentPlan } = usePlanCheck(hotelId, 'channel_manager')
  *
  *   if (loading) return <Skeleton />
- *   if (!hasAccess) return <UpgradePrompt currentPlan={currentPlan} requiredPlan="pro" feature="Channel Manager" />
+ *   if (!hasAccess) return <UpgradePrompt currentPlan={currentPlan} requiredPlan="pro" feature="Seguro Anti-Sobreventa" />
  *   return <ChannelManagerFeature />
  */
 

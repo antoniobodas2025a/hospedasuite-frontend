@@ -8,7 +8,7 @@
  *   <UpgradePrompt
  *     currentPlan="starter"
  *     requiredPlan="pro"
- *     feature="Channel Manager"
+ *     feature="Seguro Anti-Sobreventa"
  *   />
  */
 

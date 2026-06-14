@@ -275,7 +275,7 @@ export default function OnboardingWizard() {
 						{stepErrors[currentStep] && stepErrors[currentStep].length > 0 && (
 							<div className="bg-rose-500/10 border border-rose-500/30 rounded-[var(--radius-squircle-xl)] p-3">
 								<p className="text-rose-400 text-xs font-bold uppercase tracking-wider mb-1">
-									⚠️ No podés avanzar
+									⚠️ No puedes avanzar
 								</p>
 								{stepErrors[currentStep].map((err, i) => (
 									<p key={i} className="text-rose-300 text-sm">

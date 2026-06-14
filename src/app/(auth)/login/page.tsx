@@ -102,7 +102,7 @@ export default function LoginPage() {
 
         <div className="mt-6 text-center">
           <p className="text-white/40 text-xs">
-            ¿No tenés cuenta?{' '}
+            ¿No tienes cuenta?{' '}
             <a href="/software/onboarding?plan=pro" className="text-white/70 hover:text-white transition-colors underline underline-offset-4">
               Empezar 1 mes gratis
             </a>

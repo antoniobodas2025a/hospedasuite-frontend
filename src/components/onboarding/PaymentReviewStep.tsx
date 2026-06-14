@@ -70,13 +70,13 @@ export default function PaymentReviewStep() {
               <ol className="text-zinc-400 text-xs space-y-1.5 list-decimal list-inside">
                 <li>Un administrador revisará tu comprobante</li>
                 <li>Recibirás un email cuando sea aprobado</li>
-                <li>Mientras tanto, podés seguir configurando tu propiedad</li>
+                <li>Mientras tanto, puedes seguir configurando tu propiedad</li>
               </ol>
             </div>
           </div>
           <p className="text-amber-400/70 text-xs flex items-center justify-center gap-1.5">
             <Clock size={12} />
-            Tus datos se guardarán — podés cerrar esta página y volver después.
+            Tus datos se guardarán — puedes cerrar esta página y volver después.
           </p>
         </div>
       ) : (

@@ -1,5 +1,5 @@
 /**
- * ICS (iCalendar) Parser — Channel Manager
+ * ICS (iCalendar) Parser — Seguro Anti-Sobreventa
  *
  * Lightweight parser for .ics files from Booking.com, Airbnb, Expedia, etc.
  * No external dependencies — pure TypeScript.
@@ -274,7 +274,7 @@ export function generateICS(
 
   let ics = `BEGIN:VCALENDAR
 VERSION:2.0
-PRODID:-//HospedaSuite//Channel Manager//ES
+PRODID:-//HospedaSuite//SeguroAntiSobreventa//ES
 CALSCALE:GREGORIAN
 METHOD:PUBLISH
 X-WR-CALNAME:${hotelName} - HospedaSuite

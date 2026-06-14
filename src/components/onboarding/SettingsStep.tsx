@@ -2,10 +2,10 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, ChevronDown, Clock, Shield, Sparkles, Banknote, CreditCard } from 'lucide-react';
+import { Settings, ChevronDown, Clock, Shield, Sparkles, Banknote, CreditCard, Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
-import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
+import { AMENITY_REGISTRY } from '@/lib/amenity-registry';
 import AIPolicyAssistant from './AIPolicyAssistant';
 import SuggestAmenity from './SuggestAmenity';
 
@@ -19,6 +19,7 @@ export default function SettingsStep() {
   const t = useTranslations('onboarding.settings');
   const { settings, updateSettings } = useOnboardingStore();
   const [openSection, setOpenSection] = useState<Section>('hours');
+  const [showSecret, setShowSecret] = useState(false);
 
   const toggleAmenity = (amenityId: string) => {
     const has = settings.amenities.includes(amenityId);
@@ -104,7 +105,7 @@ export default function SettingsStep() {
           <SuggestAmenity hotelName={hotelIdentity.name} />
         </div>
         <div className="flex flex-wrap gap-2">
-          {Object.values(ROOM_AMENITY_REGISTRY).map(amenity => {
+          {Object.values(AMENITY_REGISTRY).map(amenity => {
             const isActive = settings.amenities.includes(amenity.id);
             const Icon = amenity.icon;
             return (
@@ -133,7 +134,7 @@ export default function SettingsStep() {
         onToggle={() => toggleSection('tax')}
       >
         <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-3">
-          Seleccioná tu régimen fiscal
+          Selecciona tu régimen fiscal
         </p>
         <div className="grid grid-cols-2 gap-3">
           <button
@@ -172,7 +173,7 @@ export default function SettingsStep() {
         badge={settings.wompi_public_key && settings.wompi_integrity_secret ? '✓' : undefined}
       >
         <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-3">
-          Conectá tu cuenta de Wompi para recibir pagos directos
+          Conecta tu cuenta de Wompi para recibir pagos directos
         </p>
         <div className="space-y-4">
           <div>
@@ -187,28 +188,36 @@ export default function SettingsStep() {
               className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-lg)] p-3 text-white outline-none focus:border-indigo-500/50 placeholder:text-zinc-700 font-mono text-sm"
             />
           </div>
-          <div>
+          <div className="relative">
             <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">
               Secreto de Integridad (Integrity Secret)
             </label>
             <input
-              type="password"
+              type={showSecret ? 'text' : 'password'}
               value={settings.wompi_integrity_secret || ''}
               onChange={(e) => updateSettings({ wompi_integrity_secret: e.target.value })}
               placeholder="integ_..."
-              className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-lg)] p-3 text-white outline-none focus:border-indigo-500/50 placeholder:text-zinc-700 font-mono text-sm"
+              className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-lg)] p-3 pr-10 text-white outline-none focus:border-indigo-500/50 placeholder:text-zinc-700 font-mono text-sm"
             />
+            <button
+              type="button"
+              onClick={() => setShowSecret(!showSecret)}
+              className="absolute right-3 top-[34px] text-zinc-500 hover:text-zinc-300 transition-colors"
+              aria-label={showSecret ? 'Ocultar clave' : 'Mostrar clave'}
+            >
+              {showSecret ? <EyeOff size={16} /> : <Eye size={16} />}
+            </button>
           </div>
           <p className="text-[10px] text-zinc-600 leading-relaxed">
-            Obtené estas claves en tu <span className="text-zinc-400">Dashboard de Wompi → Desarrollo → Integración</span>.
-            Sin estas claves, tus huéspedes no podrán pagarte.
+            Obtén estas claves en tu <span className="text-zinc-400">Dashboard de Wompi → Desarrollo → Integración</span>.
+            Si no las tienes aún, puedes activar tu cuenta y configurarlas después.
           </p>
           
           {/* Toggle: Modo de Prueba */}
           <div className="mt-4 pt-4 border-t border-white/5 flex items-center justify-between">
             <div>
               <p className="text-sm font-bold text-white">Modo de Prueba</p>
-              <p className="text-[10px] text-zinc-500">Activá para hacer cobros de prueba sin riesgo</p>
+              <p className="text-[10px] text-zinc-500">Activa para hacer cobros de prueba sin riesgo</p>
             </div>
             <button
               type="button"

@@ -137,7 +137,7 @@ export async function checkChannelLimit(hotelId: string): Promise<{
       maxAllowed: 0,
       remaining: 0,
       plan,
-      reason: `Tu plan ${SAAS_PLANS[plan].label} no incluye Channel Manager. Subí a Pro para conectar Channels.`,
+      reason: `Tu plan ${SAAS_PLANS[plan].label} no incluye el Seguro Anti-Sobreventa. Sube a Pro para conectar canales.`,
     }
   }
 
@@ -305,7 +305,7 @@ type PlanFeature = 'channel_manager' | 'carta_digital' | 'forensic_book' | 'pos'
 
 function getFeatureLabel(feature: PlanFeature): string {
   const labels: Record<PlanFeature, string> = {
-    channel_manager: 'Channel Manager',
+    channel_manager: 'Seguro Anti-Sobreventa',
     carta_digital: 'Carta Digital',
     forensic_book: 'Libro Registro Forense',
     pos: 'Punto de Venta (POS)',

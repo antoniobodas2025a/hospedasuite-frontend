@@ -1485,7 +1485,7 @@ export default function SettingsPanel({
 											Configuración Avanzada
 										</h3>
 										<p className="text-xs text-muted-foreground uppercase tracking-widest mt-1">
-											API, Webhooks y Channel Manager
+											API, Webhooks y Seguro Anti-Sobreventa
 										</p>
 									</div>
 								</div>
@@ -1546,7 +1546,7 @@ export default function SettingsPanel({
 									</div>
 								</div>
 
-								{/* Channel Manager */}
+								{/* Seguro Anti-Sobreventa */}
 								<div className="mt-8 pt-8 border-t border-border">
 									<h4 className="text-sm font-bold text-foreground flex items-center gap-2 mb-4">
 										<RefreshCcw size={16} className="text-sky-400" /> Channel

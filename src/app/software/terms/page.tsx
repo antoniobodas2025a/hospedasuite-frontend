@@ -12,7 +12,7 @@ const SECTIONS = [
     content: (
       <>
         <p className="mb-3">
-          <strong>PMS (Property Management System):</strong> Sistema de gestión hotelera que incluye motor
+          <strong>PMS (Property Management System):</strong> Sistema de gestión hotelera que incluye el Cerebro Operativo
           de reservas, calendario, gestión de huéspedes, channel manager, POS y facturación.
         </p>
         <p className="mb-3">
@@ -203,7 +203,7 @@ const SECTIONS = [
           Al cancelar:
         </p>
         <ul className="list-disc list-inside space-y-1 mb-3 ml-2">
-          <li>El acceso al PMS se mantiene hasta el final del ciclo de facturación ya pagado</li>
+          <li>El acceso al Cerebro Operativo se mantiene hasta el final del ciclo de facturación ya pagado</li>
           <li>Los datos del hotel permanecen exportables durante 30 días calendario</li>
           <li>Transcurridos 30 días, los datos se eliminan de forma segura de nuestros servidores</li>
           <li>Las reservas existentes no se ven afectadas y se honran normalmente</li>
@@ -304,7 +304,7 @@ export default function TermsPage() {
             Términos y Condiciones
           </h1>
           <p className="text-[15px] text-[#1d1d1f]/60 leading-relaxed max-w-lg mx-auto">
-            Última actualización: Mayo 2026. Estos términos rigen el uso de HospedaSuite PMS
+            Última actualización: Mayo 2026. Estos términos rigen el uso de HospedaSuite Cerebro Operativo
             y todos los servicios asociados.
           </p>
         </div>

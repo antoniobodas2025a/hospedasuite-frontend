@@ -314,7 +314,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 			const state = useOnboardingStore.getState();
 			if (state.galleryPreviews.length < 3) {
 				errors.push(
-					`Necesitás al menos 3 fotos (tenés ${state.galleryPreviews.length})`,
+					`Necesitas al menos 3 fotos (tienes ${state.galleryPreviews.length})`,
 				);
 			}
 		}
@@ -322,7 +322,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 		if (step === 4) {
 			const state = useOnboardingStore.getState();
 			if (state.rooms.length === 0) {
-				errors.push("Necesitás al menos 1 habitación");
+				errors.push("Necesitas al menos 1 habitación");
 			} else {
 				state.rooms.forEach((room, i) => {
 					// Validate structural fields only; imagePreviews are blob: URLs

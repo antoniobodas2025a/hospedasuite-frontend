@@ -14,7 +14,7 @@ export default function DatasetJsonLd() {
     description:
       'Datos agregados y anonimizados sobre la eficiencia operativa, reducción de comisiones y aumento de reservas directas en hoteles boutique y glampings de la región Boyacá-Centro utilizando HospedaSuite PMS.',
     url: 'https://hospedasuite.com/software',
-    keywords: ['Hoteles Boyacá', 'Reservas Directas', 'ROI Hotelero', 'PMS Colombia', 'Turismo Paipa'],
+    keywords: ['Hoteles Boyacá', 'Reservas Directas', 'ROI Hotelero', 'Cerebro Operativo Colombia', 'Turismo Paipa'],
     creator: {
       '@type': 'Organization',
       name: 'HospedaSuite Inc.',

@@ -27,7 +27,7 @@ export default function CrisisOperativaPage() {
         '@type': 'HowToStep',
         position: 2,
         name: 'Bloqueá el inventario manualmente',
-        text: 'Mientras se restablece la plataforma externa, marcá las fechas ocupadas en tu PMS para evitar sobreventas.',
+        text: 'Mientras se restablece la plataforma externa, marca las fechas ocupadas en tu Cerebro Operativo para evitar sobreventas.',
       },
       {
         '@type': 'HowToStep',
@@ -133,7 +133,7 @@ export default function CrisisOperativaPage() {
                   Bloqueá el inventario manualmente
                 </h3>
                 <p className="mt-1 text-sm text-neutral-600">
-                  Mientras se restablece la plataforma externa, marcá las fechas ocupadas en tu PMS para evitar sobreventas.
+                  Mientras se restablece la plataforma externa, marca las fechas ocupadas en tu Cerebro Operativo para evitar sobreventas.
                 </p>
               </div>
             </li>

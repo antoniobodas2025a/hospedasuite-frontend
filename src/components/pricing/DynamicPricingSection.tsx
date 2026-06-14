@@ -13,8 +13,8 @@
 import { getPricingForPlan, pricingExperiment, type PricingVariant } from '@/flags/pricing';
 
 const PLAN_FEATURES = {
-  starter: ['Motor de Reservas Básico', 'Calendario Interactivo', 'Gestión de Huéspedes', 'Channel Manager (Manual)'],
-  pro: ['Todo lo del Plan Starter', 'Channel Manager Automatizado (iCal)', 'Sincronización con Booking/Airbnb', 'POS (Punto de Venta)'],
+  starter: ['Motor de Reservas Básico', 'Calendario Interactivo', 'Gestión de Huéspedes', 'Seguro Anti-Sobreventa (Manual)'],
+  pro: ['Todo lo del Plan Starter', 'Seguro Anti-Sobreventa Automatizado (iCal)', 'Sincronización con Booking/Airbnb', 'POS (Punto de Venta)'],
   enterprise: ['Todo lo del Plan Pro', 'Reportes Financieros Avanzados', 'Facturación Automática'],
 };
 

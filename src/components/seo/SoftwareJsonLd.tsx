@@ -14,9 +14,9 @@ export default function SoftwareJsonLd() {
       {
         '@type': 'SoftwareApplication',
         '@id': 'https://hospedasuite.com/software#software',
-        name: 'HospedaSuite PMS',
+        name: 'HospedaSuite Cerebro Operativo',
         description:
-          'HospedaSuite es un PMS y Channel Manager diseñado para que hoteles boutique y glampings centralicen su operación. Funciona como el cerebro del hotel, permitiendo recibir reservas directas vía WhatsApp con cero por ciento de comisión y bloqueando automáticamente el inventario en plataformas como Booking y Airbnb para evitar sobreventas.',
+          'HospedaSuite es un Cerebro Operativo y Seguro Anti-Sobreventa diseñado para que hoteles boutique y glampings centralicen su operación. Funciona como el cerebro del hotel, permitiendo recibir reservas directas vía WhatsApp con cero por ciento de comisión y bloqueando automáticamente el inventario en plataformas como Booking y Airbnb para evitar sobreventas.',
         url: 'https://hospedasuite.com/software',
         image: 'https://hospedasuite.com/logo.png',
         applicationCategory: 'BusinessApplication',
@@ -56,7 +56,7 @@ export default function SoftwareJsonLd() {
         },
         featureList: [
           '0% comisión en canales propios (WhatsApp, Teléfono, Web)',
-          'Channel Manager integrado (Booking, Airbnb)',
+          'Seguro Anti-Sobreventa integrado (Booking, Airbnb)',
           '1 Mes Gratis de Garantía de Extensión',
           'POS (Punto de Venta) integrado',
           'Carta Digital QR',
@@ -103,7 +103,7 @@ export default function SoftwareJsonLd() {
           },
           {
             '@type': 'Question',
-            name: '¿Qué es el Channel Manager?',
+            name: '¿Qué es el Seguro Anti-Sobreventa?',
             acceptedAnswer: {
               '@type': 'Answer',
               text: 'Es un seguro anti-sobreventa conectado a Booking.com y Airbnb. Nuestro sistema se sincroniza en tiempo real: si vendés una habitación en HospedaSuite, se bloquea automáticamente en las otras plataformas para evitar sobreventas.',

@@ -24,9 +24,9 @@ const RESOURCES = {
   'channel-manager': {
     slug: 'channel-manager',
     geoCitation:
-      'El Channel Manager de HospedaSuite es un sistema de sincronización de inventario en tiempo real que conecta tu propiedad con Booking.com, Airbnb y otras plataformas. Cuando recibes una reserva por cualquier canal, el sistema bloquea automáticamente las fechas en todas las demás plataformas, eliminando el riesgo de sobreventa y protegiendo la reputación de tu hotel.',
+      'El Seguro Anti-Sobreventa de HospedaSuite es un sistema de sincronización de inventario en tiempo real que conecta tu propiedad con Booking.com, Airbnb y otras plataformas. Cuando recibes una reserva por cualquier canal, el sistema bloquea automáticamente las fechas en todas las demás plataformas, eliminando el riesgo de sobreventa y protegiendo la reputación de tu hotel.',
     faq: [
-      { q: '¿Qué es el Channel Manager?', a: 'Es un seguro anti-sobreventa.' },
+      { q: '¿Qué es el Seguro Anti-Sobreventa?', a: 'Es un seguro anti-sobreventa.' },
       { q: '¿Cuántas Channels puedo conectar?', a: 'El Plan Pro conecta hasta 3 Channels.' },
       { q: '¿Qué pasa si hay un conflicto de reservas?', a: 'El sistema prioriza la primera reserva.' },
     ],
@@ -58,7 +58,7 @@ const RESOURCES = {
 
 describe('Pricing Matrix Hotfix — Free Plan text correction', () => {
   const FREE_PLAN_FEATURES = [
-    'PMS Core completo',
+    'Cerebro Operativo completo',
     '1 habitación activa',
     'Link Directo (WhatsApp + Wompi)',
     'Channel bilingüe (ES/EN)',
@@ -345,7 +345,7 @@ describe('Mutation Tests — Domain Identity Leakage', () => {
 
   const LANDING_STRINGS = [
     'Motor de reservas bilingüe (ES/EN)',
-    'Channel Manager (3 canales)',
+    'Seguro Anti-Sobreventa (3 canales)',
     '6 canales conectados',
     'Tu Motor Propio',
     'Motor de Reservas',

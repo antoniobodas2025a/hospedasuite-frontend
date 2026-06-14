@@ -113,11 +113,11 @@ export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success
 
 /**
  * Dispara un sync manual vía QStash.
- * Requires Channel Manager feature (Pro+ plan).
+ * Requiere Seguro Anti-Sobreventa (Pro+ plan).
  */
 export async function triggerManualSyncAction(hotelId: string): Promise<{ success: boolean; error?: string }> {
   try {
-    // ─── Plan Gating: Channel Manager requires Pro+ ─────────────
+    // ─── Plan Gating: Seguro Anti-Sobreventa requiere Pro+ ─────────────
     const featureCheck = await checkPlanFeature(hotelId, 'channel_manager')
     if (!featureCheck.ok) {
       return { success: false, error: featureCheck.reason }

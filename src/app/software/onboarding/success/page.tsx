@@ -17,7 +17,7 @@ export default function OnboardingSuccess() {
         
         <div className="space-y-4">
           <h1 className="text-4xl font-black text-white uppercase tracking-widest">¡Tu Propiedad Está Lista!</h1>
-          <p className="text-zinc-400 text-lg">Todo fue configurado correctamente. Ya podés empezar a recibir reservas.</p>
+          <p className="text-zinc-400 text-lg">Todo fue configurado correctamente. Ya puedes empezar a recibir reservas.</p>
         </div>
 
         <div className="flex flex-col sm:flex-row gap-4 justify-center">

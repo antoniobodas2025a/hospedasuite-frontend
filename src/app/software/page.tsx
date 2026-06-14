@@ -40,14 +40,14 @@ export default function SoftwarePage() {
           </h1>
 
           <p className="text-lg sm:text-xl md:text-2xl text-[#1d1d1f]/60 max-w-2xl mx-auto mb-6 font-normal leading-relaxed">
-            PMS + Channel Manager + Reservas directas por WhatsApp. <strong className="text-[#1d1d1f]/80">1 mes gratis</strong>.<br className="hidden sm:block" />
+            Cerebro Operativo + Seguro Anti-Sobreventa + Reservas directas por WhatsApp. <strong className="text-[#1d1d1f]/80">1 mes gratis</strong>.<br className="hidden sm:block" />
             Instalación VIP incluida. Tu suscripción empieza en el mes 2.
           </p>
 
           {/* GEO Citation Block — 40-60 words for RAG / Answer Engine Optimization */}
           <div className="max-w-2xl mx-auto mb-10 p-5 bg-white/60 backdrop-blur-sm rounded-[16px] border border-black/[0.06] text-left">
             <p className="text-[14px] text-[#1d1d1f]/60 leading-relaxed">
-              HospedaSuite es un PMS y Channel Manager diseñado para que hoteles boutique y glampings centralicen su operación. Funciona como el cerebro del hotel, permitiendo recibir reservas directas vía WhatsApp con cero por ciento de comisión y bloqueando automáticamente el inventario en plataformas como Booking y Airbnb para evitar sobreventas.
+              HospedaSuite es un Cerebro Operativo y Seguro Anti-Sobreventa diseñado para que hoteles boutique y glampings centralicen su operación. Funciona como el cerebro del hotel, permitiendo recibir reservas directas vía WhatsApp con cero por ciento de comisión y bloqueando automáticamente el inventario en plataformas como Booking y Airbnb para evitar sobreventas.
             </p>
           </div>
 
@@ -77,7 +77,7 @@ export default function SoftwarePage() {
             Un sistema. Dos motores.
           </h2>
           <p className="text-[17px] text-[#1d1d1f]/50 text-center max-w-xl mx-auto mb-16">
-            Tu PMS gestiona. Tu motor de reservas vende. Todo conectado automáticamente.
+            Tu Cerebro Operativo gestiona. Tu motor de reservas vende. Todo conectado automáticamente.
           </p>
 
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -108,9 +108,9 @@ export default function SoftwarePage() {
                   <div className="w-12 h-12 rounded-[18px] flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300" style={{ backgroundColor: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(20px)' }}>
                     <LayoutGrid size={22} color="white" strokeWidth={1.5} />
                   </div>
-                  <h3 className="text-xl font-semibold mb-3 tracking-tight" style={{ color: 'white' }}>PMS Central</h3>
+                  <h3 className="text-xl font-semibold mb-3 tracking-tight" style={{ color: 'white' }}>Cerebro Central</h3>
                   <p className="text-[15px] mb-8 leading-relaxed font-medium" style={{ color: 'rgba(255,255,255,0.90)' }}>
-                    El cerebro de la operación. Tarifas, POS, huéspedes y Channel Manager desde una sola pantalla.
+                    El cerebro de la operación. Tarifas, POS, huéspedes y Seguro Anti-Sobreventa desde una sola pantalla.
                   </p>
                 </div>
                 <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full w-fit border" style={{ backgroundColor: 'rgba(255,255,255,0.20)', backdropFilter: 'blur(20px)', borderColor: 'rgba(255,255,255,0.10)' }}>
@@ -129,7 +129,7 @@ export default function SoftwarePage() {
                 </div>
                 <h3 className="text-xl font-semibold mb-3 tracking-tight">Motor de Reservas</h3>
                 <p className="text-[15px] text-[#1d1d1f]/50 mb-8 leading-relaxed">
-                  Publicación automática bilingüe. Si estás en el PMS, estás visible al mundo.
+                  Publicación automática bilingüe. Si estás en el Cerebro Operativo, estás visible al mundo.
                 </p>
                 <div className="flex items-baseline gap-1.5">
                   <span className="text-5xl font-semibold tracking-tight">10%</span>

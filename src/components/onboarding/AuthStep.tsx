@@ -146,7 +146,7 @@ export default function AuthStep({ onSuccess }: AuthStepProps) {
 
       <div className="mt-6 text-center">
         <p className="text-zinc-600 text-xs">
-          ¿Ya tenés cuenta?{' '}
+          ¿Ya tienes cuenta?{' '}
           <a href="/login" className="text-zinc-400 hover:text-white transition-colors underline underline-offset-4">
             Iniciar sesión
           </a>

@@ -94,7 +94,7 @@ export async function GET(request: Request) {
                 </a>
               </p>
               <p style="color: #666; font-size: 12px; margin-top: 32px;">
-                Si tenés dudas, escribinos a soporte@hospedasuite.com
+                Si tienes dudas, escríbenos a soporte@hospedasuite.com
               </p>
             </div>
           `,

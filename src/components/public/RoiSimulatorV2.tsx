@@ -35,7 +35,7 @@ export default function RoiSimulatorV2({ onCtaClick }: RoiSimulatorV2Props) {
             Calculadora de Rentabilidad Total
           </h3>
           <p className="text-[13px] text-[#1d1d1f]/40 font-medium">
-            Descubrí cuánto valor real genera tu Motor Propio
+            Descubre cuánto valor real genera tu Motor Propio
           </p>
         </div>
       </div>
@@ -93,10 +93,13 @@ export default function RoiSimulatorV2({ onCtaClick }: RoiSimulatorV2Props) {
             <Shield size={20} className="text-purple-600" />
           </div>
           <p className="text-[11px] font-bold text-[#1d1d1f]/40 uppercase tracking-wide mb-1">
-            Ganancia Extra (Para tu bolsillo)
+            Ganancia Extra (Ahorro real en tu bolsillo)
           </p>
           <p className="text-xl font-bold text-purple-600">
             {formatCOP(roi.upsellingRevenue)}
+          </p>
+          <p className="text-[9px] text-[#1d1d1f]/30 mt-1">
+            Dinero ahorrado al no pagar 18% de comisiones a terceros
           </p>
         </div>
       </div>
@@ -106,7 +109,7 @@ export default function RoiSimulatorV2({ onCtaClick }: RoiSimulatorV2Props) {
         <p className="text-[13px] font-bold text-[#0071e3] uppercase tracking-wider mb-2">
           Valor Total Generado por Mes
         </p>
-        <p className="text-5xl sm:text-6xl font-bold text-[#0071e3] tracking-tighter">
+        <p className="text-5xl sm:text-6xl font-bold text-[#0071e3] tracking-tighter break-words leading-tight">
           {formatCOP(roi.totalValue)}
         </p>
         <p className="text-[12px] text-[#1d1d1f]/40 mt-2">

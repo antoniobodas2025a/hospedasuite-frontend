@@ -1,5 +1,5 @@
 /**
- * Circuit Breaker Pattern — Channel Manager Channel Sync
+ * Circuit Breaker Pattern — Seguro Anti-Sobreventa - Sincronización
  *
  * Prevents cascading failures when an Channel endpoint is down or rate-limiting.
  *

@@ -250,7 +250,7 @@ export async function checkGoLiveGate(hotelId: string): Promise<GoLiveGateResult
     return {
       allowed: false,
       reason:
-        'El hotel aún no ha sido activado para venta pública. Completá todos los requisitos en "Listo para Vender" y hacé clic en "Publicar Hotel".',
+        'El hotel aún no ha sido activado para venta pública. Completa todos los requisitos en "Listo para Vender" y haz clic en "Publicar Hotel".',
       isLive: false,
     }
   }

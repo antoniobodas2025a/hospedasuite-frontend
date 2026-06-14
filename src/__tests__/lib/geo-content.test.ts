@@ -8,7 +8,7 @@ describe('Answer Kit GEO - Strict Compliance (Red Phase)', () => {
     expect(words).toBe(48); // 🔴 FAILS until exact 48 words
   });
 
-  it('S2: Bloque "Channel Manager" debe tener EXACTAMENTE 47 palabras', () => {
+  it('S2: Bloque "Seguro Anti-Sobreventa" debe tener EXACTAMENTE 47 palabras', () => {
     const content = GEO_BLOCKS['channel-manager'].content;
     const words = content.split(/\s+/).length;
     expect(words).toBe(47); // 🔴 FAILS until exact 47 words

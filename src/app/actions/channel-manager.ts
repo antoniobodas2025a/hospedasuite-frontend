@@ -124,7 +124,7 @@ export async function syncChannelManagerAction(hotelId: string) {
     };
 
   } catch (error: any) {
-    console.error('[SEC-OPS] Error fatal en Channel Manager:', error);
+    console.error('[SEC-OPS] Error fatal en Seguro Anti-Sobreventa:', error);
     return { success: false, error: error.message };
   }
 }

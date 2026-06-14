@@ -357,7 +357,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
               onDrop={handleDrop}
             >
               <UploadCloud className={`mb-1 transition-colors ${isDragging ? 'text-indigo-400' : 'text-zinc-600'}`} size={20} />
-              <p className="text-[10px] text-zinc-500 font-medium">{isDragging ? 'Soltá las fotos acá' : 'Arrastrá fotos acá o hacé clic'}</p>
+              <p className="text-[10px] text-zinc-500 font-medium">{isDragging ? 'Suelta las fotos acá' : 'Arrastra fotos acá o haz clic'}</p>
               <input type="file" multiple accept="image/*" className="hidden" onChange={handleImages} />
             </label>
           )}
