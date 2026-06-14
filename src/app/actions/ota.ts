@@ -144,7 +144,7 @@ export async function fetchChannelHotelsAction(
 		let query = supabaseAdmin
 			.from("hotels")
 			.select(
-				`id, name, location, city, slug, status, main_image_url, description, category, type, rooms!inner(price)`,
+				`id, name, location, city, slug, status, main_image_url, description, category, type, rooms(price)`,
 			)
 			.eq("status", "active");
 
