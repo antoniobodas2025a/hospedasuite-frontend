@@ -44,6 +44,8 @@ const nextConfig = {
 		const r2UploadDomain = "https://*.r2.cloudflarestorage.com";
 		const supabaseDomain = "https://auaqpomuivfhomlkvhju.supabase.co";
 		const sentryDomain = "https://o450*.ingest.sentry.io";
+		const posthogDomain = "https://us.i.posthog.com";
+		const googleAnalyticsDomain = "https://www.google.com";
 
 		return [
 			{
@@ -61,11 +63,11 @@ const nextConfig = {
 						key: "Content-Security-Policy",
 						value: [
 							`default-src 'self'`,
-							`script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com ${wompiDomain} ${sentryDomain} https://cdn.jsdelivr.net`,
+							`script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com ${wompiDomain} ${sentryDomain} https://cdn.jsdelivr.net ${posthogDomain} ${googleAnalyticsDomain}`,
 							`style-src 'self' 'unsafe-inline' https://unpkg.com`,
 							`img-src 'self' blob: data: ${r2Domain} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
 							`font-src 'self' data:`,
-							`connect-src 'self' ${r2UploadDomain} ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org`,
+							`connect-src 'self' ${r2UploadDomain} ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org ${posthogDomain} ${googleAnalyticsDomain}`,
 							`worker-src 'self' blob:`,
 							`media-src 'self' blob:`,
 							`object-src 'none'`,
