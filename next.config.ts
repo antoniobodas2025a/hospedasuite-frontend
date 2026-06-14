@@ -48,6 +48,7 @@ const nextConfig = {
 		const posthogAssetsDomain = "https://us-assets.i.posthog.com";
 		const googleAnalyticsDomain = "https://www.google.com";
 		const googleAnalyticsApiDomain = "https://www.google-analytics.com";
+		const nominatimDomain = "https://nominatim.openstreetmap.org";
 
 		return [
 			{
@@ -69,7 +70,7 @@ const nextConfig = {
 							`style-src 'self' 'unsafe-inline' https://unpkg.com`,
 							`img-src 'self' blob: data: ${r2Domain} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
 							`font-src 'self' data:`,
-							`connect-src 'self' ${r2UploadDomain} ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org ${posthogDomain} ${posthogAssetsDomain} ${googleAnalyticsDomain} ${googleAnalyticsApiDomain}`,
+							`connect-src 'self' ${r2UploadDomain} ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org ${posthogDomain} ${posthogAssetsDomain} ${googleAnalyticsDomain} ${googleAnalyticsApiDomain} ${nominatimDomain}`,
 							`worker-src 'self' blob:`,
 							`media-src 'self' blob:`,
 							`object-src 'none'`,
