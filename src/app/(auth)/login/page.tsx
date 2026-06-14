@@ -1,31 +1,32 @@
 'use client';
 
 import { login } from '@/app/actions/auth';
-import { useState } from 'react';
+import { useState, useActionState } from 'react';
+import { useFormStatus } from 'react-dom';
 import { Loader2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
+async function loginAction(_state: unknown, formData: FormData) {
+  return login(formData);
+}
+
+function SubmitButton() {
+  const { pending } = useFormStatus();
+  return (
+    <button
+      type='submit'
+      disabled={pending}
+      className='w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-[var(--radius-squircle-lg)] shadow-lg shadow-blue-900/20 transition-all flex justify-center items-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed'
+    >
+      {pending ? <Loader2 className='animate-spin' /> : 'Iniciar Sesión'}
+    </button>
+  );
+}
+
 export default function LoginPage() {
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [state, formAction] = useActionState(loginAction, null);
   const [showPassword, setShowPassword] = useState(false);
 
-  async function handleSubmit(formData: FormData) {
-    setLoading(true);
-    setError(null);
-
-    // Invocamos la Server Action
-    const result = await login(formData).catch((e) => ({
-      success: false,
-      message: e.message,
-    }));
-
-    // Si login hace redirect, este código no se ejecuta.
-    // Si llega aquí, hubo error.
-    if (result && !result.success) {
-      setError(result.message || 'Credenciales inválidas');
-      setLoading(false);
-    }
-  }
+  const error = state && !state.success ? state.message : null;
 
   return (
     <div className='min-h-screen flex items-center justify-center bg-[#09090b] relative overflow-hidden'>
@@ -46,7 +47,7 @@ export default function LoginPage() {
         </div>
 
         <form
-          action={handleSubmit}
+          action={formAction}
           className='space-y-4 glass-card p-8'
         >
           {error && (
@@ -92,13 +93,7 @@ export default function LoginPage() {
             </div>
           </div>
 
-          <button
-            type='submit'
-            disabled={loading}
-            className='w-full bg-blue-600 hover:bg-blue-500 text-white font-bold py-4 rounded-[var(--radius-squircle-lg)] shadow-lg shadow-blue-900/20 transition-all flex justify-center items-center gap-2 mt-4 disabled:opacity-50 disabled:cursor-not-allowed'
-          >
-            {loading ? <Loader2 className='animate-spin' /> : 'Iniciar Sesión'}
-          </button>
+          <SubmitButton />
         </form>
 
         <p className='text-center text-white/20 text-xs mt-8'>
