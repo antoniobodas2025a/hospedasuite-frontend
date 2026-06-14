@@ -110,18 +110,31 @@ export default async function ChannelHotelDetailPage({
 		hotel.main_image_url ||
 		"https://images.unsplash.com/photo-1542314831-068cd1dbfeeb";
 
-	const hotelGalleryImages = [
-		{ url: coverImage, alt: hotel.name },
-		...(hotel.cover_photo_url && hotel.cover_photo_url !== coverImage
-			? [{ url: hotel.cover_photo_url, alt: `${hotel.name} — vista general` }]
-			: []),
-		...(Array.isArray(hotel.gallery_urls)
-			? hotel.gallery_urls.map((url: string, i: number) => ({
-					url,
-					alt: `${hotel.name} — foto ${i + 3}`,
-				}))
-			: []),
-	];
+	// Build gallery with deduplication — avoid repeating the same image
+	const seenUrls = new Set<string>();
+	const hotelGalleryImages: { url: string; alt: string }[] = [];
+
+	const addImage = (url: string, alt: string) => {
+		if (url && !seenUrls.has(url)) {
+			seenUrls.add(url);
+			hotelGalleryImages.push({ url, alt });
+		}
+	};
+
+	// 1. Main/hero image first
+	addImage(coverImage, hotel.name);
+
+	// 2. Cover photo (secondary)
+	if (hotel.cover_photo_url && hotel.cover_photo_url !== coverImage) {
+		addImage(hotel.cover_photo_url, `${hotel.name} — vista general`);
+	}
+
+	// 3. Gallery images (deduplicated)
+	if (Array.isArray(hotel.gallery_urls)) {
+		hotel.gallery_urls.forEach((url: string, i: number) => {
+			addImage(url, `${hotel.name} — foto ${i + 1}`);
+		});
+	}
 
 	// StickySubNav sections
 	const navSections = [
