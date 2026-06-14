@@ -65,14 +65,13 @@ export async function createHotelAction(formData: FormData) {
     if (staffError) throw staffError;
 
     revalidatePath('/admin');
-    return { success: true };
     
   } catch (error: any) {
     console.error('⚠️ [Rollback] Error en creación:', error.message);
     // Transacción Compensatoria (Rollback Manual) para preservar la integridad del sistema
     if (createdHotelId) await supabaseAdmin.from('hotels').delete().eq('id', createdHotelId);
     if (createdAuthId) await supabaseAdmin.auth.admin.deleteUser(createdAuthId);
-    return { success: false, error: error.message };
+    throw error;
   }
 }
 
