@@ -14,8 +14,53 @@ import { compressImage, generateBlurDataURL, uploadToR2 } from '@/lib/upload-uti
 import { cn } from '@/lib/utils';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 import {
-  X, Trash2, Copy, RefreshCw, Image as ImageIcon, Building2, Plus, UploadCloud, Loader2
+  X, Trash2, Copy, RefreshCw, Image as ImageIcon, Building2, Plus, UploadCloud, Loader2, GripVertical
 } from 'lucide-react';
+import { DndContext, closestCenter, DragEndEvent, PointerSensor, useSensor, useSensors } from '@dnd-kit/core';
+import { SortableContext, useSortable, horizontalListSortingStrategy, arrayMove } from '@dnd-kit/sortable';
+import { CSS } from '@dnd-kit/utilities';
+
+// Sortable thumbnail wrapper
+function SortableThumbnail({ id, img, index, onRemove }: { id: string; img: any; index: number; onRemove: (i: number) => void }) {
+  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id });
+
+  const style: React.CSSProperties = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.4 : 1,
+    zIndex: isDragging ? 10 : 1,
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="relative shrink-0 w-24 h-20 rounded-[var(--radius-squircle-md)] overflow-hidden border border-border group cursor-grab active:cursor-grabbing"
+    >
+      <img src={img.url || img} className="w-full h-full object-cover" draggable={false} />
+      {/* Drag handle */}
+      <div
+        {...attributes}
+        {...listeners}
+        className="absolute top-0.5 left-0.5 p-0.5 bg-black/60 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+      >
+        <GripVertical className="size-3 text-white/80" />
+      </div>
+      {/* Delete overlay */}
+      <button
+        type="button"
+        onClick={() => onRemove(index)}
+        className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+      >
+        <Trash2 className="size-4 text-rose-400" />
+      </button>
+      {/* Index badge */}
+      <div className="absolute bottom-0.5 right-0.5 bg-black/70 text-white text-[8px] font-bold px-1 rounded">
+        {index + 1}
+      </div>
+    </div>
+  );
+}
 
 // ==========================================
 // BLOQUE 1: CONSTANTES Y TIPADOS
@@ -56,6 +101,23 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
 
   const currentAmenities = watch('amenities') || [];
   const currentGallery = watch('gallery') || [];
+
+  // Drag-and-drop sensors for reordering
+  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 8 } }));
+
+  const handleDragEnd = (event: DragEndEvent) => {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = currentGallery.findIndex((_: any, i: number) => `thumb-${i}` === active.id);
+    const newIndex = currentGallery.findIndex((_: any, i: number) => `thumb-${i}` === over.id);
+    if (oldIndex === -1 || newIndex === -1) return;
+    const reordered = arrayMove(currentGallery, oldIndex, newIndex);
+    setValue('gallery', reordered, { shouldDirty: true });
+  };
+
+  const handleRemoveThumbnail = (index: number) => {
+    setValue('gallery', currentGallery.filter((_: any, i: number) => i !== index), { shouldDirty: true });
+  };
 
   const toggleAmenity = (amenityId: string) => {
     const exists = currentAmenities.includes(amenityId);
@@ -227,16 +289,21 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                       {isUploadingMedia ? <><Loader2 className="size-4 animate-spin" /> Procesando...</> : <><UploadCloud className="size-4" /> {isDragging ? 'Soltá las fotos acá' : 'Subir desde el Equipo'}</>}
                     </div>
 
-                    <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
-                      {currentGallery.map((img: any, i: number) => (
-                        <div key={i} className="relative shrink-0 w-24 h-20 rounded-[var(--radius-squircle-md)] overflow-hidden border border-border group">
-                          <img src={img.url || img} className="w-full h-full object-cover" />
-                          <button type="button" onClick={() => setValue('gallery', currentGallery.filter((_, idx) => idx !== i))} className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                            <Trash2 className="size-4 text-rose-400" />
-                          </button>
+                    <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
+                      <SortableContext items={currentGallery.map((_: any, i: number) => `thumb-${i}`)} strategy={horizontalListSortingStrategy}>
+                        <div className="flex gap-2 overflow-x-auto pb-2 custom-scrollbar">
+                          {currentGallery.map((img: any, i: number) => (
+                            <SortableThumbnail
+                              key={`thumb-${i}`}
+                              id={`thumb-${i}`}
+                              img={img}
+                              index={i}
+                              onRemove={handleRemoveThumbnail}
+                            />
+                          ))}
                         </div>
-                      ))}
-                    </div>
+                      </SortableContext>
+                    </DndContext>
                   </div>
                 </div>
               </div>

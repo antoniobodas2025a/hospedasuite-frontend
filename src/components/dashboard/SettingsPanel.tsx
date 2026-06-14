@@ -31,7 +31,23 @@ import {
 	Settings2,
 	UtensilsCrossed,
 	Copy,
+	GripVertical,
 } from "lucide-react";
+import {
+	DndContext,
+	closestCenter,
+	DragEndEvent,
+	PointerSensor,
+	useSensor,
+	useSensors,
+} from "@dnd-kit/core";
+import {
+	SortableContext,
+	useSortable,
+	rectSortingStrategy,
+	arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import {
 	saveSettingsAction,
 	updateHotelProfileAction,
@@ -50,6 +66,64 @@ import { GlassTooltip } from "@/components/ui/GlassTooltip";
 import { AMENITY_REGISTRY } from "@/lib/amenity-registry";
 
 const HOTEL_AMENITIES = Object.values(AMENITY_REGISTRY);
+
+/** Sortable thumbnail for hotel gallery grid */
+function SortableGalleryThumb({
+	id,
+	url,
+	index,
+	onRemove,
+}: {
+	id: string;
+	url: string;
+	index: number;
+	onRemove: (i: number) => void;
+}) {
+	const { attributes, listeners, setNodeRef, transform, transition, isDragging } =
+		useSortable({ id });
+
+	const style: React.CSSProperties = {
+		transform: CSS.Transform.toString(transform),
+		transition,
+		opacity: isDragging ? 0.4 : 1,
+		zIndex: isDragging ? 10 : 1,
+	};
+
+	return (
+		<div
+			ref={setNodeRef}
+			style={style}
+			className="relative h-24 rounded-[var(--radius-squircle-lg)] overflow-hidden border border-border group cursor-grab active:cursor-grabbing"
+		>
+			<img
+				src={url}
+				alt={`Gallery ${index + 1}`}
+				className="w-full h-full object-cover"
+				draggable={false}
+			/>
+			{/* Drag handle */}
+			<div
+				{...attributes}
+				{...listeners}
+				className="absolute top-1 left-1 p-0.5 bg-black/60 rounded opacity-0 group-hover:opacity-100 transition-opacity"
+			>
+				<GripVertical className="size-3 text-white/80" />
+			</div>
+			{/* Delete overlay */}
+			<button
+				type="button"
+				onClick={() => onRemove(index)}
+				className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
+			>
+				<Trash2 className="size-4 text-rose-400" />
+			</button>
+			{/* Index badge */}
+			<div className="absolute bottom-1 right-1 bg-black/70 text-white text-[8px] font-bold px-1 rounded">
+				{index + 1}
+			</div>
+		</div>
+	);
+}
 
 /**
  * Mac 2026 — Progressive Disclosure Section
@@ -171,6 +245,22 @@ export default function SettingsPanel({
 	const staffName = watch("staff_name") || "";
 	const staffPin = watch("staff_pin") || "";
 	const primaryColor = watch("primary_color") || "#6366f1";
+
+	// Drag-and-drop sensors for gallery reordering
+	const gallerySensors = useSensors(
+		useSensor(PointerSensor, { activationConstraint: { distance: 8 } }),
+	);
+
+	const handleGalleryDragEnd = (event: DragEndEvent) => {
+		const { active, over } = event;
+		if (!over || active.id === over.id) return;
+		const oldIndex = galleryPreviews.findIndex((_, i) => `gallery-${i}` === active.id);
+		const newIndex = galleryPreviews.findIndex((_, i) => `gallery-${i}` === over.id);
+		if (oldIndex === -1 || newIndex === -1) return;
+		const reordered = arrayMove(galleryPreviews, oldIndex, newIndex);
+		setGalleryPreviews(reordered);
+		setValue("gallery_urls", reordered);
+	};
 
 	const toggleAmenity = (id: string) => {
 		const exists = currentAmenities.includes(id);
@@ -822,27 +912,28 @@ export default function SettingsPanel({
 												{galleryPreviews.length}/8 fotos
 											</p>
 											{galleryPreviews.length > 0 && (
-												<div className="grid grid-cols-2 gap-2 mb-4">
-													{galleryPreviews.map((url, i) => (
-														<div
-															key={i}
-															className="relative h-24 rounded-[var(--radius-squircle-lg)] overflow-hidden border border-border group"
-														>
-															<img
-																src={url}
-																alt={`Gallery ${i + 1}`}
-																className="w-full h-full object-cover"
-															/>
-															<button
-																type="button"
-																onClick={() => removeGalleryImage(i)}
-																className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity"
-															>
-																<Trash2 className="size-4 text-rose-400" />
-															</button>
+												<DndContext
+													sensors={gallerySensors}
+													collisionDetection={closestCenter}
+													onDragEnd={handleGalleryDragEnd}
+												>
+													<SortableContext
+														items={galleryPreviews.map((_, i) => `gallery-${i}`)}
+														strategy={rectSortingStrategy}
+													>
+														<div className="grid grid-cols-2 gap-2 mb-4">
+															{galleryPreviews.map((url, i) => (
+																<SortableGalleryThumb
+																	key={`gallery-${i}`}
+																	id={`gallery-${i}`}
+																	url={url}
+																	index={i}
+																	onRemove={removeGalleryImage}
+																/>
+															))}
 														</div>
-													))}
-												</div>
+													</SortableContext>
+												</DndContext>
 											)}
 											{galleryPreviews.length < 8 && (
 												<label
