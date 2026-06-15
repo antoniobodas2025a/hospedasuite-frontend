@@ -1,18 +1,20 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CreditCard, CheckCircle2, Wallet } from 'lucide-react';
+import { CreditCard, CheckCircle2, Wallet, Gift } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import type { PaymentMethod } from '@/lib/onboarding-schemas';
 import WompiButton from '@/components/payments/WompiButton';
 import ManualPaymentCard from './ManualPaymentCard';
+import { useIsMobile } from '@/hooks/useIsMediaQuery';
 
 const wompiRef = `ONB-${Date.now()}`;
 
 export default function PaymentStep() {
   const t = useTranslations('onboarding.payment');
   const locale = useLocale();
+  const isMobile = useIsMobile();
   const {
     paymentMethod,
     setPaymentMethod,
@@ -23,13 +25,19 @@ export default function PaymentStep() {
   } = useOnboardingStore();
 
   const isMethodSelected = paymentMethod !== null;
-  const isPaymentDone = paymentMethod === 'wompi'
-    ? !!paymentTransactionId
-    : !!manualReceiptUrl;
+  const isPaymentDone =
+    paymentMethod === 'free'
+      ? true
+      : paymentMethod === 'wompi'
+        ? !!paymentTransactionId
+        : !!manualReceiptUrl;
 
   const handleMethodSelect = (method: PaymentMethod) => {
     if (paymentMethod !== method) {
       setPaymentMethod(method);
+      if (method === 'free') {
+        setPaymentTransactionId(`FREE-${Date.now()}`);
+      }
     }
   };
 
@@ -92,6 +100,27 @@ export default function PaymentStep() {
             <p className="text-[10px] text-zinc-600 mt-1">Nequi / Daviplata</p>
           </button>
         </div>
+
+        {/* Free activation — mobile only */}
+        {isMobile && (
+          <button
+            onClick={() => handleMethodSelect('free')}
+            className={`w-full p-5 rounded-[var(--radius-squircle-xl)] border text-center transition-all bg-gradient-to-r from-emerald-500/5 to-green-500/5 ${
+              paymentMethod === 'free'
+                ? 'border-emerald-500/40 ring-1 ring-emerald-500/30 bg-emerald-500/10'
+                : 'border-emerald-500/20 text-zinc-400 hover:border-emerald-500/40 hover:text-emerald-300'
+            }`}
+          >
+            <Gift
+              size={24}
+              className={`mx-auto mb-2 ${paymentMethod === 'free' ? 'text-emerald-400' : 'text-emerald-600'}`}
+            />
+            <p className={`font-bold text-sm ${paymentMethod === 'free' ? 'text-emerald-300' : 'text-emerald-500'}`}>
+              Activar gratis
+            </p>
+            <p className="text-[10px] text-emerald-700 mt-1">30 días de prueba gratis</p>
+          </button>
+        )}
       </div>
 
       {/* Conditional payment UI */}
@@ -105,7 +134,11 @@ export default function PaymentStep() {
             <div className="text-center space-y-4">
               <CheckCircle2 className="mx-auto text-emerald-400" size={48} />
               <p className="text-emerald-400 font-bold">
-                {paymentMethod === 'wompi' ? t('paymentProcessed') : 'Comprobante recibido'}
+                {paymentMethod === 'free'
+                  ? 'Activación gratuita seleccionada'
+                  : paymentMethod === 'wompi'
+                    ? t('paymentProcessed')
+                    : 'Comprobante recibido'}
               </p>
             </div>
           ) : paymentMethod === 'wompi' ? (

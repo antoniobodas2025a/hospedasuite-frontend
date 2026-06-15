@@ -32,7 +32,7 @@ function generateSlug(name: string): string {
 		.replace(/^-|-$/g, "");
 }
 
-type ProvisioningStatus = "uploading" | "provisioning" | "success" | "error";
+type ProvisioningStatus = "uploading" | "provisioning" | "success" | "error" | "duplicate_review";
 
 export default function ProvisioningStep() {
 	const t = useTranslations("onboarding.provisioning");
@@ -45,6 +45,7 @@ export default function ProvisioningStep() {
 		paymentTransactionId,
 		paymentMethod,
 		manualReceiptUrl,
+		manualPaymentMethod,
 		reset,
 	} = useOnboardingStore();
 	const [status, setStatus] = useState<ProvisioningStatus>("provisioning");
@@ -68,7 +69,7 @@ export default function ProvisioningStep() {
 	useEffect(() => {
 		async function provision() {
 			const isManual = paymentMethod === "manual";
-			const hasPayment = isManual ? !!manualReceiptUrl : !!paymentTransactionId;
+			const hasPayment = paymentMethod === "free" || (isManual ? !!manualReceiptUrl : !!paymentTransactionId);
 
 			if (!hasPayment) {
 				setStatus("error");
@@ -177,6 +178,7 @@ export default function ProvisioningStep() {
 					transactionId: paymentTransactionId,
 					paymentMethod: paymentMethod,
 					manualReceiptUrl: manualReceiptUrl,
+					manualPaymentMethod: manualPaymentMethod,
 				},
 			};
 
@@ -223,8 +225,13 @@ export default function ProvisioningStep() {
 			if (provisioningResult.success) {
 				const slug = generateSlug(hotelIdentity.name);
 				setHotelSlug(slug);
-				// Both Wompi and Manual: hotel is published immediately (good faith policy)
-				setStatus("success");
+				// Duplicate fingerprint detected → show verification message
+				if (provisioningResult.isDuplicate) {
+					setStatus("duplicate_review");
+				} else {
+					// Both Wompi and Manual: hotel is published immediately (good faith policy)
+					setStatus("success");
+				}
 			} else {
 				setStatus("error");
 				setErrorMessage(provisioningResult.error || t("errorTitle"));
@@ -361,6 +368,114 @@ export default function ProvisioningStep() {
 				>
 					{t("retry")}
 				</button>
+			</motion.div>
+		);
+	}
+
+	// --------------------------------------------------------------------------
+	// DUPLICATE REVIEW STATE — Hotel flagged, awaiting admin verification
+	// --------------------------------------------------------------------------
+	if (status === "duplicate_review") {
+		return (
+			<motion.div
+				initial={{ opacity: 0, y: 20 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ type: "spring", stiffness: 300, damping: 24, mass: 1.0 }}
+				className="py-12 space-y-10 max-w-lg mx-auto"
+			>
+				{/* Chunk 1: Verification notice */}
+				<div className="text-center space-y-4">
+					<motion.div
+						initial={{ scale: 0 }}
+						animate={{ scale: 1 }}
+						transition={{
+							type: "spring",
+							stiffness: 400,
+							damping: 20,
+							delay: 0.2,
+						}}
+						className="relative w-20 h-20 mx-auto"
+					>
+						<div className="absolute inset-0 bg-amber-500/20 rounded-full blur-xl" />
+						<div className="relative w-20 h-20 rounded-full bg-amber-500/10 border border-amber-500/30 flex items-center justify-center">
+							<Clock className="text-amber-400" size={36} />
+						</div>
+					</motion.div>
+					<h3 className="text-2xl font-black text-white tracking-tight">
+						Propiedad en verificación
+					</h3>
+					<p className="text-zinc-400 text-sm">
+						Detectamos un hotel con el mismo nombre en esta zona. Verificamos que no sea un duplicado.
+					</p>
+				</div>
+
+				{/* Chunk 2: Hotel identity card */}
+				<div className="glass-card p-6 space-y-4">
+					<div className="flex items-center gap-3">
+						<div className="w-10 h-10 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-brand-500 to-warm-600 flex items-center justify-center text-white font-black text-lg shrink-0">
+							{hotelIdentity.name.charAt(0).toUpperCase()}
+						</div>
+						<div className="min-w-0">
+							<p className="text-white font-bold text-sm truncate">
+								{hotelIdentity.name}
+							</p>
+							<p className="text-zinc-500 text-xs">{hotelIdentity.city}</p>
+						</div>
+					</div>
+
+					<div className="flex items-start gap-3 p-3 bg-amber-500/10 border border-amber-500/20 rounded-[var(--radius-squircle-lg)]">
+						<Clock size={14} className="text-amber-400 shrink-0 mt-0.5" />
+						<div>
+							<p className="text-amber-300 text-xs font-bold">
+								Revisión en curso
+							</p>
+							<p className="text-amber-300/80 text-xs mt-1">
+								Un administrador revisará tu registro en las próximas 24 horas.
+								Recibirás un email cuando tu propiedad esté activa.
+							</p>
+						</div>
+					</div>
+
+					<div className="border-t border-white/5 pt-3">
+						<p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">
+							¿Por qué pasa esto?
+						</p>
+						<p className="text-zinc-400 text-xs leading-relaxed">
+							Para proteger a los hoteleros, verificamos que no se creen
+							cuentas duplicadas con el mismo nombre y ubicación. Si este es
+							tu hotel y perdiste acceso, contactanos por WhatsApp.
+						</p>
+					</div>
+				</div>
+
+				{/* Chunk 3: Contact CTA */}
+				<div className="space-y-3">
+					<motion.button
+						whileTap={{ scale: 0.98 }}
+						onClick={() => {
+							reset();
+							router.push("/dashboard");
+						}}
+						className="w-full flex items-center gap-3 p-4 bg-white/5 border border-white/10 rounded-[var(--radius-squircle-xl)] hover:bg-white/10 hover:border-indigo-500/30 transition-all group"
+					>
+						<div className="w-9 h-9 rounded-[var(--radius-squircle-lg)] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+							<LayoutDashboard size={16} className="text-indigo-400" />
+						</div>
+						<div className="text-left">
+							<p className="text-white text-sm font-bold">Ir al Dashboard</p>
+							<p className="text-zinc-500 text-xs">
+								Te avisaremos cuando esté activo
+							</p>
+						</div>
+					</motion.button>
+				</div>
+
+				{/* Chunk 4: Credentials */}
+				<div className="text-center space-y-2">
+					<p className="text-zinc-600 text-xs">
+						Usá el email con el que te registraste para acceder al dashboard.
+					</p>
+				</div>
 			</motion.div>
 		);
 	}

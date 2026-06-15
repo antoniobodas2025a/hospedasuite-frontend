@@ -94,7 +94,7 @@ export const paymentSchema = z.object({
 	planId: z.string().optional().nullable(),
 	price: z.number().min(0),
 	transactionId: z.string().optional().nullable(),
-	paymentMethod: z.enum(["wompi", "manual"]).nullable(),
+	paymentMethod: z.enum(["wompi", "manual", "free"]).nullable(),
 	manualReceiptUrl: z.string().nullable(),
 	manualPaymentMethod: z.enum(["nequi", "daviplata"]).nullable().optional(),
 });

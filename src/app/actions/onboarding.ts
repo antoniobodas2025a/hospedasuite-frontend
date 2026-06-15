@@ -4,13 +4,14 @@ import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath, revalidateTag } from 'next/cache';
 import { redirect } from 'next/navigation';
+import crypto from 'crypto';
 import { FullWizardState } from '@/lib/onboarding-schemas';
 import { checkUnitLimit } from '@/data/plan-guard';
 import { generateUniqueSlug } from '@/lib/slug';
 import { FEATURES } from '@/lib/feature-flags';
 import { validateProvisioningImageUrls } from '@/lib/provisioning-guard';
 
-export async function executeOnboardingProvisioning(state: FullWizardState): Promise<{ success: boolean; error?: string }> {
+export async function executeOnboardingProvisioning(state: FullWizardState): Promise<{ success: boolean; error?: string; isDuplicate?: boolean }> {
   const supabase = await createClient();
   
   try {
@@ -26,6 +27,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       .maybeSingle();
 
     let hotelId = staff?.hotel_id;
+    let isDuplicate = false;
 
     // ─── If no hotel exists yet, CREATE it ────
     if (!hotelId) {
@@ -187,6 +189,64 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       if (paymentError) {
         console.error('Manual payment record error:', paymentError);
       }
+    } else if (state.payment.paymentMethod === 'free') {
+      // ─── Free activation (mobile only) — duplicate fingerprint check ────
+      const nameNorm = state.hotelIdentity.name.trim().toLowerCase();
+      const cityNorm = state.hotelIdentity.city.trim().toLowerCase();
+      const locationNorm = state.hotelIdentity.location.trim().toLowerCase();
+
+      const fingerprintHash = crypto
+        .createHash('sha256')
+        .update(`${nameNorm}|${cityNorm}|${locationNorm}`)
+        .digest('hex');
+
+      // Check if this fingerprint already exists
+      const { data: existingFingerprint } = await supabaseAdmin
+        .from('hotel_fingerprints')
+        .select('id, hotel_id')
+        .eq('fingerprint_hash', fingerprintHash)
+        .maybeSingle();
+
+      const isDup = !!existingFingerprint;
+      isDuplicate = isDup;
+      const subscriptionStatus = isDup ? 'duplicate_review' : 'trialing';
+
+      const { error: hotelError } = await supabaseAdmin
+        .from('hotels')
+        .update({
+          ...hotelUpdateBase,
+          status: isDuplicate ? 'draft' : 'active',
+          subscription_status: subscriptionStatus,
+          trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+          is_onboarding_complete: true,
+          onboarding_step: 6,
+        })
+        .eq('id', hotelId);
+
+      if (hotelError) throw hotelError;
+
+      // Insert fingerprint record in ALL cases
+      const { error: fingerprintError } = await supabaseAdmin
+        .from('hotel_fingerprints')
+        .insert({
+          hotel_id: hotelId,
+          fingerprint_hash: fingerprintHash,
+          name_normalized: nameNorm,
+          city_normalized: cityNorm,
+          location_normalized: locationNorm,
+        });
+
+      if (fingerprintError) {
+        console.error(
+          `🔍 [Onboarding] Error guardando fingerprint para ${state.hotelIdentity.name}:`,
+          fingerprintError.message,
+        );
+      } else {
+        console.log(
+          `🔍 [Onboarding] Fingerprint guardado para ${state.hotelIdentity.name}` +
+            (isDuplicate ? ' (DUPLICADO — requiere revisión)' : ''),
+        );
+      }
     } else {
       // Wompi (or default): activate immediately
       const { error: hotelError } = await supabaseAdmin
@@ -332,7 +392,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     revalidatePath(`/hotel/${hotelSlug}`);
     revalidateTag(`hotel-${hotelId}`, 'max');
     
-    return { success: true };
+    return { success: true, isDuplicate };
   } catch (error: any) {
     console.error('🚨 ONBOARDING_PROVISIONING_ERROR:', error.message);
     return { success: false, error: error.message };
