@@ -179,7 +179,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
           hotel_id: hotelId,
           user_id: user.id,
           amount: state.payment.price || 89900,
-          method: 'nequi',
+          method: state.payment.manualPaymentMethod || 'nequi',
           receipt_url: state.payment.manualReceiptUrl || '',
           status: 'pending',
         });

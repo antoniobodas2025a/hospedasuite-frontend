@@ -12,7 +12,7 @@ const DAVIPLATA_NUMBER = '3213795015';
 const WHATSAPP_NUMBER = '573213795015';
 
 export default function ManualPaymentCard() {
-  const { setManualReceiptUrl, manualReceiptUrl } = useOnboardingStore();
+  const { setManualReceiptUrl, manualReceiptUrl, setManualPaymentMethod } = useOnboardingStore();
   const [selectedMethod, setSelectedMethod] = useState<'nequi' | 'daviplata'>('nequi');
   const [uploading, setUploading] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
@@ -61,6 +61,7 @@ export default function ManualPaymentCard() {
 
       if (result.success && result.url) {
         setManualReceiptUrl(result.url);
+        setManualPaymentMethod(selectedMethod);
       } else {
         setUploadError(result.error || 'Error al subir el comprobante.');
         setPreviewUrl(null);
@@ -82,7 +83,10 @@ export default function ManualPaymentCard() {
         {(['nequi', 'daviplata'] as const).map((method) => (
           <button
             key={method}
-            onClick={() => setSelectedMethod(method)}
+            onClick={() => {
+              setSelectedMethod(method);
+              setManualPaymentMethod(method);
+            }}
             className={`p-4 rounded-[var(--radius-squircle-xl)] border text-center transition-all ${
               selectedMethod === method
                 ? 'bg-indigo-500/10 border-indigo-500/30 text-white'

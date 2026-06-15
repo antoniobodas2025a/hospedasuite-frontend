@@ -33,6 +33,7 @@ export default function OnboardingWizard() {
 		isProvisioning,
 		validateStep,
 		setValidationErrors,
+		startProvisioning,
 	} = useOnboardingStore();
 
 	// Migration: Step 3 (PropertyType) was removed — bump completed step if stuck
@@ -150,6 +151,9 @@ export default function OnboardingWizard() {
 		if (currentStep < 7) {
 			setMaxCompletedStep(Math.max(maxCompletedStep, currentStep));
 			setCurrentStep(currentStep + 1);
+		} else if (currentStep === 7) {
+			setMaxCompletedStep(Math.max(maxCompletedStep, 7));
+			startProvisioning();
 		}
 	};
 
@@ -269,7 +273,7 @@ export default function OnboardingWizard() {
 				</div>
 
 				{/* Navigation */}
-				{currentStep < 8 && (
+				{currentStep < 7 && (
 					<div className="mt-8 space-y-3">
 						{/* Step validation errors */}
 						{stepErrors[currentStep] && stepErrors[currentStep].length > 0 && (

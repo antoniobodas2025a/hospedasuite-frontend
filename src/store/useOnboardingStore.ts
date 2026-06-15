@@ -46,6 +46,7 @@ export interface OnboardingState {
 	paymentTransactionId: string | null;
 	paymentMethod: PaymentMethod | null;
 	manualReceiptUrl: string | null;
+	manualPaymentMethod: 'nequi' | 'daviplata' | null;
 
 	// State
 	isSubmitting: boolean;
@@ -83,6 +84,7 @@ export interface OnboardingState {
 	setPaymentTransactionId: (id: string | null) => void;
 	setPaymentMethod: (method: PaymentMethod | null) => void;
 	setManualReceiptUrl: (url: string | null) => void;
+	setManualPaymentMethod: (method: 'nequi' | 'daviplata') => void;
 
 	// General
 	setIsSubmitting: (value: boolean) => void;
@@ -136,6 +138,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 	paymentTransactionId: null,
 	paymentMethod: null,
 	manualReceiptUrl: null,
+	manualPaymentMethod: null,
 
 	isSubmitting: false,
 	error: null,
@@ -293,6 +296,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 	setPaymentTransactionId: (id) => set({ paymentTransactionId: id }),
 	setPaymentMethod: (method) => set({ paymentMethod: method }),
 	setManualReceiptUrl: (url) => set({ manualReceiptUrl: url }),
+	setManualPaymentMethod: (method) => set({ manualPaymentMethod: method }),
 
 	setIsSubmitting: (value) => set({ isSubmitting: value }),
 	setError: (error) => set({ error }),

@@ -96,6 +96,7 @@ export const paymentSchema = z.object({
 	transactionId: z.string().optional().nullable(),
 	paymentMethod: z.enum(["wompi", "manual"]).nullable(),
 	manualReceiptUrl: z.string().nullable(),
+	manualPaymentMethod: z.enum(["nequi", "daviplata"]).nullable().optional(),
 });
 
 // Full wizard state schema (for provisioning)

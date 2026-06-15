@@ -3,8 +3,8 @@
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { revalidatePath } from 'next/cache';
-import { PutObjectCommand } from '@aws-sdk/client-s3';
-import { r2Client, R2_BUCKET, R2_PUBLIC_URL } from '@/lib/r2-client';
+import { uploadToR2, R2_BUCKET } from '@/lib/r2-upload';
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-xxxxx.r2.dev';
 
 // ============================================================================
 // 1. SUBIR COMPROBANTE DE PAGO MANUAL (R2 — zero egress cost)
@@ -35,15 +35,7 @@ export async function uploadManualPaymentReceipt(
     const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
     const key = `receipts/${user.id}/${Date.now()}-${sanitizedName}`;
 
-    await r2Client.send(new PutObjectCommand({
-      Bucket: R2_BUCKET,
-      Key: key,
-      Body: buffer,
-      ContentType: file.type,
-      CacheControl: 'public, max-age=31536000',
-    }));
-
-    const publicUrl = `${R2_PUBLIC_URL}/${key}`;
+    const publicUrl = await uploadToR2(key, buffer, file.type);
     return { success: true, url: publicUrl };
   } catch (error: any) {
     console.error('Manual payment upload error:', error.message);
