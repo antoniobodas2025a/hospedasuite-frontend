@@ -912,10 +912,10 @@ export default function OTADashboard({
 						<LanguageSwitcher />
 						<Link
 							href="/software"
-							className="hidden sm:flex items-center gap-1.5 text-xs font-bold text-brand-600 bg-brand-50 px-3 py-1.5 rounded-full hover:bg-brand-100 transition-colors border border-brand-200"
+							className="flex items-center gap-1 sm:gap-1.5 text-xs font-bold text-brand-600 bg-brand-50 px-2 sm:px-3 py-1.5 rounded-full hover:bg-brand-100 transition-colors border border-brand-200 shrink-0"
 						>
 							<UserLock size={12} />
-							<span>{t("ota.header.hotelAccess")}</span>
+							<span className="hidden sm:inline">{t("ota.header.hotelAccess")}</span>
 						</Link>
 					</div>
 				</div>
