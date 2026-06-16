@@ -11,6 +11,9 @@ import {
 	PaymentMethod,
 } from "@/lib/onboarding-schemas";
 
+// Cerebro Operativo — clave de persistencia en memoria local
+const STORAGE_KEY = "hospedasuite:wizard-memory";
+
 export interface RoomDraft extends RoomDraftData {
 	imageFiles: File[];
 	imagePreviews: string[];
@@ -92,6 +95,11 @@ export interface OnboardingState {
 	setValidationErrors: (errors: Record<string, string>) => void;
 	startProvisioning: () => void;
 	reset: () => void;
+
+	// Cerebro Operativo — persistencia de memoria
+	restoreFromStorage: () => void;
+	persistToStorage: () => void;
+	clearStorage: () => void;
 
 	// Step validation — returns { valid: boolean, errors: string[] }
 	validateStep: (step: number) => { valid: boolean; errors: string[] };
@@ -303,6 +311,75 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 	setValidationErrors: (errors) => set({ validationErrors: errors }),
 	startProvisioning: () => set({ isProvisioning: true }),
 
+	// ─── Cerebro Operativo: persistencia de memoria del wizard ────
+	restoreFromStorage: () => {
+		if (typeof window === "undefined") return;
+		try {
+			const raw = localStorage.getItem(STORAGE_KEY);
+			if (!raw) return;
+			const saved = JSON.parse(raw);
+			set((state) => ({
+				currentStep: saved.currentStep ?? state.currentStep,
+				maxCompletedStep: saved.maxCompletedStep ?? state.maxCompletedStep,
+				hotelIdentity: saved.hotelIdentity ?? state.hotelIdentity,
+				settings: saved.settings ?? state.settings,
+				rooms: saved.rooms ?? state.rooms,
+				galleryPreviews: saved.galleryPreviews ?? state.galleryPreviews,
+				galleryImages: saved.galleryImages ?? state.galleryImages,
+				paymentPlan: saved.paymentPlan ?? state.paymentPlan,
+				paymentPrice: saved.paymentPrice ?? state.paymentPrice,
+				paymentMethod: saved.paymentMethod ?? state.paymentMethod,
+				paymentTransactionId:
+					saved.paymentTransactionId ?? state.paymentTransactionId,
+				manualReceiptUrl: saved.manualReceiptUrl ?? state.manualReceiptUrl,
+				manualPaymentMethod:
+					saved.manualPaymentMethod ?? state.manualPaymentMethod,
+				// Files CANNOT be restored from localStorage (not serializable)
+				// galleryFiles, logoFile, coverPhotoFile, room imageFiles stay empty
+			}));
+		} catch {
+			// Corrupted storage — ignore, start fresh
+		}
+	},
+
+	persistToStorage: () => {
+		if (typeof window === "undefined") return;
+		try {
+			const state = useOnboardingStore.getState();
+			const snapshot = {
+				currentStep: state.currentStep,
+				maxCompletedStep: state.maxCompletedStep,
+				hotelIdentity: state.hotelIdentity,
+				settings: state.settings,
+				rooms: state.rooms.map((r) => ({
+					...r,
+					imageFiles: [], // Files not serializable
+					imagePreviews: r.imagePreviews,
+				})),
+				galleryPreviews: state.galleryPreviews,
+				galleryImages: state.galleryImages,
+				paymentPlan: state.paymentPlan,
+				paymentPrice: state.paymentPrice,
+				paymentMethod: state.paymentMethod,
+				paymentTransactionId: state.paymentTransactionId,
+				manualReceiptUrl: state.manualReceiptUrl,
+				manualPaymentMethod: state.manualPaymentMethod,
+			};
+			localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot));
+		} catch {
+			// Storage full or blocked — non-critical, skip
+		}
+	},
+
+	clearStorage: () => {
+		if (typeof window === "undefined") return;
+		try {
+			localStorage.removeItem(STORAGE_KEY);
+		} catch {
+			// Ignore
+		}
+	},
+
 	validateStep: (step) => {
 		const errors: string[] = [];
 
@@ -357,7 +434,8 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 		return { valid: errors.length === 0, errors };
 	},
 
-	reset: () =>
+	reset: () => {
+		useOnboardingStore.getState().clearStorage();
 		set({
 			currentStep: 1,
 			maxCompletedStep: 0,
@@ -380,5 +458,6 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 			error: null,
 			validationErrors: {},
 			isProvisioning: false,
-		}),
+		});
+	},
 }));

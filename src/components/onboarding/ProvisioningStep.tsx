@@ -101,41 +101,39 @@ export default function ProvisioningStep() {
 
 			setUploadProgress({ current: 0, total: allFiles.length });
 
-			// Upload paralelo con tracking de progreso
-			const uploadSingle = async (item: (typeof allFiles)[0]) => {
-				const compressed = await compressImage(item.file);
-				const presign = await getPresignedOnboardingUrlAction(
-					item.file.name,
-					"image/webp",
-				);
-				if (!presign.success || !presign.uploadUrl || !presign.publicUrl) {
-					throw new Error(presign.error || "Sin URL presignada");
-				}
-				await uploadToR2(presign.uploadUrl, compressed);
-				return { type: item.type, id: item.id, url: presign.publicUrl };
-			};
-
-			// Procesar en batches de 3 para no saturar la red
-			const batchSize = 3;
-			let completed = 0;
-
-			for (let i = 0; i < allFiles.length; i += batchSize) {
-				const batch = allFiles.slice(i, i + batchSize);
-				const results = await Promise.allSettled(batch.map(uploadSingle));
-
-				for (const result of results) {
-					if (result.status === "fulfilled") {
-						if (result.value.type === "gallery") {
-							galleryUrls.push(result.value.url);
-						} else {
-							if (!roomUrlMap[result.value.id])
-								roomUrlMap[result.value.id] = [];
-							roomUrlMap[result.value.id].push(result.value.url);
-						}
+			// Upload SECUENCIAL — una imagen a la vez para evitar saturación
+			// del servidor con server actions concurrentes (root cause de los
+			// "8 intentos fallidos" en la galería).
+			for (let i = 0; i < allFiles.length; i++) {
+				const item = allFiles[i];
+				try {
+					const compressed = await compressImage(item.file);
+					const presign = await getPresignedOnboardingUrlAction(
+						item.file.name,
+						"image/webp",
+					);
+					if (!presign.success || !presign.uploadUrl || !presign.publicUrl) {
+						console.warn(
+							`[Cerebro Operativo] Falló presign para ${item.file.name}: ${presign.error}`,
+						);
+						continue; // Skip this file, continue with next
 					}
-					completed++;
-					setUploadProgress({ current: completed, total: allFiles.length });
+					await uploadToR2(presign.uploadUrl, compressed);
+
+					if (item.type === "gallery") {
+						galleryUrls.push(presign.publicUrl);
+					} else {
+						if (!roomUrlMap[item.id]) roomUrlMap[item.id] = [];
+						roomUrlMap[item.id].push(presign.publicUrl);
+					}
+				} catch (err) {
+					console.warn(
+						`[Cerebro Operativo] Falló subida de ${item.file.name}:`,
+						err instanceof Error ? err.message : err,
+					);
+					// Continue with next file — don't abort the whole pipeline
 				}
+				setUploadProgress({ current: i + 1, total: allFiles.length });
 			}
 
 			// ─── FASE 1: VERIFICAR QUE TODAS LAS IMÁGENES SE SUBIERON ──

@@ -28,12 +28,17 @@ export default function OnboardingWizard() {
 		setCurrentStep,
 		setMaxCompletedStep,
 		setPaymentInfo,
+		updateHotelIdentity,
+		updateSettings,
 		paymentTransactionId,
 		manualReceiptUrl,
 		isProvisioning,
 		validateStep,
 		setValidationErrors,
 		startProvisioning,
+		restoreFromStorage,
+		persistToStorage,
+		clearStorage,
 	} = useOnboardingStore();
 
 	// Migration: Step 3 (PropertyType) was removed — bump completed step if stuck
@@ -42,6 +47,18 @@ export default function OnboardingWizard() {
 			setMaxCompletedStep(Math.max(maxCompletedStep, 3));
 		}
 	}, []);
+
+	// Restore wizard memory from Cerebro Operativo (localStorage) on mount
+	useEffect(() => {
+		restoreFromStorage();
+	}, []);
+
+	// Persist state to Cerebro Operativo on every meaningful change
+	useEffect(() => {
+		if (!isProvisioning && currentStep > 1) {
+			persistToStorage();
+		}
+	}, [currentStep, isProvisioning]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [showAuth, setShowAuth] = useState(false);
@@ -94,6 +111,23 @@ export default function OnboardingWizard() {
 				const price = searchParams.get("price");
 				if (price) {
 					setPaymentInfo(plan, Number(price));
+				}
+
+				// Hydrate wizard with data from LeadCaptureModal (Cerebro Operativo)
+				const leadName = searchParams.get("name");
+				const leadEmail = searchParams.get("email");
+				const leadPhone = searchParams.get("phone");
+				const leadHotelName = searchParams.get("hotelName");
+				const leadCity = searchParams.get("city");
+
+				if (leadHotelName || leadCity) {
+					updateHotelIdentity({
+						name: leadHotelName || "",
+						city: leadCity || "",
+					});
+				}
+				if (leadPhone) {
+					updateSettings({ whatsappNumber: leadPhone });
 				}
 			} catch {
 				setError("Error de conexión.");

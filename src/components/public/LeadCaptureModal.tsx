@@ -76,6 +76,10 @@ export default function LeadCaptureModal({
         const params = new URLSearchParams({
           plan: defaultPlan,
           email: formData.email,
+          name: formData.name,
+          phone: formData.phone,
+          hotelName: formData.business_name,
+          city: formData.city,
           rooms: String(roomCount),
         });
         router.push(`/software/onboarding?${params.toString()}`);

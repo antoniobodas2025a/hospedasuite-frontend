@@ -89,7 +89,7 @@ export async function generateBlurDataURL(file: File): Promise<string> {
  * Sube un archivo directamente a R2 usando una URL presignada.
  * Incluye retry con exponential backoff (3 intentos).
  */
-export async function uploadToR2(presignedUrl: string, file: File, retries = 3): Promise<void> {
+export async function uploadToR2(presignedUrl: string, file: File, retries = 5): Promise<void> {
   for (let i = 0; i < retries; i++) {
     const res = await fetch(presignedUrl, {
       method: 'PUT',
@@ -97,7 +97,11 @@ export async function uploadToR2(presignedUrl: string, file: File, retries = 3):
       headers: { 'Content-Type': file.type },
     });
     if (res.ok) return;
-    // Exponential backoff: 1s, 2s, 4s
+    // Log status code for debugging
+    console.warn(
+      `[Cerebro Operativo] Intento ${i + 1}/${retries} fallido para ${file.name}: status ${res.status}`,
+    );
+    // Exponential backoff: 1s, 2s, 4s, 8s, 16s
     if (i < retries - 1) {
       await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
     }
