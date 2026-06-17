@@ -29,7 +29,7 @@ function sha256Hex(data: string): string {
  */
 export async function getPresignedUploadUrl(
   key: string,
-  _contentType: string = 'image/webp',
+  contentType: string = 'image/webp',
   expiresIn: number = 900
 ): Promise<string> {
   const now = new Date();
@@ -42,18 +42,20 @@ export async function getPresignedUploadUrl(
   const url = new URL(endpoint);
   const host = url.host;
 
+  // Sign both host AND content-type for stricter R2 compatibility
+  const canonicalHeaders = `content-type:${contentType}\nhost:${host}\n`;
+  const signedHeaders = 'content-type;host';
+
   const queryEntries = [
     `X-Amz-Algorithm=AWS4-HMAC-SHA256`,
     `X-Amz-Credential=${encodeURIComponent(`${accessKeyId}/${credentialScope}`)}`,
     `X-Amz-Date=${timeStamp}`,
     `X-Amz-Expires=${expiresIn}`,
-    `X-Amz-SignedHeaders=host`,
+    `X-Amz-SignedHeaders=${signedHeaders}`,
   ];
 
   const canonicalUri = `/${R2_BUCKET}/${key}`;
   const canonicalQueryString = queryEntries.join('&');
-  const canonicalHeaders = `host:${host}\n`;
-  const signedHeaders = 'host';
   const payloadHash = 'UNSIGNED-PAYLOAD';
 
   const canonicalRequest = [

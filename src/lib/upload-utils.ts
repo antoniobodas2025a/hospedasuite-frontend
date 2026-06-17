@@ -91,18 +91,34 @@ export async function generateBlurDataURL(file: File): Promise<string> {
  */
 export async function uploadToR2(presignedUrl: string, file: File, retries = 5): Promise<void> {
   for (let i = 0; i < retries; i++) {
-    const res = await fetch(presignedUrl, {
-      method: 'PUT',
-      body: file,
-      headers: { 'Content-Type': file.type },
-    });
-    if (res.ok) return;
-    // Log status code for debugging
-    console.warn(
-      `[Cerebro Operativo] Intento ${i + 1}/${retries} fallido para ${file.name}: status ${res.status}`,
-    );
-    // Exponential backoff: 1s, 2s, 4s, 8s, 16s
-    if (i < retries - 1) {
+    try {
+      const res = await fetch(presignedUrl, {
+        method: 'PUT',
+        body: file,
+        headers: { 'Content-Type': file.type },
+      });
+      if (res.ok) return;
+      // Log status code for debugging
+      console.warn(
+        `[Cerebro Operativo] Intento ${i + 1}/${retries} fallido para ${file.name}: status ${res.status}`,
+      );
+      // If R2 returns 403, the presigned URL signature may be invalid
+      // If R2 returns 400, the request format is wrong
+      if (res.status === 403 || res.status === 400) break; // Don't retry signature/format errors
+      // Exponential backoff: 1s, 2s, 4s, 8s, 16s
+      if (i < retries - 1) {
+        await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
+      }
+    } catch (err) {
+      // Network error — likely CORS or connectivity issue
+      const isLastAttempt = i === retries - 1;
+      if (isLastAttempt) {
+        throw new Error(
+          `No se pudo conectar con el almacenamiento. Verificá tu conexión a internet. ` +
+          `Si el problema persiste, contactanos por WhatsApp.`,
+        );
+      }
+      // Wait before retry
       await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
     }
   }
