@@ -104,34 +104,59 @@ export default function ProvisioningStep() {
 			// Upload SECUENCIAL — una imagen a la vez para evitar saturación
 			// del servidor con server actions concurrentes (root cause de los
 			// "8 intentos fallidos" en la galería).
+			// Fallback: si el PUT directo a R2 falla (CORS), sube via API proxy.
 			for (let i = 0; i < allFiles.length; i++) {
 				const item = allFiles[i];
+				let uploadedUrl: string | null = null;
+
 				try {
 					const compressed = await compressImage(item.file);
 					const presign = await getPresignedOnboardingUrlAction(
 						item.file.name,
 						"image/webp",
 					);
-					if (!presign.success || !presign.uploadUrl || !presign.publicUrl) {
-						console.warn(
-							`[Cerebro Operativo] Falló presign para ${item.file.name}: ${presign.error}`,
-						);
-						continue; // Skip this file, continue with next
+					if (presign.success && presign.uploadUrl && presign.publicUrl) {
+						// Intento 1: PUT directo a R2 (sin pasar por servidor)
+						await uploadToR2(presign.uploadUrl, compressed);
+						uploadedUrl = presign.publicUrl;
 					}
-					await uploadToR2(presign.uploadUrl, compressed);
+				} catch {
+					// Intento 2: Fallback via API proxy del servidor (bypass CORS)
+					console.warn(
+						`[Cerebro Operativo] PUT directo falló para ${item.file.name}, activando fallback servidor...`,
+					);
+					try {
+						const compressed = await compressImage(item.file);
+						const formData = new FormData();
+						formData.append("file", compressed, item.file.name);
 
+						const res = await fetch("/api/onboarding/upload", {
+							method: "POST",
+							body: formData,
+						});
+						const data = await res.json();
+						if (data.success && data.publicUrl) {
+							uploadedUrl = data.publicUrl;
+						} else {
+							console.warn(
+								`[Cerebro Operativo] Fallback servidor falló: ${data.error}`,
+							);
+						}
+					} catch (fallbackErr) {
+						console.warn(
+							`[Cerebro Operativo] Fallback total para ${item.file.name}:`,
+							fallbackErr instanceof Error ? fallbackErr.message : fallbackErr,
+						);
+					}
+				}
+
+				if (uploadedUrl) {
 					if (item.type === "gallery") {
-						galleryUrls.push(presign.publicUrl);
+						galleryUrls.push(uploadedUrl);
 					} else {
 						if (!roomUrlMap[item.id]) roomUrlMap[item.id] = [];
-						roomUrlMap[item.id].push(presign.publicUrl);
+						roomUrlMap[item.id].push(uploadedUrl);
 					}
-				} catch (err) {
-					console.warn(
-						`[Cerebro Operativo] Falló subida de ${item.file.name}:`,
-						err instanceof Error ? err.message : err,
-					);
-					// Continue with next file — don't abort the whole pipeline
 				}
 				setUploadProgress({ current: i + 1, total: allFiles.length });
 			}
