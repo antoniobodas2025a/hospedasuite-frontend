@@ -59,6 +59,11 @@ export default function ProvisioningStep() {
 	>([]);
 	const [hotelSlug, setHotelSlug] = useState<string | null>(null);
 	const [copiedField, setCopiedField] = useState<string | null>(null);
+	const [uploadLog, setUploadLog] = useState<string[]>([]);
+
+	const appendLog = (msg: string) => {
+		setUploadLog((prev) => [...prev, `[${new Date().toLocaleTimeString()}] ${msg}`]);
+	};
 
 	const copyToClipboard = (text: string, field: string) => {
 		navigator.clipboard.writeText(text);
@@ -101,52 +106,63 @@ export default function ProvisioningStep() {
 
 			setUploadProgress({ current: 0, total: allFiles.length });
 
-			// Upload SECUENCIAL — una imagen a la vez para evitar saturación
-			// del servidor con server actions concurrentes (root cause de los
-			// "8 intentos fallidos" en la galería).
-			// Fallback: si el PUT directo a R2 falla (CORS), sube via API proxy.
+			// Upload SECUENCIAL con DIAGNÓSTICO VISIBLE
+			appendLog(`Iniciando subida de ${allFiles.length} imágenes...`);
+
 			for (let i = 0; i < allFiles.length; i++) {
 				const item = allFiles[i];
 				let uploadedUrl: string | null = null;
+				const fileLabel = `[${i + 1}/${allFiles.length}] ${item.file.name} (${(item.file.size / 1024).toFixed(0)}KB)`;
 
 				try {
+					appendLog(`${fileLabel} → Comprimiendo...`);
 					const compressed = await compressImage(item.file);
+					appendLog(`${fileLabel} → Comprimido a ${(compressed.size / 1024).toFixed(0)}KB`);
+
+					appendLog(`${fileLabel} → Generando URL presignada...`);
 					const presign = await getPresignedOnboardingUrlAction(
 						item.file.name,
 						"image/webp",
 					);
-					if (presign.success && presign.uploadUrl && presign.publicUrl) {
-						// Intento 1: PUT directo a R2 (sin pasar por servidor)
-						await uploadToR2(presign.uploadUrl, compressed);
-						uploadedUrl = presign.publicUrl;
+
+					if (!presign.success || !presign.uploadUrl || !presign.publicUrl) {
+						appendLog(`${fileLabel} → ❌ Presign falló: ${presign.error || 'sin URL'}`);
+						continue;
 					}
-				} catch {
-					// Intento 2: Fallback via API proxy del servidor (bypass CORS)
-					console.warn(
-						`[Cerebro Operativo] PUT directo falló para ${item.file.name}, activando fallback servidor...`,
-					);
+					appendLog(`${fileLabel} → URL presignada OK`);
+
+					// Intento 1: PUT directo a R2
+					appendLog(`${fileLabel} → Intentando PUT directo a R2...`);
+					await uploadToR2(presign.uploadUrl!, compressed);
+					uploadedUrl = presign.publicUrl!;
+					appendLog(`${fileLabel} → ✅ Subida directa exitosa`);
+				} catch (directErr) {
+					appendLog(`${fileLabel} → ⚠️ PUT directo falló: ${directErr instanceof Error ? directErr.message : 'error desconocido'}`);
+					appendLog(`${fileLabel} → Intentando fallback servidor...`);
+
+					// Intento 2: Fallback via API proxy
 					try {
 						const compressed = await compressImage(item.file);
 						const formData = new FormData();
 						formData.append("file", compressed, item.file.name);
 
+						appendLog(`${fileLabel} → POST a /api/onboarding/upload...`);
 						const res = await fetch("/api/onboarding/upload", {
 							method: "POST",
 							body: formData,
 						});
+
+						appendLog(`${fileLabel} → Respuesta servidor: status ${res.status}`);
 						const data = await res.json();
+
 						if (data.success && data.publicUrl) {
 							uploadedUrl = data.publicUrl;
+							appendLog(`${fileLabel} → ✅ Fallback servidor exitoso`);
 						} else {
-							console.warn(
-								`[Cerebro Operativo] Fallback servidor falló: ${data.error}`,
-							);
+							appendLog(`${fileLabel} → ❌ Fallback falló: ${data.error || 'sin respuesta'}`);
 						}
 					} catch (fallbackErr) {
-						console.warn(
-							`[Cerebro Operativo] Fallback total para ${item.file.name}:`,
-							fallbackErr instanceof Error ? fallbackErr.message : fallbackErr,
-						);
+						appendLog(`${fileLabel} → ❌ Fallback total: ${fallbackErr instanceof Error ? fallbackErr.message : 'error desconocido'}`);
 					}
 				}
 
@@ -160,6 +176,8 @@ export default function ProvisioningStep() {
 				}
 				setUploadProgress({ current: i + 1, total: allFiles.length });
 			}
+
+			appendLog(`─── Resumen: ${galleryUrls.length}/${galleryFiles.length} galería, ${Object.values(roomUrlMap).flat().length}/${rooms.reduce((a, r) => a + r.imageFiles.length, 0)} habitaciones ───`);
 
 			// ─── FASE 1: VERIFICAR QUE TODAS LAS IMÁGENES SE SUBIERON ──
 			const uploadError = detectUploadFailures({
@@ -265,7 +283,7 @@ export default function ProvisioningStep() {
 	}, []);
 
 	// --------------------------------------------------------------------------
-	// UPLOADING STATE
+	// UPLOADING STATE — con diagnóstico visible
 	// --------------------------------------------------------------------------
 	if (status === "uploading") {
 		const pct =
@@ -276,7 +294,7 @@ export default function ProvisioningStep() {
 			<motion.div
 				initial={{ opacity: 0 }}
 				animate={{ opacity: 1 }}
-				className="py-24 text-center space-y-8"
+				className="py-12 space-y-8"
 			>
 				<div className="relative w-24 h-24 mx-auto">
 					<div className="absolute inset-0 border-t-2 border-cyan-500 rounded-full animate-spin" />
@@ -301,6 +319,40 @@ export default function ProvisioningStep() {
 						/>
 					</div>
 					<p className="text-zinc-600 text-xs font-mono">{pct}%</p>
+				</div>
+
+				{/* Panel de diagnóstico visible */}
+				<div className="max-w-lg mx-auto w-full">
+					<div className="bg-black/40 border border-white/10 rounded-[var(--radius-squircle-xl)] p-4 max-h-64 overflow-y-auto font-mono text-xs">
+						<p className="text-zinc-500 text-[10px] font-bold uppercase tracking-widest mb-2">
+							Diagnóstico en vivo
+						</p>
+						{uploadLog.length === 0 ? (
+							<p className="text-zinc-600 italic">Iniciando...</p>
+						) : (
+							uploadLog.map((line, i) => {
+								const isError = line.includes("❌");
+								const isSuccess = line.includes("✅");
+								const isWarning = line.includes("⚠️");
+								return (
+									<p
+										key={i}
+										className={`leading-relaxed ${
+											isError
+												? "text-red-400"
+												: isSuccess
+													? "text-emerald-400"
+													: isWarning
+														? "text-amber-400"
+														: "text-zinc-400"
+										}`}
+									>
+										{line}
+									</p>
+								);
+							})
+						)}
+					</div>
 				</div>
 			</motion.div>
 		);
