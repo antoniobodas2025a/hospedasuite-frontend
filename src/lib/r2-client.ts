@@ -32,6 +32,7 @@ export async function getPresignedUploadUrl(
   contentType: string = 'image/webp',
   expiresIn: number = 900
 ): Promise<string> {
+  void contentType; // Not included in signature — R2 accepts PUT without content-type in signed headers
   const now = new Date();
   const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, '');
   const timeStamp = now.toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
@@ -42,9 +43,9 @@ export async function getPresignedUploadUrl(
   const url = new URL(endpoint);
   const host = url.host;
 
-  // Sign both host AND content-type for stricter R2 compatibility
-  const canonicalHeaders = `content-type:${contentType}\nhost:${host}\n`;
-  const signedHeaders = 'content-type;host';
+  // Only sign 'host' — adding content-type causes 400 errors on R2
+  const canonicalHeaders = `host:${host}\n`;
+  const signedHeaders = 'host';
 
   const queryEntries = [
     `X-Amz-Algorithm=AWS4-HMAC-SHA256`,
