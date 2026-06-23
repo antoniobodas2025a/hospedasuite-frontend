@@ -1,59 +1,46 @@
 {
-  "scenario": "totiao_instagram_dm_automation",
+  "name": "Totiao VIP Funnel Automation",
+  "version": "1.0",
+  "description": "Automated Instagram DM funnel triggered by keyword comment",
   "trigger": {
     "platform": "instagram",
     "event": "new_comment",
-    "keyword": "ANTOJO",
-    "post_type": "reel"
+    "keyword_filter": "ANTOJO",
+    "webhook_config": {
+      "method": "POST",
+      "path": "/webhooks/instagram/comment",
+      "headers": {
+        "Content-Type": "application/json"
+      }
+    }
   },
-  "nodes": [
+  "workflow": [
     {
-      "id": "1",
-      "type": "webhook",
-      "name": "Interceptar Comentario",
-      "config": {
-        "method": "POST",
-        "path": "/webhooks/instagram/comment",
-        "payload_mapping": {
-          "user_id": "{{body.from.id}}",
-          "username": "{{body.from.username}}",
-          "comment_text": "{{body.text}}",
-          "media_id": "{{body.media.id}}"
-        }
-      }
+      "step": 1,
+      "action": "validate_comment",
+      "description": "Check if comment contains keyword 'ANTOJO'",
+      "logic": "if (comment.text.includes('ANTOJO')) proceed else end"
     },
     {
-      "id": "2",
-      "type": "filter",
-      "name": "Validar Keyword",
-      "config": {
-        "condition": "{{body.text}} contains 'ANTOJO'",
-        "true_path": "3",
-        "false_path": "end"
-      }
-    },
-    {
-      "id": "3",
-      "type": "http_request",
-      "name": "Obtener Perfil Usuario",
-      "config": {
+      "step": 2,
+      "action": "get_user_profile",
+      "description": "Retrieve user ID and username from comment payload",
+      "api_call": {
         "method": "GET",
-        "url": "https://graph.instagram.com/{{body.from.id}}",
-        "headers": {
-          "Authorization": "Bearer {{instagram_access_token}}"
-        }
+        "url": "https://graph.instagram.com/{{comment.from.id}}",
+        "auth": "Bearer {{instagram_access_token}}"
       }
     },
     {
-      "id": "4",
-      "type": "action",
-      "name": "Enviar DM Automático",
-      "config": {
+      "step": 3,
+      "action": "send_direct_message",
+      "description": "Send automated DM with VIP access link",
+      "api_call": {
         "method": "POST",
         "url": "https://graph.instagram.com/me/messages",
         "body": {
           "recipient": {
-            "id": "{{body.from.id}}"
+            "id": "{{user.id}}"
           },
           "message": {
             "text": "¡El CRUNCH no miente! 🥩🔥 Aquí tienes tu acceso directo a la lista VIP de Totiao para que sepas el día exacto de apertura: https://hospedasuite.com/totiao_vip"
@@ -63,7 +50,8 @@
     }
   ],
   "copy_rules": {
+    "mandatory_phrase": "¡El CRUNCH no miente! 🔥",
     "forbidden_words": ["Próximamente", "En construcción", "Disculpa", "Aún no abrimos"],
-    "mandatory_phrase": "¡El CRUNCH no miente! 🔥"
+    "link_target": "https://hospedasuite.com/totiao_vip"
   }
 }
