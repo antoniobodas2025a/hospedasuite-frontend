@@ -1,12 +1,6 @@
 'use client';
 
 import { useState } from 'react';
-import { Metadata } from 'next';
-
-export const metadata: Metadata = {
-  title: 'Totiao — Lista VIP',
-  description: 'Únete a la lista VIP de Totiao. El verdadero crunch está por llegar.',
-};
 
 export default function TotiaoPage() {
   const [phone, setPhone] = useState('');
