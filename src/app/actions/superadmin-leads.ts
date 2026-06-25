@@ -1,8 +1,11 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSuperAdmin } from '@/lib/auth-guards';
+import { logAuditEvent } from '@/lib/audit-logger';
+import { createClient } from '@/utils/supabase/server';
 import type { LeadFilter, LeadListResult, LeadStatus } from '@/types/leads';
 
 // ============================================================================
@@ -93,12 +96,36 @@ export async function updateLeadStatusAction(
   await requireSuperAdmin();
 
   try {
+    // 📸 Snapshot pre-mutación para auditoría
+    const { data: currentLead } = await supabaseAdmin
+      .from('hunted_leads')
+      .select('status')
+      .eq('id', leadId)
+      .single();
+
     const { error } = await supabaseAdmin
       .from('hunted_leads')
       .update({ status })
       .eq('id', leadId);
 
     if (error) throw new Error(error.message);
+
+    // 🔍 Audit: lead status change
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'lead_status_updated',
+      entity_type: 'lead',
+      entity_id: leadId,
+      old_value: currentLead ? { status: currentLead.status } : null,
+      new_value: { status },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
 
     revalidatePath('/admin/leads');
     return { success: true };
@@ -119,12 +146,36 @@ export async function updateLeadNotesAction(
   await requireSuperAdmin();
 
   try {
+    // 📸 Snapshot pre-mutación para auditoría
+    const { data: currentLead } = await supabaseAdmin
+      .from('hunted_leads')
+      .select('notes')
+      .eq('id', leadId)
+      .single();
+
     const { error } = await supabaseAdmin
       .from('hunted_leads')
       .update({ notes })
       .eq('id', leadId);
 
     if (error) throw new Error(error.message);
+
+    // 🔍 Audit: lead notes updated
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'lead_notes_updated',
+      entity_type: 'lead',
+      entity_id: leadId,
+      old_value: currentLead ? { notes: currentLead.notes } : null,
+      new_value: { notes },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
 
     revalidatePath('/admin/leads');
     return { success: true };
@@ -144,12 +195,36 @@ export async function deleteLeadAction(
   await requireSuperAdmin();
 
   try {
+    // 📸 Snapshot pre-borrado para auditoría
+    const { data: leadSnapshot } = await supabaseAdmin
+      .from('hunted_leads')
+      .select('*')
+      .eq('id', leadId)
+      .single();
+
     const { error } = await supabaseAdmin
       .from('hunted_leads')
       .delete()
       .eq('id', leadId);
 
     if (error) throw new Error(error.message);
+
+    // 🔍 Audit: lead deleted
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'lead_deleted',
+      entity_type: 'lead',
+      entity_id: leadId,
+      old_value: (leadSnapshot as Record<string, unknown>) ?? null,
+      new_value: null,
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
 
     revalidatePath('/admin/leads');
     return { success: true };
@@ -170,12 +245,36 @@ export async function assignLeadToHotelAction(
   await requireSuperAdmin();
 
   try {
+    // 📸 Snapshot pre-mutación para auditoría
+    const { data: currentLead } = await supabaseAdmin
+      .from('hunted_leads')
+      .select('hotel_id')
+      .eq('id', leadId)
+      .single();
+
     const { error } = await supabaseAdmin
       .from('hunted_leads')
       .update({ hotel_id: hotelId })
       .eq('id', leadId);
 
     if (error) throw new Error(error.message);
+
+    // 🔍 Audit: lead assigned to hotel
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'lead_assigned',
+      entity_type: 'lead',
+      entity_id: leadId,
+      old_value: currentLead ? { hotel_id: currentLead.hotel_id } : null,
+      new_value: { hotel_id: hotelId },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
 
     revalidatePath('/admin/leads');
     return { success: true };
@@ -245,6 +344,23 @@ export async function createAdminLeadAction(
       }
       throw new Error(error.message);
     }
+
+    // 🔍 Audit: lead created
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'lead_created',
+      entity_type: 'lead',
+      entity_id: created.id,
+      old_value: null,
+      new_value: { business_name: data.business_name.trim(), phone: data.phone.trim(), status: 'new' },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
 
     revalidatePath('/admin/leads');
     return { success: true, data: created };

@@ -1,7 +1,7 @@
 import React from 'react';
 import '../globals.css';
 import Link from 'next/link';
-import { ShieldCheck, LayoutDashboard, CreditCard, Building2, Users } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, CreditCard, Building2, Users, ScrollText } from 'lucide-react';
 
 export default function SuperAdminLayout({
   children,
@@ -66,6 +66,13 @@ export default function SuperAdminLayout({
             >
               <Users size={18} />
               <span className='hidden lg:inline'>Leads</span>
+            </Link>
+            <Link
+              href='/admin/audit-logs'
+              className='flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-squircle-lg)] text-white/60 hover:text-white hover:bg-white/5 transition-all text-sm font-medium'
+            >
+              <ScrollText size={18} />
+              <span className='hidden lg:inline'>Auditoría</span>
             </Link>
           </nav>
           <div className='mt-auto text-xs text-white/30 hidden lg:block'>

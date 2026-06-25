@@ -2,8 +2,11 @@
 
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { TRIAL_DAYS } from '@/config/saas-plans';
 import { requireSuperAdmin } from '@/lib/auth-guards';
+import { logAuditEvent } from '@/lib/audit-logger';
+import { createClient } from '@/utils/supabase/server';
 
 // ============================================================================
 // 1. LISTAR HOTELES CON duplicate_review
@@ -88,6 +91,23 @@ export async function approveDuplicateHotelAction(
       return { success: false, error: 'Error al aprobar hotel: ' + error.message };
     }
 
+    // 🔍 Audit: duplicate hotel approved
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'duplicate_hotel_approved',
+      entity_type: 'hotel',
+      entity_id: hotelId,
+      old_value: { subscription_status: 'duplicate_review' },
+      new_value: { subscription_status: 'trialing', status: 'active' },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
     revalidatePath('/admin/hotels/duplicates');
     return { success: true };
   } catch (error: any) {
@@ -117,6 +137,23 @@ export async function rejectDuplicateHotelAction(
     if (error) {
       return { success: false, error: 'Error al rechazar hotel: ' + error.message };
     }
+
+    // 🔍 Audit: duplicate hotel rejected
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'duplicate_hotel_rejected',
+      entity_type: 'hotel',
+      entity_id: hotelId,
+      old_value: { subscription_status: 'duplicate_review' },
+      new_value: { subscription_status: 'cancelled', status: 'suspended' },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
 
     revalidatePath('/admin/hotels/duplicates');
     return { success: true };

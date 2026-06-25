@@ -26,13 +26,13 @@ export interface AuditEvent {
   /** Qué se hizo */
   action: string;
   /** Tipo de entidad afectada */
-  entity_type: 'hotel' | 'invoice' | 'subscription';
+  entity_type: 'hotel' | 'invoice' | 'subscription' | 'lead' | 'manual_payment' | 'user';
   /** ID de la entidad afectada */
   entity_id: string;
   /** Valor antes del cambio (opcional) */
-  old_value?: Record<string, unknown>;
+  old_value?: Record<string, unknown> | null;
   /** Valor después del cambio (opcional) */
-  new_value?: Record<string, unknown>;
+  new_value?: Record<string, unknown> | null;
   /** IP del actor (opcional, se auto-detecta en server actions) */
   ip_address?: string;
   /** User agent (opcional) */

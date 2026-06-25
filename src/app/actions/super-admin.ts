@@ -1,9 +1,12 @@
 'use server'
 
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
 import { generateUniqueSlug } from '@/lib/slug';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSuperAdmin } from '@/lib/auth-guards';
+import { logAuditEvent } from '@/lib/audit-logger';
+import { createClient } from '@/utils/supabase/server';
 
 /**
  * ACCIÓN 1: Crear nuevo Hotel y Usuario Dueño (Transacción Atómica con Rollback)
@@ -68,6 +71,23 @@ export async function createHotelAction(formData: FormData) {
     if (staffError) throw staffError;
 
     revalidatePath('/admin');
+
+    // 🔍 Audit: hotel creation
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'hotel_created',
+      entity_type: 'hotel',
+      entity_id: createdHotelId!,
+      old_value: null,
+      new_value: { name, email, plan, slug: slug ?? undefined },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
     
   } catch (error: any) {
     console.error('⚠️ [Rollback] Error en creación:', error.message);
@@ -93,6 +113,24 @@ export async function godModeAccess(email: string) {
     });
 
     if (error) throw error;
+
+    // 🔍 Audit: god mode access
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'god_mode_access',
+      entity_type: 'user',
+      entity_id: email,
+      old_value: null,
+      new_value: { email, link_generated: true },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
     return { success: true, url: data.properties.action_link }; 
   } catch (error: any) {
     console.error('GodMode Error:', error);
@@ -107,12 +145,37 @@ export async function updateTenantAction(hotelId: string, updateData: { name: st
   await requireSuperAdmin();
 
   try {
+    // 📸 Snapshot pre-mutación para auditoría
+    const { data: current } = await supabaseAdmin
+      .from('hotels')
+      .select('name, status, subscription_plan')
+      .eq('id', hotelId)
+      .single();
+
     const { error } = await supabaseAdmin
       .from('hotels')
       .update(updateData)
       .eq('id', hotelId);
 
     if (error) throw error;
+
+    // 🔍 Audit: tenant update
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'tenant_updated',
+      entity_type: 'hotel',
+      entity_id: hotelId,
+      old_value: current ? { name: current.name, status: current.status, subscription_plan: current.subscription_plan } : null,
+      new_value: updateData as Record<string, unknown>,
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
     revalidatePath('/admin');
     return { success: true };
   } catch (error: any) {
@@ -135,6 +198,24 @@ export async function forceChangePasswordAction(ownerId: string, newPassword: st
     });
 
     if (error) throw error;
+
+    // 🔍 Audit: forced password change
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'password_forced',
+      entity_type: 'user',
+      entity_id: ownerId,
+      old_value: null,
+      new_value: { password_changed: true },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
     return { success: true };
   } catch (error: any) {
     console.error('Password Reset Error:', error);
@@ -151,6 +232,13 @@ export async function deleteHotelAction(hotelId: string, ownerId: string | null 
 
   try {
     console.log(`☢️ INICIANDO BORRADO NUCLEAR: ${hotelId}`);
+
+    // 📸 Snapshot pre-borrado para auditoría
+    const { data: hotelSnapshot } = await supabaseAdmin
+      .from('hotels')
+      .select('*')
+      .eq('id', hotelId)
+      .single();
 
     // Reconocimiento de registros dependientes
     const { data: bookings } = await supabaseAdmin
@@ -186,6 +274,24 @@ export async function deleteHotelAction(hotelId: string, ownerId: string | null 
     }
 
     console.log(`✅ Tenant ${hotelId} erradicado satisfactoriamente.`);
+
+    // 🔍 Audit: hotel deletion
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'hotel_deleted',
+      entity_type: 'hotel',
+      entity_id: hotelId,
+      old_value: (hotelSnapshot as Record<string, unknown>) ?? null,
+      new_value: null,
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
     revalidatePath('/admin');
     return { success: true };
 

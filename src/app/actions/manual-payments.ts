@@ -4,6 +4,8 @@ import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSuperAdmin } from '@/lib/auth-guards';
 import { revalidatePath } from 'next/cache';
+import { headers } from 'next/headers';
+import { logAuditEvent } from '@/lib/audit-logger';
 import { uploadToR2, R2_BUCKET } from '@/lib/r2-upload';
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-xxxxx.r2.dev';
 
@@ -157,6 +159,21 @@ export async function approveManualPayment(
 
     if (updateHotelError) throw updateHotelError;
 
+    // 🔍 Audit: payment approved
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user.id,
+      actor_email: user.email,
+      action: 'payment_approved',
+      entity_type: 'manual_payment',
+      entity_id: manualPaymentId,
+      old_value: { status: 'pending' },
+      new_value: { status: 'approved' },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
     // Send approval email to hotelier
     try {
       const { data: hotel } = await supabaseAdmin
@@ -240,6 +257,23 @@ export async function rejectManualPayment(
     if (updateError) {
       return { success: false, error: 'Error al rechazar: ' + updateError.message };
     }
+
+    // 🔍 Audit: payment rejected
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'payment_rejected',
+      entity_type: 'manual_payment',
+      entity_id: manualPaymentId,
+      old_value: { status: 'pending' },
+      new_value: { status: 'rejected', reason: reason.trim() },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
 
     revalidatePath('/admin/payments/pending');
     return { success: true };
