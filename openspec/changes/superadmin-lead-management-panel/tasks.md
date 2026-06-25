@@ -41,17 +41,17 @@ Chain strategy: pending
 
 ## Phase 4: Client State — useLeads Hook
 
-- [ ] **4.1** Create `src/hooks/useLeads.ts` — manages `filteredLeads`, `search`, `statusFilter`, `dateRange`, `page`. Exposes optmistic update wrappers for all 5 server actions (mirrors `useCRM.ts` pattern: snapshot → call → rollback on failure → `router.refresh()`). **[M]**
+- [x] **4.1** Create `src/hooks/useLeads.ts` — manages `filteredLeads`, `search`, `statusFilter`, `dateRange`, `page`. Exposes optmistic update wrappers for all 5 server actions (mirrors `useCRM.ts` pattern: snapshot → call → rollback on failure → `router.refresh()`). **[M]**
 
 ## Phase 5: UI Components
 
-- [ ] **5.1** Create `src/components/superadmin/LeadsTable.tsx` — receives `initialLeads`, `totalCount`, `initialHotels`. Renders: toolbar (search input, status `<Select>`, date range pickers, export button, create button), paginated table with expanded columns (address, website, rating, ai_pitch, hotel_name), action buttons (Edit, Delete) per row. **[L]**
-- [ ] **5.2** Create `src/components/superadmin/LeadEditModal.tsx` — shadcn `Dialog` with status `<Select>`, notes `<textarea>`, hotel searchable dropdown (client-filter from pre-fetched 200 hotels). Calls `updateLeadStatusAction` / `updateLeadNotesAction` / `assignLeadToHotelAction` on save. **[M]**
-- [ ] **5.3** Create `src/components/superadmin/LeadCreateModal.tsx` — shadcn `Dialog` with form for all `hunted_leads` fields. Required: business_name, phone, city_search, status. Validates required fields client-side + duplicate phone via server check. Calls `createAdminLeadAction` on submit. **[M]**
+- [x] **5.1** Create `src/app/(super-admin)/admin/leads/LeadsTable.tsx` — receives `initialLeads`, `totalCount`, `initialHotels`. Renders: toolbar (search input, status `<Select>`, date range pickers, export button, create button), paginated table with expanded columns (address, website, rating, ai_pitch, hotel_name), action buttons (Edit, Delete) per row. **[L]**
+- [x] **5.2** Create `src/app/(super-admin)/admin/leads/LeadEditModal.tsx` — shadcn `Dialog` with status `<Select>`, notes `<textarea>`, hotel searchable dropdown (client-filter from pre-fetched 200 hotels). Calls `updateLeadStatusAction` / `updateLeadNotesAction` / `assignLeadToHotelAction` on save. **[M]**
+- [x] **5.3** Create `src/app/(super-admin)/admin/leads/LeadCreateModal.tsx` — shadcn `Dialog` with form for all `hunted_leads` fields. Required: business_name, phone, city_search, status. Validates required fields client-side + duplicate phone via server check. Calls `createAdminLeadAction` on submit. **[M]**
 
 ## Phase 6: Page Wiring
 
-- [ ] **6.1** Modify `src/app/(super-admin)/admin/leads/page.tsx` — fetch paginated leads + 200 hotels server-side, pass as props to `<LeadsTable>`. Remove inline table, remove "solo lectura" label, add `dynamic = 'force-dynamic'` (already present). **[M]**
+- [x] **6.1** Modify `src/app/(super-admin)/admin/leads/page.tsx` — fetch paginated leads + 200 hotels server-side, pass as props to `<LeadsTable>`. Remove inline table, remove "solo lectura" label, add `dynamic = 'force-dynamic'` (already present). **[M]**
 
 ## Phase 7: Testing
 
