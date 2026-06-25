@@ -5,7 +5,7 @@ import { CheckCircle2, Clock, ShieldCheck, Gift } from 'lucide-react';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 
 export default function PaymentReviewStep() {
-  const { paymentMethod, paymentTransactionId, manualReceiptUrl, startProvisioning } = useOnboardingStore();
+  const { paymentMethod, paymentTransactionId, manualReceiptUrl, startProvisioning, setCurrentStep } = useOnboardingStore();
 
   const isManual = paymentMethod === 'manual';
   const isFree = paymentMethod === 'free';
@@ -141,6 +141,15 @@ export default function PaymentReviewStep() {
         }`}
       >
         {isFree ? 'Activar propiedad (prueba gratis)' : isManual ? 'Activar propiedad (pendiente de pago)' : 'Activar propiedad'}
+      </motion.button>
+
+      {/* Back button — returns to PaymentStep (step 6) */}
+      <motion.button
+        whileTap={{ scale: 0.97 }}
+        onClick={() => setCurrentStep(6)}
+        className="w-full border border-white/10 text-zinc-500 py-4 rounded-[var(--radius-squircle-xl)] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all"
+      >
+        ← Volver
       </motion.button>
     </motion.div>
   );

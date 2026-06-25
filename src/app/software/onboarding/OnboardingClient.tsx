@@ -306,44 +306,48 @@ export default function OnboardingWizard() {
 					</AnimatePresence>
 				</div>
 
-				{/* Navigation */}
-				{currentStep < 7 && (
-					<div className="mt-8 space-y-3">
-						{/* Step validation errors */}
-						{stepErrors[currentStep] && stepErrors[currentStep].length > 0 && (
-							<div className="bg-rose-500/10 border border-rose-500/30 rounded-[var(--radius-squircle-xl)] p-3">
-								<p className="text-rose-400 text-xs font-bold uppercase tracking-wider mb-1">
-									⚠️ No puedes avanzar
-								</p>
-								{stepErrors[currentStep].map((err, i) => (
-									<p key={i} className="text-rose-300 text-sm">
-										• {err}
-									</p>
-								))}
-							</div>
-						)}
+            {/* Navigation */}
+            {currentStep >= 1 && (
+              <div className="mt-8 space-y-3">
+                {/* Step validation errors */}
+                {stepErrors[currentStep] && stepErrors[currentStep].length > 0 && (
+                  <div className="bg-rose-500/10 border border-rose-500/30 rounded-[var(--radius-squircle-xl)] p-3">
+                    <p className="text-rose-400 text-xs font-bold uppercase tracking-wider mb-1">
+                      ⚠️ No puedes avanzar
+                    </p>
+                    {stepErrors[currentStep].map((err, i) => (
+                      <p key={i} className="text-rose-300 text-sm">
+                        • {err}
+                      </p>
+                    ))}
+                  </div>
+                )}
 
-						<div className="flex gap-4">
-							{currentStep > 1 && (
-								<motion.button
-									onClick={handleBack}
-									whileTap={{ scale: 0.97 }}
-									className="w-1/3 border border-white/10 text-zinc-500 py-4 rounded-[var(--radius-squircle-xl)] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all"
-								>
-									Atrás
-								</motion.button>
-							)}
-							<motion.button
-								onClick={handleNext}
-								whileTap={{ scale: 0.97 }}
-								disabled={!canProceed}
-								className={`${currentStep === 1 ? "w-full" : "w-2/3"} bg-indigo-600 text-white font-bold py-4 rounded-[var(--radius-squircle-xl)] uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20 disabled:opacity-20 transition-all`}
-							>
-								{isLastStep ? "Activar" : "Siguiente"}
-							</motion.button>
-						</div>
-					</div>
-				)}
+                <div className="flex gap-4">
+                  {currentStep > 1 && (
+                    <motion.button
+                      onClick={handleBack}
+                      whileTap={{ scale: 0.97 }}
+                      className={`border border-white/10 text-zinc-500 py-4 rounded-[var(--radius-squircle-xl)] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all ${
+                        currentStep === 7 ? 'w-full' : 'w-1/3'
+                      }`}
+                    >
+                      Atrás
+                    </motion.button>
+                  )}
+                  {currentStep < 7 && (
+                    <motion.button
+                      onClick={handleNext}
+                      whileTap={{ scale: 0.97 }}
+                      disabled={!canProceed}
+                      className={`${currentStep === 1 ? "w-full" : "w-2/3"} bg-indigo-600 text-white font-bold py-4 rounded-[var(--radius-squircle-xl)] uppercase tracking-widest text-[10px] shadow-lg shadow-indigo-600/20 disabled:opacity-20 transition-all`}
+                    >
+                      {isLastStep ? "Activar" : "Siguiente"}
+                    </motion.button>
+                  )}
+                </div>
+              </div>
+            )}
 			</div>
 		</div>
 	);

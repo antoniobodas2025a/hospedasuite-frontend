@@ -63,10 +63,6 @@ export default function SettingsStep() {
             <input type="time" value={settings.checkOutTime || '11:00'} onChange={(e) => updateSettings({ checkOutTime: e.target.value })} className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-lg)] p-3 text-white outline-none focus:border-indigo-500/50" />
           </div>
         </div>
-        <div className="mt-4">
-          <label className="block text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2 ml-1">{t('whatsappLabel')}</label>
-          <input type="text" value={settings.whatsappNumber || ''} onChange={(e) => updateSettings({ whatsappNumber: e.target.value })} placeholder={t('whatsappPlaceholder')} className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-lg)] p-3 text-white outline-none focus:border-indigo-500/50 placeholder:text-zinc-700" />
-        </div>
       </SectionCard>
 
       {/* Section 2: Políticas */}

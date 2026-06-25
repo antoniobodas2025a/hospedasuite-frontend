@@ -10,6 +10,7 @@ import { checkUnitLimit } from '@/data/plan-guard';
 import { generateUniqueSlug } from '@/lib/slug';
 import { FEATURES } from '@/lib/feature-flags';
 import { validateProvisioningImageUrls } from '@/lib/provisioning-guard';
+import { TRIAL_DAYS } from '@/config/saas-plans';
 
 export async function executeOnboardingProvisioning(state: FullWizardState): Promise<{ success: boolean; error?: string; isDuplicate?: boolean }> {
   const supabase = await createClient();
@@ -57,7 +58,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
           onboarding_step: 0,
           subscription_plan: 'starter',
           subscription_status: 'trialing',
-          trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+          trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString(),
         })
         .select()
         .single();
@@ -217,7 +218,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
           ...hotelUpdateBase,
           status: isDuplicate ? 'draft' : 'active',
           subscription_status: subscriptionStatus,
-          trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+          trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString(),
           is_onboarding_complete: true,
           onboarding_step: 6,
         })
@@ -255,7 +256,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
           ...hotelUpdateBase,
           status: 'active',
           subscription_status: 'trialing',
-          trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+          trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString(),
           is_onboarding_complete: true,
           onboarding_step: 6,
         })
@@ -336,7 +337,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     ) {
       try {
         const now = new Date();
-        const trialEnd = new Date(now.getTime() + 90 * 86400000); // 90-day trial
+        const trialEnd = new Date(now.getTime() + TRIAL_DAYS * 86400000); // 30-day trial
 
         await supabaseAdmin.from('saas_subscriptions').upsert(
           {

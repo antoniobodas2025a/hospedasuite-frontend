@@ -13,7 +13,7 @@
 import 'server-only'
 
 import { createClient } from '@supabase/supabase-js'
-import { SAAS_PLANS, normalizePlan, PlanKey } from '@/config/saas-plans'
+import { SAAS_PLANS, normalizePlan, PlanKey, TRIAL_DAYS } from '@/config/saas-plans'
 import { getHotelWithPlan, verifyHotelOwnership } from './hotels'
 
 // ─── Types ────────────────────────────────────────────────────
@@ -134,7 +134,7 @@ export async function createSubscription(
 
   // If in trial, period starts when trial ends
   const periodStart = isTrial ? new Date(hotel.trial_ends_at!) : now
-  const periodEnd = new Date(periodStart.getTime() + 30 * 24 * 60 * 60 * 1000) // 30 days
+  const periodEnd = new Date(periodStart.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000) // 30 days
 
   // 4. Execute
   const supabase = getAdminClient()
@@ -290,7 +290,7 @@ export async function activateSubscription(
 ): Promise<{ ok: boolean; error?: string }> {
   const supabase = getAdminClient()
   const now = new Date()
-  const nextPeriod = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000)
+  const nextPeriod = new Date(now.getTime() + TRIAL_DAYS * 24 * 60 * 60 * 1000)
 
   const { error } = await supabase
     .from('saas_subscriptions')

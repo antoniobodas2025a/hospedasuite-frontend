@@ -1,9 +1,19 @@
 'use client';
 
-import React, { useState, useTransition } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, useTransition } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { X, Loader2, ArrowRight } from 'lucide-react';
 import { createPublicLeadAction } from '@/app/actions/public-lead';
+
+const STORAGE_KEY = 'hospedasuite:lead-capture-draft';
+
+interface LeadFormData {
+  name: string;
+  email: string;
+  phone: string;
+  business_name: string;
+  city: string;
+}
 
 // ============================================================================
 // LEAD CAPTURE MODAL — Formulario de baja fricción para "Mes Gratis"
@@ -27,8 +37,9 @@ export default function LeadCaptureModal({
   roomCount = 1,
 }: LeadCaptureModalProps) {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<LeadFormData>({
     name: '',
     email: '',
     phone: '',
@@ -36,6 +47,47 @@ export default function LeadCaptureModal({
     city: 'Boyacá',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [submitted, setSubmitted] = useState(false);
+
+  // Issue 3 + 6: Restore from localStorage / URL params on mount
+  useEffect(() => {
+    if (!isOpen) return;
+    const restored: Partial<LeadFormData> = {};
+    let restoredFromStorage = false;
+
+    // Try localStorage draft
+    const draftRaw = localStorage.getItem(STORAGE_KEY);
+    if (draftRaw) {
+      try {
+        const draft = JSON.parse(draftRaw);
+        if (draft && typeof draft === 'object') {
+          Object.assign(restored, draft);
+        }
+      } catch {
+        // Corrupted JSON — ignore gracefully
+      }
+    }
+
+    // URL param `phone` takes precedence (explicit user intent)
+    const urlPhone = searchParams.get('phone');
+    if (urlPhone) {
+      restored.phone = urlPhone;
+    }
+
+    if (Object.keys(restored).length > 0) {
+      setFormData((prev) => ({ ...prev, ...restored }));
+    }
+  }, [isOpen]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Issue 3: Save to localStorage on every field change
+  useEffect(() => {
+    if (!isOpen || submitted) return;
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(formData));
+    } catch {
+      // localStorage full or disabled — fail silently
+    }
+  }, [formData, isOpen, submitted]);
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
@@ -61,6 +113,14 @@ export default function LeadCaptureModal({
       });
 
       if (result.success) {
+        // Issue 3: Clear localStorage draft on success
+        try {
+          localStorage.removeItem(STORAGE_KEY);
+        } catch {
+          // Ignore
+        }
+        setSubmitted(true);
+
         // Cierre del bucle: Inyectar evento en dataLayer para Analytics/Klaviyo
         if (typeof window !== 'undefined' && window.dataLayer) {
           window.dataLayer.push({
@@ -186,7 +246,7 @@ export default function LeadCaptureModal({
             </div>
             <div>
               <label className="block text-[13px] font-semibold text-[#1d1d1f]/60 mb-1.5 uppercase tracking-wide">
-                Alojamiento
+                Nombre de tu negocio
               </label>
               <input
                 type="text"
@@ -195,7 +255,7 @@ export default function LeadCaptureModal({
                 className={`w-full px-4 py-3 rounded-[14px] bg-[#f5f5f7] border text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/25 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 transition-all ${
                   errors.business_name ? 'border-red-400' : 'border-black/[0.06]'
                 }`}
-                placeholder="Glamping Sol"
+                placeholder="Ej: Glamping Sol"
               />
               {errors.business_name && (
                 <p className="text-[12px] text-red-500 mt-1">{errors.business_name}</p>

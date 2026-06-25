@@ -5,6 +5,9 @@
  * actualiza todo el sistema (billing, gating, UI, HQ).
  */
 
+/** Trial period in days — single source of truth for all trial calculations */
+export const TRIAL_DAYS = 30;
+
 export type PlanKey = 'starter' | 'pro' | 'enterprise';
 
 export interface SaasPlan {

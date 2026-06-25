@@ -3,6 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { revalidatePath } from 'next/cache';
+import { TRIAL_DAYS } from '@/config/saas-plans';
 
 // ============================================================================
 // 1. LISTAR HOTELES CON duplicate_review
@@ -104,7 +105,7 @@ export async function approveDuplicateHotelAction(
       .update({
         subscription_status: 'trialing',
         status: 'active',
-        trial_ends_at: new Date(Date.now() + 30 * 86400000).toISOString(),
+        trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString(),
       })
       .eq('id', hotelId)
       .eq('subscription_status', 'duplicate_review');
