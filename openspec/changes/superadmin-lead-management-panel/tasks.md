@@ -55,8 +55,8 @@ Chain strategy: pending
 
 ## Phase 7: Testing
 
-- [ ] **7.1** Add tests in `src/__tests__/unit/superadmin-leads.test.ts` — mock `requireSuperAdmin()` and `supabaseAdmin`, test all 5 actions: happy path, invalid data, unauthorized caller, lead-not-found edge case. **[M]**
-- [ ] **7.2** Add tests in `src/lib/__tests__/export-leads-csv.test.ts` — RFC 4180 escaping (commas, quotes, newlines), empty leads array, filtered export. **[S]**
+- [x] **7.1** Add tests in `src/__tests__/unit/superadmin-leads.test.ts` — mock `requireSuperAdmin()` and `supabaseAdmin`, test all 5 actions: happy path, invalid data, unauthorized caller, lead-not-found edge case. **[M]**
+- [x] **7.2** Add tests in `src/lib/__tests__/lead-export.test.ts` — RFC 4180 escaping (commas, quotes, newlines), empty leads array, filtered export. **[S]**
 - [ ] **7.3** Add E2E in `e2e/superadmin-leads.spec.ts` — Playwright: login → `/admin/leads` → search → filter → edit status → edit notes → assign hotel → delete (confirm + cancel) → create lead → export CSV. **[L]**
 
 ---
