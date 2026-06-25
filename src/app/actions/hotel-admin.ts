@@ -1,9 +1,9 @@
 'use server';
 
-import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { revalidatePath } from 'next/cache';
 import { TRIAL_DAYS } from '@/config/saas-plans';
+import { requireSuperAdmin } from '@/lib/auth-guards';
 
 // ============================================================================
 // 1. LISTAR HOTELES CON duplicate_review
@@ -23,20 +23,7 @@ export async function getDuplicateHotelsAction(): Promise<{
   error?: string;
 }> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'No autenticado' };
-
-    // Verificar rol de super-admin
-    const { data: roleData } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!roleData || roleData.role !== 'super_admin') {
-      return { success: false, error: 'No autorizado. Solo super-admins.' };
-    }
+    await requireSuperAdmin();
 
     const { data, error } = await supabaseAdmin
       .from('hotels')
@@ -85,20 +72,7 @@ export async function approveDuplicateHotelAction(
   hotelId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'No autenticado' };
-
-    // Verificar rol de super-admin
-    const { data: roleData } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!roleData || roleData.role !== 'super_admin') {
-      return { success: false, error: 'No autorizado. Solo super-admins.' };
-    }
+    await requireSuperAdmin();
 
     const { error } = await supabaseAdmin
       .from('hotels')
@@ -129,20 +103,7 @@ export async function rejectDuplicateHotelAction(
   hotelId: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'No autenticado' };
-
-    // Verificar rol de super-admin
-    const { data: roleData } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!roleData || roleData.role !== 'super_admin') {
-      return { success: false, error: 'No autorizado. Solo super-admins.' };
-    }
+    await requireSuperAdmin();
 
     const { error } = await supabaseAdmin
       .from('hotels')

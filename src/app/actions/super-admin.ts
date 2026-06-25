@@ -3,11 +3,14 @@
 import { revalidatePath } from 'next/cache';
 import { generateUniqueSlug } from '@/lib/slug';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { requireSuperAdmin } from '@/lib/auth-guards';
 
 /**
  * ACCIÓN 1: Crear nuevo Hotel y Usuario Dueño (Transacción Atómica con Rollback)
  */
 export async function createHotelAction(formData: FormData) {
+  await requireSuperAdmin();
+
   const name = formData.get('name') as string;
   const email = formData.get('email') as string;
   const password = formData.get('password') as string;
@@ -79,6 +82,8 @@ export async function createHotelAction(formData: FormData) {
  * ACCIÓN 2: Generar enlace de acceso directo (God Mode)
  */
 export async function godModeAccess(email: string) {
+  await requireSuperAdmin();
+
   try {
     const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
     const { data, error } = await supabaseAdmin.auth.admin.generateLink({
@@ -99,6 +104,8 @@ export async function godModeAccess(email: string) {
  * ACCIÓN 3: Editar Datos del Tenant
  */
 export async function updateTenantAction(hotelId: string, updateData: { name: string, status: string, subscription_plan: string }) {
+  await requireSuperAdmin();
+
   try {
     const { error } = await supabaseAdmin
       .from('hotels')
@@ -118,6 +125,8 @@ export async function updateTenantAction(hotelId: string, updateData: { name: st
  * ACCIÓN 4: Forzar Cambio de Contraseña (Capa de Seguridad Crítica)
  */
 export async function forceChangePasswordAction(ownerId: string, newPassword: string) {
+  await requireSuperAdmin();
+
   try {
     if (!ownerId) throw new Error("ID de propietario no encontrado");
     
@@ -138,6 +147,8 @@ export async function forceChangePasswordAction(ownerId: string, newPassword: st
  * Ejecuta desmantelamiento de grafo en orden inverso para satisfacer FKs.
  */
 export async function deleteHotelAction(hotelId: string, ownerId: string | null | undefined) {
+  await requireSuperAdmin();
+
   try {
     console.log(`☢️ INICIANDO BORRADO NUCLEAR: ${hotelId}`);
 

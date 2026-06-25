@@ -1,43 +1,9 @@
 'use server';
 
-import { createServerClient } from '@supabase/ssr';
-import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { SAAS_PLANS, normalizePlan, PLAN_LABELS, type PlanKey } from '@/config/saas-plans';
 import { isTrialActive, getEffectivePlanCost, type TrialHotel } from '@/lib/trial-check';
-
-// 🛑 BARRERA ZERO-TRUST: Lista blanca de Super Administradores
-const SUPER_ADMIN_EMAILS = ['suitehospeda@gmail.com'];
-
-// 🛡️ VERIFICACIÓN CRIPTOGRÁFICA TIER-0 (Vía Supabase SSR)
-async function verifySuperAdmin() {
-  const cookieStore = await cookies();
-
-  const supabaseAuth = createServerClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
-    {
-      cookies: {
-        get(name: string) {
-          return cookieStore.get(name)?.value;
-        },
-      },
-    }
-  );
-
-  const { data: { user }, error } = await supabaseAuth.auth.getUser();
-
-  if (error || !user || !user.email) {
-    console.error("[AUTH ERROR Tier-0]", error?.message);
-    throw new Error('Acceso denegado: Sesión inexistente en Supabase Auth.');
-  }
-  
-  if (!SUPER_ADMIN_EMAILS.includes(user.email)) {
-    throw new Error(`Fallo de Autorización: ${user.email} no posee privilegios Tier-0.`);
-  }
-  
-  return true;
-}
+import { requireSuperAdmin } from '@/lib/auth-guards';
 
 export interface HotelFinancialRecord {
   hotel_id: string;
@@ -51,7 +17,7 @@ export interface HotelFinancialRecord {
 
 export async function getHQFinancialReportAction() {
   try {
-    await verifySuperAdmin();
+    await requireSuperAdmin();
 
     const { data: hotels, error: hotelsError } = await supabaseAdmin
       .from('hotels')

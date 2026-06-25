@@ -2,6 +2,7 @@
 
 import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { requireSuperAdmin } from '@/lib/auth-guards';
 import { revalidatePath } from 'next/cache';
 import { uploadToR2, R2_BUCKET } from '@/lib/r2-upload';
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-xxxxx.r2.dev';
@@ -108,20 +109,12 @@ export async function approveManualPayment(
   manualPaymentId: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    await requireSuperAdmin();
+
+    // Fetch user for approved_by reference
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'No autenticado' };
-
-    // Verificar rol de super-admin
-    const { data: roleData } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!roleData || roleData.role !== 'super_admin') {
-      return { success: false, error: 'No autorizado. Solo super-admins pueden aprobar pagos.' };
-    }
 
     // Obtener el manual_payment
     const { data: payment, error: paymentError } = await supabaseAdmin
@@ -214,20 +207,7 @@ export async function rejectManualPayment(
   reason: string
 ): Promise<{ success: boolean; error?: string }> {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'No autenticado' };
-
-    // Verificar rol de super-admin
-    const { data: roleData } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!roleData || roleData.role !== 'super_admin') {
-      return { success: false, error: 'No autorizado. Solo super-admins pueden rechazar pagos.' };
-    }
+    await requireSuperAdmin();
 
     if (!reason || reason.trim().length === 0) {
       return { success: false, error: 'Debés proporcionar un motivo de rechazo.' };
@@ -274,20 +254,7 @@ export async function rejectManualPayment(
 // ============================================================================
 export async function getPendingManualPayments(filter?: 'pending' | 'approved' | 'rejected') {
   try {
-    const supabase = await createClient();
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return { success: false, error: 'No autenticado' };
-
-    // Verificar rol de super-admin
-    const { data: roleData } = await supabaseAdmin
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', user.id)
-      .single();
-
-    if (!roleData || roleData.role !== 'super_admin') {
-      return { success: false, error: 'No autorizado.' };
-    }
+    await requireSuperAdmin();
 
     let query = supabaseAdmin
       .from('manual_payments')
