@@ -349,7 +349,7 @@ export const READINESS_CHECKS: ReadinessCheck[] = [
     description: 'Llaves de Wompi configuradas',
     category: 'payment',
     weight: 15,
-    requiredForPlans: [],
+    requiredForPlans: ['starter', 'pro', 'enterprise'],
     applicablePlans: ['starter', 'pro', 'enterprise'],
     check: checkPaymentGateway,
     resolve: resolvePaymentGateway,

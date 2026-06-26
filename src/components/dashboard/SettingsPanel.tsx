@@ -64,6 +64,7 @@ import { useRouter } from "next/navigation";
 import { cn } from "@/lib/utils";
 import { GlassTooltip } from "@/components/ui/GlassTooltip";
 import { AMENITY_REGISTRY } from "@/lib/amenity-registry";
+import PaymentConnectors from "./PaymentConnectors";
 
 const HOTEL_AMENITIES = Object.values(AMENITY_REGISTRY);
 
@@ -184,7 +185,7 @@ function DisclosureSection({
 							{children}
 						</div>
 					</motion.div>
-				)}
+					)}
 			</AnimatePresence>
 		</div>
 	);
@@ -506,7 +507,7 @@ export default function SettingsPanel({
 						<KeyRound className="text-indigo-400 size-8" /> Centro de Mando
 					</h2>
 					<p className="text-muted-foreground text-sm mt-[var(--space-focus)] font-lora italic">
-						Administración operativa del tenant.
+						Configuración de tu propiedad.
 					</p>
 				</div>
 				<div className="flex bg-background/60 p-1.5 rounded-[var(--radius-squircle-3xl)] border border-border gap-1.5">
@@ -744,6 +745,14 @@ export default function SettingsPanel({
 										</p>
 									</div>
 								)}
+							</div>
+
+							{/* Conectores de Pago — Soberanía Financiera (Ley de Hick) */}
+							<div className="mt-6">
+								<PaymentConnectors
+									hotelId={hotelId}
+									currentGateway={initialData?.wompi_public_key ? 'wompi' : undefined}
+								/>
 							</div>
 						</motion.div>
 					)}

@@ -17,7 +17,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Hoisted mock store ─────────────────────────────────────────────────────
-const { mockRequireSuperAdmin, mockRevalidatePath, mockChain } = vi.hoisted(() => {
+const { mockRequireSuperAdmin, mockRevalidatePath, mockChain, mockCreateClient, mockHeaders, mockLogAudit } = vi.hoisted(() => {
   const chain: any = {
     _result: {
       data: [] as any[],
@@ -49,6 +49,13 @@ const { mockRequireSuperAdmin, mockRevalidatePath, mockChain } = vi.hoisted(() =
     mockRequireSuperAdmin: vi.fn(),
     mockRevalidatePath: vi.fn(),
     mockChain: chain,
+    mockCreateClient: vi.fn().mockReturnValue({
+      auth: { getUser: vi.fn().mockResolvedValue({ data: { user: { id: 'test-user', email: 'admin@test.com' } }, error: null }) },
+    }),
+    mockHeaders: vi.fn().mockReturnValue({
+      get: vi.fn().mockReturnValue('unknown'),
+    }),
+    mockLogAudit: vi.fn().mockResolvedValue(undefined),
   };
 });
 
@@ -64,6 +71,18 @@ vi.mock('@/lib/supabase-admin', () => ({
   supabaseAdmin: {
     from: vi.fn(() => mockChain),
   },
+}));
+
+vi.mock('@/utils/supabase/server', () => ({
+  createClient: mockCreateClient,
+}));
+
+vi.mock('next/headers', () => ({
+  headers: mockHeaders,
+}));
+
+vi.mock('@/lib/audit-logger', () => ({
+  logAuditEvent: mockLogAudit,
 }));
 
 // ── Imports (after mocks) ──────────────────────────────────────────────────

@@ -10,11 +10,22 @@ import { springGentle, springSnappy } from '@/lib/mac2026/spring';
 import ShiftReportModal from '@/components/modals/ShiftReportModal';
 import { MENU_GROUPS, type MenuItem as MenuItemType } from '@/config/menuItems';
 import { logout, logoutStaff } from '@/app/actions/auth';
+import PropertySwitcher from './PropertySwitcher';
 
 interface MenuGroup {
   id: string;
   label: string;
   items: MenuItemType[];
+}
+
+export interface HotelOption {
+  id: string;
+  name: string;
+  city: string;
+  slug: string;
+  subscription_plan: string;
+  subscription_status: string;
+  role: string;
 }
 
 interface MobileNavViewProps {
@@ -31,6 +42,9 @@ interface MobileNavViewProps {
     name: string;
     role: string;
   };
+  hotelName?: string;
+  hotelId?: string;
+  myHotels?: HotelOption[];
 }
 
 interface MobileNavProps {
@@ -40,6 +54,9 @@ interface MobileNavProps {
     name: string;
     role: string;
   };
+  hotelName?: string;
+  hotelId?: string;
+  myHotels?: HotelOption[];
 }
 
 // ==========================================
@@ -56,6 +73,9 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
   onRevealDock,
   onLogout,
   staffIdentity,
+  hotelName,
+  hotelId,
+  myHotels = [],
 }) => {
   return (
     <nav className="md:hidden">
@@ -134,6 +154,16 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
             >
               {/* Grouped menu — Mac 2026: Ley de Miller, ≤5 chunks por grupo */}
               <div className="overflow-y-auto custom-scrollbar px-4 pt-4 pb-2 space-y-4">
+                {/* Selector de Propiedades — Invariante de Aislamiento Operativo */}
+                {hotelId && myHotels.length > 0 && (
+                  <PropertySwitcher
+                    currentHotelId={hotelId}
+                    currentHotelName={hotelName || 'HospedaSuite'}
+                    hotels={myHotels}
+                    variant="mobile"
+                  />
+                )}
+
                 {menuGroups.map(group => (
                   <div key={group.id}>
                     <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest px-2 mb-2">
@@ -208,7 +238,7 @@ const MobileNavView: React.FC<MobileNavViewProps> = ({
 // BLOQUE 3: COMPONENTE CONTENEDOR
 // ==========================================
 
-export default function MobileNav({ subscriptionPlan = 'starter', staffIdentity }: MobileNavProps) {
+export default function MobileNav({ subscriptionPlan = 'starter', staffIdentity, hotelName, hotelId, myHotels }: MobileNavProps) {
   const [showMenu, setShowMenu] = useState(false);
   const [isVisible, setIsVisible] = useState(true);
   const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
@@ -323,6 +353,9 @@ export default function MobileNav({ subscriptionPlan = 'starter', staffIdentity 
         }}
         onLogout={handleLogout}
         staffIdentity={staffIdentity}
+        hotelName={hotelName}
+        hotelId={hotelId}
+        myHotels={myHotels}
       />
 
       <ShiftReportModal 

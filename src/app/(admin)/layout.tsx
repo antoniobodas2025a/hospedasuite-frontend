@@ -5,6 +5,7 @@ import MobileNav from '@/components/layout/MobileNav';
 import SubscriptionBanner from '@/components/layout/SubscriptionBanner';
 import PostHogProvider from '@/components/analytics/PostHogProvider';
 import { getCurrentHotel, getStaffSession, getStaffHotel } from '@/lib/hotel-context';
+import { getMyHotelsAction } from '@/app/actions/properties';
 import type { TrialHotel } from '@/lib/trial-check';
 
 export default async function AdminLayout({
@@ -53,6 +54,10 @@ export default async function AdminLayout({
     return redirect('/staff-login');
   }
 
+  // 3. Obtener todas las propiedades del usuario (para el selector "Mis Propiedades")
+  const myHotelsResult = user ? await getMyHotelsAction() : { success: false, hotels: [] };
+  const myHotels = myHotelsResult.success ? myHotelsResult.hotels : [];
+
   return (
     // Océano Profundo dark theme — PMS/Dashboard
     <div className='flex h-screen bg-sidebar text-sidebar-foreground overflow-hidden font-poppins selection:bg-brand-500/30 selection:text-brand-200 dark'>
@@ -69,6 +74,8 @@ export default async function AdminLayout({
           user={plainUser}
           staffIdentity={staffIdentity}
           hotelName={hotel?.name || 'HospedaSuite'}
+          hotelId={hotel?.id || ''}
+          myHotels={myHotels}
           subscriptionPlan={(hotel?.subscription_plan as 'starter' | 'pro' | 'enterprise') || 'starter'}
         />
       </div>
@@ -79,6 +86,9 @@ export default async function AdminLayout({
         <MobileNav 
           subscriptionPlan={(hotel?.subscription_plan as 'starter' | 'pro' | 'enterprise') || 'starter'}
           staffIdentity={staffIdentity}
+          hotelName={hotel?.name || 'HospedaSuite'}
+          hotelId={hotel?.id || ''}
+          myHotels={myHotels}
         />
         
         {/* ⚠️ Banner de suscripción (si aplica) */}

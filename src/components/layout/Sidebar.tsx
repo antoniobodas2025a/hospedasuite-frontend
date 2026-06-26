@@ -14,10 +14,23 @@ import NavButton from "../ui/NavButton";
 import { MENU_GROUPS } from "@/config/menuItems";
 import { logout, logoutStaff } from "@/app/actions/auth";
 import ShiftReportModal from "@/components/modals/ShiftReportModal";
+import PropertySwitcher from "./PropertySwitcher";
 
+
+export interface HotelOption {
+	id: string;
+	name: string;
+	city: string;
+	slug: string;
+	subscription_plan: string;
+	subscription_status: string;
+	role: string;
+}
 
 export interface SidebarViewProps {
 	hotelName: string;
+	hotelId: string;
+	myHotels: HotelOption[];
 	user?: {
 		id: string;
 		email?: string;
@@ -36,6 +49,8 @@ export interface SidebarViewProps {
 
 interface SidebarProps {
 	hotelName?: string;
+	hotelId?: string;
+	myHotels?: HotelOption[];
 	user?: {
 		id: string;
 		email?: string;
@@ -50,6 +65,8 @@ interface SidebarProps {
 
 const SidebarView: React.FC<SidebarViewProps> = ({
 	hotelName,
+	hotelId,
+	myHotels = [],
 	
 	currentPath,
 	subscriptionPlan = "starter",
@@ -70,6 +87,11 @@ const SidebarView: React.FC<SidebarViewProps> = ({
 			? { label: staffIdentity.name, badge: staffIdentity.role, badgeColor: "text-emerald-400" }
 			: null;
 
+	// Construir lista de propiedades para el selector
+	const hotelsForSwitcher = myHotels.length > 0
+		? myHotels
+		: [{ id: hotelId, name: hotelName, city: '', slug: '', subscription_plan: subscriptionPlan, subscription_status: 'active', role: 'admin' }];
+
 	const toggleGroup = (id: string) => {
 		setCollapsedGroups((prev) => {
 			const next = new Set(prev);
@@ -80,37 +102,38 @@ const SidebarView: React.FC<SidebarViewProps> = ({
 	};
 	return (
 		<aside className="hidden md:flex w-72 glass-panel text-sidebar-foreground flex-col shadow-2xl z-20 rounded-r-[var(--radius-squircle-3xl)] my-4 ml-4 h-[calc(100vh-2rem)] sticky top-4">
-			{/* Hotel Brand Context */}
-			<div className="p-8 border-b border-border flex items-center gap-4">
-				<div className="size-10 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-indigo-500 to-indigo-700 flex items-center justify-center text-white font-bold shadow-lg shadow-indigo-500/20">
-					{hotelName?.[0] || "H"}
-				</div>
-				<div className="flex flex-col min-w-0 flex-1">
-					<h1 className="font-bold text-sidebar-foreground truncate text-sm tracking-tight">
-						{hotelName}
-					</h1>
-					<p className="text-[10px] text-muted-foreground font-mono tracking-widest uppercase">
-						{subscriptionPlan === "enterprise" ? (
-							<span className="text-amber-400">Enterprise</span>
-						) : subscriptionPlan === "pro" ? (
-							<span className="text-indigo-400">Pro</span>
-						) : (
-							<span className="text-muted-foreground">Starter</span>
-						)}
-					</p>
-					{/* Identidad del usuario activo (Heurística #1: Visibilidad) */}
-					{displayIdentity && (
-						<div className="mt-1.5 flex items-center gap-1.5 truncate">
-							<div className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
-							<span className="text-[10px] text-sidebar-foreground/70 truncate font-medium">
-								{displayIdentity.label}
-							</span>
-							<span className={`text-[9px] font-bold uppercase tracking-wider ${displayIdentity.badgeColor}`}>
-								{displayIdentity.badge}
-							</span>
-						</div>
+			{/* Selector de Propiedades — Invariante de Aislamiento Operativo */}
+			<div className="p-6 border-b border-border">
+				<PropertySwitcher
+					currentHotelId={hotelId}
+					currentHotelName={hotelName}
+					hotels={hotelsForSwitcher}
+					variant="sidebar"
+				/>
+			</div>
+
+			{/* Plan badge + identidad del usuario */}
+			<div className="px-8 pb-3 flex items-center justify-between">
+				<p className="text-[10px] text-muted-foreground font-mono tracking-widest uppercase">
+					{subscriptionPlan === "enterprise" ? (
+						<span className="text-amber-400">Enterprise</span>
+					) : subscriptionPlan === "pro" ? (
+						<span className="text-indigo-400">Pro</span>
+					) : (
+						<span className="text-muted-foreground">Starter</span>
 					)}
-				</div>
+				</p>
+				{displayIdentity && (
+					<div className="flex items-center gap-1.5 truncate">
+						<div className="size-1.5 rounded-full bg-emerald-400 animate-pulse" />
+						<span className="text-[10px] text-sidebar-foreground/70 truncate font-medium">
+							{displayIdentity.label}
+						</span>
+						<span className={`text-[9px] font-bold uppercase tracking-wider ${displayIdentity.badgeColor}`}>
+							{displayIdentity.badge}
+						</span>
+					</div>
+				)}
 			</div>
 
 			{/* Navegación agrupada — Ley de Miller: 4 chunks */}
@@ -245,6 +268,8 @@ const SidebarView: React.FC<SidebarViewProps> = ({
 
 export default function Sidebar({
 	hotelName = "HospedaSuite",
+	hotelId = "",
+	myHotels = [],
 	
 	user,
 	subscriptionPlan = "starter",
@@ -271,6 +296,8 @@ export default function Sidebar({
 		<>
 			<SidebarView
 				hotelName={hotelName}
+				hotelId={hotelId}
+				myHotels={myHotels}
 				user={user}
 				staffIdentity={staffIdentity}
 				currentPath={pathname}
