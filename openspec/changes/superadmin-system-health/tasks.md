@@ -9,11 +9,11 @@
 | Chained PRs recommended | Yes |
 | Suggested split | PR 1 (Foundation) → PR 2 (UI) → PR 3 (Instrumentation) |
 | Delivery strategy | ask-on-risk |
-| Chain strategy | pending |
+| Chain strategy | stacked-to-main |
 
 Decision needed before apply: Yes
 Chained PRs recommended: Yes
-Chain strategy: pending
+Chain strategy: stacked-to-main
 400-line budget risk: High
 
 ### Suggested Work Units
@@ -35,12 +35,13 @@ Chain strategy: pending
 
 ## Phase 2: Dashboard UI (PR 2)
 
-- [ ] 2.1 Create 5 presentational card components under `src/components/super-admin/system-health/`: `EventsCard`, `WebhooksCard`, `CronJobsCard`, `DatabaseCard`, `StorageCard`
-- [ ] 2.2 Create `src/app/(super-admin)/admin/system-health/page.tsx` — server component, imports `health-checks.ts`, renders 5 card sections
-- [ ] 2.3 Create `src/components/super-admin/HealthWidgets.tsx` — client component, fetches `/api/admin/health`, renders event failure rate + cron last-run status
-- [ ] 2.4 Modify `src/app/(super-admin)/admin/page.tsx` — add `<Suspense><HealthWidgets /></Suspense>` row below Row 2
-- [ ] 2.5 Write Playwright E2E: dashboard page loads 5 sections with data
-- [ ] 2.6 Write Playwright E2E: admin homepage shows health widgets, skeleton during loading
+- [x] 2.1 Create reusable UI components: `HealthStatusBadge.tsx` (healthy/degraded/critical with pulse animation), `HealthCard.tsx` (metric card with loading/error states), `SystemHealthDashboard.tsx` (5-section client component) under `src/components/super-admin/` and `src/app/(super-admin)/admin/system-health/`
+- [x] 2.2 Create `src/app/(super-admin)/admin/system-health/page.tsx` — server component, imports `health-checks.ts`, renders 5 card sections via `SystemHealthDashboard`
+- [x] 2.3 Create `src/components/super-admin/HealthWidgets.tsx` — client component, fetches `/api/admin/health`, renders database/events/webhooks mini-cards with skeleton loading
+- [x] 2.4 Modify `src/app/(super-admin)/admin/page.tsx` — add `<Suspense><HealthWidgets /></Suspense>` row below Row 2
+- [x] 2.5 Write Playwright E2E: dashboard page loads 5 sections with data (`e2e/superadmin-system-health.spec.ts`)
+- [x] 2.6 Write Playwright E2E: admin homepage shows health widgets, skeleton during loading (`e2e/superadmin-system-health.spec.ts`)
+- [x] 2.7 Add "System Health" nav link to `src/app/(super-admin)/layout.tsx` with Activity icon
 
 ## Phase 3: Instrumentation (PR 3)
 

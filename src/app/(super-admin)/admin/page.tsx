@@ -14,11 +14,13 @@ import {
   CreditCard,
   Users,
 } from 'lucide-react';
+import { Suspense } from 'react';
 import { getHQFinancialReportAction } from '@/app/actions/hq';
 import { getSubscriptionMetricsAction } from '@/app/actions/super-admin';
 import { getHotels, getHotelCount } from '@/data/superadmin';
 import TenantManager from '@/components/super-admin/TenantManager';
 import CreateHotelForm from '@/components/super-admin/CreateHotelForm';
+import HealthWidgets from '@/components/super-admin/HealthWidgets';
 import Link from 'next/link';
 
 export const dynamic = 'force-dynamic';
@@ -108,6 +110,25 @@ export default async function SuperAdminPage() {
           </div>
         </div>
       </div>
+
+      {/* ── Row 3: System Health Widgets (non-blocking) ── */}
+      <Suspense fallback={
+        <div className='bg-white/5 border border-white/10 p-6 rounded-[var(--radius-squircle-2xl)]'>
+          <div className='flex items-center gap-2 mb-4'>
+            <div className='h-5 w-32 bg-white/10 rounded animate-pulse' />
+          </div>
+          <div className='grid grid-cols-1 md:grid-cols-3 gap-4'>
+            {[...Array(3)].map((_, i) => (
+              <div key={i} className='bg-white/5 border border-white/10 p-4 rounded-[var(--radius-squircle-lg)]'>
+                <div className='h-3 w-20 bg-white/10 rounded animate-pulse mb-3' />
+                <div className='h-6 w-16 bg-white/5 rounded animate-pulse' />
+              </div>
+            ))}
+          </div>
+        </div>
+      }>
+        <HealthWidgets />
+      </Suspense>
 
       {/* ── Quick Actions ── */}
       <div className='bg-white/5 border border-white/10 p-6 rounded-[var(--radius-squircle-2xl)]'>
