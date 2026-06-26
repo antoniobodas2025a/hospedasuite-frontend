@@ -389,3 +389,256 @@ export async function extendSubscription(
 
   return { ok: true }
 }
+
+// ─── Superadmin Queries ─────────────────────────────────────
+// These bypass hotel-ownership checks and are only called from
+// server actions guarded by requireSuperAdmin().
+
+export interface SubscriptionFilters {
+  status?: string
+  planKey?: PlanKey
+  search?: string
+  page?: number
+  pageSize?: number
+}
+
+export interface SubscriptionRow {
+  id: string
+  hotel_id: string
+  hotel_name: string | null
+  plan_key: PlanKey
+  status: string
+  current_period_start: string
+  current_period_end: string
+  cancel_at_period_end: boolean
+  wompi_subscription_id: string | null
+  created_at: string
+  updated_at: string
+}
+
+/**
+ * Get all subscriptions with hotel name join, paginated and filterable.
+ * Superadmin-only — no ownership check.
+ */
+export async function getAllSubscriptions(
+  filters: SubscriptionFilters = {}
+): Promise<{ subscriptions: SubscriptionRow[]; total: number }> {
+  const supabase = getAdminClient()
+  const { status, planKey, search, page = 1, pageSize = 50 } = filters
+
+  let query = supabase
+    .from('saas_subscriptions')
+    .select('*, hotels!inner(name)', { count: 'exact' })
+    .order('created_at', { ascending: false })
+
+  if (status) query = query.eq('status', status)
+  if (planKey) query = query.eq('plan_key', planKey)
+  if (search) query = query.ilike('hotels.name', `%${search}%`)
+
+  const from = (page - 1) * pageSize
+  const to = from + pageSize - 1
+  query = query.range(from, to)
+
+  const { data, error, count } = await query
+
+  if (error) {
+    console.error('[Billing DAL] Error getting subscriptions:', error)
+    return { subscriptions: [], total: 0 }
+  }
+
+  const subscriptions: SubscriptionRow[] = (data || []).map((row: any) => ({
+    id: row.id,
+    hotel_id: row.hotel_id,
+    hotel_name: row.hotels?.name ?? null,
+    plan_key: row.plan_key,
+    status: row.status,
+    current_period_start: row.current_period_start,
+    current_period_end: row.current_period_end,
+    cancel_at_period_end: row.cancel_at_period_end,
+    wompi_subscription_id: row.wompi_subscription_id,
+    created_at: row.created_at,
+    updated_at: row.updated_at,
+  }))
+
+  return { subscriptions, total: count ?? 0 }
+}
+
+export interface SubscriptionMetrics {
+  mrr: number
+  churnRate: number
+  trialExpiringCount: number
+  activeCount: number
+  cancelledCount: number
+  pastDueCount: number
+  totalCount: number
+}
+
+/**
+ * Get aggregate subscription metrics for the superadmin dashboard.
+ * Returns MRR, churn rate, trial expiring count, and status breakdowns.
+ */
+export async function getSubscriptionMetrics(): Promise<SubscriptionMetrics> {
+  const supabase = getAdminClient()
+
+  const { data, error } = await supabase
+    .from('saas_subscriptions')
+    .select('status, plan_key, current_period_end, updated_at')
+
+  if (error) {
+    console.error('[Billing DAL] Error getting metrics:', error)
+    return {
+      mrr: 0,
+      churnRate: 0,
+      trialExpiringCount: 0,
+      activeCount: 0,
+      cancelledCount: 0,
+      pastDueCount: 0,
+      totalCount: 0,
+    }
+  }
+
+  const subs = (data || []) as any[]
+  const now = new Date()
+  const sevenDaysFromNow = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
+  const thirtyDaysAgo = new Date(now.getTime() - 30 * 24 * 60 * 60 * 1000)
+
+  const active = subs.filter(
+    (s) => s.status === 'active' || s.status === 'trialing'
+  )
+  const cancelled = subs.filter((s) => s.status === 'cancelled')
+  const trialExpiring = subs.filter(
+    (s) =>
+      s.status === 'trialing' &&
+      s.current_period_end &&
+      new Date(s.current_period_end) <= sevenDaysFromNow &&
+      new Date(s.current_period_end) >= now
+  )
+  const recentlyCancelled = cancelled.filter(
+    (s) => s.updated_at && new Date(s.updated_at) >= thirtyDaysAgo
+  )
+
+  // MRR: sum of active subscriptions' plan prices (COP)
+  const mrr = active.reduce((sum, s) => {
+    const plan = SAAS_PLANS[s.plan_key as PlanKey]
+    return sum + (plan?.priceCOP ?? 0)
+  }, 0)
+
+  // Churn rate: cancelled in last 30 days / (active + cancelled in last 30 days)
+  const atRiskDenominator = active.length + recentlyCancelled.length
+  const churnRate =
+    atRiskDenominator > 0
+      ? Math.round((recentlyCancelled.length / atRiskDenominator) * 100) / 100
+      : 0
+
+  return {
+    mrr,
+    churnRate,
+    trialExpiringCount: trialExpiring.length,
+    activeCount: active.length,
+    cancelledCount: recentlyCancelled.length,
+    pastDueCount: subs.filter((s) => s.status === 'past_due').length,
+    totalCount: subs.length,
+  }
+}
+
+export interface UserRoleRow {
+  id: string
+  user_id: string
+  email: string | null
+  role: string
+  hotel_id: string | null
+  hotel_name: string | null
+  created_at: string
+}
+
+/**
+ * Get all users with their roles from user_roles, joined with auth.users
+ * for email and hotels for owner hotel name.
+ * Superadmin-only — no ownership check.
+ */
+export async function getAllUsersWithRoles(): Promise<UserRoleRow[]> {
+  const supabase = getAdminClient()
+
+  const { data: roles, error } = await supabase
+    .from('user_roles')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  if (error || !roles) {
+    console.error('[Billing DAL] Error getting user roles:', error)
+    return []
+  }
+
+  const rolesArray = roles as any[]
+
+  // Build email map from auth.users (service role allows schema access)
+  const userIds = [...new Set(rolesArray.map((r) => r.user_id))]
+  const emailMap = new Map<string, string>()
+
+  if (userIds.length > 0) {
+    try {
+      const { data: authUsers } = await supabase
+        .schema('auth')
+        .from('users')
+        .select('id, email')
+        .in('id', userIds)
+
+      for (const u of (authUsers || []) as any[]) {
+        if (u.email) emailMap.set(u.id, u.email)
+      }
+    } catch (err) {
+      // Emails will be null in result — auth schema may not be directly accessible
+      console.warn(
+        '[Billing DAL] Could not fetch auth.users emails:',
+        (err as Error).message
+      )
+    }
+  }
+
+  // Build hotel map for owners
+  const ownerIds = rolesArray
+    .filter((r) => r.role === 'owner')
+    .map((r) => r.user_id)
+  const hotelMap = new Map<string, string>()
+
+  if (ownerIds.length > 0) {
+    const { data: hotels } = await supabase
+      .from('hotels')
+      .select('owner_id, name')
+      .in('owner_id', ownerIds)
+
+    for (const h of (hotels || []) as any[]) {
+      if (h.owner_id) hotelMap.set(h.owner_id, h.name)
+    }
+  }
+
+  return rolesArray.map((r) => ({
+    id: r.id,
+    user_id: r.user_id,
+    email: emailMap.get(r.user_id) ?? null,
+    role: r.role,
+    hotel_id: r.role === 'owner' ? r.user_id : null,
+    hotel_name: r.role === 'owner' ? (hotelMap.get(r.user_id) ?? null) : null,
+    created_at: r.created_at,
+  }))
+}
+
+/**
+ * Count users with role='superadmin'.
+ * Used by the last-superadmin guard in revokeSuperadminRoleAction.
+ */
+export async function getSuperadminCount(): Promise<number> {
+  const supabase = getAdminClient()
+
+  const { count, error } = await supabase
+    .from('user_roles')
+    .select('*', { count: 'exact', head: true })
+    .eq('role', 'superadmin')
+
+  if (error) {
+    console.error('[Billing DAL] Error counting superadmins:', error)
+    return 0
+  }
+
+  return count ?? 0
+}

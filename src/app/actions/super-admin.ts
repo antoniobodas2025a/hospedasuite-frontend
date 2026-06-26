@@ -7,6 +7,13 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSuperAdmin } from '@/lib/auth-guards';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { createClient } from '@/utils/supabase/server';
+import { PlanKey, SAAS_PLANS } from '@/config/saas-plans';
+import {
+  getAllSubscriptions,
+  getSubscriptionMetrics,
+  getAllUsersWithRoles,
+  getSuperadminCount,
+} from '@/data/billing';
 
 /**
  * ACCIÓN 1: Crear nuevo Hotel y Usuario Dueño (Transacción Atómica con Rollback)
@@ -297,6 +304,511 @@ export async function deleteHotelAction(hotelId: string, ownerId: string | null 
 
   } catch (error: any) {
     console.error('❌ Error Crítico en Borrado Nuclear:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ACCIONES 6-10: Gestión de Suscripciones (Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * ACCIÓN 6: Listar todas las suscripciones con paginación y filtros.
+ */
+export async function getSubscriptionsAction(filters: {
+  status?: string;
+  planKey?: string;
+  search?: string;
+  page?: number;
+  pageSize?: number;
+} = {}) {
+  await requireSuperAdmin();
+  return getAllSubscriptions({
+    ...filters,
+    planKey: filters.planKey as PlanKey | undefined,
+  });
+}
+
+/**
+ * ACCIÓN 7: Cancelar suscripción (cancel_at_period_end = true).
+ */
+export async function cancelSubscriptionAction(
+  subscriptionId: string
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  try {
+    // Snapshot pre-mutación
+    const { data: current } = await supabaseAdmin
+      .from('saas_subscriptions')
+      .select('*')
+      .eq('id', subscriptionId)
+      .single();
+
+    if (!current) throw new Error('Suscripción no encontrada.');
+    if (current.cancel_at_period_end)
+      throw new Error('La suscripción ya está pendiente de cancelación.');
+
+    const { error } = await supabaseAdmin
+      .from('saas_subscriptions')
+      .update({
+        cancel_at_period_end: true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', subscriptionId);
+
+    if (error) throw error;
+
+    // Audit
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'subscription_cancelled',
+      entity_type: 'subscription',
+      entity_id: subscriptionId,
+      old_value: { cancel_at_period_end: false },
+      new_value: { cancel_at_period_end: true },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
+    revalidatePath('/admin/subscriptions');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Cancel Subscription] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * ACCIÓN 8: Reactivar suscripción cancelada (cancel_at_period_end = false).
+ */
+export async function reactivateSubscriptionAction(
+  subscriptionId: string
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  try {
+    const { data: current } = await supabaseAdmin
+      .from('saas_subscriptions')
+      .select('*')
+      .eq('id', subscriptionId)
+      .single();
+
+    if (!current) throw new Error('Suscripción no encontrada.');
+    if (!current.cancel_at_period_end)
+      throw new Error('La suscripción no está pendiente de cancelación.');
+
+    const { error } = await supabaseAdmin
+      .from('saas_subscriptions')
+      .update({
+        cancel_at_period_end: false,
+        status: 'active',
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', subscriptionId);
+
+    if (error) throw error;
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'subscription_reactivated',
+      entity_type: 'subscription',
+      entity_id: subscriptionId,
+      old_value: { cancel_at_period_end: true },
+      new_value: { cancel_at_period_end: false },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
+    revalidatePath('/admin/subscriptions');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Reactivate Subscription] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * ACCIÓN 9: Extender período de prueba (trial) por N días.
+ * Solo aplica a suscripciones con status='trialing'.
+ */
+export async function extendTrialAction(
+  subscriptionId: string,
+  days: number
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  try {
+    const { data: current } = await supabaseAdmin
+      .from('saas_subscriptions')
+      .select('*')
+      .eq('id', subscriptionId)
+      .single();
+
+    if (!current) throw new Error('Suscripción no encontrada.');
+    if (current.status !== 'trialing')
+      throw new Error('Solo se pueden extender suscripciones en período de prueba.');
+
+    const currentEnd = new Date(current.current_period_end);
+    if (isNaN(currentEnd.getTime()))
+      throw new Error('La fecha de fin de período actual no es válida.');
+
+    const newEnd = new Date(
+      currentEnd.getTime() + days * 24 * 60 * 60 * 1000
+    );
+
+    const { error } = await supabaseAdmin
+      .from('saas_subscriptions')
+      .update({
+        current_period_end: newEnd.toISOString(),
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', subscriptionId);
+
+    if (error) throw error;
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'trial_extended',
+      entity_type: 'subscription',
+      entity_id: subscriptionId,
+      old_value: { current_period_end: current.current_period_end },
+      new_value: {
+        current_period_end: newEnd.toISOString(),
+        days_added: days,
+      },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
+    revalidatePath('/admin/subscriptions');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Extend Trial] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * ACCIÓN 10: Cambiar el plan de una suscripción.
+ * Valida que el nuevo plan exista en SAAS_PLANS.
+ */
+export async function changePlanAction(
+  subscriptionId: string,
+  newPlanKey: string
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  try {
+    // Validate plan
+    const normalized = newPlanKey as PlanKey;
+    if (!SAAS_PLANS[normalized]) {
+      return {
+        success: false,
+        error: `Plan inválido: "${newPlanKey}". Debe ser starter, pro, o enterprise.`,
+      };
+    }
+
+    const { data: current } = await supabaseAdmin
+      .from('saas_subscriptions')
+      .select('*')
+      .eq('id', subscriptionId)
+      .single();
+
+    if (!current) throw new Error('Suscripción no encontrada.');
+
+    const oldPlan = current.plan_key as PlanKey;
+
+    const { error } = await supabaseAdmin
+      .from('saas_subscriptions')
+      .update({
+        plan_key: normalized,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', subscriptionId);
+
+    if (error) throw error;
+
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'plan_changed',
+      entity_type: 'subscription',
+      entity_id: subscriptionId,
+      old_value: { plan_key: oldPlan },
+      new_value: { plan_key: normalized },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
+    revalidatePath('/admin/subscriptions');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Change Plan] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * ACCIÓN 11: Obtener métricas de suscripciones (mrr, churn, trial expiring, etc.).
+ */
+export async function getSubscriptionMetricsAction() {
+  await requireSuperAdmin();
+  return getSubscriptionMetrics();
+}
+
+// ═══════════════════════════════════════════════════════════════════════════
+// ACCIONES 12-15: Gestión de Usuarios y Roles (Superadmin)
+// ═══════════════════════════════════════════════════════════════════════════
+
+/**
+ * ACCIÓN 12: Listar todos los usuarios con sus roles.
+ */
+export async function getUsersAction() {
+  await requireSuperAdmin();
+  return getAllUsersWithRoles();
+}
+
+/**
+ * ACCIÓN 13: Otorgar rol superadmin a un usuario por email.
+ */
+export async function grantSuperadminRoleAction(
+  targetEmail: string
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  try {
+    // 1. Buscar usuario por email en auth.users
+    const { data: usersData, error: lookupError } = await supabaseAdmin
+      .schema('auth')
+      .from('users')
+      .select('id, email')
+      .eq('email', targetEmail)
+      .limit(1);
+
+    if (lookupError || !usersData || usersData.length === 0) {
+      return { success: false, error: 'Usuario no encontrado.' };
+    }
+
+    const targetUser = usersData[0] as { id: string; email: string };
+    const targetUserId = targetUser.id;
+
+    // 2. Verificar que no sea ya superadmin
+    const { data: existingRole } = await supabaseAdmin
+      .from('user_roles')
+      .select('id')
+      .eq('user_id', targetUserId)
+      .eq('role', 'superadmin')
+      .maybeSingle();
+
+    if (existingRole) {
+      return { success: false, error: 'El usuario ya es superadmin.' };
+    }
+
+    // 3. Insertar rol
+    const { error: insertError } = await supabaseAdmin.from('user_roles').insert({
+      user_id: targetUserId,
+      role: 'superadmin',
+    });
+
+    if (insertError) throw insertError;
+
+    // Audit
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'role_granted',
+      entity_type: 'user',
+      entity_id: targetUserId,
+      old_value: null,
+      new_value: { role: 'superadmin', target_email: targetEmail },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
+    revalidatePath('/admin/users');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Grant Superadmin] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * ACCIÓN 14: Revocar rol superadmin de un usuario.
+ * Bloquea auto-revocación y última-superadmin.
+ */
+export async function revokeSuperadminRoleAction(
+  targetUserId: string
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  try {
+    // Guard: self-revoke
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) throw new Error('No autenticado.');
+    if (user.id === targetUserId) {
+      return { success: false, error: 'No podés revocar tu propio rol de superadmin.' };
+    }
+
+    // Guard: last superadmin
+    const superadminCount = await getSuperadminCount();
+    if (superadminCount <= 1) {
+      return { success: false, error: 'No se puede revocar el último superadmin del sistema.' };
+    }
+
+    // Verificar que el target tenga rol superadmin
+    const { data: targetRole, error: roleLookupError } = await supabaseAdmin
+      .from('user_roles')
+      .select('id')
+      .eq('user_id', targetUserId)
+      .eq('role', 'superadmin')
+      .maybeSingle();
+
+    if (roleLookupError || !targetRole) {
+      return { success: false, error: 'El usuario no tiene rol superadmin.' };
+    }
+
+    // Obtener email del target para auditoría
+    let targetEmail: string | null = null;
+    try {
+      const { data: authUsers } = await supabaseAdmin
+        .schema('auth')
+        .from('users')
+        .select('email')
+        .eq('id', targetUserId)
+        .limit(1);
+      if (authUsers && (authUsers as any[]).length > 0) {
+        targetEmail = (authUsers as any[])[0].email;
+      }
+    } catch {
+      // Email opcional para auditoría
+    }
+
+    // Revocar: eliminar fila de user_roles
+    const { error: deleteError } = await supabaseAdmin
+      .from('user_roles')
+      .delete()
+      .eq('user_id', targetUserId)
+      .eq('role', 'superadmin');
+
+    if (deleteError) throw deleteError;
+
+    // Audit
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user.id,
+      actor_email: user.email,
+      action: 'role_revoked',
+      entity_type: 'user',
+      entity_id: targetUserId,
+      old_value: { role: 'superadmin', target_email: targetEmail },
+      new_value: null,
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
+    revalidatePath('/admin/users');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Revoke Superadmin] Error:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+/**
+ * ACCIÓN 15: Crear nuevo usuario superadmin (auth + role).
+ */
+export async function createSuperadminAction(
+  email: string,
+  password: string
+): Promise<{ success: boolean; error?: string }> {
+  await requireSuperAdmin();
+
+  try {
+    // 1. Verificar que el usuario no exista
+    const { data: existingUser } = await supabaseAdmin
+      .schema('auth')
+      .from('users')
+      .select('id')
+      .eq('email', email)
+      .limit(1);
+
+    if (existingUser && (existingUser as any[]).length > 0) {
+      return { success: false, error: 'Ya existe un usuario con ese email.' };
+    }
+
+    // 2. Crear usuario en auth
+    const { data: authUser, error: authError } =
+      await supabaseAdmin.auth.admin.createUser({
+        email,
+        password,
+        email_confirm: true,
+      });
+
+    if (authError) throw authError;
+
+    const newUserId = authUser.user.id;
+
+    // 3. Insertar rol superadmin
+    const { error: roleError } = await supabaseAdmin.from('user_roles').insert({
+      user_id: newUserId,
+      role: 'superadmin',
+    });
+
+    if (roleError) {
+      // Rollback: eliminar el auth user si falla el insert del rol
+      await supabaseAdmin.auth.admin.deleteUser(newUserId);
+      throw roleError;
+    }
+
+    // Audit
+    const supabase = await createClient();
+    const { data: { user } } = await supabase.auth.getUser();
+    const headersList = await headers();
+    await logAuditEvent({
+      actor_type: 'user',
+      actor_id: user?.id,
+      actor_email: user?.email,
+      action: 'superadmin_created',
+      entity_type: 'user',
+      entity_id: newUserId,
+      old_value: null,
+      new_value: { email, role: 'superadmin' },
+      ip_address: headersList.get('x-forwarded-for') || 'unknown',
+      user_agent: headersList.get('user-agent') || 'unknown',
+    });
+
+    revalidatePath('/admin/users');
+    return { success: true };
+  } catch (error: any) {
+    console.error('[Create Superadmin] Error:', error.message);
     return { success: false, error: error.message };
   }
 }
