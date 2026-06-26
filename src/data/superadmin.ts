@@ -27,6 +27,7 @@ export {
 // ─── Re-export from superadmin-leads server action ──────────────
 
 export { getLeadsAction as getLeads } from '@/app/actions/superadmin-leads'
+export { getFeatureFlagsAction as getFeatureFlags } from '@/app/actions/superadmin-feature-flags'
 
 // ─── Typed Interfaces ──────────────────────────────────────────
 
@@ -83,6 +84,17 @@ export interface AuditLogRow {
   ip_address: string | null
   user_agent: string | null
   created_at: string
+}
+
+export interface FeatureFlagRow {
+  id: string
+  flag_key: string
+  flag_name: string
+  description: string | null
+  enabled: boolean
+  hotel_id: string | null
+  created_at: string
+  updated_at: string
 }
 
 export interface AuditLogFilters {

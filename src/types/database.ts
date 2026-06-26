@@ -1150,6 +1150,39 @@ export interface Database {
         };
         Relationships: [];
       };
+      feature_flags: {
+        Row: {
+          id: string
+          flag_key: string
+          flag_name: string
+          description?: string
+          enabled: boolean
+          hotel_id?: string
+          created_at: string
+          updated_at: string
+        };
+        Insert: {
+          id?: string
+          flag_key: string
+          flag_name: string
+          description?: string
+          enabled?: boolean
+          hotel_id?: string
+          created_at?: string
+          updated_at?: string
+        };
+        Update: {
+          id?: string
+          flag_key?: string
+          flag_name?: string
+          description?: string
+          enabled?: boolean
+          hotel_id?: string
+          created_at?: string
+          updated_at?: string
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;

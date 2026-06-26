@@ -26,7 +26,7 @@ export interface AuditEvent {
   /** Qué se hizo */
   action: string;
   /** Tipo de entidad afectada */
-  entity_type: 'hotel' | 'invoice' | 'subscription' | 'lead' | 'manual_payment' | 'user';
+  entity_type: 'hotel' | 'invoice' | 'subscription' | 'lead' | 'manual_payment' | 'user' | 'feature_flag';
   /** ID de la entidad afectada */
   entity_id: string;
   /** Valor antes del cambio (opcional) */
