@@ -18,7 +18,7 @@ import Image from 'next/image';
 
 // ─── Tipos ────────────────────────────────────────────────────────────────────
 
-interface PaymentWithHotel {
+export interface PaymentWithHotel {
   id: string;
   hotel_id: string;
   user_id: string;
@@ -26,10 +26,10 @@ interface PaymentWithHotel {
   method: 'nequi' | 'daviplata';
   status: 'pending' | 'approved' | 'rejected';
   receipt_url: string;
-  rejection_reason?: string;
+  rejection_reason?: string | null;
   created_at: string;
-  approved_at?: string;
-  approved_by?: string;
+  approved_at?: string | null;
+  approved_by?: string | null;
   hotels: {
     name: string;
     city: string | null;

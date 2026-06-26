@@ -1,4 +1,3 @@
-import { createClient } from '@supabase/supabase-js';
 import {
   Building2,
   PlusCircle,
@@ -17,20 +16,16 @@ import {
 } from 'lucide-react';
 import { getHQFinancialReportAction } from '@/app/actions/hq';
 import { getSubscriptionMetricsAction } from '@/app/actions/super-admin';
+import { getHotels, getHotelCount } from '@/data/superadmin';
 import TenantManager from '@/components/super-admin/TenantManager';
 import CreateHotelForm from '@/components/super-admin/CreateHotelForm';
 import Link from 'next/link';
 
-const supabaseAdmin = createClient(
-  process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_ROLE_KEY!,
-);
-
 export const dynamic = 'force-dynamic';
 
 export default async function SuperAdminPage() {
-  const { data: hotels } = await supabaseAdmin.from('hotels').select('*').order('created_at', { ascending: false });
-  const activeHotels = hotels?.filter((h: any) => h.status === 'active').length || 0;
+  const hotels = await getHotels();
+  const activeHotels = await getHotelCount();
 
   const hqResponse = await getHQFinancialReportAction();
   const kpis = hqResponse.success ? hqResponse.kpis : { globalSaaS: 0, globalCommissions: 0, grandTotalExpected: 0 };

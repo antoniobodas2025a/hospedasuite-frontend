@@ -1,7 +1,7 @@
 'use client';
 
 import { useState } from 'react';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   CheckCircle,
@@ -14,6 +14,8 @@ import {
   X,
   ExternalLink,
   Clock,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
   approveDuplicateHotelAction,
@@ -49,17 +51,30 @@ function formatDate(dateStr: string): string {
 
 export default function DuplicatesTable({
   hotels,
+  totalPages,
+  currentPage,
+  totalCount,
   error,
 }: {
   hotels: DuplicateHotel[];
+  totalPages?: number;
+  currentPage?: number;
+  totalCount?: number;
   error?: string;
 }) {
   const [isProcessing, setIsProcessing] = useState<string | null>(null);
   const [showRejectConfirm, setShowRejectConfirm] = useState<string | null>(null);
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleRefresh = () => {
     router.refresh();
+  };
+
+  const goToPage = (p: number) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('page', String(p));
+    router.push(`/admin/hotels/duplicates?${params.toString()}`);
   };
 
   const handleApprove = async (hotelId: string, hotelName: string) => {
@@ -202,6 +217,59 @@ export default function DuplicatesTable({
           </tbody>
         </table>
       </div>
+
+      {/* ─── Paginación ────────────────────────────────────────────────────── */}
+      {totalPages && totalPages > 1 && (
+        <div className="border-t border-white/10 px-6 py-4 flex items-center justify-between">
+          <p className="text-xs text-white/30">
+            Página {currentPage} de {totalPages} ({totalCount} registros)
+          </p>
+          <div className="flex items-center gap-1">
+            <button
+              onClick={() => goToPage((currentPage ?? 1) - 1)}
+              disabled={(currentPage ?? 1) <= 1}
+              className="p-2 rounded-[var(--radius-squircle-lg)] text-white/40 hover:text-white hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronLeft size={16} />
+            </button>
+
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter((p) => {
+                if (p === 1 || p === totalPages) return true;
+                if (Math.abs(p - (currentPage ?? 1)) <= 1) return true;
+                return false;
+              })
+              .map((p, idx, arr) => {
+                const showEllipsis = idx > 0 && p - arr[idx - 1] > 1;
+                return (
+                  <div key={p} className="flex items-center">
+                    {showEllipsis && (
+                      <span className="px-1 text-white/20 text-xs">...</span>
+                    )}
+                    <button
+                      onClick={() => goToPage(p)}
+                      className={`min-w-[32px] h-8 text-xs font-bold rounded-[var(--radius-squircle-lg)] transition-colors ${
+                        p === (currentPage ?? 1)
+                          ? 'bg-blue-600 text-white'
+                          : 'text-white/40 hover:text-white hover:bg-white/5'
+                      }`}
+                    >
+                      {p}
+                    </button>
+                  </div>
+                );
+              })}
+
+            <button
+              onClick={() => goToPage((currentPage ?? 1) + 1)}
+              disabled={(currentPage ?? 1) >= (totalPages ?? 1)}
+              className="p-2 rounded-[var(--radius-squircle-lg)] text-white/40 hover:text-white hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-colors"
+            >
+              <ChevronRight size={16} />
+            </button>
+          </div>
+        </div>
+      )}
 
       {/* ─── Modal: Confirmación de rechazo ────────────────────────────────── */}
       <AnimatePresence>
