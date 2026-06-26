@@ -68,6 +68,20 @@ export default function SuperAdminLayout({
               <span className='hidden lg:inline'>Leads</span>
             </Link>
             <Link
+              href='/admin/subscriptions'
+              className='flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-squircle-lg)] text-white/60 hover:text-white hover:bg-white/5 transition-all text-sm font-medium'
+            >
+              <CreditCard size={18} />
+              <span className='hidden lg:inline'>Suscripciones</span>
+            </Link>
+            <Link
+              href='/admin/users'
+              className='flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-squircle-lg)] text-white/60 hover:text-white hover:bg-white/5 transition-all text-sm font-medium'
+            >
+              <Users size={18} />
+              <span className='hidden lg:inline'>Usuarios</span>
+            </Link>
+            <Link
               href='/admin/audit-logs'
               className='flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-squircle-lg)] text-white/60 hover:text-white hover:bg-white/5 transition-all text-sm font-medium'
             >

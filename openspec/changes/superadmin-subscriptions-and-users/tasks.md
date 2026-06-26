@@ -59,8 +59,8 @@ Chain strategy: stacked-to-main
 
 ## Phase 5: Dashboard + Nav Links
 
-- [ ] 5.1 Modify `src/app/(super-admin)/admin/page.tsx` — add 3 metric cards (Trial Expiring, Past Due, Cancelled 30d) using `getSubscriptionMetricsAction()`
-- [ ] 5.2 Modify `src/app/(super-admin)/layout.tsx` — add sidebar `<Link>` for Subscriptions (`Receipt` icon) and Users (`Users` icon)
+- [x] 5.1 Modify `src/app/(super-admin)/admin/page.tsx` — add 3 metric cards (Trial Expiring, Past Due, Cancelled 30d) using `getSubscriptionMetricsAction()`
+- [x] 5.2 Modify `src/app/(super-admin)/layout.tsx` — add sidebar `<Link>` for Subscriptions (`Receipt` icon) and Users (`Users` icon)
 
 ## Phase 6: Unit Tests
 
@@ -70,6 +70,6 @@ Chain strategy: stacked-to-main
 
 ## Phase 7: E2E Verification
 
-- [ ] 7.1 Write Playwright test: `/admin/subscriptions` renders table, filters work, cancel+confirm flow works
-- [ ] 7.2 Write Playwright test: `/admin/users` renders table, grant flow, revoke flow (including blocked self-revoke)
-- [ ] 7.3 Write Playwright test: Dashboard metric cards render correct counts with seeded data
+- [x] 7.1 Write Playwright test: `/admin/subscriptions` renders table, filters work, cancel+confirm flow works
+- [x] 7.2 Write Playwright test: `/admin/users` renders table, grant flow, revoke flow (including blocked self-revoke)
+- [x] 7.3 Write Playwright test: Dashboard metric cards render correct counts with seeded data
