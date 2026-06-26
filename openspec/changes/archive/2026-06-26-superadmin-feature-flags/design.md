@@ -90,7 +90,7 @@ Implementation: two sequential Supabase queries (single `.limit(1)` each). Expor
 
 ```typescript
 // All async, all guarded by await requireSuperAdmin() as first line
-listFeatureFlagsAction(): Promise<FeatureFlagRow[]>
+getFeatureFlagsAction(): Promise<FeatureFlagRow[]>
 createFeatureFlagAction(input: CreateFlagInput): Promise<{ success: boolean; data?: FeatureFlagRow; error?: string }>
 updateFeatureFlagAction(id: string, input: UpdateFlagInput): Promise<{ success: boolean; error?: string }>
 deleteFeatureFlagAction(id: string): Promise<{ success: boolean; error?: string }>

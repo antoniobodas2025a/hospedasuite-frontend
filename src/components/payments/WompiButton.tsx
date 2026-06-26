@@ -127,11 +127,11 @@ const WompiButton = ({
         )}
 
         {loading
-          ? 'Conectando con Bóveda...'
+          ? 'Procesando...'
           : !widgetReady
             ? 'Cargando pasarela...'
             : isSubscription
-              ? 'Vincular Tarjeta y Activar 90 Días Gratis'
+              ? 'Vincular Tarjeta y Activar 30 Días Gratis'
               : `Pagar $${amount.toLocaleString()} con Wompi`}
       </button>
     </>

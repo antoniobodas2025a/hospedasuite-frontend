@@ -80,12 +80,12 @@ The system MUST export `isFeatureEnabled(flagKey: string, hotelId?: string): Pro
 
 ### Requirement: CRUD Server Actions
 
-The system MUST provide server actions in `src/app/actions/superadmin-feature-flags.ts`: `listFeatureFlagsAction`, `createFeatureFlagAction`, `updateFeatureFlagAction`, `deleteFeatureFlagAction`, `toggleFeatureFlagAction`. Every action MUST call `await requireSuperAdmin()` before business logic. Every mutation action MUST call `logAuditEvent()` on success with `entity_type: 'feature_flag'`.
+The system MUST provide server actions in `src/app/actions/superadmin-feature-flags.ts`: `getFeatureFlagsAction`, `createFeatureFlagAction`, `updateFeatureFlagAction`, `deleteFeatureFlagAction`, `toggleFeatureFlagAction`. Every action MUST call `await requireSuperAdmin()` before business logic. Every mutation action MUST call `logAuditEvent()` on success with `entity_type: 'feature_flag'`.
 
 #### Scenario: List feature flags returns all records
 
 - GIVEN feature flags exist in the database (global and per-hotel)
-- WHEN a superadmin calls `listFeatureFlagsAction`
+- WHEN a superadmin calls `getFeatureFlagsAction`
 - THEN all flags are returned ordered by `created_at` descending
 
 #### Scenario: Create feature flag persists and audits

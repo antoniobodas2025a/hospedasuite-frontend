@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Mail, Lock, Loader2, ArrowRight, AlertCircle, ShieldCheck } from 'lucide-react';
+import { Mail, Lock, Loader2, ArrowRight, AlertCircle, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 import { createClient } from '@/utils/supabase/client';
 import { springGentle, springSnappy } from '@/lib/mac2026/spring';
 
@@ -18,6 +18,7 @@ export default function AuthStep({ onSuccess }: AuthStepProps) {
 
   const [email, setEmail] = useState(prefillEmail);
   const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const supabase = createClient();
@@ -90,20 +91,33 @@ export default function AuthStep({ onSuccess }: AuthStepProps) {
           )}
         </div>
 
-        {/* Password */}
+        {/* Password — Heurística #5: Prevención de Errores (toggle de visibilidad) */}
         <div className="space-y-1">
           <label className="text-xs font-medium text-zinc-400 ml-1">Contraseña</label>
           <div className="relative group">
             <Lock className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500 group-focus-within:text-indigo-400 transition-colors" size={16} />
             <input
-              type="password"
+              type={showPassword ? 'text' : 'password'}
               required
               minLength={6}
               value={password}
               onChange={(e) => setPassword(e.target.value)}
               placeholder="Mínimo 6 caracteres"
-              className="w-full bg-zinc-900/50 border border-white/10 rounded-[var(--radius-squircle-md)] py-3 pl-10 pr-4 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
+              className="w-full bg-zinc-900/50 border border-white/10 rounded-[var(--radius-squircle-md)] py-3 pl-10 pr-12 text-sm text-white placeholder:text-zinc-600 focus:outline-none focus:border-indigo-500/50 focus:ring-1 focus:ring-indigo-500/20 transition-all"
             />
+            <button
+              type="button"
+              tabIndex={-1}
+              onClick={() => setShowPassword(!showPassword)}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-zinc-500 hover:text-zinc-300 transition-colors p-0.5"
+              aria-label={showPassword ? 'Ocultar contraseña' : 'Mostrar contraseña'}
+            >
+              {showPassword ? (
+                <EyeOff size={16} />
+              ) : (
+                <Eye size={16} />
+              )}
+            </button>
           </div>
         </div>
 
