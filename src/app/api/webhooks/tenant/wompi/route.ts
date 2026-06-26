@@ -141,11 +141,43 @@ export async function POST(request: Request) {
       }
     }
 
+    // 🏥 Health: fire-and-forget delivery log
+    supabaseAdmin
+      .from('webhook_delivery_log')
+      .insert({
+        webhook_type: 'tenant',
+        event_type: event,
+        payload: { event, transaction_id: dataObj.id, reference: dataObj.reference, status: dataObj.status },
+        status: 'success',
+        response_code: 200,
+      })
+      .then(() => {})
+      .catch((err: any) =>
+        console.error('[Tenant Wompi] Health log insert failed:', err.message)
+      );
+
     return NextResponse.json({ success: true }, { status: 200 });
 
   } catch (error: any) {
     const msg = error instanceof Error ? error.message : 'Excepción desconocida';
     console.error('❌ [CRITICAL SecOps] Colapso en Webhook Pipeline:', msg);
+
+    // 🏥 Health: fire-and-forget failure log
+    supabaseAdmin
+      .from('webhook_delivery_log')
+      .insert({
+        webhook_type: 'tenant',
+        event_type: 'unknown',
+        payload: {},
+        status: 'failed',
+        response_code: 500,
+        error_message: msg.substring(0, 1000),
+      })
+      .then(() => {})
+      .catch((err: any) =>
+        console.error('[Tenant Wompi] Health log insert failed:', err.message)
+      );
+
     return NextResponse.json({ error: 'Internal Transactional Error', detail: msg }, { status: 500 });
   }
 }

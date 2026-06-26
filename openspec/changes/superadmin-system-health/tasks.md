@@ -45,8 +45,8 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Instrumentation (PR 3)
 
-- [ ] 3.1 Modify `src/app/api/webhooks/platform/wompi/route.ts` — add fire-and-forget `.then().catch()` insert to `webhook_delivery_log` after processing
-- [ ] 3.2 Modify `src/app/api/webhooks/tenant/wompi/route.ts` — add fire-and-forget `.then().catch()` insert to `webhook_delivery_log` after processing
-- [ ] 3.3 Modify `src/app/api/cron/process-renewals/route.ts` — wrap in try-catch: insert `status='running'` at start, update to `success`/`failed` with duration at end
-- [ ] 3.4 Modify `src/app/api/events/handler/route.ts` — filter `isEventProcessed` by `status='processed'`; insert `status='failed'` on handler error; upsert `status='processed'` on success
-- [ ] 3.5 Write integration tests: verify log inserts fire with correct values, fire-and-forget doesn't block webhook/cron response
+- [x] 3.1 Modify `src/app/api/webhooks/platform/wompi/route.ts` — add fire-and-forget `.then().catch()` insert to `webhook_delivery_log` after processing
+- [x] 3.2 Modify `src/app/api/webhooks/tenant/wompi/route.ts` — add fire-and-forget `.then().catch()` insert to `webhook_delivery_log` after processing
+- [x] 3.3 Modify `src/app/api/cron/process-renewals/route.ts` — wrap in try-catch: insert `status='running'` at start, update to `success`/`failed` with duration at end
+- [x] 3.4 Modify `src/app/api/events/handler/route.ts` — filter `isEventProcessed` by `status='processed'`; insert `status='failed'` on handler error; upsert `status='processed'` on success
+- [x] 3.5 Write integration tests: verify log inserts fire with correct values, fire-and-forget doesn't block webhook/cron response

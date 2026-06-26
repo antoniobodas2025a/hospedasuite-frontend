@@ -15,6 +15,7 @@
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { SAAS_PLANS, type PlanKey } from '@/config/saas-plans'
 
 // ─── Supabase Admin Client ────────────────────────────────────
@@ -37,118 +38,169 @@ export async function GET(req: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  const startTime = Date.now()
   const supabase = getAdminClient()
 
-  // ─── Find subscriptions expiring in next 24 hours ───────────
-  const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
+  // 🏥 Health: insert running log entry
+  const { data: logEntry } = await supabaseAdmin
+    .from('cron_job_log')
+    .insert({
+      job_name: 'process-renewals',
+      status: 'running',
+      started_at: new Date().toISOString(),
+    })
+    .select('id')
+    .single()
 
-  const { data: expiringSubs, error } = await supabase
-    .from('saas_subscriptions')
-    .select(`
-      *,
-      hotels (
-        id,
-        name,
-        email,
-        owner_id
-      )
-    `)
-    .eq('status', 'active')
-    .lte('current_period_end', tomorrow)
-    .eq('cancel_at_period_end', false)
+  try {
+    // ─── Find subscriptions expiring in next 24 hours ───────────
+    const tomorrow = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
 
-  if (error) {
-    console.error('[Renewals Cron] Error fetching expiring subscriptions:', error)
-    return NextResponse.json({ error: error.message }, { status: 500 })
-  }
+    const { data: expiringSubs, error } = await supabase
+      .from('saas_subscriptions')
+      .select(`
+        *,
+        hotels (
+          id,
+          name,
+          email,
+          owner_id
+        )
+      `)
+      .eq('status', 'active')
+      .lte('current_period_end', tomorrow)
+      .eq('cancel_at_period_end', false)
 
-  if (!expiringSubs?.length) {
-    return NextResponse.json({ processed: 0, message: 'No subscriptions expiring' }, { status: 200 })
-  }
-
-  let processed = 0
-  const results: Array<{ hotelId: string; status: string; error?: string }> = []
-
-  for (const sub of expiringSubs) {
-    try {
-      const plan = SAAS_PLANS[sub.plan_key as PlanKey]
-      if (!plan) {
-        results.push({ hotelId: sub.hotel_id, status: 'error', error: `Unknown plan: ${sub.plan_key}` })
-        continue
-      }
-
-      // ─── Step 1: Create new invoice ─────────────────────────
-      const now = new Date()
-      const periodStart = new Date(sub.current_period_end)
-      const periodEnd = new Date(periodStart.getTime() + 30 * 24 * 60 * 60 * 1000)
-
-      const { data: invoice, error: invoiceError } = await supabase
-        .from('billing_invoices')
-        .insert({
-          hotel_id: sub.hotel_id,
-          plan_key: sub.plan_key,
-          plan_fee: plan.priceCOP,
-          total: plan.priceCOP,
-          status: 'pending',
-          due_date: periodStart.toISOString(),
-          period_start: periodStart.toISOString(),
-          period_end: periodEnd.toISOString(),
-          wompi_reference: `renewal-${sub.hotel_id}-${Date.now()}`,
-        })
-        .select()
-        .single()
-
-      if (invoiceError) {
-        console.error(`[Renewals Cron] Error creating invoice for hotel ${sub.hotel_id}:`, invoiceError)
-        results.push({ hotelId: sub.hotel_id, status: 'error', error: invoiceError.message })
-        continue
-      }
-
-      // ─── Step 2: Generate Wompi payment link ────────────────
-      const wompiUrl = generateWompiPaymentLink(invoice, plan)
-
-      // ─── Step 3: Send email to hotelier ─────────────────────
-      const hotelEmail = sub.hotels?.email
-      const hotelName = sub.hotels?.name || sub.hotel_id
-
-      if (hotelEmail) {
-        await sendRenewalEmail(hotelEmail, hotelName, plan.label, plan.priceCOP, wompiUrl, periodEnd)
-      }
-
-      // ─── Step 4: Log the renewal attempt ────────────────────
-      const { logAuditEvent } = await import('@/lib/audit-logger')
-      await logAuditEvent({
-        actor_type: 'cron',
-        actor_id: 'renewals-cron',
-        action: 'renewal_invoice_created',
-        entity_type: 'subscription',
-        entity_id: sub.hotel_id,
-        new_value: {
-          invoice_id: invoice.id,
-          plan: sub.plan_key,
-          amount: plan.priceCOP,
-          due_date: periodStart.toISOString(),
-          wompi_reference: invoice.wompi_reference,
-        },
-      })
-
-      processed++
-      results.push({ hotelId: sub.hotel_id, status: 'success' })
-    } catch (error) {
-      console.error(`[Renewals Cron] Failed for hotel ${sub.hotel_id}:`, error)
-      results.push({
-        hotelId: sub.hotel_id,
-        status: 'error',
-        error: error instanceof Error ? error.message : 'Unknown error',
-      })
+    if (error) {
+      console.error('[Renewals Cron] Error fetching expiring subscriptions:', error)
+      throw error
     }
-  }
 
-  return NextResponse.json({
-    processed,
-    total: expiringSubs.length,
-    results,
-  }, { status: 200 })
+    if (!expiringSubs?.length) {
+      // 🏥 Health: update log for empty run
+      await supabaseAdmin
+        .from('cron_job_log')
+        .update({
+          status: 'success',
+          completed_at: new Date().toISOString(),
+          duration_ms: Date.now() - startTime,
+          output: { processed: 0, message: 'No subscriptions expiring' },
+        })
+        .eq('id', logEntry.id)
+
+      return NextResponse.json({ processed: 0, message: 'No subscriptions expiring' }, { status: 200 })
+    }
+
+    let processed = 0
+    const results: Array<{ hotelId: string; status: string; error?: string }> = []
+
+    for (const sub of expiringSubs) {
+      try {
+        const plan = SAAS_PLANS[sub.plan_key as PlanKey]
+        if (!plan) {
+          results.push({ hotelId: sub.hotel_id, status: 'error', error: `Unknown plan: ${sub.plan_key}` })
+          continue
+        }
+
+        // ─── Step 1: Create new invoice ─────────────────────────
+        const now = new Date()
+        const periodStart = new Date(sub.current_period_end)
+        const periodEnd = new Date(periodStart.getTime() + 30 * 24 * 60 * 60 * 1000)
+
+        const { data: invoice, error: invoiceError } = await supabase
+          .from('billing_invoices')
+          .insert({
+            hotel_id: sub.hotel_id,
+            plan_key: sub.plan_key,
+            plan_fee: plan.priceCOP,
+            total: plan.priceCOP,
+            status: 'pending',
+            due_date: periodStart.toISOString(),
+            period_start: periodStart.toISOString(),
+            period_end: periodEnd.toISOString(),
+            wompi_reference: `renewal-${sub.hotel_id}-${Date.now()}`,
+          })
+          .select()
+          .single()
+
+        if (invoiceError) {
+          console.error(`[Renewals Cron] Error creating invoice for hotel ${sub.hotel_id}:`, invoiceError)
+          results.push({ hotelId: sub.hotel_id, status: 'error', error: invoiceError.message })
+          continue
+        }
+
+        // ─── Step 2: Generate Wompi payment link ────────────────
+        const wompiUrl = generateWompiPaymentLink(invoice, plan)
+
+        // ─── Step 3: Send email to hotelier ─────────────────────
+        const hotelEmail = sub.hotels?.email
+        const hotelName = sub.hotels?.name || sub.hotel_id
+
+        if (hotelEmail) {
+          await sendRenewalEmail(hotelEmail, hotelName, plan.label, plan.priceCOP, wompiUrl, periodEnd)
+        }
+
+        // ─── Step 4: Log the renewal attempt ────────────────────
+        const { logAuditEvent } = await import('@/lib/audit-logger')
+        await logAuditEvent({
+          actor_type: 'cron',
+          actor_id: 'renewals-cron',
+          action: 'renewal_invoice_created',
+          entity_type: 'subscription',
+          entity_id: sub.hotel_id,
+          new_value: {
+            invoice_id: invoice.id,
+            plan: sub.plan_key,
+            amount: plan.priceCOP,
+            due_date: periodStart.toISOString(),
+            wompi_reference: invoice.wompi_reference,
+          },
+        })
+
+        processed++
+        results.push({ hotelId: sub.hotel_id, status: 'success' })
+      } catch (error) {
+        console.error(`[Renewals Cron] Failed for hotel ${sub.hotel_id}:`, error)
+        results.push({
+          hotelId: sub.hotel_id,
+          status: 'error',
+          error: error instanceof Error ? error.message : 'Unknown error',
+        })
+      }
+    }
+
+    // 🏥 Health: update log for successful completion
+    await supabaseAdmin
+      .from('cron_job_log')
+      .update({
+        status: 'success',
+        completed_at: new Date().toISOString(),
+        duration_ms: Date.now() - startTime,
+        output: { processed, total: expiringSubs.length, results },
+      })
+      .eq('id', logEntry.id)
+
+    return NextResponse.json({
+      processed,
+      total: expiringSubs.length,
+      results,
+    }, { status: 200 })
+  } catch (error) {
+    const errorMsg = error instanceof Error ? error.message : 'Unknown error'
+
+    // 🏥 Health: update log for failed execution
+    await supabaseAdmin
+      .from('cron_job_log')
+      .update({
+        status: 'failed',
+        completed_at: new Date().toISOString(),
+        duration_ms: Date.now() - startTime,
+        error_message: errorMsg.substring(0, 1000),
+      })
+      .eq('id', logEntry.id)
+
+    return NextResponse.json({ error: errorMsg }, { status: 500 })
+  }
 }
 
 // ─── Helpers ──────────────────────────────────────────────────

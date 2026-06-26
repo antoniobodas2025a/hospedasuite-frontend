@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { AllEventSchemas, AnyEvent } from '@/lib/event-types';
 import { getHandlers } from '@/lib/event-handlers';
-import { createClient } from '@/utils/supabase/server';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 
 // Verify QStash signature (reuse existing pattern from webhooks)
 async function verifyQStashSignature(request: NextRequest): Promise<boolean> {
@@ -13,29 +13,50 @@ async function verifyQStashSignature(request: NextRequest): Promise<boolean> {
   return true;
 }
 
-// Check if event was already processed (idempotency)
+// Check if event was already successfully processed (idempotency).
+// Only considers rows with status='processed' as done — 'failed' rows
+// allow QStash retries to re-execute the handler.
 async function isEventProcessed(eventType: string, correlationId: string): Promise<boolean> {
-  const supabase = await createClient();
-  const { data } = await supabase
+  const { data } = await supabaseAdmin
     .from('processed_events')
     .select('id')
     .eq('event_type', eventType)
     .eq('correlation_id', correlationId)
+    .eq('status', 'processed')
     .maybeSingle();
   
   return !!data;
 }
 
-// Mark event as processed
+// Mark event as successfully processed.
+// Uses upsert to handle retries: if a previous 'failed' row exists, it gets upgraded.
 async function markEventProcessed(eventType: string, correlationId: string, payloadHash: string): Promise<void> {
-  const supabase = await createClient();
-  await supabase
+  await supabaseAdmin
     .from('processed_events')
-    .insert({
+    .upsert({
       event_type: eventType,
       correlation_id: correlationId,
       payload_hash: payloadHash,
       status: 'processed',
+      processed_at: new Date().toISOString(),
+    }, {
+      onConflict: 'event_type, correlation_id',
+    });
+}
+
+// Mark event as failed so QStash can retry it.
+// Uses upsert: on repeated failures, updates the existing 'failed' row.
+async function markEventFailed(eventType: string, correlationId: string, payloadHash: string): Promise<void> {
+  await supabaseAdmin
+    .from('processed_events')
+    .upsert({
+      event_type: eventType,
+      correlation_id: correlationId,
+      payload_hash: payloadHash,
+      status: 'failed',
+      processed_at: new Date().toISOString(),
+    }, {
+      onConflict: 'event_type, correlation_id',
     });
 }
 
@@ -96,6 +117,10 @@ export async function POST(request: NextRequest) {
     const failures = results.filter(r => r.status === 'rejected');
     if (failures.length > 0) {
       console.error(`[events] ${failures.length}/${results.length} handlers failed for ${eventType}:`, failures);
+
+      // 🏥 Health: mark event as failed so QStash can retry
+      await markEventFailed(eventType, correlationId, hashPayload(event.payload));
+
       // Return 500 so QStash retries
       return NextResponse.json({ 
         error: 'Handler failures', 
