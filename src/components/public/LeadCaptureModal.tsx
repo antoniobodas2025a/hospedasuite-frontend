@@ -53,7 +53,7 @@ export default function LeadCaptureModal({
   useEffect(() => {
     if (!isOpen) return;
     const restored: Partial<LeadFormData> = {};
-    let restoredFromStorage = false;
+    const restoredFromStorage = false;
 
     // Try localStorage draft
     const draftRaw = localStorage.getItem(STORAGE_KEY);

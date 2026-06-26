@@ -12,8 +12,8 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 const { mockInsert, mockUpdate, mockUpsert, mockSelectChain } = vi.hoisted(() => {
   // Track insert/update/upsert calls for verification
-  let insertResolve: any = () => Promise.resolve();
-  let updateResolve: any = () => Promise.resolve();
+  const insertResolve: any = () => Promise.resolve();
+  const updateResolve: any = () => Promise.resolve();
 
   const mockInsert = vi.fn(() => ({
     select: vi.fn(() => ({
