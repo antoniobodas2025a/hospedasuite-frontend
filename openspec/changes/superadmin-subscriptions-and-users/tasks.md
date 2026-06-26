@@ -47,15 +47,15 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Subscription Page — `/admin/subscriptions`
 
-- [ ] 3.1 Create `src/app/(super-admin)/admin/subscriptions/page.tsx` — server component: fetch via `getSubscriptionsAction`, render header info
-- [ ] 3.2 Create `src/components/super-admin/SubscriptionsTable.tsx` — client table: filter bar (status/plan/search), pagination, status badges, row action buttons, confirmation dialogs for cancel/reactivate/extend/change-plan
-- [ ] 3.3 Wire row actions to server actions with loading states, `useRouter().refresh()` after mutation
+- [x] 3.1 Create `src/app/(super-admin)/admin/subscriptions/page.tsx` — server component: fetch via `getSubscriptionsAction`, render header info
+- [x] 3.2 Create `src/app/(super-admin)/admin/subscriptions/SubscriptionsTable.tsx` — client table: filter bar (status/plan/search), pagination, status badges, row action buttons, confirmation dialogs for cancel/reactivate/extend/change-plan
+- [x] 3.3 Wire row actions to server actions with loading states, `useRouter().refresh()` after mutation
 
 ## Phase 4: Users Page — `/admin/users`
 
-- [ ] 4.1 Create `src/app/(super-admin)/admin/users/page.tsx` — server component: fetch via `getUserRolesAction`, render header
-- [ ] 4.2 Create `src/components/super-admin/UsersTable.tsx` — client table: role badges, grant form (email input), create form (email+password), revoke button, confirmation dialogs for revoke/create
-- [ ] 4.3 Implement guard logic: disable self-revoke with tooltip, block last-superadmin revoke with error, check duplicate grant
+- [x] 4.1 Create `src/app/(super-admin)/admin/users/page.tsx` — server component: fetch via `getUsersAction`, render header
+- [x] 4.2 Create `src/app/(super-admin)/admin/users/UsersTable.tsx` — client table: role badges, grant form (email input), create form (email+password), revoke button, confirmation dialogs for revoke/create
+- [x] 4.3 Implement guard logic: disable self-revoke with tooltip, block last-superadmin revoke with error, check duplicate grant
 
 ## Phase 5: Dashboard + Nav Links
 
