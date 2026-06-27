@@ -101,26 +101,24 @@ export default function PaymentStep() {
           </button>
         </div>
 
-        {/* Free activation — mobile only */}
-        {isMobile && (
-          <button
-            onClick={() => handleMethodSelect('free')}
-            className={`w-full p-5 rounded-[var(--radius-squircle-xl)] border text-center transition-all bg-gradient-to-r from-emerald-500/5 to-green-500/5 ${
-              paymentMethod === 'free'
-                ? 'border-emerald-500/40 ring-1 ring-emerald-500/30 bg-emerald-500/10'
-                : 'border-emerald-500/20 text-zinc-400 hover:border-emerald-500/40 hover:text-emerald-300'
-            }`}
-          >
-            <Gift
-              size={24}
-              className={`mx-auto mb-2 ${paymentMethod === 'free' ? 'text-emerald-400' : 'text-emerald-600'}`}
-            />
-            <p className={`font-bold text-sm ${paymentMethod === 'free' ? 'text-emerald-300' : 'text-emerald-500'}`}>
-              Activar gratis
-            </p>
-            <p className="text-[10px] text-emerald-700 mt-1">30 días de prueba gratis</p>
-          </button>
-        )}
+        {/* Free activation — ALL devices (Ley de Hick: activación sin fricción) */}
+        <button
+          onClick={() => handleMethodSelect('free')}
+          className={`w-full p-5 rounded-[var(--radius-squircle-xl)] border text-center transition-all bg-gradient-to-r from-emerald-500/5 to-green-500/5 ${
+            paymentMethod === 'free'
+              ? 'border-emerald-500/40 ring-1 ring-emerald-500/30 bg-emerald-500/10'
+              : 'border-emerald-500/20 text-zinc-400 hover:border-emerald-500/40 hover:text-emerald-300'
+          }`}
+        >
+          <Gift
+            size={24}
+            className={`mx-auto mb-2 ${paymentMethod === 'free' ? 'text-emerald-400' : 'text-emerald-600'}`}
+          />
+          <p className={`font-bold text-sm ${paymentMethod === 'free' ? 'text-emerald-300' : 'text-emerald-500'}`}>
+            Activar gratis
+          </p>
+          <p className="text-[10px] text-emerald-700 mt-1">30 días de prueba gratis</p>
+        </button>
       </div>
 
       {/* Conditional payment UI */}

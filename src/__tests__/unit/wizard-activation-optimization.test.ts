@@ -65,6 +65,32 @@ describe('Wizard Activation Optimization', () => {
     expect(content).not.toContain('90 días');
   });
 
+  it('PaymentStep debe ofrecer "Activar gratis" en TODOS los dispositivos (no solo mobile)', () => {
+    const content = fs.readFileSync(PAYMENT_STEP_PATH, 'utf8');
+    // The free activation button must NOT be gated behind isMobile
+    // After the fix, "Activar gratis" should appear in the file WITHOUT being inside {isMobile && (...)}
+    // Simple check: the file should NOT contain the pattern "{isMobile &&" followed by "Activar gratis" within the same JSX block
+    const lines = content.split('\n');
+    let inMobileBlock = false;
+    let braceDepth = 0;
+    for (const line of lines) {
+      if (line.includes('{isMobile &&')) {
+        inMobileBlock = true;
+        braceDepth = (line.match(/{/g) || []).length - (line.match(/}/g) || []).length;
+      }
+      if (inMobileBlock) {
+        braceDepth += (line.match(/{/g) || []).length - (line.match(/}/g) || []).length;
+        if (line.includes('Activar gratis')) {
+          // Found inside mobile block - FAIL
+          expect(true).toBe(false); // Force failure
+        }
+        if (braceDepth <= 0) inMobileBlock = false;
+      }
+    }
+    // If we got here, "Activar gratis" is NOT inside the mobile block - PASS
+    expect(true).toBe(true);
+  });
+
   it('MUTACIÓN: si se reintroduce "90 Días" en cualquier componente del wizard, debe fallar', () => {
     const paths = [WOMPI_BUTTON_PATH, PAYMENT_REVIEW_PATH, PAYMENT_STEP_PATH];
     for (const p of paths) {
