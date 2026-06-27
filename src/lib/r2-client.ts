@@ -42,11 +42,11 @@ export async function getPresignedUploadUrl(
   const url = new URL(endpoint);
   const host = url.host;
 
-  // Sign BOTH host and content-type.
-  // The browser automatically sends Content-Type when body is a File,
-  // and R2 rejects unsigned headers with 400.
-  const canonicalHeaders = `content-type:${contentType}\nhost:${host}\n`;
-  const signedHeaders = 'content-type;host';
+  // Only sign 'host'. We send the body as ArrayBuffer so the browser
+  // does NOT automatically attach a Content-Type header, avoiding
+  // signature mismatches with R2.
+  const canonicalHeaders = `host:${host}\n`;
+  const signedHeaders = 'host';
 
   const queryEntries = [
     `X-Amz-Algorithm=AWS4-HMAC-SHA256`,

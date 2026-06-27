@@ -33,14 +33,11 @@ export async function POST(request: NextRequest) {
     console.log(`[Cerebro Operativo] Server upload: ${file.name} (${(file.size / 1024).toFixed(0)}KB) → ${key}`);
 
     // Server-side PUT to R2 (no CORS issues)
-    // Presigned URL signs 'content-type;host' — must match exactly
+    // Send as buffer without Content-Type header to match the 'host'-only signature
     const buffer = Buffer.from(await file.arrayBuffer());
     const res = await fetch(uploadUrl, {
       method: 'PUT',
       body: buffer,
-      headers: {
-        'Content-Type': fileType,
-      },
     });
 
     if (!res.ok) {

@@ -133,12 +133,11 @@ export async function generateBlurDataURL(file: File): Promise<string> {
 export async function uploadToR2(presignedUrl: string, file: File, retries = 5): Promise<void> {
   for (let i = 0; i < retries; i++) {
     try {
-      // Presigned URL now signs 'content-type;host' — browser sends Content-Type
-      // automatically for File body, which matches the signed value.
+      // Send as ArrayBuffer so fetch does NOT automatically attach Content-Type.
+      // This avoids signature mismatches with R2.
       const res = await fetch(presignedUrl, {
         method: 'PUT',
-        body: file,
-        headers: { 'Content-Type': file.type },
+        body: await file.arrayBuffer(),
       });
       if (res.ok) return;
       // Log status code for debugging (console only, never shown to user)
