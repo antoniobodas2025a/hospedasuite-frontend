@@ -11,6 +11,47 @@
 
 import imageCompression from 'browser-image-compression';
 
+// ─── Validation constants ──────────────────────────────────────────
+
+export const MAX_FILE_SIZE_MB = 10;
+export const ALLOWED_MIME_TYPES = [
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/heic',
+  'image/heif',
+];
+
+/**
+ * Valida localmente una imagen antes de intentar subirla.
+ * Heurística #5: previene errores antes de contactar a R2.
+ */
+export function validateImageFile(file: File): { valid: boolean; error?: string } {
+  // Check empty
+  if (!file || file.size === 0) {
+    return { valid: false, error: 'El archivo está vacío.' };
+  }
+
+  // Check size (before compression)
+  if (file.size > MAX_FILE_SIZE_MB * 1024 * 1024) {
+    return { valid: false, error: `La imagen es muy grande (máx. ${MAX_FILE_SIZE_MB}MB).` };
+  }
+
+  // Check MIME type
+  if (!ALLOWED_MIME_TYPES.includes(file.type)) {
+    return { valid: false, error: 'Formato no soportado. Usá JPG, PNG o WebP.' };
+  }
+
+  // Sanitize filename
+  const sanitizedName = file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+  if (!sanitizedName || sanitizedName.length < 2) {
+    return { valid: false, error: 'Nombre de archivo inválido.' };
+  }
+
+  return { valid: true };
+}
+
 // ─── Compression presets ───────────────────────────────────────────
 
 export const DEFAULT_COMPRESSION = {
@@ -98,13 +139,13 @@ export async function uploadToR2(presignedUrl: string, file: File, retries = 5):
         headers: { 'Content-Type': file.type },
       });
       if (res.ok) return;
-      // Log status code for debugging
+      // Log status code for debugging (console only, never shown to user)
       console.warn(
         `[Cerebro Operativo] Intento ${i + 1}/${retries} fallido para ${file.name}: status ${res.status}`,
       );
       // If R2 returns 403, the presigned URL signature may be invalid
-      // If R2 returns 400, the request format is wrong
-      if (res.status === 403 || res.status === 400) break; // Don't retry signature/format errors
+      // If R2 returns 400, the request format is wrong — don't retry
+      if (res.status === 403 || res.status === 400) break;
       // Exponential backoff: 1s, 2s, 4s, 8s, 16s
       if (i < retries - 1) {
         await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
@@ -113,16 +154,19 @@ export async function uploadToR2(presignedUrl: string, file: File, retries = 5):
       // Network error — likely CORS or connectivity issue
       const isLastAttempt = i === retries - 1;
       if (isLastAttempt) {
+        // Heurística #2: lenguaje empático, cero jerga técnica
         throw new Error(
-          `No se pudo conectar con el almacenamiento. Verificá tu conexión a internet. ` +
-          `Si el problema persiste, contactanos por WhatsApp.`,
+          `No se pudo subir la imagen. `,
         );
       }
       // Wait before retry
       await new Promise(r => setTimeout(r, 1000 * Math.pow(2, i)));
     }
   }
-  throw new Error(`R2 upload failed after ${retries} retries`);
+  // Heurística #2: mensaje amigable, nunca errores técnicos crudos
+  throw new Error(
+    `No se pudo procesar la imagen. `,
+  );
 }
 
 /**

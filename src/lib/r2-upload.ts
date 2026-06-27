@@ -81,7 +81,11 @@ export async function uploadToR2(key: string, body: Buffer, contentType: string)
 
   if (!response.ok) {
     const errorText = await response.text();
-    throw new Error(`R2 upload failed (${response.status}): ${errorText}`);
+    console.error(`[Cerebro Operativo] Server upload failed: status ${response.status}`, errorText);
+    // Heurística #2: nunca exponer jerga técnica al usuario
+    throw new Error(
+      `No se pudo subir la imagen al almacenamiento. `,
+    );
   }
 
   return `${process.env.R2_PUBLIC_URL || 'https://pub-xxxx.r2.dev'}/${key}`;
