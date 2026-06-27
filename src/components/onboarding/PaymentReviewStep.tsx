@@ -77,12 +77,12 @@ export default function PaymentReviewStep() {
             Activación gratuita
           </h3>
           <div className="glass-card p-6 space-y-3">
-            <p className="text-zinc-300 text-sm leading-relaxed">
+            <p className="text-white text-sm leading-relaxed font-medium">
               30 días de prueba gratis. Sin pago, sin tarjeta.
             </p>
-            <div className="border-t border-white/5 pt-3">
-              <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Próximos pasos</p>
-              <ol className="text-zinc-400 text-xs space-y-1.5 list-decimal list-inside">
+            <div className="border-t border-white/10 pt-3">
+              <p className="text-[10px] font-bold text-zinc-300 uppercase tracking-widest mb-2">Próximos pasos</p>
+              <ol className="text-zinc-200 text-xs space-y-1.5 list-decimal list-inside">
                 <li>Activá tu propiedad ahora mismo</li>
                 <li>Probá todas las funciones por 30 días</li>
                 <li>Si te gusta, elegí un plan al finalizar el período</li>
