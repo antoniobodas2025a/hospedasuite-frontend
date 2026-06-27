@@ -83,9 +83,9 @@ export const settingsSchema = z.object({
 	whatsappNumber: z.string().optional(),
 	googleMapsUrl: z.string().url("URL inválida").optional().or(z.literal("")),
 	taxRate: z.number().min(0).max(0.19).default(0),
-	// Soberanía Financiera: claves de Wompi para recibir pagos directos
-	wompi_public_key: z.string().min(1, "La clave pública de Wompi es requerida"),
-	wompi_integrity_secret: z.string().min(1, "El secreto de integridad de Wompi es requerido"),
+	// Soberanía Financiera: claves de Wompi (opcionales para activación, requeridas post-onboarding)
+	wompi_public_key: z.string().optional(),
+	wompi_integrity_secret: z.string().optional(),
 	wompi_sandbox_mode: z.boolean().default(false),
 });
 
