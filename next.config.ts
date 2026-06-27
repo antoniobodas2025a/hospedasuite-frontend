@@ -31,9 +31,11 @@ const nextConfig = {
 		],
 	},
 
-	// 🛡️ CONFIGURACIÓN DE COMPILACIÓN
-	// TS ahora tiene 0 errores — este bloque se mantiene vacío pero disponible
-	// si en el futuro se necesita configurar type checking del build.
+	// 🛡️ Skip TS check in Docker build (OOM on 3.7GB server)
+	// TS is validated locally via tests + tsc --noEmit
+	typescript: {
+		ignoreBuildErrors: process.env.SKIP_TS_CHECK === "1",
+	},
 
 	// 🛡️ BARRERA WAF: Cabeceras HTTP Estrictas (Security-First)
 	async headers() {
