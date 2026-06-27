@@ -133,10 +133,12 @@ export async function generateBlurDataURL(file: File): Promise<string> {
 export async function uploadToR2(presignedUrl: string, file: File, retries = 5): Promise<void> {
   for (let i = 0; i < retries; i++) {
     try {
+      // Presigned URL only signs 'host' header — do NOT send Content-Type
+      // as it was not included in the AWS Signature V4 canonical request.
+      // R2 rejects unsigned headers with 400 Bad Request.
       const res = await fetch(presignedUrl, {
         method: 'PUT',
         body: file,
-        headers: { 'Content-Type': file.type },
       });
       if (res.ok) return;
       // Log status code for debugging (console only, never shown to user)

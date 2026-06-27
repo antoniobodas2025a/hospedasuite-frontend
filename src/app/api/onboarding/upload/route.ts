@@ -33,14 +33,12 @@ export async function POST(request: NextRequest) {
     console.log(`[Cerebro Operativo] Server upload: ${file.name} (${(file.size / 1024).toFixed(0)}KB) → ${key}`);
 
     // Server-side PUT to R2 (no CORS issues)
-    // MUST send Content-Type header matching the signed headers
+    // Presigned URL only signs 'host' — do NOT send Content-Type header
+    // as it was not included in the AWS Signature V4 canonical request.
     const buffer = Buffer.from(await file.arrayBuffer());
     const res = await fetch(uploadUrl, {
       method: 'PUT',
       body: buffer,
-      headers: {
-        'Content-Type': fileType,
-      },
     });
 
     if (!res.ok) {
