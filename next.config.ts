@@ -3,9 +3,15 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
+// Single Source of Truth: el dominio R2 se lee de una sola env var
+const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev";
+const r2Url = new URL(R2_PUBLIC_URL);
+const r2Hostname = r2Url.hostname;
+const r2Origin = r2Url.origin;
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-	// 📸 CONFIGURACIÓN DE MOTOR DE IMÁGENES (SUPABASE + CDN)
+	// CONFIGURACIÓN DE MOTOR DE IMÁGENES (R2 CDN)
 	images: {
 		formats: ["image/avif", "image/webp"] as ["image/avif", "image/webp"], // AVIF primero, fallback WebP
 		minimumCacheTTL: 31536000, // 1 año — imágenes no cambian
@@ -24,7 +30,7 @@ const nextConfig = {
 			},
 			{
 				protocol: "https",
-				hostname: "pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev",
+				hostname: r2Hostname,
 				port: "",
 				pathname: "/**",
 			},
@@ -37,12 +43,11 @@ const nextConfig = {
 		ignoreBuildErrors: process.env.SKIP_TS_CHECK === "1",
 	},
 
-	// 🛡️ BARRERA WAF: Cabeceras HTTP Estrictas (Security-First)
+	// BARRERA WAF: Cabeceras HTTP Estrictas (Security-First)
 	async headers() {
 		const appUrl =
 			process.env.NEXT_PUBLIC_APP_URL || "https://hospedasuite.com";
 		const wompiDomain = "https://checkout.wompi.co";
-		const r2Domain = "https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev";
 		const r2UploadDomain = "https://*.r2.cloudflarestorage.com";
 		const supabaseDomain = "https://auaqpomuivfhomlkvhju.supabase.co";
 		const sentryDomain = "https://*.ingest.sentry.io";
@@ -70,7 +75,7 @@ const nextConfig = {
 							`default-src 'self'`,
 							`script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com ${wompiDomain} ${sentryDomain} https://cdn.jsdelivr.net ${posthogDomain} ${posthogAssetsDomain} ${googleAnalyticsDomain}`,
 							`style-src 'self' 'unsafe-inline' https://unpkg.com`,
-							`img-src 'self' blob: data: ${r2Domain} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
+							`img-src 'self' blob: data: ${r2Origin} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
 							`font-src 'self' data:`,
 							`connect-src 'self' ${r2UploadDomain} ${wompiDomain} ${supabaseDomain} ${sentryDomain} ${appUrl} https://*.tile.openstreetmap.org ${posthogDomain} ${posthogAssetsDomain} ${googleAnalyticsDomain} ${googleAnalyticsApiDomain} ${nominatimDomain}`,
 							`worker-src 'self' blob:`,
