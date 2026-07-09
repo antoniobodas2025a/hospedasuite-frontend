@@ -132,7 +132,7 @@ function RoomCardInner({
       <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl transition-all duration-500 group-hover/card:scale-[1.01]">
 
         {/* ZONA VISUAL (Atraccion) */}
-        <div className="w-full md:w-72 h-64 md:h-full min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner">
+        <div className="w-full md:w-72 aspect-[3/4] md:aspect-auto md:h-full md:min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner">
           <Image
             src={getImageSizeUrl(coverImage, 'card')}
             alt={room.name}
