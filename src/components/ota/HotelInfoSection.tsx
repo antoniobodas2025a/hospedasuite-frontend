@@ -1,17 +1,15 @@
 "use client";
 
-import { MapPin, Clock, ShieldAlert, Navigation, Phone, ExternalLink, ChevronDown, ChevronUp, Globe } from 'lucide-react';
+import { MapPin, Clock, ShieldAlert, Navigation, Phone, ChevronDown, ChevronUp } from 'lucide-react';
 import { useTranslations } from 'next-intl';
-import HotelDetailMap from './HotelDetailMapWrapper';
+import LocationCard from './LocationCard';
 import { useState } from 'react';
-import { getMapPriorityUrl } from '@/lib/map-resolver';
 
 interface HotelInfoSectionProps {
   hotelName: string;
   location?: string | null;
   address?: string | null;
   phone?: string | null;
-  googleMapsUrl?: string | null;
   cancellationPolicy?: string | null;
   checkInTime?: string | null;
   checkOutTime?: string | null;
@@ -26,7 +24,6 @@ export default function HotelInfoSection({
   location,
   address,
   phone,
-  googleMapsUrl,
   cancellationPolicy,
   checkInTime,
   checkOutTime,
@@ -35,18 +32,7 @@ export default function HotelInfoSection({
   longitude,
 }: HotelInfoSectionProps) {
   const t = useTranslations();
-  const [mapError, setMapError] = useState(false);
-  const [mapLoaded, setMapLoaded] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
-
-  // Resolve map strategy based on available data (SRP: map-resolver.ts)
-  const mapResolution = getMapPriorityUrl({
-    name: hotelName,
-    googleMapsUrl,
-    latitude,
-    longitude,
-    address,
-  });
 
   return (
     <div className="glass-card overflow-hidden">
@@ -59,60 +45,15 @@ export default function HotelInfoSection({
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2">
-        {/* Columna izquierda: Mapa + Direccion */}
+        {/* Columna izquierda: LocationCard + Direccion */}
         <div className="p-6 md:p-8 space-y-6">
-          {/* Mapa o Fallback — siempre visible (Heurística #1) */}
-          {mapResolution.type === 'iframe' && !mapError ? (
-            <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48 relative">
-              <iframe
-                src={mapResolution.url}
-                width="100%"
-                height="100%"
-                style={{ border: 0 }}
-                allowFullScreen
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-                title={`${t('ota.hotelInfo.mapTitle')} ${hotelName}`}
-                className="grayscale-[0.3] hover:grayscale-0 transition-all"
-                onLoad={() => setMapLoaded(true)}
-                onError={() => setMapError(true)}
-              />
-              {!mapLoaded && (
-                <div className="absolute inset-0 bg-muted animate-pulse pointer-events-none" />
-              )}
-            </div>
-          ) : mapResolution.type === 'leaflet' && !mapError ? (
-            <HotelDetailMap
-              latitude={latitude!}
-              longitude={longitude!}
-              hotelName={hotelName}
-              location={location || ''}
-            />
-          ) : mapResolution.type === 'link' ? (
-            /* Fallback Dinámico: Enlace externo cuando no hay mapa interactivo (Heurística #9) */
-            <a
-              href={mapResolution.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex flex-col items-center justify-center h-48 rounded-[var(--radius-squircle-2xl)] border border-border bg-muted/30 hover:bg-muted/50 transition-all group"
-            >
-              <Globe size={32} className="text-muted-foreground/40 mb-3 group-hover:text-brand-500 transition-colors" />
-              <p className="text-sm font-medium text-foreground/70 group-hover:text-foreground transition-colors">
-                {mapResolution.label || t('ota.hotelInfo.viewOnMap', { defaultValue: 'Ver en Google Maps' })}
-              </p>
-              <p className="text-xs text-muted-foreground/50 mt-1">
-                {t('ota.hotelInfo.externalLink', { defaultValue: 'Se abrirá en una nueva pestaña' })}
-              </p>
-            </a>
-          ) : (
-            /* Sin datos geográficos */
-            <div className="rounded-[var(--radius-squircle-2xl)] overflow-hidden border border-border h-48 bg-muted flex items-center justify-center">
-              <div className="text-center p-4">
-                <MapPin size={32} className="text-muted-foreground/40 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground font-medium">{t('ota.hotelInfo.mapNotAvailable')}</p>
-              </div>
-            </div>
-          )}
+          {/* LocationCard — hybrid display (static map or textual fallback) */}
+          <LocationCard
+            hotelName={hotelName}
+            address={address}
+            latitude={latitude}
+            longitude={longitude}
+          />
 
           {/* Zona general — siempre visible (Progressive Disclosure) */}
           {location && (
@@ -128,7 +69,7 @@ export default function HotelInfoSection({
           )}
 
           {/* Toggle: Ver detalles de llegada (2 clics deliberados) */}
-          {(mapResolution.type !== 'none' || phone) && (
+          {phone && (
             <button
               type="button"
               onClick={() => setShowDetails(!showDetails)}
@@ -140,24 +81,9 @@ export default function HotelInfoSection({
             </button>
           )}
 
-          {/* Detalles ocultos — Dirección + Teléfono + Cómo llegar */}
+          {/* Detalles ocultos — Dirección + Teléfono */}
           {showDetails && (
             <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-              {/* Botón "Cómo llegar" — Visualmente secundario (no compite con CTA primario) */}
-              {mapResolution.url && mapResolution.type !== 'none' && (
-                <a
-                  href={mapResolution.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  aria-label={`Abrir ubicación de ${hotelName} en Google Maps`}
-                  className="flex items-center justify-center gap-2 w-full py-3 text-sm font-medium text-muted-foreground hover:text-foreground border border-border hover:border-foreground/20 rounded-[var(--radius-squircle-xl)] transition-all active:scale-[0.98]"
-                >
-                  <Navigation size={14} />
-                  {t('ota.hotelInfo.getDirections', { defaultValue: 'Cómo llegar' })}
-                  <ExternalLink size={12} className="opacity-50" />
-                </a>
-              )}
-
               {/* Direccion exacta */}
               {address && (
                 <div className="flex items-start gap-3">

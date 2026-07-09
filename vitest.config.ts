@@ -7,7 +7,7 @@ dotenv.config({ path: '.env.local' });
 
 export default defineConfig({
   test: {
-    include: ['src/__tests__/**/*.test.ts', 'src/lib/__tests__/**/*.test.ts'],
+    include: ['src/__tests__/**/*.test.{ts,tsx}', 'src/lib/__tests__/**/*.test.{ts,tsx}', 'src/components/**/__tests__/**/*.test.{ts,tsx}'],
     testTimeout: 15000,
     environment: 'node',
     globals: true,

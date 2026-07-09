@@ -309,7 +309,6 @@ export default async function ChannelHotelDetailPage({
 									location={hotel.location}
 									address={hotel.address}
 									phone={hotel.phone}
-									googleMapsUrl={hotel.google_maps_url}
 									cancellationPolicy={hotel.cancellation_policy}
 									checkInTime={hotel.check_in_time}
 									checkOutTime={hotel.check_out_time}
