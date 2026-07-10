@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { createClient } from '@/utils/supabase/client';
 import { useRouter } from 'next/navigation';
 import { ShieldCheck, Loader2, Eye, EyeOff } from 'lucide-react';
@@ -9,11 +9,41 @@ export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [processing, setProcessing] = useState(true);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const router = useRouter();
   const supabase = createClient();
+
+  // Procesar tokens del fragment de la URL (magic links)
+  useEffect(() => {
+    const hash = window.location.hash;
+    if (hash && hash.includes('access_token')) {
+      const params = new URLSearchParams(hash.substring(1));
+      const accessToken = params.get('access_token');
+      const refreshToken = params.get('refresh_token');
+
+      if (accessToken && refreshToken) {
+        supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        }).then(({ error }) => {
+          if (error) {
+            console.error('Error setting session:', error);
+            setError('Error al procesar el link. Solicita uno nuevo.');
+          }
+          // Limpiar el fragment de la URL
+          window.history.replaceState(null, '', window.location.pathname);
+          setProcessing(false);
+        });
+      } else {
+        setProcessing(false);
+      }
+    } else {
+      setProcessing(false);
+    }
+  }, [supabase.auth]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -48,6 +78,17 @@ export default function ResetPasswordPage() {
       setLoading(false);
     }
   };
+
+  if (processing) {
+    return (
+      <div className='min-h-screen flex items-center justify-center bg-[#09090b]'>
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+          <p className="text-zinc-400">Procesando tu link de recuperación...</p>
+        </div>
+      </div>
+    );
+  }
 
   if (success) {
     return (
