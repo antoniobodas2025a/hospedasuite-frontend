@@ -165,7 +165,7 @@ export function getImageSizeUrl(baseUrl: string, _size: ImageSize): string {
   // para evitar 400 de Supabase cuando las versiones redimensionadas no existen
   const sizePattern = /_(thumb|card|full)\.(webp|jpg|png|jpeg)/i;
   if (sizePattern.test(baseUrl)) {
-    return baseUrl.replace(sizePattern, '.$1');
+    return baseUrl.replace(sizePattern, '.$2');
   }
 
   return baseUrl;

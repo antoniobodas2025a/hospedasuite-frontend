@@ -239,7 +239,7 @@ export default function RoomGallery({
 							setIndex(0);
 							setOpen(true);
 						}}
-						className="relative block aspect-[3/4] sm:aspect-[16/10] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
+						className="relative block aspect-[4/3] sm:aspect-[16/10] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
 						aria-label={t("ota.roomGallery.viewGallery", { name: roomName })}
 					>
 						<Image
