@@ -6,6 +6,7 @@ import Script from 'next/script';
 import './globals.css';
 import { cn } from "@/lib/utils";
 import AIReferralTracker from '@/components/analytics/AIReferralTracker';
+import RecoveryTokenDetector from '@/components/RecoveryTokenDetector';
 
 // Geist Variable: una sola fuente para todo el sistema (zero layout shift)
 const geist = Geist({
@@ -86,6 +87,7 @@ export default async function RootLayout({
         </Script>
 
         <NextIntlClientProvider locale={locale} messages={messages}>
+          <RecoveryTokenDetector />
           <AIReferralTracker />
           {children}
         </NextIntlClientProvider>
