@@ -292,12 +292,28 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
 
     if (roomsError) throw roomsError;
 
-    // 3. Geocode hotel address (non-blocking — if it fails, hotel still works)
+    // 3. Save hotel coordinates (manual or geocoded)
     try {
+      const manualLat = state.hotelIdentity.latitude;
+      const manualLng = state.hotelIdentity.longitude;
       const address = state.hotelIdentity.address || state.hotelIdentity.location || '';
       const city = state.hotelIdentity.city || '';
 
-      if (address || city) {
+      // Priority 1: Manual coordinates (highest precision)
+      if (manualLat != null && manualLng != null && !isNaN(manualLat) && !isNaN(manualLng)) {
+        await supabaseAdmin.from('hotel_locations').insert({
+          hotel_id: hotelId,
+          lat: manualLat,
+          lng: manualLng,
+          precision: 'exact',
+          source: 'manual',
+          raw_input: [address, city].filter(Boolean).join(', '),
+          geocoded_at: new Date().toISOString(),
+        });
+        console.log(`📍 [Onboarding] Coordenadas manuales guardadas para ${state.hotelIdentity.name}: ${manualLat}, ${manualLng}`);
+      } 
+      // Priority 2: Geocode address automatically
+      else if (address || city) {
         const baseUrl = process.env.NEXT_PUBLIC_SITE_URL || 'http://localhost:3000';
         const geocodeRes = await fetch(`${baseUrl}/api/geocode`, {
           method: 'POST',
@@ -317,14 +333,14 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
               raw_input: [address, city].filter(Boolean).join(', '),
               geocoded_at: new Date().toISOString(),
             });
-            console.log(`📍 [Onboarding] Coordenadas guardadas para ${state.hotelIdentity.name}`);
+            console.log(`📍 [Onboarding] Coordenadas geocodificadas guardadas para ${state.hotelIdentity.name}`);
           }
         }
       }
     } catch (geocodeErr) {
       // Non-blocking — log but don't fail provisioning
       console.warn(
-        `📍 [Onboarding] Geocoding no disponible:`,
+        `📍 [Onboarding] Error guardando coordenadas:`,
         geocodeErr instanceof Error ? geocodeErr.message : geocodeErr,
       );
     }

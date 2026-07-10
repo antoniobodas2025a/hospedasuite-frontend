@@ -206,6 +206,48 @@ export default function HotelIdentityStep() {
 							rows={3}
 							className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-xl)] p-3 text-white outline-none focus:border-indigo-500/50 transition-all placeholder:text-zinc-700 text-sm resize-none"
 						/>
+						
+						{/* Coordenadas geográficas */}
+						<div className="pt-4 border-t border-white/10">
+							<p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-3">
+								Ubicación Exacta (Coordenadas)
+							</p>
+							<p className="text-[10px] text-zinc-600 mb-3">
+								Pega las coordenadas de Google Maps para una ubicación precisa
+							</p>
+							<div className="grid grid-cols-2 gap-3">
+								<div>
+									<label className="text-[10px] font-bold text-zinc-500 uppercase mb-1 block">
+										Latitud
+									</label>
+									<input
+										type="number"
+										step="0.000001"
+										value={hotelIdentity.latitude || ''}
+										onChange={(e) => updateHotelIdentity({ 
+											latitude: e.target.value ? Number(e.target.value) : null 
+										})}
+										placeholder="5.213894"
+										className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-xl)] p-3 text-white outline-none focus:border-indigo-500/50 text-sm font-mono"
+									/>
+								</div>
+								<div>
+									<label className="text-[10px] font-bold text-zinc-500 uppercase mb-1 block">
+										Longitud
+									</label>
+									<input
+										type="number"
+										step="0.000001"
+										value={hotelIdentity.longitude || ''}
+										onChange={(e) => updateHotelIdentity({ 
+											longitude: e.target.value ? Number(e.target.value) : null 
+										})}
+										placeholder="-75.367892"
+										className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-xl)] p-3 text-white outline-none focus:border-indigo-500/50 text-sm font-mono"
+									/>
+								</div>
+							</div>
+						</div>
 					</div>
 				</CollapsibleSection>
 				<div>

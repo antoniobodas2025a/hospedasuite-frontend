@@ -74,6 +74,7 @@ export interface RoomAmenityDefinition {
   storyDescription?: string;
 }
 
+// ── Comodidades generales de habitacion ──────────────────────────────────────
 export const ROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
   wifi: {
     id: 'wifi',
@@ -96,25 +97,6 @@ export const ROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
     storyTitle: 'Climatizacion Perfecta',
     storyDescription: 'Control termico de precision para ignorar el frio de la montana o el calor de la tarde.',
   },
-  jacuzzi: {
-    id: 'jacuzzi',
-    label: 'Jacuzzi',
-    icon: Bath,
-    storyTitle: 'Burbujas de Relajacion',
-    storyDescription: 'Sumerja sus sentidos en hidromasaje privado con vistas inigualables al valle.',
-  },
-  bano_privado: {
-    id: 'bano_privado',
-    label: 'Bano Privado',
-    icon: ShowerHead,
-    storyTitle: 'Refugio Intimo',
-    storyDescription: 'Bano exclusivo de la habitacion con acabados premium para su total comodidad.',
-  },
-  parking: {
-    id: 'parking',
-    label: 'Parqueadero',
-    icon: Car,
-  },
   minibar: {
     id: 'minibar',
     label: 'Minibar',
@@ -129,12 +111,30 @@ export const ROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
     storyTitle: 'Fuego Procer',
     storyDescription: 'Chimenea real de lena para calentar conversaciones y revivir la nostalgia boyacense.',
   },
-  techo_panoramico: {
-    id: 'techo_panoramico',
-    label: 'Techo Panoramico',
-    icon: Sun,
-    storyTitle: 'Cielo de Plata',
-    storyDescription: 'Visualizacion directa a la Via Lactea desde la comodidad absoluta de su domo.',
+  cama_premium: {
+    id: 'cama_premium',
+    label: 'Cama Premium',
+    icon: BedDouble,
+    storyTitle: 'Santuario de Hilos',
+    storyDescription: 'Ropa de cama de alta calidad para un descanso reparador entre montanas.',
+  },
+};
+
+// ── Amenidades de bano ───────────────────────────────────────────────────────
+export const BATHROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
+  jacuzzi: {
+    id: 'jacuzzi',
+    label: 'Jacuzzi',
+    icon: Bath,
+    storyTitle: 'Burbujas de Relajacion',
+    storyDescription: 'Sumerja sus sentidos en hidromasaje privado con vistas inigualables al valle.',
+  },
+  bano_privado: {
+    id: 'bano_privado',
+    label: 'Bano Privado',
+    icon: ShowerHead,
+    storyTitle: 'Refugio Intimo',
+    storyDescription: 'Bano exclusivo de la habitacion con acabados premium para su total comodidad.',
   },
   ducha_lluvia: {
     id: 'ducha_lluvia',
@@ -143,17 +143,37 @@ export const ROOM_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
     storyTitle: 'Ducha Sensorial',
     storyDescription: 'Arquitectura hidrica disenada para simular una lluvia constante de alta presion.',
   },
-  cama_premium: {
-    id: 'cama_premium',
-    label: 'Cama Premium',
-    icon: BedDouble,
-    storyTitle: 'Santuario de Hilos',
-    storyDescription: 'Ropa de cama de alta calidad para un descanso reparador entre montanas.',
+};
+
+// ── Vistas desde la habitacion ───────────────────────────────────────────────
+export const VIEW_AMENITY_REGISTRY: Record<string, RoomAmenityDefinition> = {
+  mountain_view: {
+    id: 'mountain_view',
+    label: 'Vista a la Montana',
+    icon: Mountain,
+    storyTitle: 'Horizonte Andino',
+    storyDescription: 'Ventana natural a las cumbres nevadas que enmarcan su estancia.',
+  },
+  beach_access: {
+    id: 'beach_access',
+    label: 'Acceso a Playa',
+    icon: Palmtree,
+    storyTitle: 'Brisa Marina',
+    storyDescription: 'Camino directo al mar para despertar con el sonido de las olas.',
+  },
+  techo_panoramico: {
+    id: 'techo_panoramico',
+    label: 'Techo Panoramico',
+    icon: Sun,
+    storyTitle: 'Cielo de Plata',
+    storyDescription: 'Visualizacion directa a la Via Lactea desde la comodidad absoluta de su domo.',
   },
   balcon: {
     id: 'balcon',
     label: 'Balcon',
     icon: Mountain,
+    storyTitle: 'Terraza Privada',
+    storyDescription: 'Espacio exterior exclusivo para respirar el aire puro de la montana.',
   },
 };
 

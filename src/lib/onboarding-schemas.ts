@@ -4,7 +4,7 @@ import { z } from "zod";
 export const hotelIdentitySchema = z.object({
 	name: z.string().min(3, "El nombre debe tener al menos 3 caracteres"),
 	city: z.string().min(2, "La ciudad o municipio es requerido"),
-	location: z.string().min(2, "La zona o vereda es requerida"),
+	location: z.string().min(2, "La zona o vereda es requerido"),
 	address: z.string().optional(),
 	phone: z.string().optional(),
 	email: z.string().email("Email inválido").optional().or(z.literal("")),
@@ -17,6 +17,16 @@ export const hotelIdentitySchema = z.object({
 		"hostal",
 		"apartamento",
 	] as const),
+	latitude: z.number()
+		.min(-90, "Latitud debe estar entre -90 y 90")
+		.max(90, "Latitud debe estar entre -90 y 90")
+		.optional()
+		.nullable(),
+	longitude: z.number()
+		.min(-180, "Longitud debe estar entre -180 y 180")
+		.max(180, "Longitud debe estar entre -180 y 180")
+		.optional()
+		.nullable(),
 });
 
 // Step 2: Property Gallery (handled by upload action, just track count)

@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, BedDouble, Bath, Maximize2, ChevronDown, ChevronUp, Droplets, ShowerHead, Mountain, Eye, EyeOff, Plus, X } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useOnboardingStore, RoomDraft } from '@/store/useOnboardingStore';
-import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
+import { ROOM_AMENITY_REGISTRY, BATHROOM_AMENITY_REGISTRY, VIEW_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 import AIPolicyAssistant from './AIPolicyAssistant';
 
 const springs = {
@@ -363,11 +363,61 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           )}
         </div>
 
-        {/* Amenities */}
+        {/* Amenities — Comodidades generales */}
         <div>
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('amenitiesLabel')}</p>
           <div className="flex flex-wrap gap-1.5">
             {Object.values(ROOM_AMENITY_REGISTRY).map(amenity => {
+              const isActive = room.amenities.includes(amenity.id);
+              const Icon = amenity.icon;
+              return (
+                <motion.button
+                  key={amenity.id}
+                  onClick={() => toggleAmenity(amenity.id)}
+                  whileTap={{ scale: 0.93 }}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-medium transition-all border ${
+                    isActive
+                      ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
+                      : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
+                  }`}
+                >
+                  <Icon size={10} /> {amenity.label}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Amenities — Baño */}
+        <div>
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Baño</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.values(BATHROOM_AMENITY_REGISTRY).map(amenity => {
+              const isActive = room.amenities.includes(amenity.id);
+              const Icon = amenity.icon;
+              return (
+                <motion.button
+                  key={amenity.id}
+                  onClick={() => toggleAmenity(amenity.id)}
+                  whileTap={{ scale: 0.93 }}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-medium transition-all border ${
+                    isActive
+                      ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
+                      : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
+                  }`}
+                >
+                  <Icon size={10} /> {amenity.label}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* Amenities — Vistas */}
+        <div>
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Vistas</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.values(VIEW_AMENITY_REGISTRY).map(amenity => {
               const isActive = room.amenities.includes(amenity.id);
               const Icon = amenity.icon;
               return (
