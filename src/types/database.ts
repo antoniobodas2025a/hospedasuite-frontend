@@ -1150,6 +1150,36 @@ export interface Database {
         };
         Relationships: [];
       };
+      hotel_images: {
+        Row: {
+          id: string
+          hotel_id: string
+          url: string
+          category: 'exterior' | 'lobby' | 'habitacion' | 'bano' | 'amenidades' | 'restaurante' | 'entorno' | 'otros'
+          blur_data?: string | null
+          sort_order: number
+          created_at: string
+        };
+        Insert: {
+          id?: string
+          hotel_id: string
+          url: string
+          category: 'exterior' | 'lobby' | 'habitacion' | 'bano' | 'amenidades' | 'restaurante' | 'entorno' | 'otros'
+          blur_data?: string | null
+          sort_order?: number
+          created_at?: string
+        };
+        Update: {
+          id?: string
+          hotel_id?: string
+          url?: string
+          category?: 'exterior' | 'lobby' | 'habitacion' | 'bano' | 'amenidades' | 'restaurante' | 'entorno' | 'otros'
+          blur_data?: string | null
+          sort_order?: number
+          created_at?: string
+        };
+        Relationships: [];
+      };
       feature_flags: {
         Row: {
           id: string
@@ -1186,6 +1216,8 @@ export interface Database {
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
-    Enums: Record<string, never>;
+    Enums: {
+      image_category: 'exterior' | 'lobby' | 'habitacion' | 'bano' | 'amenidades' | 'restaurante' | 'entorno' | 'otros';
+    };
   };
 }

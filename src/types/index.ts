@@ -6,6 +6,27 @@
 // ============================================================================
 
 // --------------------------------------------------------------------------
+// CATEGORIZED IMAGE (Hotel Media Management)
+// --------------------------------------------------------------------------
+export type ImageCategory =
+  | 'exterior'
+  | 'lobby'
+  | 'habitacion'
+  | 'bano'
+  | 'amenidades'
+  | 'restaurante'
+  | 'entorno'
+  | 'otros';
+
+export interface CategorizedImage {
+  url: string;
+  category: ImageCategory;
+  alt?: string;
+  sort_order: number;
+  blur_data?: string | null;
+}
+
+// --------------------------------------------------------------------------
 // REVIEW STATS (Calificaciones)
 // --------------------------------------------------------------------------
 export interface ReviewStats {
