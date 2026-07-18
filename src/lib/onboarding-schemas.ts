@@ -1,4 +1,5 @@
 import { z } from "zod";
+import type { ImageCategory } from "@/types";
 
 // Step 1: Hotel Identity
 export const hotelIdentitySchema = z.object({
@@ -29,9 +30,46 @@ export const hotelIdentitySchema = z.object({
 		.nullable(),
 });
 
-// Step 2: Property Gallery (handled by upload action, just track count)
+// Step 2: Property Gallery — categorized images with mandatory category
+const VALID_IMAGE_CATEGORIES = [
+	"exterior",
+	"lobby",
+	"habitacion",
+	"bano",
+	"amenidades",
+	"restaurante",
+	"entorno",
+	"otros",
+] as const;
+
+export const imageCategoryEnum = z.custom<ImageCategory>(
+	(val) =>
+		typeof val === "string" &&
+		VALID_IMAGE_CATEGORIES.includes(val as ImageCategory),
+	{ message: "Categoría requerida" },
+);
+
+export const categorizedImageSchema = z.object({
+	url: z
+		.string()
+		.url()
+		.refine(
+			(url) =>
+				!url.startsWith("blob:") &&
+				!url.startsWith("data:") &&
+				!url.startsWith("javascript:"),
+			"URL de imagen inválida",
+		),
+	category: imageCategoryEnum,
+	alt: z.string().optional(),
+	sort_order: z.number().int().min(0).default(0),
+	blur_data: z.string().nullable().optional(),
+});
+
 export const propertyGallerySchema = z.object({
-	images: z.array(z.string()).min(3, "Se requieren al menos 3 fotos"),
+	images: z
+		.array(categorizedImageSchema)
+		.min(3, "Se requieren al menos 3 fotos"),
 });
 
 // Step 3: Property Type (already covered in Step 1 schema)
@@ -135,3 +173,6 @@ export type SettingsData = z.infer<typeof settingsSchema>;
 export type PaymentData = z.infer<typeof paymentSchema>;
 export type PaymentMethod = NonNullable<PaymentData["paymentMethod"]>;
 export type FullWizardState = z.infer<typeof fullWizardStateSchema>;
+export type ImageCategoryEnum = z.infer<typeof imageCategoryEnum>;
+export type CategorizedImageData = z.infer<typeof categorizedImageSchema>;
+export type PropertyGalleryData = z.infer<typeof propertyGallerySchema>;

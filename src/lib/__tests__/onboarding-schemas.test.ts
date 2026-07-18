@@ -1,5 +1,12 @@
 import { describe, it, expect } from "vitest";
-import { roomDraftSchema, fullWizardStateSchema } from "../onboarding-schemas";
+import {
+	roomDraftSchema,
+	fullWizardStateSchema,
+	imageCategoryEnum,
+	categorizedImageSchema,
+	propertyGallerySchema,
+} from "../onboarding-schemas";
+import { validateNoJargon } from "../jargon-guard";
 
 // ─────────────────────────────────────────────────────────────
 // Helper: build a minimal valid fullWizardState for parse tests
@@ -229,5 +236,275 @@ describe("fullWizardStateSchema.galleryImages", () => {
 		};
 		const result = fullWizardStateSchema.safeParse(state);
 		expect(result.success).toBe(true);
+	});
+});
+
+// ─────────────────────────────────────────────────────────────
+// T1: imageCategoryEnum accepts all 8 valid categories
+// ─────────────────────────────────────────────────────────────
+describe("T1: imageCategoryEnum — valid categories", () => {
+	const validCategories = [
+		"exterior",
+		"lobby",
+		"habitacion",
+		"bano",
+		"amenidades",
+		"restaurante",
+		"entorno",
+		"otros",
+	] as const;
+
+	it.each(validCategories)("accepts '%s' as a valid category", (category) => {
+		const result = imageCategoryEnum.safeParse(category);
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data).toBe(category);
+		}
+	});
+
+	it("accepts all 8 categories in a single parse", () => {
+		const results = validCategories.map((c) => imageCategoryEnum.safeParse(c));
+		expect(results.every((r) => r.success)).toBe(true);
+	});
+});
+
+// ─────────────────────────────────────────────────────────────
+// T2: imageCategoryEnum rejects invalid/null/empty categories
+// ─────────────────────────────────────────────────────────────
+describe("T2: imageCategoryEnum — invalid categories", () => {
+	it("rejects null with 'Categoría requerida' error", () => {
+		const result = imageCategoryEnum.safeParse(null);
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			const messages = result.error.issues.map((i) => i.message);
+			expect(messages.some((m) => m.includes("Categoría requerida"))).toBe(
+				true,
+			);
+		}
+	});
+
+	it("rejects undefined", () => {
+		const result = imageCategoryEnum.safeParse(undefined);
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects empty string", () => {
+		const result = imageCategoryEnum.safeParse("");
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects an unknown category string", () => {
+		const result = imageCategoryEnum.safeParse("invalid_category");
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects a category with wrong casing", () => {
+		const result = imageCategoryEnum.safeParse("Exterior");
+		expect(result.success).toBe(false);
+	});
+});
+
+// ─────────────────────────────────────────────────────────────
+// T3: propertyGallerySchema accepts valid CategorizedImage[]
+// ─────────────────────────────────────────────────────────────
+describe("T3: propertyGallerySchema — valid CategorizedImage[]", () => {
+	const validCategorizedImages = [
+		{
+			url: "https://cdn.example.com/exterior.webp",
+			category: "exterior" as const,
+			sort_order: 0,
+		},
+		{
+			url: "https://cdn.example.com/lobby.webp",
+			category: "lobby" as const,
+			sort_order: 0,
+		},
+		{
+			url: "https://cdn.example.com/room.webp",
+			category: "habitacion" as const,
+			sort_order: 0,
+			blur_data: "data:image/webp;base64,abc123",
+		},
+	];
+
+	it("accepts a valid array of 3 categorized images", () => {
+		const result = propertyGallerySchema.safeParse({
+			images: validCategorizedImages,
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("accepts images with optional fields (alt, blur_data)", () => {
+		const result = propertyGallerySchema.safeParse({
+			images: [
+				{
+					url: "https://cdn.example.com/1.webp",
+					category: "exterior" as const,
+					sort_order: 0,
+					alt: "Hotel facade",
+					blur_data: null,
+				},
+				{
+					url: "https://cdn.example.com/2.webp",
+					category: "lobby" as const,
+					sort_order: 1,
+				},
+				{
+					url: "https://cdn.example.com/3.webp",
+					category: "bano" as const,
+					sort_order: 0,
+				},
+			],
+		});
+		expect(result.success).toBe(true);
+	});
+
+	it("rejects fewer than 3 images", () => {
+		const result = propertyGallerySchema.safeParse({
+			images: [
+				{
+					url: "https://cdn.example.com/1.webp",
+					category: "exterior" as const,
+					sort_order: 0,
+				},
+				{
+					url: "https://cdn.example.com/2.webp",
+					category: "lobby" as const,
+					sort_order: 0,
+				},
+			],
+		});
+		expect(result.success).toBe(false);
+		if (!result.success) {
+			const messages = result.error.issues.map((i) => i.message);
+			expect(
+				messages.some((m) => m.includes("al menos 3 fotos")),
+			).toBe(true);
+		}
+	});
+});
+
+// ─────────────────────────────────────────────────────────────
+// T4: propertyGallerySchema rejects image without category
+// (mutation-mindset: removing category must fail)
+// ─────────────────────────────────────────────────────────────
+describe("T4: propertyGallerySchema — mutation guard (no category)", () => {
+	it("rejects an image missing the category field", () => {
+		const result = propertyGallerySchema.safeParse({
+			images: [
+				{ url: "https://cdn.example.com/1.webp", sort_order: 0 },
+				{ url: "https://cdn.example.com/2.webp", sort_order: 1 },
+				{ url: "https://cdn.example.com/3.webp", sort_order: 2 },
+			],
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects an image with null category", () => {
+		const result = propertyGallerySchema.safeParse({
+			images: [
+				{
+					url: "https://cdn.example.com/1.webp",
+					category: null,
+					sort_order: 0,
+				},
+				{
+					url: "https://cdn.example.com/2.webp",
+					category: "lobby" as const,
+					sort_order: 1,
+				},
+				{
+					url: "https://cdn.example.com/3.webp",
+					category: "bano" as const,
+					sort_order: 2,
+				},
+			],
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects an image with an invalid category", () => {
+		const result = propertyGallerySchema.safeParse({
+			images: [
+				{
+					url: "https://cdn.example.com/1.webp",
+					category: "invalid_cat" as const,
+					sort_order: 0,
+				},
+				{
+					url: "https://cdn.example.com/2.webp",
+					category: "lobby" as const,
+					sort_order: 1,
+				},
+				{
+					url: "https://cdn.example.com/3.webp",
+					category: "bano" as const,
+					sort_order: 2,
+				},
+			],
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects an image with a blob: URL", () => {
+		const result = propertyGallerySchema.safeParse({
+			images: [
+				{
+					url: "blob:http://localhost/abc",
+					category: "exterior" as const,
+					sort_order: 0,
+				},
+				{
+					url: "https://cdn.example.com/2.webp",
+					category: "lobby" as const,
+					sort_order: 1,
+				},
+				{
+					url: "https://cdn.example.com/3.webp",
+					category: "bano" as const,
+					sort_order: 2,
+				},
+			],
+		});
+		expect(result.success).toBe(false);
+	});
+});
+
+// ─────────────────────────────────────────────────────────────
+// T12: jargon-guard rejects URLs/strings with forbidden terms
+// ─────────────────────────────────────────────────────────────
+describe("T12: jargon-guard — forbidden terms", () => {
+	it("rejects a string containing 'OTA'", () => {
+		const result = validateNoJargon("Canal OTA externo");
+		expect(result).not.toBeNull();
+		expect(result).toContain("OTA");
+	});
+
+	it("rejects a string containing 'Marketplace'", () => {
+		const result = validateNoJargon("Listado en Marketplace");
+		expect(result).not.toBeNull();
+		expect(result).toContain("Marketplace");
+	});
+
+	it("rejects a string containing 'marketplace' (lowercase)", () => {
+		const result = validateNoJargon("Publicar en marketplace");
+		expect(result).not.toBeNull();
+	});
+
+	it("rejects a string containing 'vitrina digital'", () => {
+		const result = validateNoJargon("Tu vitrina digital en línea");
+		expect(result).not.toBeNull();
+	});
+
+	it("accepts a clean B2B string", () => {
+		const result = validateNoJargon(
+			"Galería del hotel con fotos del alojamiento",
+		);
+		expect(result).toBeNull();
+	});
+
+	it("accepts an empty string", () => {
+		const result = validateNoJargon("");
+		expect(result).toBeNull();
 	});
 });
