@@ -85,3 +85,62 @@ export async function getPresignedUploadUrl(
 
   return `${endpoint}${canonicalUri}?${canonicalQueryString}&X-Amz-Signature=${signature}`;
 }
+
+/**
+ * Genera URL presignada para GET (lectura) desde R2 (firma V4 manual).
+ * Válida por 1 hora (3600s) por defecto.
+ */
+export async function getPresignedReadUrl(
+  key: string,
+  expiresIn: number = 3600
+): Promise<string> {
+  const now = new Date();
+  const dateStamp = now.toISOString().slice(0, 10).replace(/-/g, '');
+  const timeStamp = now.toISOString().replace(/[-:]/g, '').slice(0, 15) + 'Z';
+  const region = 'auto';
+  const service = 's3';
+  const credentialScope = `${dateStamp}/${region}/${service}/aws4_request`;
+
+  const url = new URL(endpoint);
+  const host = url.host;
+
+  const canonicalHeaders = `host:${host}\n`;
+  const signedHeaders = 'host';
+
+  const queryEntries = [
+    `X-Amz-Algorithm=AWS4-HMAC-SHA256`,
+    `X-Amz-Credential=${encodeURIComponent(`${accessKeyId}/${credentialScope}`)}`,
+    `X-Amz-Date=${timeStamp}`,
+    `X-Amz-Expires=${expiresIn}`,
+    `X-Amz-SignedHeaders=${signedHeaders}`,
+  ];
+
+  const canonicalUri = `/${R2_BUCKET}/${key}`;
+  const canonicalQueryString = queryEntries.join('&');
+  const payloadHash = 'UNSIGNED-PAYLOAD';
+
+  const canonicalRequest = [
+    'GET',
+    canonicalUri,
+    canonicalQueryString,
+    canonicalHeaders,
+    signedHeaders,
+    payloadHash,
+  ].join('\n');
+
+  const stringToSign = [
+    'AWS4-HMAC-SHA256',
+    timeStamp,
+    credentialScope,
+    sha256Hex(canonicalRequest),
+  ].join('\n');
+
+  const dateKey = hmacSha256(`AWS4${secretAccessKey}`, dateStamp);
+  const dateRegionKey = hmacSha256(dateKey, region);
+  const dateRegionServiceKey = hmacSha256(dateRegionKey, service);
+  const signingKey = hmacSha256(dateRegionServiceKey, 'aws4_request');
+
+  const signature = hmacSha256(signingKey, stringToSign).toString('hex');
+
+  return `${endpoint}${canonicalUri}?${canonicalQueryString}&X-Amz-Signature=${signature}`;
+}
