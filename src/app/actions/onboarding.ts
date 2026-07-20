@@ -132,6 +132,30 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       });
     }
 
+    // ─── Dual-write: Insert into hotel_images (new) + gallery_urls (legacy) ────
+    // Write to hotel_images with default category 'otros' (since FullWizardState has flat URLs)
+    if (state.galleryImages && state.galleryImages.length > 0) {
+      const hotelImagesToInsert = state.galleryImages.map((url, index) => ({
+        hotel_id: hotelId,
+        url,
+        category: 'otros' as const,
+        sort_order: index,
+        blur_data: null,
+      }));
+
+      const { error: imagesError } = await supabaseAdmin
+        .from('hotel_images')
+        .insert(hotelImagesToInsert);
+
+      if (imagesError) {
+        console.error('Error inserting into hotel_images:', imagesError.message);
+        // Non-fatal: continue with legacy write
+      }
+    }
+
+    // Derive main_image_url from first image (priority: exterior > first image)
+    const mainImageUrl = state.galleryImages?.[0] || null;
+
     const hotelUpdateBase = {
       name: state.hotelIdentity.name,
       slug: hotelSlug,
@@ -144,7 +168,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       category: state.hotelIdentity.category || null,
       type: state.hotelIdentity.propertyType,
       gallery_urls: state.galleryImages,
-      main_image_url: state.galleryImages?.[0] || null,
+      main_image_url: mainImageUrl,
       amenities: state.settings.amenities,
       check_in_time: state.settings.checkInTime || '15:00',
       check_out_time: state.settings.checkOutTime || '11:00',

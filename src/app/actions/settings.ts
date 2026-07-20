@@ -3,6 +3,8 @@
 import { revalidatePath } from "next/cache";
 import { z } from "zod";
 import { getCurrentHotel } from "@/lib/hotel-context";
+import { IMAGE_CATEGORIES } from "@/lib/image-category";
+import type { ImageCategory } from "@/types";
 
 // ============================================================================
 // 🛠️ ACCIÓN 1: CONFIGURACIÓN BÁSICA Y FINANCIERA (Recuperada y Blindada)
@@ -102,6 +104,31 @@ const updateProfileSchema = z.object({
 	main_image_url: z.string().url().nullable().optional().or(z.literal("")),
 	cover_photo_url: z.string().url().nullable().optional().or(z.literal("")),
 	gallery_urls: z.array(z.string().url()).nullable().optional(),
+	categorized_images: z
+		.array(
+			z.object({
+				url: z
+					.string()
+					.url()
+					.refine(
+						(url) =>
+							!url.startsWith("blob:") &&
+							!url.startsWith("data:") &&
+							!url.startsWith("javascript:"),
+						"URL de imagen inválida",
+					),
+				category: z.custom<ImageCategory>(
+					(val) =>
+						typeof val === "string" &&
+						IMAGE_CATEGORIES.includes(val as ImageCategory),
+					{ message: "Categoría inválida" },
+				),
+				sort_order: z.number().int().min(0).default(0),
+				blur_data: z.string().nullable().optional(),
+			}),
+		)
+		.nullable()
+		.optional(),
 	show_recent_activity: z.boolean().optional(),
 	recent_activity_messages: z
 		.array(
@@ -144,6 +171,42 @@ export async function updateHotelProfileAction(hotelId: string, formData: any) {
 
 		// Filtramos la carga útil (payload) a través del escudo Zod
 		const validData = updateProfileSchema.parse(formData);
+
+		// Handle categorized images: write to hotel_images table
+		if (validData.categorized_images && validData.categorized_images.length > 0) {
+			// Delete existing images for this hotel (optional: or upsert)
+			await supabaseAdmin
+				.from("hotel_images")
+				.delete()
+				.eq("hotel_id", hotelId);
+
+			// Insert new categorized images
+			const imagesToInsert = validData.categorized_images.map((img) => ({
+				hotel_id: hotelId,
+				url: img.url,
+				category: img.category,
+				sort_order: img.sort_order,
+				blur_data: img.blur_data || null,
+			}));
+
+			const { error: imagesError } = await supabaseAdmin
+				.from("hotel_images")
+				.insert(imagesToInsert);
+
+			if (imagesError) {
+				console.error("Error inserting categorized images:", imagesError.message);
+				throw new Error("Error al guardar las imágenes categorizadas");
+			}
+
+			// Also update gallery_urls with flat URLs for backward compatibility
+			const flatUrls = validData.categorized_images.map((img) => img.url);
+			validData.gallery_urls = flatUrls;
+
+			// Set main_image_url from first image if not already set
+			if (!validData.main_image_url && flatUrls.length > 0) {
+				validData.main_image_url = flatUrls[0];
+			}
+		}
 
 		// Inyección en la base de datos
 		const { error } = await supabaseAdmin
