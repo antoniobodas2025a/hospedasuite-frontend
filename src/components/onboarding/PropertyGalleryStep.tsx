@@ -17,6 +17,7 @@ export default function PropertyGalleryStep() {
 		getTotalImageCount,
 		addImage,
 		removeImage,
+		categorizedImages,
 	} = useHotelImagesStore();
 
 	const hasErrors = validationErrors["step-2"];
@@ -39,8 +40,17 @@ export default function PropertyGalleryStep() {
 		[removeImage],
 	);
 
-	// Build previews from store for display — empty for now (Phase 5 will wire URLs)
-	const previewImages: CategorizedPreview[] = [];
+	// Build previews from store for display
+	const previewImages: CategorizedPreview[] = Object.entries(
+		categorizedImages,
+	).flatMap(([category, entries]) =>
+		entries.map((entry) => ({
+			url: "", // Will be populated by Phase 5 (server actions)
+			preview: entry.preview,
+			category: category as ImageCategory,
+			sort_order: entry.sort_order,
+		})),
+	);
 
 	return (
 		<motion.div

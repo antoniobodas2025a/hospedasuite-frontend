@@ -18,16 +18,33 @@ stack:
 testing:
   runner: vitest
   command: vitest run
+  watch_command: vitest
+  watch_alias: bun test:watch
   e2e: playwright
   e2e_command: npx playwright test
+  coverage:
+    available: true
+    configured: false
+    providers:
+      - "@vitest/coverage-v8"
+      - "@vitest/coverage-istanbul"
+    command: "vitest --coverage (requires bun add -D @vitest/coverage-v8)"
   test_patterns:
     - src/__tests__/**/*.test.ts
     - src/lib/__tests__/**/*.test.ts
+    - src/components/**/__tests__/**/*.test.ts
+    - src/__tests__/**/*.test.tsx
+  component_env: jsdom (per-file // @vitest-environment jsdom)
+  setup: src/__tests__/vitest-bun-polyfills.ts
 
 linting:
   runner: eslint
   command: npx eslint
   precommit: husky + lint-staged
+
+typecheck:
+  runner: typescript
+  command: tsc --noEmit
 
 ci:
   provider: github-actions
@@ -38,7 +55,7 @@ ci:
     - test (vitest)
     - build
 
-strict_tdd: false
+strict_tdd: true
 
 conventions:
   commits: conventional-commits

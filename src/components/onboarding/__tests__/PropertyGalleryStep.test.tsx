@@ -147,4 +147,47 @@ describe("PropertyGalleryStep", () => {
 		const { getByText } = render(<PropertyGalleryStep />);
 		expect(getByText(/0/)).toBeDefined();
 	});
+
+	// ─── Displays previews from store ─────────────────────────
+
+	it("displays image previews when store has categorized images", () => {
+		// Mock store with images
+		storeState.categorizedImages = {
+			exterior: [
+				{
+					file: new File([""], "exterior1.jpg", { type: "image/jpeg" }),
+					preview: "blob:exterior1",
+					sort_order: 0,
+				},
+			],
+			lobby: [
+				{
+					file: new File([""], "lobby1.jpg", { type: "image/jpeg" }),
+					preview: "blob:lobby1",
+					sort_order: 0,
+				},
+				{
+					file: new File([""], "lobby2.jpg", { type: "image/jpeg" }),
+					preview: "blob:lobby2",
+					sort_order: 1,
+				},
+			],
+		};
+		mockGetTotalImageCount.mockReturnValue(3);
+		mockHasExteriorImage.mockReturnValue(true);
+
+		const { container } = render(<PropertyGalleryStep />);
+		const previews = container.querySelectorAll("[data-testid='image-preview']");
+		expect(previews.length).toBe(3);
+	});
+
+	it("does not display previews when store is empty", () => {
+		storeState.categorizedImages = {};
+		mockGetTotalImageCount.mockReturnValue(0);
+		mockHasExteriorImage.mockReturnValue(false);
+
+		const { container } = render(<PropertyGalleryStep />);
+		const previews = container.querySelectorAll("[data-testid='image-preview']");
+		expect(previews.length).toBe(0);
+	});
 });
