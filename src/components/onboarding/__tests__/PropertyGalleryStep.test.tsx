@@ -3,7 +3,7 @@ import "../../../__tests__/bun-test-dom-setup";
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
 import { render, cleanup } from "@testing-library/react";
-import { IMAGE_CATEGORIES, CATEGORY_DISPLAY_ES } from "@/lib/image-category";
+import { UI_CATEGORIES, CATEGORY_DISPLAY_ES } from "@/lib/image-category";
 
 // ─── Mock framer-motion ────────────────────────────────────────
 vi.mock("framer-motion", () => ({
@@ -105,17 +105,17 @@ describe("PropertyGalleryStep", () => {
 
 	// ─── Renders 8 categorized dropzones ───────────────────────
 
-	it("renders all 8 category labels", () => {
+	it("renders all 7 category labels", () => {
 		const { getByText } = render(<PropertyGalleryStep />);
-		for (const cat of IMAGE_CATEGORIES) {
+		for (const cat of UI_CATEGORIES) {
 			expect(getByText(CATEGORY_DISPLAY_ES[cat])).toBeDefined();
 		}
 	});
 
-	it("renders 8 category dropzone containers", () => {
+	it("renders 7 category dropzone containers", () => {
 		const { container } = render(<PropertyGalleryStep />);
 		const zones = container.querySelectorAll("[data-testid='category-dropzone']");
-		expect(zones.length).toBe(8);
+		expect(zones.length).toBe(7);
 	});
 
 	// ─── Validates at least one exterior image ─────────────────

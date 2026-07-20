@@ -8,13 +8,15 @@
  * before the database insert, even if client-side validation is bypassed.
  */
 
+import type { ImageCategory } from '@/types';
+
 export function validateProvisioningImageUrls(state: {
-  galleryImages: string[];
+  galleryImages: Array<{ url: string; category: ImageCategory; sort_order: number }>;
   rooms: Array<{ name: string; imageUrls: string[] }>;
 }): string | null {
   // Check gallery images
   const invalidGallery = state.galleryImages.filter(
-    u => u.startsWith('blob:') || u.startsWith('data:') || u.startsWith('javascript:'),
+    img => img.url.startsWith('blob:') || img.url.startsWith('data:') || img.url.startsWith('javascript:'),
   );
   if (invalidGallery.length > 0) {
     if (invalidGallery.length === 1) {

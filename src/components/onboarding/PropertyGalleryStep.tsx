@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useCallback } from "react";
+import React, { useCallback, useEffect } from "react";
 import { motion } from "framer-motion";
 import { useTranslations } from "next-intl";
 import CategorizedDropzone from "./CategorizedDropzone";
@@ -11,7 +11,7 @@ import type { ImageCategory } from "@/types";
 
 export default function PropertyGalleryStep() {
 	const t = useTranslations("onboarding.gallery");
-	const { validationErrors } = useOnboardingStore();
+	const { validationErrors, setGalleryImages } = useOnboardingStore();
 	const {
 		hasExteriorImage,
 		getTotalImageCount,
@@ -23,6 +23,18 @@ export default function PropertyGalleryStep() {
 	const hasErrors = validationErrors["step-2"];
 	const totalImages = getTotalImageCount();
 	const needsExterior = !hasExteriorImage();
+
+	// Bridge: Sync useHotelImagesStore → useOnboardingStore.galleryFiles
+	// This fixes the data loss bug where provisioning couldn't find gallery images
+	useEffect(() => {
+		const allFiles = Object.entries(categorizedImages).flatMap(
+			([_, entries]) => entries.map((entry) => entry.file),
+		);
+		const allPreviews = Object.entries(categorizedImages).flatMap(
+			([_, entries]) => entries.map((entry) => entry.preview),
+		);
+		setGalleryImages(allFiles, allPreviews);
+	}, [categorizedImages, setGalleryImages]);
 
 	const handleFilesSelected = useCallback(
 		(category: ImageCategory, files: File[], previews: string[]) => {

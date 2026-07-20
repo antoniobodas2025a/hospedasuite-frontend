@@ -4,7 +4,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import React from "react";
 import { render, cleanup, act } from "@testing-library/react";
 import type { ImageCategory } from "@/types";
-import { IMAGE_CATEGORIES, CATEGORY_DISPLAY_ES } from "@/lib/image-category";
+import { UI_CATEGORIES, CATEGORY_DISPLAY_ES } from "@/lib/image-category";
 
 // ─── Mock URL.createObjectURL (not available in jsdom) ──────────
 if (typeof URL.createObjectURL === "undefined") {
@@ -92,22 +92,22 @@ describe("CategorizedDropzone", () => {
 
 	// ─── T5: Renders 8 per-category containers with labels ─────
 
-	it("renders exactly 8 category dropzone containers", () => {
+	it("renders exactly 7 category dropzone containers", () => {
 		const { container } = render(<CategorizedDropzone />);
 		const zones = container.querySelectorAll("[data-testid='category-dropzone']");
-		expect(zones.length).toBe(8);
+		expect(zones.length).toBe(7);
 	});
 
 	it("displays Spanish labels for all 8 categories", () => {
 		const { getByText } = render(<CategorizedDropzone />);
-		for (const cat of IMAGE_CATEGORIES) {
+		for (const cat of UI_CATEGORIES) {
 			expect(getByText(CATEGORY_DISPLAY_ES[cat])).toBeDefined();
 		}
 	});
 
 	it("each dropzone has its category data attribute", () => {
 		const { container } = render(<CategorizedDropzone />);
-		for (const cat of IMAGE_CATEGORIES) {
+		for (const cat of UI_CATEGORIES) {
 			const zone = container.querySelector(
 				`[data-testid="category-dropzone"][data-category="${cat}"]`,
 			);
@@ -121,8 +121,8 @@ describe("CategorizedDropzone", () => {
 		const onFilesSelected = vi.fn();
 		render(<CategorizedDropzone onFilesSelected={onFilesSelected} />);
 
-		// IMAGE_CATEGORIES[0] = 'exterior' — first zone rendered
-		expect(capturedDropzoneConfigs.length).toBe(8);
+		// UI_CATEGORIES[0] = 'exterior' — first zone rendered
+		expect(capturedDropzoneConfigs.length).toBe(7);
 		const exteriorConfig = capturedDropzoneConfigs[0];
 
 		const validFile = makeFile("facade.jpg", 500_000, "image/jpeg");
