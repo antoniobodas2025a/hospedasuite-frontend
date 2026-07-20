@@ -10,6 +10,7 @@ import {
 	SettingsData,
 	PaymentMethod,
 } from "@/lib/onboarding-schemas";
+import { useHotelImagesStore } from "@/store/useHotelImagesStore";
 
 // Cerebro Operativo — clave de persistencia en memoria local
 const STORAGE_KEY = "hospedasuite:wizard-memory";
@@ -392,11 +393,15 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 		}
 
 		if (step === 2) {
-			const state = useOnboardingStore.getState();
-			if (state.galleryPreviews.length < 3) {
+			const hotelImagesState = useHotelImagesStore.getState();
+			const totalImages = hotelImagesState.getTotalImageCount();
+			if (totalImages < 3) {
 				errors.push(
-					`Necesitas al menos 3 fotos (tienes ${state.galleryPreviews.length})`,
+					`Necesitas al menos 3 fotos (tienes ${totalImages})`,
 				);
+			}
+			if (!hotelImagesState.hasExteriorImage()) {
+				errors.push("Necesitas al menos 1 foto de exterior");
 			}
 		}
 
