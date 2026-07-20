@@ -1,1 +1,7 @@
 npx lint-staged
+
+# Check lockfile sync only if package.json was modified
+if git diff --cached --name-only | grep -q "^package.json$"; then
+  echo "🔍 Checking lockfile synchronization..."
+  npm run check:lockfile
+fi

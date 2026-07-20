@@ -1,0 +1,32 @@
+name: Lockfile Sync Check
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  check-lockfile:
+    name: Validate package-lock.json sync
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+
+      - name: Check lockfile synchronization
+        run: npm run check:lockfile
+
+      - name: Show fix instructions on failure
+        if: failure()
+        run: |
+          echo "::error::Lockfile is out of sync!"
+          echo "::error::Run 'npm install --package-lock-only' locally and commit the changes."
+          echo "::error::This prevents Docker build failures in deployment."
