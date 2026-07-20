@@ -10,7 +10,11 @@ import { Suspense } from "react";
 import { RoomShowcaseModalWrapper } from "@/components/ota/RoomShowcaseModalWrapper";
 import AvailabilitySearchBar from "@/components/ota/AvailabilitySearchBar";
 import HeroGallery from "@/components/ota/HeroGallery";
+import CategorizedHeroGallery from "@/components/ota/CategorizedHeroGallery";
+import { categorizedGalleryFlag } from "@/lib/flags";
+import { legacyGalleryToCategorized } from "@/lib/adapters/legacy-gallery-adapter";
 import type { ImageBlurMeta } from "@/lib/image-config";
+import type { CategorizedImage } from "@/types";
 import BookingWidget from "@/components/ota/BookingWidget";
 import ReviewsSection from "@/components/ota/ReviewsSection";
 import HotelInfoSection from "@/components/ota/HotelInfoSection";
@@ -98,6 +102,20 @@ export default async function ChannelHotelDetailPage({
 	const reviewStatsResult = await getReviewStatsAction(hotel.id);
 	const reviewStats = reviewStatsResult.success ? reviewStatsResult.data : null;
 
+	// Feature flag: categorized gallery (Strangler Fig pattern)
+	const useCategorizedGallery = await categorizedGalleryFlag();
+
+	// Build categorized images: prefer hotel_images, fallback to legacy gallery_urls via adapter
+	let categorizedImages: CategorizedImage[] | null = null;
+	if (useCategorizedGallery) {
+		if (hotel.categorized_images && hotel.categorized_images.length > 0) {
+			categorizedImages = hotel.categorized_images as CategorizedImage[];
+		} else if (Array.isArray(hotel.gallery_urls) && hotel.gallery_urls.length > 0) {
+			// Legacy fallback: convert flat URLs to categorized format
+			categorizedImages = legacyGalleryToCategorized(hotel.gallery_urls);
+		}
+	}
+
 	const availableRooms = (hotel.rooms || []).filter((room: any) => {
 		const isActive = room.status === "active";
 		const guestCount = Number(guests) || 1;
@@ -174,14 +192,23 @@ export default async function ChannelHotelDetailPage({
 				</ErrorBoundary>
 			</Suspense>
 
-			{/* Hero Gallery */}
+			{/* Hero Gallery — Strangler Fig: categorized vs legacy */}
 			<ErrorBoundary name="HeroGallery">
-				<HeroGallery
-					images={hotelGalleryImages}
-					hotelName={hotel.name}
-					activityMessages={hotel.recent_activity_messages ?? null}
-					blurs={hotel.image_blur_meta as ImageBlurMeta | undefined}
-				/>
+				{useCategorizedGallery && categorizedImages && categorizedImages.length > 0 ? (
+					<div className="max-w-6xl mx-auto px-4 sm:px-6 pt-4">
+						<CategorizedHeroGallery
+							images={categorizedImages}
+							hotelName={hotel.name}
+						/>
+					</div>
+				) : (
+					<HeroGallery
+						images={hotelGalleryImages}
+						hotelName={hotel.name}
+						activityMessages={hotel.recent_activity_messages ?? null}
+						blurs={hotel.image_blur_meta as ImageBlurMeta | undefined}
+					/>
+				)}
 			</ErrorBoundary>
 
 			{/* Hotel Header */}

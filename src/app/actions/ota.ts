@@ -473,6 +473,21 @@ export async function getHotelDetailsBySlugAction(
 			// Non-blocking — el mapa del detalle funciona sin coordenadas
 		}
 
+		// 6. Categorized images from hotel_images (Strangler Fig: parallel read with legacy fallback)
+		try {
+			const { data: hotelImages } = await supabaseAdmin
+				.from("hotel_images")
+				.select("url, category, sort_order, blur_data")
+				.eq("hotel_id", hotel.id)
+				.order("sort_order", { ascending: true });
+
+			if (hotelImages && hotelImages.length > 0) {
+				premiumHotel.categorized_images = hotelImages;
+			}
+		} catch {
+			// Non-blocking — legacy gallery_urls still works as fallback
+		}
+
 		return { success: true, hotel: premiumHotel };
 	} catch (error: unknown) {
 		const message =
