@@ -156,7 +156,7 @@ export default function RoomGallery({
 				src: img.url,
 				alt: img.alt ?? roomName,
 				description: img.caption,
-				blurDataURL: i === 0 ? blurDataURL : undefined,
+				blurDataURL: img.blurDataURL || (i === 0 ? blurDataURL : undefined),
 			})),
 		[galleryImages, roomName, blurDataURL],
 	);
@@ -248,8 +248,8 @@ export default function RoomGallery({
 							priority
 							sizes="100vw"
 							quality={85}
-							placeholder={blurDataURL ? "blur" : undefined}
-							blurDataURL={blurDataURL}
+							placeholder={galleryImages[0]?.blurDataURL || blurDataURL ? "blur" : undefined}
+							blurDataURL={galleryImages[0]?.blurDataURL || blurDataURL}
 						/>
 						<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 						<div className="absolute bottom-3 left-3">
@@ -353,8 +353,8 @@ export default function RoomGallery({
 							priority
 							sizes="100vw"
 							quality={85}
-							placeholder={blurDataURL ? "blur" : undefined}
-							blurDataURL={blurDataURL}
+							placeholder={galleryImages[0]?.blurDataURL || blurDataURL ? "blur" : undefined}
+							blurDataURL={galleryImages[0]?.blurDataURL || blurDataURL}
 						/>
 						<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
 						<div className="absolute bottom-3 left-3">

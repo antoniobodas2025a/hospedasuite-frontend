@@ -106,6 +106,7 @@ export interface GalleryItem {
   url: string;
   alt?: string;
   caption?: string;
+  blurDataURL?: string;
 }
 
 // --------------------------------------------------------------------------
