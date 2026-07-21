@@ -5,7 +5,8 @@
 import { vi } from "vitest";
 
 // Mock server-only globally to prevent "cannot be imported from Client Component" errors
-vi.mock('server-only', () => ({}));
+// Use { virtual: true } to mock before the module is loaded
+vi.mock('server-only', () => ({}), { virtual: true });
 
 // stubGlobal: set a property on globalThis
 if (!vi.stubGlobal) {

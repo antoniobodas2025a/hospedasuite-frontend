@@ -8,10 +8,10 @@
  * Also tests main_image_url derivation from first priority image.
  */
 
+import { describe, it, expect, vi, beforeEach } from 'vitest';
+
 // Mock server-only BEFORE any imports to prevent "cannot be imported from Client Component" errors
 vi.mock('server-only', () => ({}));
-
-import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Mock DB chain ──────────────────────────────────────────────────────────
 function createMockChain(result: any) {

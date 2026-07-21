@@ -16,6 +16,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),
+      // Mock server-only for tests to prevent "cannot be imported from Client Component" errors
+      'server-only': path.resolve(__dirname, './src/__tests__/__mocks__/server-only.ts'),
     },
   },
 });

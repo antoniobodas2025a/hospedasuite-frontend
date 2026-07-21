@@ -13,7 +13,7 @@ import { validateNoJargon } from "../jargon-guard";
 // ─────────────────────────────────────────────────────────────
 function makeValidState(
 	overrides?: Partial<{
-		galleryImages: string[];
+		galleryImages: Array<{ url: string; category: string; sort_order: number }>;
 		roomImageUrls: string[];
 	}>,
 ) {
@@ -25,7 +25,7 @@ function makeValidState(
 			propertyType: "hotel" as const,
 		},
 		galleryImages: overrides?.galleryImages ?? [
-			"https://example.com/photo.webp",
+			{ url: "https://example.com/photo.webp", category: "exterior", sort_order: 0 },
 		],
 		rooms: [
 			{
@@ -144,7 +144,7 @@ describe("roomDraftSchema.imageUrls", () => {
 describe("fullWizardStateSchema.galleryImages", () => {
 	it("rejects a blob: URL in galleryImages", () => {
 		const state = makeValidState({
-			galleryImages: ["blob:http://localhost/abc"],
+			galleryImages: [{ url: "blob:http://localhost/abc", category: "exterior", sort_order: 0 }],
 		});
 		const result = fullWizardStateSchema.safeParse(state);
 		expect(result.success).toBe(false);
@@ -152,21 +152,27 @@ describe("fullWizardStateSchema.galleryImages", () => {
 
 	it("rejects a data: URL in galleryImages", () => {
 		const state = makeValidState({
-			galleryImages: ["data:image/jpeg;base64,abc"],
+			galleryImages: [{ url: "data:image/jpeg;base64,abc", category: "exterior", sort_order: 0 }],
 		});
 		const result = fullWizardStateSchema.safeParse(state);
 		expect(result.success).toBe(false);
 	});
 
 	it("rejects a javascript: URL in galleryImages", () => {
-		const state = makeValidState({ galleryImages: ["javascript:void(0)"] });
+		const state = makeValidState({ 
+			galleryImages: [{ url: "javascript:void(0)", category: "exterior", sort_order: 0 }] 
+		});
 		const result = fullWizardStateSchema.safeParse(state);
 		expect(result.success).toBe(false);
 	});
 
 	it("accepts valid https:// galleryImages", () => {
 		const state = makeValidState({
-			galleryImages: ["https://cdn.example.com/hotel.webp"],
+			galleryImages: [
+				{ url: "https://cdn.example.com/hotel1.webp", category: "exterior", sort_order: 0 },
+				{ url: "https://cdn.example.com/hotel2.webp", category: "lobby", sort_order: 1 },
+				{ url: "https://cdn.example.com/hotel3.webp", category: "habitacion", sort_order: 2 },
+			],
 		});
 		const result = fullWizardStateSchema.safeParse(state);
 		expect(result.success).toBe(true);
@@ -175,8 +181,9 @@ describe("fullWizardStateSchema.galleryImages", () => {
 	it("accepts valid R2 public galleryImages", () => {
 		const state = makeValidState({
 			galleryImages: [
-				"https://pub-xyz.r2.dev/hotel-media/hotels/test/card_1.webp",
-				"https://pub-xyz.r2.dev/hotel-media/hotels/test/full_2.webp",
+				{ url: "https://pub-xyz.r2.dev/hotel-media/hotels/test/card_1.webp", category: "exterior", sort_order: 0 },
+				{ url: "https://pub-xyz.r2.dev/hotel-media/hotels/test/full_2.webp", category: "lobby", sort_order: 1 },
+				{ url: "https://pub-xyz.r2.dev/hotel-media/hotels/test/room_3.webp", category: "habitacion", sort_order: 2 },
 			],
 		});
 		const result = fullWizardStateSchema.safeParse(state);
@@ -185,7 +192,10 @@ describe("fullWizardStateSchema.galleryImages", () => {
 
 	it("rejects mixed valid and blob URLs in galleryImages", () => {
 		const state = makeValidState({
-			galleryImages: ["https://valid.com/a.webp", "blob:invalid"],
+			galleryImages: [
+				{ url: "https://valid.com/a.webp", category: "exterior", sort_order: 0 },
+				{ url: "blob:invalid", category: "lobby", sort_order: 1 },
+			],
 		});
 		const result = fullWizardStateSchema.safeParse(state);
 		expect(result.success).toBe(false);
@@ -208,8 +218,9 @@ describe("fullWizardStateSchema.galleryImages", () => {
 				propertyType: "hotel" as const,
 			},
 			galleryImages: [
-				"https://cdn.example.com/1.webp",
-				"https://cdn.example.com/2.webp",
+				{ url: "https://cdn.example.com/1.webp", category: "exterior", sort_order: 0 },
+				{ url: "https://cdn.example.com/2.webp", category: "lobby", sort_order: 1 },
+				{ url: "https://cdn.example.com/3.webp", category: "habitacion", sort_order: 2 },
 			],
 			rooms: [
 				{
