@@ -18,6 +18,7 @@ const STORAGE_KEY = "hospedasuite:wizard-memory";
 export interface RoomDraft extends RoomDraftData {
 	imageFiles: File[];
 	imagePreviews: string[];
+	imageBlurData: string[];
 }
 
 export interface OnboardingState {
@@ -77,7 +78,7 @@ export interface OnboardingState {
 	addEmptyRoom: () => void;
 	updateRoom: (roomId: string, data: Partial<RoomDraft>) => void;
 	removeRoom: (roomId: string) => void;
-	setRoomImages: (roomId: string, files: File[], previews: string[]) => void;
+	setRoomImages: (roomId: string, files: File[], previews: string[], blurData: string[]) => void;
 	removeRoomImage: (roomId: string, index: number) => void;
 
 	// Step 5 actions
@@ -228,6 +229,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 				roomView: "exterior",
 				imageUrls: [],
 				imageFiles: [],
+				imageBlurData: [],
 				imagePreviews: [],
 				availabilityRange: null,
 			};
@@ -253,6 +255,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 					roomView: "exterior",
 					imageUrls: [],
 					imageFiles: [],
+				imageBlurData: [],
 					imagePreviews: [],
 					availabilityRange: null,
 				},
@@ -269,11 +272,11 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 			rooms: state.rooms.filter((r) => r.id !== roomId),
 		})),
 
-	setRoomImages: (roomId, files, previews) =>
+	setRoomImages: (roomId, files, previews, blurData) =>
 		set((state) => ({
 			rooms: state.rooms.map((r) =>
 				r.id === roomId
-					? { ...r, imageFiles: files, imagePreviews: previews }
+					? { ...r, imageFiles: files, imagePreviews: previews, imageBlurData: blurData }
 					: r,
 			),
 		})),
@@ -284,9 +287,11 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 				if (r.id !== roomId) return r;
 				const newFiles = [...r.imageFiles];
 				const newPreviews = [...r.imagePreviews];
+				const newBlurData = [...r.imageBlurData];
 				newFiles.splice(index, 1);
 				newPreviews.splice(index, 1);
-				return { ...r, imageFiles: newFiles, imagePreviews: newPreviews };
+				newBlurData.splice(index, 1);
+				return { ...r, imageFiles: newFiles, imagePreviews: newPreviews, imageBlurData: newBlurData };
 			}),
 		})),
 
@@ -354,7 +359,8 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 				settings: state.settings,
 				rooms: state.rooms.map((r) => ({
 					...r,
-					imageFiles: [], // Files not serializable
+					imageFiles: [],
+				imageBlurData: [], // Files not serializable
 					imagePreviews: r.imagePreviews,
 				})),
 				galleryPreviews: state.galleryPreviews,

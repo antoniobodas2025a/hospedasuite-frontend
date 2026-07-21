@@ -7,6 +7,7 @@ import { useTranslations } from 'next-intl';
 import { useOnboardingStore, RoomDraft } from '@/store/useOnboardingStore';
 import { useHotelImagesStore } from '@/store/useHotelImagesStore';
 import { ROOM_AMENITY_REGISTRY, BATHROOM_AMENITY_REGISTRY, VIEW_AMENITY_REGISTRY } from '@/lib/amenity-registry';
+import { generateBlurDataURL } from '@/lib/blur-generator';
 import AIPolicyAssistant from './AIPolicyAssistant';
 import GalleryPicker from './GalleryPicker';
 
@@ -120,7 +121,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
     setOpenSections(prev => ({ ...prev, [id]: !prev[id] }));
   };
 
-  const processFiles = (files: File[]) => {
+  const processFiles = async (files: File[]) => {
     if (files.length === 0) return;
     const remaining = 5 - room.imagePreviews.length;
     if (remaining <= 0) return;
@@ -135,7 +136,19 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
     if (toAdd.length === 0) return;
 
     const previews = toAdd.map(f => URL.createObjectURL(f));
-    setRoomImages(room.id, [...room.imageFiles, ...toAdd], [...room.imagePreviews, ...previews]);
+    
+    // Generate blur data for each image
+    const blurDataPromises = toAdd.map(async (file) => {
+      try {
+        return await generateBlurDataURL(file);
+      } catch (error) {
+        console.warn('Failed to generate blur data:', error);
+        return '';
+      }
+    });
+    const blurData = await Promise.all(blurDataPromises);
+    
+    setRoomImages(room.id, [...room.imageFiles, ...toAdd], [...room.imagePreviews, ...previews], [...room.imageBlurData, ...blurData]);
   };
 
   const handleImages = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -151,7 +164,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
     processFiles(files);
   };
 
-  const handleCopyFromGallery = (files: File[], previews: string[]) => {
+  const handleCopyFromGallery = async (files: File[], previews: string[]) => {
     if (files.length === 0) return;
     const remaining = 5 - room.imagePreviews.length;
     if (remaining <= 0) return;
@@ -159,7 +172,18 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
     const toAdd = files.slice(0, remaining);
     const toAddPreviews = previews.slice(0, remaining);
 
-    setRoomImages(room.id, [...room.imageFiles, ...toAdd], [...room.imagePreviews, ...toAddPreviews]);
+    // Generate blur data for copied images
+    const blurDataPromises = toAdd.map(async (file) => {
+      try {
+        return await generateBlurDataURL(file);
+      } catch (error) {
+        console.warn('Failed to generate blur data:', error);
+        return '';
+      }
+    });
+    const blurData = await Promise.all(blurDataPromises);
+
+    setRoomImages(room.id, [...room.imageFiles, ...toAdd], [...room.imagePreviews, ...toAddPreviews], [...room.imageBlurData, ...blurData]);
   };
 
   const toggleAmenity = (amenityId: string) => {
