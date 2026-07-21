@@ -2,11 +2,13 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { UploadCloud, BedDouble, Bath, Maximize2, ChevronDown, ChevronUp, Droplets, ShowerHead, Mountain, Eye, EyeOff, Plus, X } from 'lucide-react';
+import { UploadCloud, BedDouble, Bath, Maximize2, ChevronDown, ChevronUp, Droplets, ShowerHead, Mountain, Eye, EyeOff, Plus, X, Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useOnboardingStore, RoomDraft } from '@/store/useOnboardingStore';
+import { useHotelImagesStore } from '@/store/useHotelImagesStore';
 import { ROOM_AMENITY_REGISTRY, BATHROOM_AMENITY_REGISTRY, VIEW_AMENITY_REGISTRY } from '@/lib/amenity-registry';
 import AIPolicyAssistant from './AIPolicyAssistant';
+import GalleryPicker from './GalleryPicker';
 
 const springs = {
   fast: { type: 'spring' as const, stiffness: 400, damping: 30, mass: 0.8 },
@@ -105,7 +107,9 @@ type RoomSectionId = 'essentials' | 'bathroom' | 'details';
 export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) {
   const t = useTranslations('onboarding.roomDetail');
   const { setRoomImages, removeRoomImage } = useOnboardingStore();
+  const { categorizedImages } = useHotelImagesStore();
   const [isDragging, setIsDragging] = useState(false);
+  const [isGalleryPickerOpen, setIsGalleryPickerOpen] = useState(false);
   const [openSections, setOpenSections] = useState<Record<RoomSectionId, boolean>>({
     essentials: true,
     bathroom: false,
@@ -145,6 +149,17 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
     e.preventDefault(); e.stopPropagation(); setIsDragging(false);
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
     processFiles(files);
+  };
+
+  const handleCopyFromGallery = (files: File[], previews: string[]) => {
+    if (files.length === 0) return;
+    const remaining = 5 - room.imagePreviews.length;
+    if (remaining <= 0) return;
+
+    const toAdd = files.slice(0, remaining);
+    const toAddPreviews = previews.slice(0, remaining);
+
+    setRoomImages(room.id, [...room.imageFiles, ...toAdd], [...room.imagePreviews, ...toAddPreviews]);
   };
 
   const toggleAmenity = (amenityId: string) => {
@@ -314,7 +329,20 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
 
         {/* Photos — Drag & Drop */}
         <div>
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('photosLabel')} ({room.imagePreviews.length}/5)</p>
+          <div className="flex items-center justify-between mb-2">
+            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('photosLabel')} ({room.imagePreviews.length}/5)</p>
+            {Object.values(categorizedImages).some(arr => arr.length > 0) && room.imagePreviews.length < 5 && (
+              <motion.button
+                type="button"
+                onClick={() => setIsGalleryPickerOpen(true)}
+                whileTap={{ scale: 0.95 }}
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-md transition-all"
+              >
+                <Copy size={10} />
+                Copiar de galería
+              </motion.button>
+            )}
+          </div>
           {room.imagePreviews.length > 0 ? (
             <div
               className="grid grid-cols-5 gap-2"
@@ -438,6 +466,15 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           </div>
         </div>
       </RoomSection>
+
+      {/* Gallery Picker Modal */}
+      <GalleryPicker
+        isOpen={isGalleryPickerOpen}
+        onClose={() => setIsGalleryPickerOpen(false)}
+        onCopy={handleCopyFromGallery}
+        existingFiles={room.imageFiles}
+        maxImages={5 - room.imagePreviews.length}
+      />
     </div>
   );
 }
