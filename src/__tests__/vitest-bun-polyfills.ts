@@ -4,6 +4,9 @@
 
 import { vi } from "vitest";
 
+// Mock server-only globally to prevent "cannot be imported from Client Component" errors
+vi.mock('server-only', () => ({}));
+
 // stubGlobal: set a property on globalThis
 if (!vi.stubGlobal) {
 	(vi as unknown as Record<string, unknown>).stubGlobal = (

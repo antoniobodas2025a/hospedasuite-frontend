@@ -133,14 +133,14 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     }
 
     // ─── Dual-write: Insert into hotel_images (new) + gallery_urls (legacy) ────
-    // Write to hotel_images with default category 'otros' (since FullWizardState has flat URLs)
+    // Write to hotel_images with category metadata from FullWizardState
     if (state.galleryImages && state.galleryImages.length > 0) {
-      const hotelImagesToInsert = state.galleryImages.map((url, index) => ({
+      const hotelImagesToInsert = state.galleryImages.map((img) => ({
         hotel_id: hotelId,
-        url,
-        category: 'otros' as const,
-        sort_order: index,
-        blur_data: null,
+        url: img.url,
+        category: img.category,
+        sort_order: img.sort_order,
+        blur_data: img.blur_data || null,
       }));
 
       const { error: imagesError } = await supabaseAdmin
@@ -153,8 +153,12 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       }
     }
 
-    // Derive main_image_url from first image (priority: exterior > first image)
-    const mainImageUrl = state.galleryImages?.[0] || null;
+    // Derive main_image_url from first exterior image (priority: exterior > first image)
+    const exteriorImage = state.galleryImages?.find(img => img.category === 'exterior');
+    const mainImageUrl = exteriorImage?.url || state.galleryImages?.[0]?.url || null;
+
+    // Extract flat URLs for legacy gallery_urls field (backward compatibility)
+    const flatGalleryUrls = state.galleryImages?.map(img => img.url) || [];
 
     const hotelUpdateBase = {
       name: state.hotelIdentity.name,
@@ -167,7 +171,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       description: state.hotelIdentity.description || null,
       category: state.hotelIdentity.category || null,
       type: state.hotelIdentity.propertyType,
-      gallery_urls: state.galleryImages,
+      gallery_urls: flatGalleryUrls,
       main_image_url: mainImageUrl,
       amenities: state.settings.amenities,
       check_in_time: state.settings.checkInTime || '15:00',

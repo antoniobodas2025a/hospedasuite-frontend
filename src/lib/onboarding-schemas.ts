@@ -150,17 +150,7 @@ export const paymentSchema = z.object({
 // Full wizard state schema (for provisioning)
 export const fullWizardStateSchema = z.object({
 	hotelIdentity: hotelIdentitySchema,
-	galleryImages: z.array(
-		z
-			.string()
-			.refine(
-				(url) =>
-					!url.startsWith("blob:") &&
-					!url.startsWith("data:") &&
-					!url.startsWith("javascript:"),
-				"Formato de URL de imagen inválido (no se permiten URLs blob, data, o javascript)",
-			),
-	),
+	galleryImages: z.array(categorizedImageSchema).min(3, "Se requieren al menos 3 fotos"),
 	rooms: z.array(roomDraftSchema).min(1),
 	settings: settingsSchema,
 	payment: paymentSchema,

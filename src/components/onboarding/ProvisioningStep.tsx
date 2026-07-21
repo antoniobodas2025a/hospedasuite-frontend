@@ -17,6 +17,8 @@ import {
 import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import { useOnboardingStore } from "@/store/useOnboardingStore";
+import { useHotelImagesStore } from "@/store/useHotelImagesStore";
+import type { ImageCategory } from "@/types";
 import { executeOnboardingProvisioning } from "@/app/actions/onboarding";
 import { getPresignedOnboardingUrlAction } from "@/app/actions/onboarding-upload";
 import { compressImage, uploadToR2 } from "@/lib/upload-utils";
@@ -86,12 +88,23 @@ export default function ProvisioningStep() {
 			// Reemplaza blob:// URLs por URLs públicas de R2
 			setStatus("uploading");
 
-			const allFiles: { type: "gallery" | "room"; id: string; file: File }[] =
+			// Obtener imágenes categorizadas del store
+			const { categorizedImages } = useHotelImagesStore.getState();
+			
+			const allFiles: { type: "gallery" | "room"; id: string; file: File; category?: ImageCategory; sort_order?: number }[] =
 				[];
 
-			// Recolectar archivos de galería
-			galleryFiles.forEach((file, i) => {
-				allFiles.push({ type: "gallery", id: `gallery-${i}`, file });
+			// Recolectar archivos de galería con categorías
+			Object.entries(categorizedImages).forEach(([category, entries]) => {
+				entries.forEach((entry, index) => {
+					allFiles.push({ 
+						type: "gallery", 
+						id: `gallery-${category}-${index}`, 
+						file: entry.file,
+						category: category as ImageCategory,
+						sort_order: index
+					});
+				});
 			});
 
 			// Recolectar archivos de habitaciones
@@ -102,7 +115,7 @@ export default function ProvisioningStep() {
 			});
 
 			const roomUrlMap: Record<string, string[]> = {};
-			const galleryUrls: string[] = [];
+			const galleryImages: { url: string; category: ImageCategory; sort_order: number }[] = [];
 
 			setUploadProgress({ current: 0, total: allFiles.length });
 
@@ -168,7 +181,11 @@ export default function ProvisioningStep() {
 
 				if (uploadedUrl) {
 					if (item.type === "gallery") {
-						galleryUrls.push(uploadedUrl);
+						galleryImages.push({
+							url: uploadedUrl,
+							category: item.category!,
+							sort_order: item.sort_order!
+						});
 					} else {
 						if (!roomUrlMap[item.id]) roomUrlMap[item.id] = [];
 						roomUrlMap[item.id].push(uploadedUrl);
@@ -177,12 +194,12 @@ export default function ProvisioningStep() {
 				setUploadProgress({ current: i + 1, total: allFiles.length });
 			}
 
-			appendLog(`─── Resumen: ${galleryUrls.length}/${galleryFiles.length} galería, ${Object.values(roomUrlMap).flat().length}/${rooms.reduce((a, r) => a + r.imageFiles.length, 0)} habitaciones ───`);
+			appendLog(`─── Resumen: ${galleryImages.length}/${allFiles.filter(f => f.type === "gallery").length} galería, ${Object.values(roomUrlMap).flat().length}/${rooms.reduce((a, r) => a + r.imageFiles.length, 0)} habitaciones ───`);
 
 			// ─── FASE 1: VERIFICAR QUE TODAS LAS IMÁGENES SE SUBIERON ──
 			const uploadError = detectUploadFailures({
-				galleryFileCount: galleryFiles.length,
-				galleryUrlCount: galleryUrls.length,
+				galleryFileCount: allFiles.filter(f => f.type === "gallery").length,
+				galleryUrlCount: galleryImages.length,
 				rooms: rooms.map((r) => ({
 					name: r.name,
 					imageFileCount: r.imageFiles.length,
@@ -199,7 +216,7 @@ export default function ProvisioningStep() {
 			// ─── FASE 2: CONSTRUIR ESTADO CON URLs REALES ──────────────
 			const wizardState = {
 				hotelIdentity,
-				galleryImages: galleryUrls,
+				galleryImages: galleryImages,
 				rooms: rooms.map((r) => ({
 					id: r.id,
 					name: r.name,

@@ -8,6 +8,9 @@
  * Also tests main_image_url derivation from first priority image.
  */
 
+// Mock server-only BEFORE any imports to prevent "cannot be imported from Client Component" errors
+vi.mock('server-only', () => ({}));
+
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 
 // ── Mock DB chain ──────────────────────────────────────────────────────────
@@ -85,9 +88,9 @@ function createMockWizardState(overrides?: Partial<FullWizardState>): FullWizard
       propertyType: 'hotel',
     },
     galleryImages: [
-      'https://r2.dev/exterior1.webp',
-      'https://r2.dev/lobby1.webp',
-      'https://r2.dev/room1.webp',
+      { url: 'https://r2.dev/exterior1.webp', category: 'exterior', sort_order: 0 },
+      { url: 'https://r2.dev/lobby1.webp', category: 'lobby', sort_order: 1 },
+      { url: 'https://r2.dev/room1.webp', category: 'habitacion', sort_order: 2 },
     ],
     rooms: [
       {
@@ -226,9 +229,9 @@ describe('Onboarding dual-write: hotel_images + gallery_urls', () => {
 
     const state = createMockWizardState({
       galleryImages: [
-        'https://r2.dev/exterior1.webp',
-        'https://r2.dev/lobby1.webp',
-        'https://r2.dev/room1.webp',
+        { url: 'https://r2.dev/exterior1.webp', category: 'exterior', sort_order: 0 },
+        { url: 'https://r2.dev/lobby1.webp', category: 'lobby', sort_order: 1 },
+        { url: 'https://r2.dev/room1.webp', category: 'habitacion', sort_order: 2 },
       ],
     });
 
@@ -252,9 +255,9 @@ describe('Onboarding dual-write: hotel_images + gallery_urls', () => {
 
     const state = createMockWizardState({
       galleryImages: [
-        'blob:http://localhost:3000/abc123',
-        'https://r2.dev/valid.webp',
-        'https://r2.dev/valid2.webp',
+        { url: 'blob:http://localhost:3000/abc123', category: 'exterior', sort_order: 0 },
+        { url: 'https://r2.dev/valid.webp', category: 'lobby', sort_order: 1 },
+        { url: 'https://r2.dev/valid2.webp', category: 'habitacion', sort_order: 2 },
       ],
     });
 

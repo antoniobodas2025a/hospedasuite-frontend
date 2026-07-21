@@ -3,7 +3,7 @@
 import React, { useCallback } from "react";
 import { useDropzone } from "react-dropzone";
 import { UploadCloud, X } from "lucide-react";
-import { IMAGE_CATEGORIES, CATEGORY_DISPLAY_ES } from "@/lib/image-category";
+import { UI_CATEGORIES, CATEGORY_DISPLAY_ES } from "@/lib/image-category";
 import type { ImageCategory } from "@/types";
 
 /**
@@ -49,8 +49,9 @@ const ACCEPT = {
 const MAX_SIZE = 10 * 1024 * 1024; // 10MB
 
 /**
- * Renders 8 category-segregated dropzones (Ley de Hick).
+ * Renders 7 category-segregated dropzones (Ley de Hick).
  * Each dropzone accepts images only for its category.
+ * Note: "habitacion" category is excluded from UI to avoid confusion with Step 3.
  */
 export default function CategorizedDropzone({
 	onFilesSelected,
@@ -60,7 +61,7 @@ export default function CategorizedDropzone({
 }: CategorizedDropzoneProps) {
 	return (
 		<div className="space-y-4">
-			{IMAGE_CATEGORIES.map((category) => (
+			{UI_CATEGORIES.map((category) => (
 				<CategoryZone
 					key={category}
 					category={category}
