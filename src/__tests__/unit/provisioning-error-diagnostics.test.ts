@@ -20,9 +20,9 @@ function makeValidState(overrides?: Record<string, unknown>) {
 			propertyType: "hotel" as const,
 		},
 		galleryImages: [
-			"https://example.com/photo.webp",
-			"https://example.com/2.webp",
-			"https://example.com/3.webp",
+			{ url: "https://example.com/photo.webp", category: "exterior", sort_order: 0 },
+			{ url: "https://example.com/2.webp", category: "lobby", sort_order: 1 },
+			{ url: "https://example.com/3.webp", category: "habitacion", sort_order: 2 },
 		],
 		rooms: [
 			{

@@ -5,7 +5,7 @@
  * Mocks supabaseAdmin to control query responses.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 
 // ── Types ───────────────────────────────────────────────────────────────────
 
@@ -324,6 +324,13 @@ describe('checkStorageHealth()', () => {
   beforeEach(() => {
     vi.clearAllMocks();
     vi.restoreAllMocks();
+    // Set R2_ENDPOINT for tests that need it
+    process.env.R2_ENDPOINT = 'https://test.r2.cloudflarestorage.com';
+  });
+
+  afterEach(() => {
+    // Clean up environment variable
+    delete process.env.R2_ENDPOINT;
   });
 
   it('returns ok=true when R2 responds 200', async () => {
@@ -359,15 +366,13 @@ describe('checkStorageHealth()', () => {
   });
 
   it('returns ok=false when R2_ENDPOINT is not configured', async () => {
-    const originalEndpoint = process.env.R2_ENDPOINT;
-    delete (process.env as any).R2_ENDPOINT;
+    // Remove R2_ENDPOINT for this specific test
+    delete process.env.R2_ENDPOINT;
 
     const result = await checkStorageHealth();
 
     expect(result.ok).toBe(false);
     expect(result.error).toContain('not configured');
-
-    if (originalEndpoint) process.env.R2_ENDPOINT = originalEndpoint;
   });
 
   it('returns ok=false when fetch throws (network error)', async () => {
@@ -389,6 +394,13 @@ describe('getSystemHealth()', () => {
     vi.clearAllMocks();
     vi.restoreAllMocks();
     resetChain();
+    // Set R2_ENDPOINT for storage health checks
+    process.env.R2_ENDPOINT = 'https://test.r2.cloudflarestorage.com';
+  });
+
+  afterEach(() => {
+    // Clean up environment variable
+    delete process.env.R2_ENDPOINT;
   });
 
   it('aggregates all subsystems into a single report', async () => {
