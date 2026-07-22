@@ -129,6 +129,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
+  const [zoomLevel, setZoomLevel] = useState(1);
   const isMobile = useIsMobile();
 
   // Mostrar hasta 9 fotos en el grid (antes solo 5)
@@ -139,8 +140,15 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
   const nextMobile = useCallback(() => setMobileIndex((i) => (i + 1) % totalDisplay), [totalDisplay]);
   const prevMobile = useCallback(() => setMobileIndex((i) => (i - 1 + totalDisplay) % totalDisplay), [totalDisplay]);
 
-  const nextLightbox = useCallback(() => setActiveIndex((i) => (i + 1) % images.length), [images.length]);
-  const prevLightbox = useCallback(() => setActiveIndex((i) => (i - 1 + images.length) % images.length), [images.length]);
+  const nextLightbox = useCallback(() => {
+    setActiveIndex((i) => (i + 1) % images.length);
+    setZoomLevel(1);
+  }, [images.length]);
+  
+  const prevLightbox = useCallback(() => {
+    setActiveIndex((i) => (i - 1 + images.length) % images.length);
+    setZoomLevel(1);
+  }, [images.length]);
 
   const swipeHandlers = useSwipe(nextMobile, prevMobile);
 
@@ -172,6 +180,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
 
   const closeLightbox = useCallback(() => {
     setLightboxOpen(false);
+    setZoomLevel(1);
     if (window.location.hash === '#gallery') {
       history.back();
     }
@@ -394,19 +403,19 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
               </div>
             )}
 
-            {/* Flechas */}
+            {/* Flechas — solo visibles en desktop con hover */}
             {totalDisplay > 1 && (
               <>
                 <button
                   onClick={prevMobile}
-                  className="absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
+                  className="hidden md:group-hover:flex absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
                   aria-label={t('ota.heroGallery.prevPhoto')}
                 >
                   <ChevronLeft size={20} className="text-foreground" />
                 </button>
                 <button
                   onClick={nextMobile}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg flex items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
+                  className="hidden md:group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
                   aria-label={t('ota.heroGallery.nextPhoto')}
                 >
                   <ChevronRight size={20} className="text-foreground" />
@@ -497,43 +506,41 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
               src={getImageSizeUrl(images[activeIndex].url, 'full')}
               alt={images[activeIndex].alt || hotelName}
               fill
-              className="object-contain"
+              className="object-contain transition-transform duration-300"
               sizes="80vw"
               quality={90}
               placeholder={blurs?.gallery_blurs?.[activeIndex]?.blur ? 'blur' : undefined}
               blurDataURL={blurs?.gallery_blurs?.[activeIndex]?.blur}
+              style={{ transform: `scale(${zoomLevel})` }}
             />
           </div>
 
-          {/* Thumbnails con spring animations */}
-          {images.length > 1 && (
-            <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex gap-2 max-w-2xl overflow-x-auto px-4 pb-2">
-              {images.slice(0, 10).map((img, i) => (
-                <motion.button
-                  key={i}
-                  onClick={() => setActiveIndex(i)}
-                  whileHover={{ scale: 1.08 }}
-                  whileTap={{ scale: 0.95 }}
-                  transition={springSnappy()}
-                  className={cn(
-                    'relative size-16 rounded-[var(--radius-squircle-md)] overflow-hidden border-2 transition-all shrink-0',
-                    i === activeIndex ? 'border-white scale-110' : 'border-transparent opacity-60 hover:opacity-100',
-                  )}
-                  aria-label={t('ota.heroGallery.goToPhoto', { num: i + 1 })}
-                >
-                  <GalleryImage
-                    src={getImageSizeUrl(img.url, 'thumb')}
-                    alt={img.alt || ''}
-                    fill
-                    className="object-cover"
-                    sizes="100px"
-                    quality={50}
-                    loading="lazy"
-                  />
-                </motion.button>
-              ))}
-            </div>
-          )}
+          {/* Controles de Zoom */}
+          <div className="absolute bottom-6 right-6 flex gap-2 z-10">
+            <button
+              onClick={() => setZoomLevel(prev => Math.min(prev + 0.25, 3))}
+              className="size-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+              aria-label="Zoom in"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                <line x1="11" y1="8" x2="11" y2="14"/>
+                <line x1="8" y1="11" x2="14" y2="11"/>
+              </svg>
+            </button>
+            <button
+              onClick={() => setZoomLevel(prev => Math.max(prev - 0.25, 1))}
+              className="size-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
+              aria-label="Zoom out"
+            >
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="11" cy="11" r="8"/>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+                <line x1="8" y1="11" x2="14" y2="11"/>
+              </svg>
+            </button>
+          </div>
 
           {/* Photo counter — glass-pill overlay */}
           <div className="absolute top-6 left-6 text-white text-sm font-medium glass-pill px-3 py-1.5">
