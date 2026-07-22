@@ -178,19 +178,21 @@ export function RoomShowcaseModal({
 					<X size={18} strokeWidth={2.5} />
 				</button>
 
-				{/* DESKTOP: full scroll — gallery + info together */}
-				<div className="hidden lg:flex flex-col flex-1 overflow-y-auto">
-					{/* Galeria — scrolls with content */}
-					<div className="shrink-0 p-4 bg-foreground">
-						<RoomGallery
-							images={images}
-							roomName={room.name ?? t("ota.showcase.fallbackRoom")}
-							variant="compact"
-						/>
+				{/* DESKTOP: 2-column grid layout — gallery + info side by side */}
+				<div className="hidden lg:grid lg:grid-cols-2 lg:gap-0 lg:flex-1 overflow-hidden">
+					{/* Columna izquierda: Galería (scrollable) */}
+					<div className="flex flex-col overflow-y-auto bg-foreground">
+						<div className="shrink-0 p-4">
+							<RoomGallery
+								images={images}
+								roomName={room.name ?? t("ota.showcase.fallbackRoom")}
+								variant="compact"
+							/>
+						</div>
 					</div>
 
-					{/* PANEL DERECHO: Info + Resumen (scrolleable, fondo claro) */}
-					<div className="w-1/2 flex flex-col overflow-hidden bg-gradient-to-b from-muted/80 to-background/60">
+					{/* Columna derecha: Info + Resumen (scrollable, fondo claro) */}
+					<div className="flex flex-col overflow-hidden bg-gradient-to-b from-muted/80 to-background/60">
 						{/* Contenido scrolleable */}
 						<div className="flex-1 overflow-y-auto custom-scrollbar">
 							<div className="p-7 xl:p-9 space-y-6">
