@@ -1,6 +1,6 @@
 'use client';
 
-import { MapPin } from 'lucide-react';
+import { MapPin, ExternalLink } from 'lucide-react';
 
 interface NearbyPoint {
   name: string;
@@ -18,7 +18,7 @@ interface LocationCardProps {
 /**
  * LocationCard — Hybrid location display.
  * Shows Google Maps Static image when API key + coordinates available,
- * otherwise falls back to a textual card. Both include a "View on Google Maps" link.
+ * otherwise falls back to a textual card. No external links to prevent user leakage.
  */
 export default function LocationCard({
   hotelName,
@@ -30,10 +30,6 @@ export default function LocationCard({
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const hasCoordinates = latitude != null && longitude != null;
   const showStaticMap = !!apiKey && hasCoordinates;
-
-  const googleMapsUrl = hasCoordinates
-    ? `https://www.google.com/maps?q=${latitude},${longitude}`
-    : `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(address || hotelName)}`;
 
   return (
     <div className="w-full max-w-[600px] mx-auto space-y-4">
@@ -48,7 +44,15 @@ export default function LocationCard({
         <TextualCard address={address} nearbyPoints={nearbyPoints} />
       )}
 
-      <ViewOnGoogleMapsButton url={googleMapsUrl} />
+      {/* Coordenadas como texto (sin enlace externo) */}
+      {hasCoordinates && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <MapPin size={12} />
+          <span>
+            {latitude!.toFixed(6)}, {longitude!.toFixed(6)}
+          </span>
+        </div>
+      )}
     </div>
   );
 }
@@ -67,12 +71,19 @@ function StaticMap({
   const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=600x300&markers=color:red%7C${lat},${lng}&key=${apiKey}`;
 
   return (
-    <img
-      src={mapUrl}
-      alt={`Ubicación de ${hotelName}`}
-      className="w-full h-auto rounded-xl"
-      loading="lazy"
-    />
+    <div className="relative">
+      <img
+        src={mapUrl}
+        alt={`Ubicación de ${hotelName}`}
+        className="w-full h-auto rounded-xl"
+        loading="lazy"
+      />
+      {/* Badge indicando que es una imagen estática */}
+      <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
+        <MapPin size={12} />
+        <span>Ubicación</span>
+      </div>
+    </div>
   );
 }
 
@@ -115,19 +126,5 @@ function TextualCard({
         </div>
       )}
     </div>
-  );
-}
-
-function ViewOnGoogleMapsButton({ url }: { url: string }) {
-  return (
-    <a
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      className="flex items-center justify-center gap-2 w-full py-3 px-4 bg-brand-500 text-white rounded-xl font-bold hover:bg-brand-600 transition-colors min-h-[44px] text-sm"
-      aria-label="Ver ubicación en Google Maps (abre en nueva pestaña)"
-    >
-      Ver en Google Maps ↗
-    </a>
   );
 }
