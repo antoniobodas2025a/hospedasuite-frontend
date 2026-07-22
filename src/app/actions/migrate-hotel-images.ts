@@ -158,14 +158,15 @@ export async function migrateExistingHotelImages(): Promise<MigrationResult> {
     };
   }
 
-  // Check admin role (you may need to adjust this based on your auth setup)
+  // Check admin role (accept admin, super_admin, and superadmin roles)
   const { data: staff } = await supabaseAdmin
     .from('staff')
     .select('role')
     .eq('user_id', user.id)
     .single();
 
-  if (!staff || staff.role !== 'admin') {
+  const allowedRoles = ['admin', 'super_admin', 'superadmin'];
+  if (!staff || !allowedRoles.includes(staff.role)) {
     return {
       success: false,
       hotelsProcessed: 0,
