@@ -1,10 +1,10 @@
 'use client';
 
-import React, { useState, useCallback, useEffect } from 'react';
-import Image from 'next/image';
-import { X, ChevronLeft, ChevronRight } from 'lucide-react';
+import React, { useState, useCallback } from 'react';
 import { CATEGORY_DISPLAY_ES, CATEGORY_PRIORITY } from '@/lib/image-category';
 import type { CategorizedImage, ImageCategory } from '@/types';
+import GalleryImage from '@/components/ota/shared/GalleryImage';
+import GalleryLightbox from '@/components/ota/shared/GalleryLightbox';
 
 // ============================================================================
 // CATEGORIZED HERO GALLERY — Category-grouped display for hotel images
@@ -47,27 +47,6 @@ export default function CategorizedHeroGallery({
   // Flat list for lightbox navigation (preserves category priority order)
   const flatImages = Array.from(grouped.entries()).flatMap(([, imgs]) => imgs);
 
-  const nextLightbox = useCallback(
-    () => setActiveIndex((i) => (i + 1) % flatImages.length),
-    [flatImages.length]
-  );
-  const prevLightbox = useCallback(
-    () => setActiveIndex((i) => (i - 1 + flatImages.length) % flatImages.length),
-    [flatImages.length]
-  );
-
-  // Keyboard navigation in lightbox
-  useEffect(() => {
-    if (!lightboxOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxOpen(false);
-      if (e.key === 'ArrowRight') nextLightbox();
-      if (e.key === 'ArrowLeft') prevLightbox();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [lightboxOpen, nextLightbox, prevLightbox]);
-
   const openLightbox = useCallback((globalIndex: number) => {
     setActiveIndex(globalIndex);
     setLightboxOpen(true);
@@ -103,7 +82,7 @@ export default function CategorizedHeroGallery({
                     className="relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer group bg-muted"
                     aria-label={`${CATEGORY_DISPLAY_ES[category]} — foto ${currentGlobalIdx + 1} de ${hotelName}`}
                   >
-                    <Image
+                    <GalleryImage
                       src={img.url}
                       alt={img.alt || `${hotelName} — ${CATEGORY_DISPLAY_ES[category]}`}
                       fill
@@ -122,65 +101,18 @@ export default function CategorizedHeroGallery({
       </div>
 
       {/* ─── Lightbox ─── */}
-      {lightboxOpen && (
-        <div
-          className="fixed inset-0 z-[var(--z-lightbox)] bg-black/95 backdrop-blur-xl flex items-center justify-center"
-          role="dialog"
-          aria-modal="true"
-          aria-label="Galería de fotos"
-        >
-          {/* Close button */}
-          <button
-            onClick={() => setLightboxOpen(false)}
-            className="absolute top-6 right-6 z-10 size-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-            aria-label="Cerrar galería"
-          >
-            <X size={24} />
-          </button>
-
-          {/* Navigation */}
-          {flatImages.length > 1 && (
-            <>
-              <button
-                onClick={prevLightbox}
-                className="absolute left-6 top-1/2 -translate-y-1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
-                aria-label="Foto anterior"
-              >
-                <ChevronLeft size={28} />
-              </button>
-              <button
-                onClick={nextLightbox}
-                className="absolute right-6 top-1/2 -translate-y-1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
-                aria-label="Siguiente foto"
-              >
-                <ChevronRight size={28} />
-              </button>
-            </>
-          )}
-
-          {/* Active image */}
-          <div className="relative w-full max-w-5xl h-[80vh]">
-            <Image
-              src={flatImages[activeIndex].url}
-              alt={flatImages[activeIndex].alt || hotelName}
-              fill
-              className="object-contain"
-              sizes="80vw"
-              quality={90}
-            />
-          </div>
-
-          {/* Category badge + counter */}
-          <div className="absolute top-6 left-6 flex items-center gap-3">
-            <span className="text-white text-sm font-medium bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
-              {CATEGORY_DISPLAY_ES[flatImages[activeIndex].category]}
-            </span>
-            <span className="text-white text-sm font-medium bg-white/10 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/20">
-              {activeIndex + 1} / {flatImages.length}
-            </span>
-          </div>
-        </div>
-      )}
+      <GalleryLightbox
+        slides={flatImages.map((img) => ({
+          src: img.url,
+          alt: img.alt || hotelName,
+          width: 1200,
+          height: 800,
+        }))}
+        open={lightboxOpen}
+        openIndex={activeIndex}
+        onClose={() => setLightboxOpen(false)}
+        zoom={{ maxZoomLevel: 3 }}
+      />
     </>
   );
 }
