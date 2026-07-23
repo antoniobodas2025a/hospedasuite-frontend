@@ -477,6 +477,27 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
           role="dialog"
           aria-modal="true"
           aria-label={t('ota.heroGallery.galleryDialog')}
+          onTouchStart={(e) => {
+            const touch = e.touches[0];
+            (e.currentTarget as any).dataset.touchStartX = touch.clientX.toString();
+            (e.currentTarget as any).dataset.touchStartY = touch.clientY.toString();
+          }}
+          onTouchEnd={(e) => {
+            const touch = e.changedTouches[0];
+            const startX = Number((e.currentTarget as any).dataset.touchStartX);
+            const startY = Number((e.currentTarget as any).dataset.touchStartY);
+            const deltaX = touch.clientX - startX;
+            const deltaY = touch.clientY - startY;
+
+            // Solo navegar si el swipe es horizontal y mayor a 50px
+            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
+              if (deltaX < 0) {
+                nextLightbox();
+              } else {
+                prevLightbox();
+              }
+            }
+          }}
         >
           <button
             onClick={closeLightbox}

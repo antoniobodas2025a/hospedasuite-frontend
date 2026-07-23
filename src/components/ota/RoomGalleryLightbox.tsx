@@ -79,7 +79,7 @@ function renderSlide(slide: { src?: unknown; alt?: string; blurDataURL?: string 
         src={getImageSizeUrl(slide.src, 'full')}
         loading="eager"
         draggable={false}
-        style={{ objectFit: 'cover', cursor: 'pointer' }}
+        style={{ objectFit: 'contain', cursor: 'pointer' }}
         sizes="80vw"
         quality={90}
         placeholder={slide.blurDataURL ? 'blur' : undefined}
