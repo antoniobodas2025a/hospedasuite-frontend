@@ -1,14 +1,14 @@
 'use client';
 
-import React, { useState, useRef, useCallback, useEffect } from 'react';
-import Image from 'next/image';
-import { motion } from 'framer-motion';
-import { springSnappy } from '@/lib/mac2026/spring';
+import React, { useState, useCallback } from 'react';
 import { X, ChevronLeft, ChevronRight, Grid, TrendingUp, Clock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { getImageSizeUrl, type ImageBlurMeta } from '@/lib/image-config';
 import { useIsMobile } from '@/hooks/useIsMediaQuery';
 import { useTranslations } from 'next-intl';
+import GalleryImage from '@/components/ota/shared/GalleryImage';
+import useSwipe from '@/hooks/useSwipe';
+import GalleryLightbox from '@/components/ota/shared/GalleryLightbox';
 
 // ============================================================================
 // HERO GALLERY — Grid estilo Airbnb para pagina de hotel Channel
@@ -30,88 +30,6 @@ interface HeroGalleryProps {
   blurs?: ImageBlurMeta;
 }
 
-// Hook para touch swipe con loop infinito
-function useSwipe(onSwipeLeft: () => void, onSwipeRight: () => void) {
-  const touchStartX = useRef(0);
-  const touchStartY = useRef(0);
-
-  const onTouchStart = useCallback((e: React.TouchEvent) => {
-    touchStartX.current = e.touches[0].clientX;
-    touchStartY.current = e.touches[0].clientY;
-  }, []);
-
-  const onTouchEnd = useCallback((e: React.TouchEvent) => {
-    const deltaX = e.changedTouches[0].clientX - touchStartX.current;
-    const deltaY = e.changedTouches[0].clientY - touchStartY.current;
-
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-      if (deltaX < 0) onSwipeLeft();
-      else onSwipeRight();
-    }
-  }, [onSwipeLeft, onSwipeRight]);
-
-  return { onTouchStart, onTouchEnd };
-}
-
-// Imagen con estado de carga y fallback por error
-function GalleryImage({
-  src,
-  alt,
-  fill,
-  className,
-  sizes,
-  quality,
-  priority,
-  loading,
-  blurDataURL,
-  placeholder,
-}: {
-  src: string;
-  alt: string;
-  fill?: boolean;
-  className?: string;
-  sizes?: string;
-  quality?: number;
-  priority?: boolean;
-  loading?: 'lazy' | 'eager';
-  blurDataURL?: string;
-  placeholder?: 'blur';
-}) {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(false);
-
-  if (error) {
-    return (
-      <div className={cn('bg-muted flex items-center justify-center', className)}>
-        <Grid size={24} className="text-muted-foreground/30" />
-      </div>
-    );
-  }
-
-  return (
-    <>
-      {/* Skeleton placeholder mientras carga */}
-      {isLoading && fill && (
-        <div className={cn('absolute inset-0 bg-muted animate-pulse', className)} />
-      )}
-      <Image
-        src={src}
-        alt={alt}
-        fill={fill}
-        className={cn(isLoading && fill ? 'opacity-0' : 'opacity-100', 'transition-opacity duration-300', className)}
-        sizes={sizes}
-        quality={quality ?? 75}
-        priority={priority}
-        loading={loading ?? 'eager'}
-        placeholder={placeholder}
-        blurDataURL={blurDataURL}
-        onLoad={() => setIsLoading(false)}
-        onError={() => { setError(true); setIsLoading(false); }}
-      />
-    </>
-  );
-}
-
 const ICON_MAP: Record<string, React.ElementType> = {
   TrendingUp,
   Clock,
@@ -129,7 +47,6 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
   const [mobileIndex, setMobileIndex] = useState(0);
-  const [zoomLevel, setZoomLevel] = useState(1);
   const isMobile = useIsMobile();
 
   // Mostrar hasta 9 fotos en el grid (antes solo 5)
@@ -140,51 +57,10 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
   const nextMobile = useCallback(() => setMobileIndex((i) => (i + 1) % totalDisplay), [totalDisplay]);
   const prevMobile = useCallback(() => setMobileIndex((i) => (i - 1 + totalDisplay) % totalDisplay), [totalDisplay]);
 
-  const nextLightbox = useCallback(() => {
-    setActiveIndex((i) => (i + 1) % images.length);
-    setZoomLevel(1);
-  }, [images.length]);
-  
-  const prevLightbox = useCallback(() => {
-    setActiveIndex((i) => (i - 1 + images.length) % images.length);
-    setZoomLevel(1);
-  }, [images.length]);
-
-  const swipeHandlers = useSwipe(nextMobile, prevMobile);
-
-  // Keyboard navigation en lightbox
-  useEffect(() => {
-    if (!lightboxOpen) return;
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setLightboxOpen(false);
-      if (e.key === 'ArrowRight') nextLightbox();
-      if (e.key === 'ArrowLeft') prevLightbox();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [lightboxOpen, nextLightbox, prevLightbox]);
-
-  // Back button fix: push history state when lightbox opens, pop on close
-  useEffect(() => {
-    if (lightboxOpen) {
-      history.pushState({ lightbox: true }, '');
-    }
-
-    const onPopState = () => {
-      setLightboxOpen(false);
-    };
-
-    window.addEventListener('popstate', onPopState);
-    return () => window.removeEventListener('popstate', onPopState);
-  }, [lightboxOpen]);
-
-  const closeLightbox = useCallback(() => {
-    setLightboxOpen(false);
-    setZoomLevel(1);
-    if (window.location.hash === '#gallery') {
-      history.back();
-    }
-  }, []);
+  const swipeHandlers = useSwipe({
+    onSwipeLeft: nextMobile,
+    onSwipeRight: prevMobile,
+  });
 
   if (images.length === 0) return null;
 
@@ -471,104 +347,19 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
       </div>
 
       {/* ─── Lightbox ───────────────────────────────────────────────────── */}
-      {lightboxOpen && (
-        <div
-          className="fixed inset-0 z-[var(--z-lightbox)] bg-black/95 backdrop-blur-xl flex items-center justify-center"
-          role="dialog"
-          aria-modal="true"
-          aria-label={t('ota.heroGallery.galleryDialog')}
-          onTouchStart={(e) => {
-            const touch = e.touches[0];
-            (e.currentTarget as any).dataset.touchStartX = touch.clientX.toString();
-            (e.currentTarget as any).dataset.touchStartY = touch.clientY.toString();
-          }}
-          onTouchEnd={(e) => {
-            const touch = e.changedTouches[0];
-            const startX = Number((e.currentTarget as any).dataset.touchStartX);
-            const startY = Number((e.currentTarget as any).dataset.touchStartY);
-            const deltaX = touch.clientX - startX;
-            const deltaY = touch.clientY - startY;
-
-            // Solo navegar si el swipe es horizontal y mayor a 50px
-            if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 50) {
-              if (deltaX < 0) {
-                nextLightbox();
-              } else {
-                prevLightbox();
-              }
-            }
-          }}
-        >
-          <button
-            onClick={closeLightbox}
-            className="absolute top-6 right-6 z-10 size-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-            aria-label={t('ota.heroGallery.closeGallery')}
-          >
-            <X size={24} />
-          </button>
-
-          <button
-            onClick={prevLightbox}
-            className="absolute left-6 top-1/2 -translate-y-1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
-            aria-label="Foto anterior"
-          >
-            <ChevronLeft size={28} />
-          </button>
-          <button
-            onClick={nextLightbox}
-            className="absolute right-6 top-1/2 -translate-y-1/2 size-14 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors z-10"
-            aria-label="Siguiente foto"
-          >
-            <ChevronRight size={28} />
-          </button>
-
-          <div className="relative w-full max-w-5xl h-[80vh]">
-            <GalleryImage
-              src={getImageSizeUrl(images[activeIndex].url, 'full')}
-              alt={images[activeIndex].alt || hotelName}
-              fill
-              className="object-contain transition-transform duration-300"
-              sizes="80vw"
-              quality={90}
-              placeholder={blurs?.gallery_blurs?.[activeIndex]?.blur ? 'blur' : undefined}
-              blurDataURL={blurs?.gallery_blurs?.[activeIndex]?.blur}
-              style={{ transform: `scale(${zoomLevel})` }}
-            />
-          </div>
-
-          {/* Controles de Zoom */}
-          <div className="absolute bottom-6 right-6 flex gap-2 z-10">
-            <button
-              onClick={() => setZoomLevel(prev => Math.min(prev + 0.25, 3))}
-              className="size-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-              aria-label="Zoom in"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                <line x1="11" y1="8" x2="11" y2="14"/>
-                <line x1="8" y1="11" x2="14" y2="11"/>
-              </svg>
-            </button>
-            <button
-              onClick={() => setZoomLevel(prev => Math.max(prev - 0.25, 1))}
-              className="size-12 rounded-full bg-white/10 flex items-center justify-center text-white hover:bg-white/20 transition-colors"
-              aria-label="Zoom out"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                <circle cx="11" cy="11" r="8"/>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-                <line x1="8" y1="11" x2="14" y2="11"/>
-              </svg>
-            </button>
-          </div>
-
-          {/* Photo counter — glass-pill overlay */}
-          <div className="absolute top-6 left-6 text-white text-sm font-medium glass-pill px-3 py-1.5">
-            {activeIndex + 1} / {images.length}
-          </div>
-        </div>
-      )}
+      <GalleryLightbox
+        slides={images.map((img, i) => ({
+          src: getImageSizeUrl(img.url, 'full'),
+          alt: img.alt || hotelName,
+          width: 1200,
+          height: 800,
+          msrc: blurs?.gallery_blurs?.[i]?.blur || img.url,
+        }))}
+        open={lightboxOpen}
+        openIndex={activeIndex}
+        onClose={() => setLightboxOpen(false)}
+        zoom={{ maxZoomLevel: 3 }}
+      />
     </>
   );
 }

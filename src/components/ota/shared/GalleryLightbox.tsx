@@ -89,13 +89,7 @@ export default function GalleryLightbox({
       wheelToZoom: true,
       pinchToClose: false,
       loop: slides.length > 1,
-      zoom: zoom.maxZoomLevel ? {
-        levels: [
-          { zoom: 1, duration: 300 },
-          { zoom: 2, duration: 300 },
-          { zoom: zoom.maxZoomLevel, duration: 300 },
-        ],
-      } : undefined,
+      zoom: true,
     });
 
     // Event listeners

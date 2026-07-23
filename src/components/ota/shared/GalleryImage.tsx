@@ -16,6 +16,8 @@ interface GalleryImageProps {
   onClick?: () => void;
   sizes?: string;
   quality?: number;
+  placeholder?: 'blur' | 'empty';
+  loading?: 'lazy' | 'eager';
 }
 
 /**
@@ -50,6 +52,8 @@ export default function GalleryImage({
   onClick,
   sizes,
   quality = 75,
+  placeholder,
+  loading,
 }: GalleryImageProps) {
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
@@ -129,8 +133,8 @@ export default function GalleryImage({
         sizes={sizes}
         quality={quality}
         priority={priority}
-        loading={priority ? 'eager' : 'lazy'}
-        placeholder={blurDataURL ? 'blur' : undefined}
+        loading={loading || (priority ? 'eager' : 'lazy')}
+        placeholder={placeholder || (blurDataURL ? 'blur' : undefined)}
         blurDataURL={blurDataURL}
         onLoad={handleLoad}
         onError={handleError}
