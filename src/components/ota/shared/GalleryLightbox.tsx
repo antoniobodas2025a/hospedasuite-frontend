@@ -71,7 +71,7 @@ export default function GalleryLightbox({
 
     // Inicializar PhotoSwipe
     const lightbox = new PhotoSwipeLightbox({
-      slides: slides.map((slide) => ({
+      dataSource: slides.map((slide) => ({
         src: slide.src,
         alt: slide.alt || '',
         width: slide.width || 1200,

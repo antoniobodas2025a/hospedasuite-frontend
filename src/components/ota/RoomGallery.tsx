@@ -1,9 +1,7 @@
 "use client";
 
-import { useState, useCallback, Suspense, useMemo } from "react";
+import { useState, useCallback, useMemo, Suspense } from "react";
 import { useTranslations } from "next-intl";
-import Image from "next/image";
-import dynamic from "next/dynamic";
 import type { GalleryItem } from "@/types";
 import { getImageSizeUrl } from "@/lib/image-config";
 import {
@@ -25,24 +23,8 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMediaQuery";
-
-// CSS imports at top level (tree-shaken by PostCSS, minimal JS impact)
-import "yet-another-react-lightbox/styles.css";
-import "yet-another-react-lightbox/plugins/thumbnails.css";
-import "yet-another-react-lightbox/plugins/counter.css";
-
-// Dynamic import of the YARL lightbox component (the heavy part ~50KB)
-const LightboxWrapper = dynamic(
-	() => import("@/components/ota/RoomGalleryLightbox"),
-	{
-		loading: () => (
-			<div className="animate-pulse bg-muted w-full h-full flex items-center justify-center">
-				<div className="size-12 rounded-full bg-muted-foreground/10" />
-			</div>
-		),
-		ssr: false,
-	},
-);
+import GalleryImage from "@/components/ota/shared/GalleryImage";
+import GalleryLightbox from "@/components/ota/shared/GalleryLightbox";
 
 // ============================================================================
 // SORTABLE THUMBNAIL
@@ -92,14 +74,13 @@ function SortableThumbnail({
 				className="absolute inset-0 w-full h-full"
 				aria-label={t("ota.roomGallery.viewImage", { index: realIndex + 1 })}
 			>
-				<Image
+				<GalleryImage
 					src={getImageSizeUrl(img.url, "thumb")}
 					alt={img.alt ?? `${roomName} — ${realIndex + 1}`}
 					fill
 					className="object-cover"
 					sizes="80px"
 					quality={50}
-					loading="lazy"
 				/>
 				<div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors rounded-[var(--radius-squircle-lg)]" />
 				<div className="absolute inset-0 rounded-[var(--radius-squircle-lg)] ring-1 ring-white/20" />
@@ -192,27 +173,72 @@ export default function RoomGallery({
 	);
 
 	// --------------------------------------------------------------------------
-	// MODO INLINE: carrusel empotrado en el panel izquierdo (desktop)
+	// MODO INLINE: carrusel CSS nativo con scroll-snap (reemplaza YARL inline)
 	// --------------------------------------------------------------------------
 	if (variant === "inline") {
 		return (
-			<div suppressHydrationWarning>
-				<Suspense
-					fallback={
-						<div className="w-full h-full bg-muted animate-pulse flex items-center justify-center">
-							<div className="size-16 rounded-full bg-muted-foreground/10" />
-						</div>
-					}
+			<div className="relative w-full h-full">
+				{/* Carrusel con scroll-snap nativo */}
+				<div
+					className="flex overflow-x-auto snap-x snap-mandatory w-full h-full scrollbar-hide"
+					style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
 				>
-					<LightboxWrapper
-						variant="inline"
-						slides={slides}
-						open={open}
-						openIndex={index}
-						onOpen={setOpen}
-						onClose={() => setOpen(false)}
-					/>
-				</Suspense>
+					{galleryImages.map((img, i) => (
+						<button
+							key={i}
+							type="button"
+							onClick={() => {
+								setIndex(i);
+								setOpen(true);
+							}}
+							className="flex-none w-full h-full snap-center relative cursor-pointer group"
+							aria-label={t("ota.roomGallery.viewImage", { index: i + 1 })}
+						>
+							<GalleryImage
+								src={img.url}
+								alt={img.alt ?? `${roomName} — ${i + 1}`}
+								fill
+								className="object-contain"
+								sizes="100vw"
+								quality={90}
+								priority={i === 0}
+								placeholder={img.blurDataURL ? "blur" : undefined}
+								blurDataURL={img.blurDataURL}
+							/>
+						</button>
+					))}
+				</div>
+
+				{/* Indicadores de posición */}
+				{galleryImages.length > 1 && (
+					<div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+						{galleryImages.map((_, i) => (
+							<button
+								key={i}
+								onClick={() => {
+									const container = document.querySelector('.snap-x');
+									if (container) {
+										const scrollWidth = container.scrollWidth / galleryImages.length;
+										container.scrollTo({ left: scrollWidth * i, behavior: 'smooth' });
+									}
+								}}
+								className={`size-2 rounded-full transition-all ${
+									i === index ? 'bg-white w-6' : 'bg-white/50'
+								}`}
+								aria-label={`Ir a foto ${i + 1}`}
+							/>
+						))}
+					</div>
+				)}
+
+				{/* Lightbox fullscreen */}
+				<GalleryLightbox
+					slides={slides}
+					open={open}
+					openIndex={index}
+					onClose={() => setOpen(false)}
+					zoom={{ maxZoomLevel: 3 }}
+				/>
 			</div>
 		);
 	}
@@ -240,7 +266,7 @@ export default function RoomGallery({
 						className="relative block aspect-[4/3] sm:aspect-[16/10] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
 						aria-label={t("ota.roomGallery.viewGallery", { name: roomName })}
 					>
-						<Image
+						<GalleryImage
 							src={galleryImages[0]?.url ?? ""}
 							alt={galleryImages[0]?.alt ?? roomName}
 							fill
@@ -291,14 +317,13 @@ export default function RoomGallery({
 										className="relative shrink-0 w-20 h-14 rounded-[var(--radius-squircle-lg)] overflow-hidden group"
 										aria-label={t("ota.roomGallery.viewImage", { index: realIndex })}
 									>
-										<Image
+										<GalleryImage
 											src={getImageSizeUrl(img.url, "thumb")}
 											alt={img.alt ?? `${roomName} — ${realIndex}`}
 											fill
 											className="object-cover"
 											sizes="80px"
 											quality={50}
-											loading="lazy"
 										/>
 										<div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors rounded-[var(--radius-squircle-lg)]" />
 										<div className="absolute inset-0 rounded-[var(--radius-squircle-lg)] ring-1 ring-white/20" />
@@ -310,16 +335,13 @@ export default function RoomGallery({
 				</div>
 
 				<Suspense fallback={null}>
-					<LightboxWrapper
-						variant="compact"
-						slides={slides}
-						open={open}
-						openIndex={index}
-						onOpen={setOpen}
-						onClose={() => {
-							setOpen(false);
-						}}
-					/>
+			<GalleryLightbox
+				slides={slides}
+				open={open}
+				openIndex={index}
+				onClose={() => setOpen(false)}
+				zoom={{ maxZoomLevel: 3 }}
+			/>
 				</Suspense>
 			</div>
 		);
@@ -345,7 +367,7 @@ export default function RoomGallery({
 						className="relative block aspect-[4/3] sm:aspect-[16/10] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
 						aria-label={t("ota.roomGallery.viewGallery", { name: roomName })}
 					>
-						<Image
+						<GalleryImage
 							src={galleryImages[0]?.url ?? ""}
 							alt={galleryImages[0]?.alt ?? roomName}
 							fill
@@ -410,7 +432,7 @@ export default function RoomGallery({
 				<DragOverlay>
 					{activeDragImage ? (
 						<div className="relative w-20 h-14 rounded-[var(--radius-squircle-lg)] overflow-hidden shadow-xl ring-2 ring-brand-500/50 rotate-3 scale-110">
-							<Image
+							<GalleryImage
 								src={getImageSizeUrl(activeDragImage.url, "thumb")}
 								alt={activeDragImage.alt ?? roomName}
 								fill
@@ -424,15 +446,12 @@ export default function RoomGallery({
 			</DndContext>
 
 			<Suspense fallback={null}>
-				<LightboxWrapper
-					variant="compact"
+				<GalleryLightbox
 					slides={slides}
 					open={open}
 					openIndex={index}
-					onOpen={setOpen}
-					onClose={() => {
-						setOpen(false);
-					}}
+					onClose={() => setOpen(false)}
+					zoom={{ maxZoomLevel: 3 }}
 				/>
 			</Suspense>
 		</div>
