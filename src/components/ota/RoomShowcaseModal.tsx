@@ -22,6 +22,7 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { getDateFnsLocale } from "@/lib/date-locale";
 import { useModalAccessibility } from "@/hooks/useModalAccessibility";
+import { AnimatePresence, motion } from "framer-motion";
 
 interface HotelForModal {
 	slug: string;
@@ -165,20 +166,35 @@ export function RoomShowcaseModal({
 	}
 
 	return (
-		<div 
-			ref={modalRef}
-			{...ariaProps}
-			className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-3 lg:p-5 animate-in fade-in duration-200"
-		>
-			{/* Backdrop con blur pesado */}
-			<div
-				className="absolute inset-0 bg-foreground/50 backdrop-blur-2xl"
-				onClick={onClose}
-				aria-hidden="true"
-			/>
+		<AnimatePresence>
+			<motion.div 
+				ref={modalRef}
+				{...ariaProps}
+				className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-3 lg:p-5"
+				initial={{ opacity: 0 }}
+				animate={{ opacity: 1 }}
+				exit={{ opacity: 0 }}
+				transition={{ duration: 0.2 }}
+			>
+				{/* Backdrop con blur pesado */}
+				<motion.div
+					className="absolute inset-0 bg-foreground/50 backdrop-blur-2xl"
+					onClick={onClose}
+					aria-hidden="true"
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					exit={{ opacity: 0 }}
+					transition={{ duration: 0.2 }}
+				/>
 
-			{/* MODAL CONTAINER — Liquid Glass */}
-			<div className="relative w-full max-w-7xl h-[96vh] sm:h-[92vh] flex flex-col overflow-hidden animate-in slide-in-from-bottom-10 duration-300 sm:rounded-[var(--radius-squircle-2xl)] rounded-t-[2rem] glass-panel">
+				{/* MODAL CONTAINER — Liquid Glass */}
+				<motion.div 
+					className="relative w-full max-w-7xl h-[96vh] sm:h-[92vh] flex flex-col overflow-hidden sm:rounded-[var(--radius-squircle-2xl)] rounded-t-[2rem] glass-panel"
+					initial={{ opacity: 0, y: 50 }}
+					animate={{ opacity: 1, y: 0 }}
+					exit={{ opacity: 0, y: 50 }}
+					transition={{ duration: 0.3, ease: "easeOut" }}
+				>
 				{/* Boton cerrar glass */}
 				<button
 					onClick={onClose}
@@ -340,7 +356,8 @@ export function RoomShowcaseModal({
 						</div>
 					</div>
 				</div>
-			</div>
-		</div>
+			</motion.div>
+		</motion.div>
+	</AnimatePresence>
 	);
 }
