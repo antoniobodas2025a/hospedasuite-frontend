@@ -119,7 +119,7 @@ export default function GalleryLightbox({
       }
     });
 
-    // Agregar botones de navegación custom después de que PhotoSwipe se inicialice
+    // Guardar referencia a la instancia de PhotoSwipe y agregar botones de navegación
     lightbox.on('afterInit', () => {
       pswpInstance = lightbox.pswp;
       if (!pswpInstance || !pswpInstance.element) return;
@@ -129,104 +129,34 @@ export default function GalleryLightbox({
       // Crear contenedor para los botones
       const navContainer = document.createElement('div');
       navContainer.className = 'pswp__custom-nav';
-      navContainer.style.cssText = `
-        position: absolute;
-        top: 50%;
-        left: 0;
-        right: 0;
-        transform: translateY(-50%);
-        display: flex;
-        justify-content: space-between;
-        padding: 0 16px;
-        pointer-events: none;
-        z-index: 60;
+      navContainer.innerHTML = `
+        <button type="button" class="pswp__custom-nav-btn pswp__custom-nav-btn--prev" aria-label="${t('ota.heroGallery.lightboxPrev')}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </button>
+        <button type="button" class="pswp__custom-nav-btn pswp__custom-nav-btn--next" aria-label="${t('ota.heroGallery.lightboxNext')}">
+          <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </button>
       `;
 
-      // Botón Previous
-      const prevButton = document.createElement('button');
-      prevButton.className = 'pswp__custom-nav-btn pswp__custom-nav-btn--prev';
-      prevButton.setAttribute('aria-label', t('ota.heroGallery.lightboxPrev'));
-      prevButton.setAttribute('type', 'button');
-      prevButton.style.cssText = `
-        pointer-events: auto;
-        width: 48px;
-        height: 48px;
-        min-width: 44px;
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        color: white;
-      `;
-      prevButton.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="15 18 9 12 15 6"></polyline>
-        </svg>
-      `;
-      prevButton.addEventListener('click', (e) => {
+      // Agregar event listeners
+      const prevBtn = navContainer.querySelector('.pswp__custom-nav-btn--prev');
+      const nextBtn = navContainer.querySelector('.pswp__custom-nav-btn--next');
+
+      prevBtn?.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         pswpInstance.prev();
       });
-      prevButton.addEventListener('mouseenter', () => {
-        prevButton.style.background = 'rgba(0, 0, 0, 0.8)';
-        prevButton.style.transform = 'scale(1.08)';
-      });
-      prevButton.addEventListener('mouseleave', () => {
-        prevButton.style.background = 'rgba(0, 0, 0, 0.6)';
-        prevButton.style.transform = 'scale(1)';
-      });
 
-      // Botón Next
-      const nextButton = document.createElement('button');
-      nextButton.className = 'pswp__custom-nav-btn pswp__custom-nav-btn--next';
-      nextButton.setAttribute('aria-label', t('ota.heroGallery.lightboxNext'));
-      nextButton.setAttribute('type', 'button');
-      nextButton.style.cssText = `
-        pointer-events: auto;
-        width: 48px;
-        height: 48px;
-        min-width: 44px;
-        min-height: 44px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        color: white;
-      `;
-      nextButton.innerHTML = `
-        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <polyline points="9 18 15 12 9 6"></polyline>
-        </svg>
-      `;
-      nextButton.addEventListener('click', (e) => {
+      nextBtn?.addEventListener('click', (e) => {
         e.preventDefault();
         e.stopPropagation();
         pswpInstance.next();
       });
-      nextButton.addEventListener('mouseenter', () => {
-        nextButton.style.background = 'rgba(0, 0, 0, 0.8)';
-        nextButton.style.transform = 'scale(1.08)';
-      });
-      nextButton.addEventListener('mouseleave', () => {
-        nextButton.style.background = 'rgba(0, 0, 0, 0.6)';
-        nextButton.style.transform = 'scale(1)';
-      });
-
-      // Agregar botones al contenedor
-      navContainer.appendChild(prevButton);
-      navContainer.appendChild(nextButton);
 
       // Agregar contenedor al lightbox
       pswpElement.appendChild(navContainer);
