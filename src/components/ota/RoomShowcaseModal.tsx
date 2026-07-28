@@ -21,6 +21,7 @@ import { getRoomAmenityById } from "@/lib/amenity-registry";
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
 import { getDateFnsLocale } from "@/lib/date-locale";
+import { useModalAccessibility } from "@/hooks/useModalAccessibility";
 
 interface HotelForModal {
 	slug: string;
@@ -97,6 +98,9 @@ export function RoomShowcaseModal({
 		[hotel.rooms, roomId],
 	);
 
+	// Accessibility: focus trap, ESC handler, scroll lock, ARIA
+	const { modalRef, ariaProps } = useModalAccessibility(!!roomId, onClose, 'room-modal-title');
+
 	// onClose handled by parent via onClose callback
 
 	if (!roomId) return null;
@@ -161,11 +165,16 @@ export function RoomShowcaseModal({
 	}
 
 	return (
-		<div className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-3 lg:p-5 animate-in fade-in duration-200">
+		<div 
+			ref={modalRef}
+			{...ariaProps}
+			className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-3 lg:p-5 animate-in fade-in duration-200"
+		>
 			{/* Backdrop con blur pesado */}
 			<div
 				className="absolute inset-0 bg-foreground/50 backdrop-blur-2xl"
 				onClick={onClose}
+				aria-hidden="true"
 			/>
 
 			{/* MODAL CONTAINER — Liquid Glass */}
@@ -202,7 +211,7 @@ export function RoomShowcaseModal({
 										<Star size={11} className="fill-warm-500" />{" "}
 										{t("ota.showcase.authorsPick")}
 									</span>
-									<h2 className="text-3xl xl:text-4xl font-black text-foreground tracking-tight leading-tight">
+									<h2 id="room-modal-title" className="text-3xl xl:text-4xl font-black text-foreground tracking-tight leading-tight">
 										{room.name}
 									</h2>
 									<p className="text-[15px] text-muted-foreground font-lora leading-relaxed italic">
@@ -425,7 +434,7 @@ export function RoomShowcaseModal({
 									<Star size={11} className="fill-warm-500" />{" "}
 									{t("ota.showcase.authorsPick")}
 								</span>
-								<h2 className="text-2xl font-black text-foreground tracking-tight">
+								<h2 id="room-modal-title-mobile" className="text-2xl font-black text-foreground tracking-tight">
 									{room.name}
 								</h2>
 								<p className="text-[15px] text-muted-foreground font-lora leading-relaxed italic">
