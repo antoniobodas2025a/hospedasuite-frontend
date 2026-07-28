@@ -71,6 +71,9 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
     [images, hotelName, blurs]
   );
 
+  // Stable callback to prevent useEffect re-execution in GalleryLightbox
+  const handleClose = useCallback(() => setLightboxOpen(false), []);
+
   // Navegacion infinita (loop)
   const nextMobile = useCallback(() => setMobileIndex((i) => (i + 1) % totalDisplay), [totalDisplay]);
   const prevMobile = useCallback(() => setMobileIndex((i) => (i - 1 + totalDisplay) % totalDisplay), [totalDisplay]);
@@ -376,7 +379,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
         slides={lightboxSlides}
         open={lightboxOpen}
         openIndex={activeIndex}
-        onClose={() => setLightboxOpen(false)}
+        onClose={handleClose}
         zoom={{ maxZoomLevel: 3 }}
       />
     </>

@@ -68,6 +68,9 @@ export default function CategorizedHeroGallery({
     setLightboxOpen(true);
   }, []);
 
+  // Stable callback to prevent useEffect re-execution in GalleryLightbox
+  const handleClose = useCallback(() => setLightboxOpen(false), []);
+
   if (images.length === 0) return null;
 
   // Track global index across groups for lightbox
@@ -122,7 +125,7 @@ export default function CategorizedHeroGallery({
         slides={lightboxSlides}
         open={lightboxOpen}
         openIndex={activeIndex}
-        onClose={() => setLightboxOpen(false)}
+        onClose={handleClose}
         zoom={{ maxZoomLevel: 3 }}
       />
     </>

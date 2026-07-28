@@ -174,6 +174,9 @@ export default function RoomGallery({
 		[galleryImages],
 	);
 
+	// Stable callback to prevent useEffect re-execution in GalleryLightbox
+	const handleClose = useCallback(() => setOpen(false), []);
+
 	// --------------------------------------------------------------------------
 	// MODO INLINE: carrusel CSS nativo con scroll-snap (reemplaza YARL inline)
 	// --------------------------------------------------------------------------
@@ -284,7 +287,7 @@ export default function RoomGallery({
 					slides={slides}
 					open={open}
 					openIndex={index}
-					onClose={() => setOpen(false)}
+					onClose={handleClose}
 					zoom={{ maxZoomLevel: 3 }}
 				/>
 			</div>
@@ -387,7 +390,7 @@ export default function RoomGallery({
 				slides={slides}
 				open={open}
 				openIndex={index}
-				onClose={() => setOpen(false)}
+				onClose={handleClose}
 				zoom={{ maxZoomLevel: 3 }}
 			/>
 				</Suspense>
@@ -498,7 +501,7 @@ export default function RoomGallery({
 					slides={slides}
 					open={open}
 					openIndex={index}
-					onClose={() => setOpen(false)}
+					onClose={handleClose}
 					zoom={{ maxZoomLevel: 3 }}
 				/>
 			</Suspense>

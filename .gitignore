@@ -60,3 +60,4 @@ playwright/.cache/
 scripts/sentry-mcp-proxy.mjs
 .atl/
 .build/
+.opencode/

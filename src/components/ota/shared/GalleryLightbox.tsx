@@ -230,7 +230,10 @@ export default function GalleryLightbox({
       pswpElement.appendChild(navContainer);
     });
 
-    lightbox.init();
+    // CRITICAL: Use loadAndOpen() instead of init() for programmatic dataSource
+    // init() only binds click events to gallery elements, it doesn't open the lightbox
+    // loadAndOpen() actually opens PhotoSwipe with the provided dataSource
+    lightbox.loadAndOpen(openIndex, slideData);
     lightboxRef.current = lightbox;
 
     // Cleanup
@@ -240,18 +243,6 @@ export default function GalleryLightbox({
     };
   }, [open, openIndex, slideData, onClose, onViewSlide, zoom, keyboard]);
 
-  // No renderizar nada si está cerrado
-  if (!open) return null;
-
-  return (
-    <div
-      className={cn(
-        'pswp-gallery',
-        className
-      )}
-      data-testid="gallery-lightbox"
-    >
-      {/* PhotoSwipe renderiza automáticamente en el DOM */}
-    </div>
-  );
+  // PhotoSwipe renders directly to document.body, no wrapper needed
+  return null;
 }
