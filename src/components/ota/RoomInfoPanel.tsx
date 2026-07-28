@@ -55,7 +55,7 @@ export function RoomInfoPanel({
 					{t("ota.showcase.authorsPick")}
 				</span>
 				<h2
-					id={isDesktop ? "room-modal-title" : "room-modal-title-mobile"}
+					id="room-modal-title"
 					className={cn(
 						"font-black text-foreground tracking-tight",
 						isDesktop ? "text-3xl xl:text-4xl leading-tight" : "text-2xl"
