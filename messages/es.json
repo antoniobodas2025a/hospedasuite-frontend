@@ -249,7 +249,9 @@
       "closeGallery": "Cerrar galeria",
       "goToPhoto": "Ir a foto {num}",
       "morePhotos": "+{count} fotos",
-      "errorLoading": "Error al cargar imagen"
+      "errorLoading": "Error al cargar imagen",
+      "lightboxPrev": "Imagen anterior",
+      "lightboxNext": "Imagen siguiente"
     },
     "hotelGallery": {
       "discover": "Descubri {hotelName}",

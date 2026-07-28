@@ -22,7 +22,6 @@ import {
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, ChevronLeft, ChevronRight } from "lucide-react";
-import { useIsMobile } from "@/hooks/useIsMediaQuery";
 import GalleryImage from "@/components/ota/shared/GalleryImage";
 import GalleryLightbox from "@/components/ota/shared/GalleryLightbox";
 import { cn } from "@/lib/utils";
@@ -118,7 +117,6 @@ export default function RoomGallery({
 	blurDataURL,
 }: RoomGalleryProps) {
 	const t = useTranslations();
-	const isMobile = useIsMobile(640);
 	const [open, setOpen] = useState(false);
 	const [index, setIndex] = useState(0);
 	const [galleryImages, setGalleryImages] = useState<GalleryItem[]>(images);
@@ -302,105 +300,93 @@ export default function RoomGallery({
 		? galleryImages.find((_, i) => `thumb-${i}` === activeId)
 		: null;
 
-	// MÓVIL: Sin drag & drop, solo scroll nativo
-	if (isMobile === true) {
-		return (
-			<div suppressHydrationWarning>
-				<div className="space-y-3">
-					{/* Imagen principal glass */}
-					<button
-						type="button"
-						onClick={() => {
-							setIndex(0);
-							setOpen(true);
-						}}
-						className="relative block aspect-[4/3] sm:aspect-[16/10] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
-						aria-label={t("ota.roomGallery.viewGallery", { name: roomName })}
-					>
-						<GalleryImage
-							src={galleryImages[0]?.url ?? ""}
-							alt={galleryImages[0]?.alt ?? roomName}
-							fill
-							className="object-cover transition-transform duration-700 group-hover:scale-105"
-							priority
-							sizes="100vw"
-							quality={85}
-							placeholder={galleryImages[0]?.blurDataURL || blurDataURL ? "blur" : undefined}
-							blurDataURL={galleryImages[0]?.blurDataURL || blurDataURL}
-						/>
-						<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
-						<div className="absolute bottom-3 left-3">
-							<span className="inline-flex items-center gap-1.5 px-3 py-1.5 glass-pill text-white text-xs font-semibold shadow-lg">
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="2"
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									className="size-3.5"
-								>
-									<rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
-									<circle cx="9" cy="9" r="2" />
-									<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
-								</svg>
-								{t("ota.roomGallery.photoCount", {
-									count: galleryImages.length,
-								})}
-							</span>
-						</div>
-					</button>
-
-					{/* Thumbnails scrolleables (sin drag) */}
-					{thumbnailItems.length > 0 && (
-						<div
-							className="flex gap-2 overflow-x-auto pb-1 px-1 [&::-webkit-scrollbar]:hidden"
-							style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-						>
-							{thumbnailItems.map((img, i) => {
-								const realIndex = i + 1;
-								return (
-									<button
-										key={`thumb-${realIndex}`}
-										type="button"
-										onClick={() => handleThumbnailClick(realIndex)}
-										className="relative shrink-0 w-20 h-14 rounded-[var(--radius-squircle-lg)] overflow-hidden group"
-										aria-label={t("ota.roomGallery.viewImage", { index: realIndex })}
-									>
-										<GalleryImage
-											src={getImageSizeUrl(img.url, "thumb")}
-											alt={img.alt ?? `${roomName} — ${realIndex}`}
-											fill
-											className="object-cover"
-											sizes="80px"
-											quality={50}
-										/>
-				<div className="absolute inset-0 bg-black/20 group-hover:bg-transparent motion-safe:transition-colors motion-safe:duration-200 rounded-[var(--radius-squircle-lg)]" />
-										<div className="absolute inset-0 rounded-[var(--radius-squircle-lg)] ring-1 ring-white/20" />
-									</button>
-								);
+	// MÓVIL: Sin drag & drop, solo scroll nativo (oculto en desktop con lg:hidden)
+	const mobileLayout = (
+		<div className="lg:hidden">
+			<div className="space-y-3">
+				{/* Imagen principal glass */}
+				<button
+					type="button"
+					onClick={() => {
+						setIndex(0);
+						setOpen(true);
+					}}
+					className="relative block aspect-[4/3] sm:aspect-[16/10] w-full rounded-[1.5rem] overflow-hidden shadow-lg shadow-elev-2 group cursor-pointer"
+					aria-label={t("ota.roomGallery.viewGallery", { name: roomName })}
+				>
+					<GalleryImage
+						src={galleryImages[0]?.url ?? ""}
+						alt={galleryImages[0]?.alt ?? roomName}
+						fill
+						className="object-cover transition-transform duration-700 group-hover:scale-105"
+						priority
+						sizes="100vw"
+						quality={85}
+						placeholder={galleryImages[0]?.blurDataURL || blurDataURL ? "blur" : undefined}
+						blurDataURL={galleryImages[0]?.blurDataURL || blurDataURL}
+					/>
+					<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent" />
+					<div className="absolute bottom-3 left-3">
+						<span className="inline-flex items-center gap-1.5 px-3 py-1.5 glass-pill text-white text-xs font-semibold shadow-lg">
+							<svg
+								xmlns="http://www.w3.org/2000/svg"
+								viewBox="0 0 24 24"
+								fill="none"
+								stroke="currentColor"
+								strokeWidth="2"
+								strokeLinecap="round"
+								strokeLinejoin="round"
+								className="size-3.5"
+							>
+								<rect width="18" height="18" x="3" y="3" rx="2" ry="2" />
+								<circle cx="9" cy="9" r="2" />
+								<path d="m21 15-3.086-3.086a2 2 0 0 0-2.828 0L6 21" />
+							</svg>
+							{t("ota.roomGallery.photoCount", {
+								count: galleryImages.length,
 							})}
-						</div>
-					)}
-				</div>
+						</span>
+					</div>
+				</button>
 
-				<Suspense fallback={null}>
-			<GalleryLightbox
-				slides={slides}
-				open={open}
-				openIndex={index}
-				onClose={handleClose}
-				zoom={{ maxZoomLevel: 3 }}
-			/>
-				</Suspense>
+				{/* Thumbnails scrolleables (sin drag) */}
+				{thumbnailItems.length > 0 && (
+					<div
+						className="flex gap-2 overflow-x-auto pb-1 px-1 [&::-webkit-scrollbar]:hidden"
+						style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+					>
+						{thumbnailItems.map((img, i) => {
+							const realIndex = i + 1;
+							return (
+								<button
+									key={`thumb-${realIndex}`}
+									type="button"
+									onClick={() => handleThumbnailClick(realIndex)}
+									className="relative shrink-0 w-20 h-14 rounded-[var(--radius-squircle-lg)] overflow-hidden group"
+									aria-label={t("ota.roomGallery.viewImage", { index: realIndex })}
+								>
+									<GalleryImage
+										src={getImageSizeUrl(img.url, "thumb")}
+										alt={img.alt ?? `${roomName} — ${realIndex}`}
+										fill
+										className="object-cover"
+										sizes="80px"
+										quality={50}
+									/>
+				<div className="absolute inset-0 bg-black/20 group-hover:bg-transparent motion-safe:transition-colors motion-safe:duration-200 rounded-[var(--radius-squircle-lg)]" />
+									<div className="absolute inset-0 rounded-[var(--radius-squircle-lg)] ring-1 ring-white/20" />
+								</button>
+							);
+						})}
+					</div>
+				)}
 			</div>
-		);
-	}
+		</div>
+	);
 
-	// DESKTOP: Con drag & drop completo
-	return (
-		<div suppressHydrationWarning>
+	// DESKTOP: Con drag & drop completo (oculto en mobile con hidden lg:block)
+	const desktopLayout = (
+		<div className="hidden lg:block">
 			<DndContext
 				sensors={sensors}
 				collisionDetection={closestCenter}
@@ -495,6 +481,13 @@ export default function RoomGallery({
 					) : null}
 				</DragOverlay>
 			</DndContext>
+		</div>
+	);
+
+	return (
+		<div>
+			{mobileLayout}
+			{desktopLayout}
 
 			<Suspense fallback={null}>
 				<GalleryLightbox

@@ -4,6 +4,7 @@ import React, { useEffect, useRef } from 'react';
 import PhotoSwipeLightbox from 'photoswipe/lightbox';
 import 'photoswipe/dist/photoswipe.css';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface GallerySlide {
   src: string;
@@ -68,6 +69,7 @@ export default function GalleryLightbox({
   keyboard = { escape: true, arrows: true },
 }: GalleryLightboxProps) {
   const lightboxRef = useRef<PhotoSwipeLightbox | null>(null);
+  const t = useTranslations();
 
   // Memoize the slide data to avoid recreating objects on every effect run
   const slideData = React.useMemo(
@@ -143,7 +145,7 @@ export default function GalleryLightbox({
       // Botón Previous
       const prevButton = document.createElement('button');
       prevButton.className = 'pswp__custom-nav-btn pswp__custom-nav-btn--prev';
-      prevButton.setAttribute('aria-label', 'Imagen anterior');
+      prevButton.setAttribute('aria-label', t('ota.heroGallery.lightboxPrev'));
       prevButton.setAttribute('type', 'button');
       prevButton.style.cssText = `
         pointer-events: auto;
@@ -184,7 +186,7 @@ export default function GalleryLightbox({
       // Botón Next
       const nextButton = document.createElement('button');
       nextButton.className = 'pswp__custom-nav-btn pswp__custom-nav-btn--next';
-      nextButton.setAttribute('aria-label', 'Imagen siguiente');
+      nextButton.setAttribute('aria-label', t('ota.heroGallery.lightboxNext'));
       nextButton.setAttribute('type', 'button');
       nextButton.style.cssText = `
         pointer-events: auto;
@@ -241,7 +243,7 @@ export default function GalleryLightbox({
       lightbox.destroy();
       lightboxRef.current = null;
     };
-  }, [open, openIndex, slideData, onClose, onViewSlide, zoom, keyboard]);
+  }, [open, openIndex, slideData, onClose, onViewSlide, zoom, keyboard, t]);
 
   // PhotoSwipe renders directly to document.body, no wrapper needed
   return null;
