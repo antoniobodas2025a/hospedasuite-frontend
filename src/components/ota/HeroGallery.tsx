@@ -49,6 +49,11 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
   const [mobileIndex, setMobileIndex] = useState(0);
   const isMobile = useIsMobile();
 
+  // Resetear mobileIndex cuando cambian las imágenes (navegación entre hoteles)
+  React.useEffect(() => {
+    setMobileIndex(0);
+  }, [images]);
+
   // Mostrar hasta 9 fotos en el grid (antes solo 5)
   const displayImages = images.slice(0, 9);
   const totalDisplay = displayImages.length;
@@ -163,12 +168,12 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
 
     // 4+ fotos: layout Airbnb con hero + grid de thumbnails
     const heroSpan = totalDisplay >= 6 ? 'md:col-span-2 md:row-span-2' : 'md:col-span-2';
-    const thumbCount = Math.min(totalDisplay - 1, totalDisplay >= 6 ? 5 : 3);
+    const thumbCount = Math.min(totalDisplay - 1, totalDisplay >= 6 ? 4 : 3);
 
     return (
       <div className={cn(
         'h-full gap-1',
-        totalDisplay >= 6 ? 'grid grid-cols-1 md:grid-cols-3 md:grid-rows-2' : 'grid grid-cols-1 md:grid-cols-4'
+        totalDisplay >= 6 ? 'grid grid-cols-1 md:grid-cols-4 md:grid-rows-2' : 'grid grid-cols-1 md:grid-cols-4'
       )}>
         <button
           onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
@@ -227,7 +232,9 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
               className="absolute inset-0 flex items-center justify-center"
               aria-label={t('ota.heroGallery.viewAllPhotosOf', { count: images.length, hotelName })}
             >
-              <span className="text-white font-bold text-sm">+{images.length - (totalDisplay >= 6 ? 6 : 4)} fotos</span>
+              <span className="text-white font-bold text-sm">
+                {t('ota.heroGallery.morePhotos', { count: images.length - (totalDisplay >= 6 ? 6 : 4) })}
+              </span>
             </button>
           </div>
         )}
@@ -248,6 +255,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
           <div
             className="absolute inset-0 select-none"
             onTouchStart={swipeHandlers.onTouchStart}
+            onTouchMove={swipeHandlers.onTouchMove}
             onTouchEnd={swipeHandlers.onTouchEnd}
           >
             <GalleryImage
@@ -279,19 +287,19 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
               </div>
             )}
 
-            {/* Flechas — solo visibles en desktop con hover */}
+            {/* Flechas — visibles en mobile, hover en desktop */}
             {totalDisplay > 1 && (
               <>
                 <button
                   onClick={prevMobile}
-                  className="hidden md:group-hover:flex absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
+                  className="flex md:opacity-0 md:group-hover:opacity-100 absolute left-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg items-center justify-center hover:bg-card transition-opacity z-10 active:scale-90"
                   aria-label={t('ota.heroGallery.prevPhoto')}
                 >
                   <ChevronLeft size={20} className="text-foreground" />
                 </button>
                 <button
                   onClick={nextMobile}
-                  className="hidden md:group-hover:flex absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg items-center justify-center hover:bg-card transition-colors z-10 active:scale-90"
+                  className="flex md:opacity-0 md:group-hover:opacity-100 absolute right-3 top-1/2 -translate-y-1/2 size-10 rounded-full bg-card/90 shadow-lg items-center justify-center hover:bg-card transition-opacity z-10 active:scale-90"
                   aria-label={t('ota.heroGallery.nextPhoto')}
                 >
                   <ChevronRight size={20} className="text-foreground" />

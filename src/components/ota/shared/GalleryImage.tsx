@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
+import { useTranslations } from 'next-intl';
 
 interface GalleryImageProps {
   src: string;
@@ -18,6 +19,7 @@ interface GalleryImageProps {
   quality?: number;
   placeholder?: 'blur' | 'empty';
   loading?: 'lazy' | 'eager';
+  objectFit?: 'cover' | 'contain';
 }
 
 /**
@@ -54,7 +56,9 @@ export default function GalleryImage({
   quality = 75,
   placeholder,
   loading,
+  objectFit = 'cover',
 }: GalleryImageProps) {
+  const t = useTranslations();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
 
@@ -72,6 +76,8 @@ export default function GalleryImage({
     return (
       <div
         data-testid="error-fallback"
+        role="alert"
+        aria-live="polite"
         className={cn(
           'relative bg-muted flex items-center justify-center',
           fill ? 'w-full h-full' : 'w-[400px] h-[300px]',
@@ -80,6 +86,7 @@ export default function GalleryImage({
       >
         <div className="text-center text-muted-foreground">
           <svg
+            aria-hidden="true"
             className="w-12 h-12 mx-auto mb-2 opacity-50"
             fill="none"
             stroke="currentColor"
@@ -92,7 +99,7 @@ export default function GalleryImage({
               d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z"
             />
           </svg>
-          <p className="text-sm">Error al cargar imagen</p>
+          <p className="text-sm">{t('ota.heroGallery.errorLoading')}</p>
         </div>
       </div>
     );
@@ -102,10 +109,11 @@ export default function GalleryImage({
     <div
       className={cn(
         'relative overflow-hidden',
-        fill ? 'w-full h-full' : width && height ? `w-[${width}px] h-[${height}px]` : 'w-[400px] h-[300px]',
+        fill ? 'w-full h-full' : width && height ? '' : 'w-[400px] h-[300px]',
         onClick && 'cursor-pointer',
         className
       )}
+      style={!fill && width && height ? { width: `${width}px`, height: `${height}px` } : undefined}
       onClick={onClick}
     >
       {/* Loading skeleton */}
@@ -128,7 +136,8 @@ export default function GalleryImage({
         className={cn(
           'transition-opacity duration-300',
           isLoading ? 'opacity-0' : 'opacity-100',
-          fill && 'object-cover'
+          fill && objectFit === 'cover' && 'object-cover',
+          fill && objectFit === 'contain' && 'object-contain'
         )}
         sizes={sizes}
         quality={quality}

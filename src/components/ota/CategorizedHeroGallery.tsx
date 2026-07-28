@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useMemo } from 'react';
 import { CATEGORY_DISPLAY_ES, CATEGORY_PRIORITY } from '@/lib/image-category';
 import type { CategorizedImage, ImageCategory } from '@/types';
 import GalleryImage from '@/components/ota/shared/GalleryImage';
@@ -43,9 +43,13 @@ export default function CategorizedHeroGallery({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [activeIndex, setActiveIndex] = useState(0);
 
-  const grouped = groupByCategory(images);
+  // Memoizar agrupamiento por categoría (solo recalcular cuando cambien las imágenes)
+  const grouped = useMemo(() => groupByCategory(images), [images]);
   // Flat list for lightbox navigation (preserves category priority order)
-  const flatImages = Array.from(grouped.entries()).flatMap(([, imgs]) => imgs);
+  const flatImages = useMemo(
+    () => Array.from(grouped.entries()).flatMap(([, imgs]) => imgs),
+    [grouped]
+  );
 
   const openLightbox = useCallback((globalIndex: number) => {
     setActiveIndex(globalIndex);

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, Suspense } from "react";
+import { useState, useCallback, useMemo, useRef, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import type { GalleryItem } from "@/types";
 import { getImageSizeUrl } from "@/lib/image-config";
@@ -122,6 +122,7 @@ export default function RoomGallery({
 	const [index, setIndex] = useState(0);
 	const [galleryImages, setGalleryImages] = useState<GalleryItem[]>(images);
 	const [activeId, setActiveId] = useState<string | null>(null);
+	const scrollContainerRef = useRef<HTMLDivElement>(null);
 
 	const sensors = useSensors(
 		useSensor(PointerSensor, {
@@ -178,11 +179,12 @@ export default function RoomGallery({
 	if (variant === "inline") {
 		return (
 			<div className="relative w-full h-full">
-				{/* Carrusel con scroll-snap nativo */}
-				<div
-					className="flex overflow-x-auto snap-x snap-mandatory w-full h-full scrollbar-hide"
-					style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
-				>
+			{/* Carrusel con scroll-snap nativo */}
+			<div
+				ref={scrollContainerRef}
+				className="flex overflow-x-auto snap-x snap-mandatory w-full h-full scrollbar-hide"
+				style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
+			>
 					{galleryImages.map((img, i) => (
 						<button
 							key={i}
@@ -212,22 +214,22 @@ export default function RoomGallery({
 				{/* Indicadores de posición */}
 				{galleryImages.length > 1 && (
 					<div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
-						{galleryImages.map((_, i) => (
-							<button
-								key={i}
-								onClick={() => {
-									const container = document.querySelector('.snap-x');
-									if (container) {
-										const scrollWidth = container.scrollWidth / galleryImages.length;
-										container.scrollTo({ left: scrollWidth * i, behavior: 'smooth' });
-									}
-								}}
-								className={`size-2 rounded-full transition-all ${
-									i === index ? 'bg-white w-6' : 'bg-white/50'
-								}`}
-								aria-label={`Ir a foto ${i + 1}`}
-							/>
-						))}
+					{galleryImages.map((_, i) => (
+						<button
+							key={i}
+							onClick={() => {
+								const container = scrollContainerRef.current;
+								if (container) {
+									const scrollWidth = container.scrollWidth / galleryImages.length;
+									container.scrollTo({ left: scrollWidth * i, behavior: 'smooth' });
+								}
+							}}
+							className={`size-2 rounded-full transition-all ${
+								i === index ? 'bg-white w-6' : 'bg-white/50'
+							}`}
+							aria-label={t('ota.roomGallery.goToImage', { index: i + 1 })}
+						/>
+					))}
 					</div>
 				)}
 

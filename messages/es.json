@@ -247,7 +247,9 @@
       "photoCount": "{count} fotos",
       "galleryDialog": "Galeria de fotos",
       "closeGallery": "Cerrar galeria",
-      "goToPhoto": "Ir a foto {num}"
+      "goToPhoto": "Ir a foto {num}",
+      "morePhotos": "+{count} fotos",
+      "errorLoading": "Error al cargar imagen"
     },
     "hotelGallery": {
       "discover": "Descubri {hotelName}",
