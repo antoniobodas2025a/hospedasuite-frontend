@@ -23,7 +23,7 @@ import {
 import { CSS } from "@dnd-kit/utilities";
 import { GripVertical, ChevronLeft, ChevronRight } from "lucide-react";
 import GalleryImage from "@/components/ota/shared/GalleryImage";
-import GalleryLightbox from "@/components/ota/shared/GalleryLightbox";
+import { DynamicGalleryLightbox as GalleryLightbox } from "@/components/ota/shared/DynamicGalleryLightbox";
 import { cn } from "@/lib/utils";
 
 // ============================================================================

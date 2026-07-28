@@ -4,7 +4,7 @@ import React, { useState, useCallback, useMemo } from 'react';
 import { CATEGORY_DISPLAY_ES, CATEGORY_PRIORITY } from '@/lib/image-category';
 import type { CategorizedImage, ImageCategory } from '@/types';
 import GalleryImage from '@/components/ota/shared/GalleryImage';
-import GalleryLightbox from '@/components/ota/shared/GalleryLightbox';
+import { DynamicGalleryLightbox as GalleryLightbox } from '@/components/ota/shared/DynamicGalleryLightbox';
 
 // ============================================================================
 // CATEGORIZED HERO GALLERY — Category-grouped display for hotel images

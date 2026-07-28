@@ -8,7 +8,7 @@ import { useIsMobile } from '@/hooks/useIsMediaQuery';
 import { useTranslations } from 'next-intl';
 import GalleryImage from '@/components/ota/shared/GalleryImage';
 import useSwipe from '@/hooks/useSwipe';
-import GalleryLightbox from '@/components/ota/shared/GalleryLightbox';
+import { DynamicGalleryLightbox as GalleryLightbox } from '@/components/ota/shared/DynamicGalleryLightbox';
 
 // ============================================================================
 // HERO GALLERY — Grid estilo Airbnb para pagina de hotel Channel
