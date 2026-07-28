@@ -330,7 +330,10 @@
     "roomGallery": {
       "viewImage": "View image {index}",
       "viewGallery": "View gallery of {name}",
-      "photoCount": "{count, plural, one {photo} other {photos}}"
+      "photoCount": "{count, plural, one {photo} other {photos}}",
+      "goToImage": "Go to image {index}",
+      "prevImage": "Previous image",
+      "nextImage": "Next image"
     }
   },
   "onboarding": {

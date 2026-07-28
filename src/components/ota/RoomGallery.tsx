@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo, useRef, Suspense } from "react";
+import React, { useState, useCallback, useMemo, useRef, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import type { GalleryItem } from "@/types";
 import { getImageSizeUrl } from "@/lib/image-config";
@@ -21,16 +21,17 @@ import {
 	horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
-import { GripVertical } from "lucide-react";
+import { GripVertical, ChevronLeft, ChevronRight } from "lucide-react";
 import { useIsMobile } from "@/hooks/useIsMediaQuery";
 import GalleryImage from "@/components/ota/shared/GalleryImage";
 import GalleryLightbox from "@/components/ota/shared/GalleryLightbox";
+import { cn } from "@/lib/utils";
 
 // ============================================================================
-// SORTABLE THUMBNAIL
+// SORTABLE THUMBNAIL — memoized to avoid re-renders during drag
 // ============================================================================
 
-function SortableThumbnail({
+const SortableThumbnail = React.memo(function SortableThumbnail({
 	img,
 	realIndex,
 	roomName,
@@ -96,7 +97,7 @@ function SortableThumbnail({
 			</div>
 		</div>
 	);
-}
+});
 
 // ============================================================================
 // ROOM GALLERY — Liquid Glass edition (dynamic YARL imports)
@@ -178,7 +179,7 @@ export default function RoomGallery({
 	// --------------------------------------------------------------------------
 	if (variant === "inline") {
 		return (
-			<div className="relative w-full h-full">
+			<div className="relative w-full h-full group">
 			{/* Carrusel con scroll-snap nativo */}
 			<div
 				ref={scrollContainerRef}
@@ -193,7 +194,7 @@ export default function RoomGallery({
 								setIndex(i);
 								setOpen(true);
 							}}
-							className="flex-none w-full h-full snap-center relative cursor-pointer group"
+							className="flex-none w-full h-full snap-center relative cursor-pointer group/slide"
 							aria-label={t("ota.roomGallery.viewImage", { index: i + 1 })}
 						>
 							<GalleryImage
@@ -204,16 +205,56 @@ export default function RoomGallery({
 								sizes="100vw"
 								quality={90}
 								priority={i === 0}
+								loading={i === 0 ? "eager" : "lazy"}
 								placeholder={img.blurDataURL ? "blur" : undefined}
 								blurDataURL={img.blurDataURL}
 							/>
+							<div className="absolute inset-0 bg-foreground/0 group-hover/slide:bg-foreground/[0.03] transition-colors" />
 						</button>
 					))}
 				</div>
 
-				{/* Indicadores de posición */}
+				{/* Navigation arrows — visible on hover (desktop) */}
 				{galleryImages.length > 1 && (
-					<div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
+					<>
+						<button
+							onClick={() => {
+								const container = scrollContainerRef.current;
+								if (container) {
+									const slideWidth = container.scrollWidth / galleryImages.length;
+									const newIndex = Math.max(0, index - 1);
+									container.scrollTo({ left: slideWidth * newIndex, behavior: 'smooth' });
+									setIndex(newIndex);
+								}
+							}}
+							className="hidden md:flex absolute left-3 top-1/2 -translate-y-1/2 size-11 rounded-full bg-card/90 shadow-lg items-center justify-center hover:bg-card motion-safe:transition-all motion-safe:duration-200 z-10 opacity-0 group-hover:opacity-100 active:motion-safe:scale-90"
+							aria-label={t("ota.roomGallery.prevImage")}
+							disabled={index === 0}
+						>
+							<ChevronLeft size={20} className="text-foreground" />
+						</button>
+						<button
+							onClick={() => {
+								const container = scrollContainerRef.current;
+								if (container) {
+									const slideWidth = container.scrollWidth / galleryImages.length;
+									const newIndex = Math.min(galleryImages.length - 1, index + 1);
+									container.scrollTo({ left: slideWidth * newIndex, behavior: 'smooth' });
+									setIndex(newIndex);
+								}
+							}}
+							className="hidden md:flex absolute right-3 top-1/2 -translate-y-1/2 size-11 rounded-full bg-card/90 shadow-lg items-center justify-center hover:bg-card motion-safe:transition-all motion-safe:duration-200 z-10 opacity-0 group-hover:opacity-100 active:motion-safe:scale-90"
+							aria-label={t("ota.roomGallery.nextImage")}
+							disabled={index === galleryImages.length - 1}
+						>
+							<ChevronRight size={20} className="text-foreground" />
+						</button>
+					</>
+				)}
+
+				{/* Indicadores de posición — 44px touch targets */}
+				{galleryImages.length > 1 && (
+					<div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-0 z-10">
 					{galleryImages.map((_, i) => (
 						<button
 							key={i}
@@ -222,13 +263,18 @@ export default function RoomGallery({
 								if (container) {
 									const scrollWidth = container.scrollWidth / galleryImages.length;
 									container.scrollTo({ left: scrollWidth * i, behavior: 'smooth' });
+									setIndex(i);
 								}
 							}}
-							className={`size-2 rounded-full transition-all ${
-								i === index ? 'bg-white w-6' : 'bg-white/50'
-							}`}
+							className="relative flex items-center justify-center min-w-[44px] min-h-[44px]"
 							aria-label={t('ota.roomGallery.goToImage', { index: i + 1 })}
-						/>
+							aria-current={i === index ? 'true' : undefined}
+						>
+							<span className={cn(
+								'block size-2 rounded-full motion-safe:transition-all motion-safe:duration-300',
+								i === index ? 'bg-white w-6' : 'bg-white/50'
+							)} />
+						</button>
 					))}
 					</div>
 				)}
@@ -327,7 +373,7 @@ export default function RoomGallery({
 											sizes="80px"
 											quality={50}
 										/>
-										<div className="absolute inset-0 bg-black/20 group-hover:bg-transparent transition-colors rounded-[var(--radius-squircle-lg)]" />
+				<div className="absolute inset-0 bg-black/20 group-hover:bg-transparent motion-safe:transition-colors motion-safe:duration-200 rounded-[var(--radius-squircle-lg)]" />
 										<div className="absolute inset-0 rounded-[var(--radius-squircle-lg)] ring-1 ring-white/20" />
 									</button>
 								);
@@ -373,7 +419,7 @@ export default function RoomGallery({
 							src={galleryImages[0]?.url ?? ""}
 							alt={galleryImages[0]?.alt ?? roomName}
 							fill
-							className="object-cover transition-transform duration-700 group-hover:scale-105"
+							className="object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out group-hover:motion-safe:scale-105"
 							priority
 							sizes="100vw"
 							quality={85}

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useTransition, useCallback } from 'react';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 import { useTranslations } from 'next-intl';
@@ -61,15 +61,20 @@ export default function GalleryImage({
   const t = useTranslations();
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
+  const [, startTransition] = useTransition();
 
-  const handleLoad = () => {
-    setIsLoading(false);
-  };
+  // Use startTransition for non-urgent UI updates (loading state)
+  // so they don't block user interactions
+  const handleLoad = useCallback(() => {
+    startTransition(() => setIsLoading(false));
+  }, []);
 
-  const handleError = () => {
-    setIsLoading(false);
-    setHasError(true);
-  };
+  const handleError = useCallback(() => {
+    startTransition(() => {
+      setIsLoading(false);
+      setHasError(true);
+    });
+  }, []);
 
   // Error fallback
   if (hasError) {
@@ -120,7 +125,7 @@ export default function GalleryImage({
       {isLoading && (
         <div
           className={cn(
-            'absolute inset-0 bg-muted animate-pulse',
+            'absolute inset-0 bg-muted motion-safe:animate-pulse motion-safe:duration-700',
             fill ? 'w-full h-full' : 'w-full h-full'
           )}
         />
@@ -134,7 +139,7 @@ export default function GalleryImage({
         height={fill ? undefined : height}
         fill={fill}
         className={cn(
-          'transition-opacity duration-300',
+          'motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-out',
           isLoading ? 'opacity-0' : 'opacity-100',
           fill && objectFit === 'cover' && 'object-cover',
           fill && objectFit === 'contain' && 'object-contain'

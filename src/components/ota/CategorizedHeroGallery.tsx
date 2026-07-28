@@ -51,6 +51,18 @@ export default function CategorizedHeroGallery({
     [grouped]
   );
 
+  // Memoize lightbox slides to avoid re-creating objects on every render
+  const lightboxSlides = useMemo(
+    () =>
+      flatImages.map((img) => ({
+        src: img.url,
+        alt: img.alt || hotelName,
+        width: 1200,
+        height: 800,
+      })),
+    [flatImages, hotelName]
+  );
+
   const openLightbox = useCallback((globalIndex: number) => {
     setActiveIndex(globalIndex);
     setLightboxOpen(true);
@@ -64,7 +76,7 @@ export default function CategorizedHeroGallery({
   return (
     <>
       {/* ─── Category-grouped grid ─── */}
-      <div className="w-full space-y-6">
+      <div className="w-full space-y-8">
         {Array.from(grouped.entries()).map(([category, categoryImages]) => (
           <section key={category} aria-labelledby={`category-${category}`}>
             {/* Category label */}
@@ -76,26 +88,27 @@ export default function CategorizedHeroGallery({
             </h3>
 
             {/* Responsive grid: 1 col mobile, 2 cols tablet, 3 cols desktop */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {categoryImages.map((img) => {
                 const currentGlobalIdx = globalIdx++;
                 return (
                   <button
                     key={`${img.url}-${currentGlobalIdx}`}
                     onClick={() => openLightbox(currentGlobalIdx)}
-                    className="relative aspect-[4/3] overflow-hidden rounded-lg cursor-pointer group bg-muted"
+                    className="relative aspect-[4/3] overflow-hidden rounded-[var(--radius-squircle-lg)] cursor-pointer group bg-muted"
                     aria-label={`${CATEGORY_DISPLAY_ES[category]} — foto ${currentGlobalIdx + 1} de ${hotelName}`}
                   >
                     <GalleryImage
                       src={img.url}
                       alt={img.alt || `${hotelName} — ${CATEGORY_DISPLAY_ES[category]}`}
                       fill
-                      className="object-contain transition-transform duration-500 group-hover:scale-105"
+                      className="object-contain motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out group-hover:motion-safe:scale-105"
                       sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                       quality={80}
+                      loading="lazy"
                     />
                     {/* Hover overlay */}
-                    <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/[0.05] transition-colors" />
+                    <div className="absolute inset-0 bg-foreground/0 group-hover:bg-foreground/[0.05] motion-safe:transition-colors motion-safe:duration-200" />
                   </button>
                 );
               })}
@@ -106,12 +119,7 @@ export default function CategorizedHeroGallery({
 
       {/* ─── Lightbox ─── */}
       <GalleryLightbox
-        slides={flatImages.map((img) => ({
-          src: img.url,
-          alt: img.alt || hotelName,
-          width: 1200,
-          height: 800,
-        }))}
+        slides={lightboxSlides}
         open={lightboxOpen}
         openIndex={activeIndex}
         onClose={() => setLightboxOpen(false)}
