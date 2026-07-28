@@ -235,12 +235,12 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
         {/* Si hay mas de las que mostramos, overlay "Ver todas" */}
         {totalDisplay > (totalDisplay >= 6 ? 6 : 4) && (
           <button
-            onClick={() => { setActiveIndex(totalDisplay >= 6 ? 6 : 4); setLightboxOpen(true); }}
+            onClick={() => { setActiveIndex(0); setLightboxOpen(true); }}
             className="relative overflow-hidden cursor-pointer group/btn"
             aria-label={t('ota.heroGallery.viewAllPhotosOf', { count: images.length, hotelName })}
           >
             <GalleryImage
-              src={getImageSizeUrl(displayImages[totalDisplay >= 6 ? 6 : 4].url, 'thumb')}
+              src={getImageSizeUrl(displayImages[totalDisplay >= 6 ? 5 : 3].url, 'thumb')}
               alt={t('ota.heroGallery.viewAllPhotosAlt')}
               fill
               className="object-cover brightness-50"

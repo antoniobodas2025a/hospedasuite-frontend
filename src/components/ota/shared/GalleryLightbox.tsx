@@ -38,6 +38,7 @@ interface GalleryLightboxProps {
  * - Fullscreen con zoom y pan
  * - Swipe táctil nativo
  * - Navegación con teclado (flechas, ESC)
+ * - Botones de navegación prev/next visibles
  * - Accesibilidad WCAG 2.1 AA
  * - Lazy loading de imágenes
  * - Estilos Liquid Glass
@@ -84,6 +85,8 @@ export default function GalleryLightbox({
   useEffect(() => {
     if (!open || slideData.length === 0) return;
 
+    let pswpInstance: any = null;
+
     // Inicializar PhotoSwipe
     const lightbox = new PhotoSwipeLightbox({
       dataSource: slideData,
@@ -99,7 +102,6 @@ export default function GalleryLightbox({
       pinchToClose: false,
       loop: slideData.length > 1,
       zoom: true,
-      // Custom animation timing for smoother transitions
       showAnimationDuration: 300,
       hideAnimationDuration: 250,
     });
@@ -110,73 +112,126 @@ export default function GalleryLightbox({
     });
 
     lightbox.on('change', () => {
-      const pswp = lightbox.pswp;
-      if (pswp && onViewSlide) {
-        onViewSlide(pswp.currIndex);
+      if (pswpInstance && onViewSlide) {
+        onViewSlide(pswpInstance.currIndex);
       }
     });
 
-    lightbox.init();
-    lightboxRef.current = lightbox;
+    // Agregar botones de navegación custom después de que PhotoSwipe se inicialice
+    lightbox.on('afterInit', () => {
+      pswpInstance = lightbox.pswp;
+      if (!pswpInstance || !pswpInstance.element) return;
 
-    // Agregar flechas de navegación UI (PhotoSwipe 5 no las incluye por defecto)
-    lightbox.on('uiRegister', () => {
-      const pswp = lightbox.pswp;
-      if (!pswp) return;
+      const pswpElement = pswpInstance.element;
 
-      // Botón Previous — 44px min touch target for WCAG 2.1 AA
+      // Crear contenedor para los botones
+      const navContainer = document.createElement('div');
+      navContainer.className = 'pswp__custom-nav';
+      navContainer.style.cssText = `
+        position: absolute;
+        top: 50%;
+        left: 0;
+        right: 0;
+        transform: translateY(-50%);
+        display: flex;
+        justify-content: space-between;
+        padding: 0 16px;
+        pointer-events: none;
+        z-index: 60;
+      `;
+
+      // Botón Previous
       const prevButton = document.createElement('button');
-      prevButton.className =
-        'pswp__button pswp__button--arrow pswp__button--arrow--prev';
+      prevButton.className = 'pswp__custom-nav-btn pswp__custom-nav-btn--prev';
       prevButton.setAttribute('aria-label', 'Imagen anterior');
       prevButton.setAttribute('type', 'button');
-      prevButton.style.cssText =
-        'min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;position:absolute;left:8px;top:50%;transform:translateY(-50%);z-index:50;padding:10px;background:rgba(0,0,0,0.5);border-radius:50%;border:none;cursor:pointer;color:white;transition:background 0.2s';
+      prevButton.style.cssText = `
+        pointer-events: auto;
+        width: 48px;
+        height: 48px;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: white;
+      `;
       prevButton.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="15 18 9 12 15 6"></polyline>
         </svg>
       `;
-      prevButton.addEventListener('click', () => {
-        pswp.prev();
+      prevButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        pswpInstance.prev();
       });
       prevButton.addEventListener('mouseenter', () => {
-        prevButton.style.background = 'rgba(0,0,0,0.7)';
+        prevButton.style.background = 'rgba(0, 0, 0, 0.8)';
+        prevButton.style.transform = 'scale(1.08)';
       });
       prevButton.addEventListener('mouseleave', () => {
-        prevButton.style.background = 'rgba(0,0,0,0.5)';
+        prevButton.style.background = 'rgba(0, 0, 0, 0.6)';
+        prevButton.style.transform = 'scale(1)';
       });
 
-      // Botón Next — 44px min touch target for WCAG 2.1 AA
+      // Botón Next
       const nextButton = document.createElement('button');
-      nextButton.className =
-        'pswp__button pswp__button--arrow pswp__button--arrow--next';
+      nextButton.className = 'pswp__custom-nav-btn pswp__custom-nav-btn--next';
       nextButton.setAttribute('aria-label', 'Imagen siguiente');
       nextButton.setAttribute('type', 'button');
-      nextButton.style.cssText =
-        'min-width:44px;min-height:44px;display:flex;align-items:center;justify-content:center;position:absolute;right:8px;top:50%;transform:translateY(-50%);z-index:50;padding:10px;background:rgba(0,0,0,0.5);border-radius:50%;border:none;cursor:pointer;color:white;transition:background 0.2s';
+      nextButton.style.cssText = `
+        pointer-events: auto;
+        width: 48px;
+        height: 48px;
+        min-width: 44px;
+        min-height: 44px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        color: white;
+      `;
       nextButton.innerHTML = `
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <polyline points="9 18 15 12 9 6"></polyline>
         </svg>
       `;
-      nextButton.addEventListener('click', () => {
-        pswp.next();
+      nextButton.addEventListener('click', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        pswpInstance.next();
       });
       nextButton.addEventListener('mouseenter', () => {
-        nextButton.style.background = 'rgba(0,0,0,0.7)';
+        nextButton.style.background = 'rgba(0, 0, 0, 0.8)';
+        nextButton.style.transform = 'scale(1.08)';
       });
       nextButton.addEventListener('mouseleave', () => {
-        nextButton.style.background = 'rgba(0,0,0,0.5)';
+        nextButton.style.background = 'rgba(0, 0, 0, 0.6)';
+        nextButton.style.transform = 'scale(1)';
       });
 
-      // Agregar botones al DOM de PhotoSwipe
-      const wrapper = pswp.element?.querySelector('.pswp__wrapper');
-      if (wrapper) {
-        wrapper.appendChild(prevButton);
-        wrapper.appendChild(nextButton);
-      }
+      // Agregar botones al contenedor
+      navContainer.appendChild(prevButton);
+      navContainer.appendChild(nextButton);
+
+      // Agregar contenedor al lightbox
+      pswpElement.appendChild(navContainer);
     });
+
+    lightbox.init();
+    lightboxRef.current = lightbox;
 
     // Cleanup
     return () => {
