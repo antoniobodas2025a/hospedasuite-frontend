@@ -71,7 +71,7 @@ export default function RoomGallery({
 								className="object-contain"
 								sizes="100vw"
 								quality={90}
-								priority={i === 0}
+								preload={i === 0}
 								loading={i === 0 ? "eager" : "lazy"}
 								placeholder={img.blurDataURL ? "blur" : undefined}
 								blurDataURL={img.blurDataURL}
@@ -121,7 +121,7 @@ export default function RoomGallery({
 					alt={images[0]?.alt ?? roomName}
 					fill
 					className="object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out group-hover:motion-safe:scale-105"
-					priority
+					preload
 					sizes="100vw"
 					quality={85}
 					placeholder={images[0]?.blurDataURL || blurDataURL ? "blur" : undefined}

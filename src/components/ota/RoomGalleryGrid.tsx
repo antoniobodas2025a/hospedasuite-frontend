@@ -99,7 +99,7 @@ export default function RoomGalleryGrid({
 						alt={images[0].alt ?? roomName}
 						fill
 						className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
-						priority
+						preload
 						sizes="100vw"
 						quality={85}
 						placeholder={images[0].blurDataURL || blurDataURL ? "blur" : undefined}
@@ -137,18 +137,18 @@ export default function RoomGalleryGrid({
 							transition={heroTransition}
 							className="absolute inset-0"
 						>
-							<GalleryImage
-								src={images[0].url}
-								alt={images[0].alt ?? roomName}
-								fill
-								className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
-								priority
-								sizes="100vw"
-								quality={85}
-								placeholder={images[0].blurDataURL || blurDataURL ? "blur" : undefined}
-								blurDataURL={images[0].blurDataURL || blurDataURL}
-								onLoad={() => markLoaded(0)}
-							/>
+						<GalleryImage
+							src={images[0].url}
+							alt={images[0].alt ?? roomName}
+							fill
+							className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
+							preload
+							sizes="100vw"
+							quality={85}
+							placeholder={images[0].blurDataURL || blurDataURL ? "blur" : undefined}
+							blurDataURL={images[0].blurDataURL || blurDataURL}
+							onLoad={() => markLoaded(0)}
+						/>
 						</motion.div>
 						<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
 					</button>
@@ -228,18 +228,18 @@ export default function RoomGalleryGrid({
 						transition={heroTransition}
 						className="absolute inset-0"
 					>
-						<GalleryImage
-							src={images[0].url}
-							alt={images[0].alt ?? roomName}
-							fill
-							className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
-							priority
-							sizes="50vw"
-							quality={85}
-							placeholder={images[0].blurDataURL || blurDataURL ? "blur" : undefined}
-							blurDataURL={images[0].blurDataURL || blurDataURL}
-							onLoad={() => markLoaded(0)}
-						/>
+					<GalleryImage
+						src={images[0].url}
+						alt={images[0].alt ?? roomName}
+						fill
+						className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
+						preload
+						sizes="50vw"
+						quality={85}
+						placeholder={images[0].blurDataURL || blurDataURL ? "blur" : undefined}
+						blurDataURL={images[0].blurDataURL || blurDataURL}
+						onLoad={() => markLoaded(0)}
+					/>
 					</motion.div>
 					<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
 				</button>

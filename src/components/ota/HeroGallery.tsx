@@ -105,7 +105,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
             className="object-cover motion-safe:transition-transform motion-safe:duration-300 motion-safe:ease-out group-hover:motion-safe:scale-105"
             sizes="(max-width: 768px) 100vw, 100vw"
             quality={85}
-            priority
+            preload
             placeholder={blurs?.gallery_blurs?.[0]?.blur ? 'blur' : undefined}
             blurDataURL={blurs?.gallery_blurs?.[0]?.blur}
           />
@@ -130,7 +130,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
                 className="object-cover transition-transform duration-700 group-hover/btn:scale-105"
                 sizes="(max-width: 768px) 100vw, 50vw"
                 quality={i === 0 ? 85 : 75}
-                priority={i === 0}
+                preload={i === 0}
                 placeholder={i === 0 && blurs?.gallery_blurs?.[0]?.blur ? 'blur' : undefined}
                 blurDataURL={i === 0 ? blurs?.gallery_blurs?.[0]?.blur : undefined}
               />
@@ -156,7 +156,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
               className="object-cover transition-transform duration-700 group-hover/btn:scale-105"
               sizes="(max-width: 768px) 100vw, 66vw"
               quality={85}
-              priority
+              preload
               placeholder={blurs?.gallery_blurs?.[0]?.blur ? 'blur' : undefined}
               blurDataURL={blurs?.gallery_blurs?.[0]?.blur}
             />
@@ -208,7 +208,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
             className="object-cover transition-transform duration-700 group-hover/btn:scale-105"
             sizes={totalDisplay >= 6 ? '(max-width: 768px) 100vw, 66vw' : '(max-width: 768px) 100vw, 50vw'}
             quality={85}
-            priority
+            preload
             placeholder={blurs?.gallery_blurs?.[0]?.blur ? 'blur' : undefined}
             blurDataURL={blurs?.gallery_blurs?.[0]?.blur}
           />
@@ -282,7 +282,7 @@ export default function HeroGallery({ images, hotelName, activityMessages, blurs
               className="object-cover motion-safe:transition-opacity motion-safe:duration-300 motion-safe:ease-out"
               sizes="100vw"
               quality={85}
-              priority
+              preload
               placeholder={blurs?.gallery_blurs?.[mobileIndex]?.blur ? 'blur' : undefined}
               blurDataURL={blurs?.gallery_blurs?.[mobileIndex]?.blur}
             />

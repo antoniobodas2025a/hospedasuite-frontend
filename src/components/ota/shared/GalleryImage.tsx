@@ -13,7 +13,7 @@ interface GalleryImageProps {
   fill?: boolean;
   className?: string;
   blurDataURL?: string;
-  priority?: boolean;
+  preload?: boolean;
   onClick?: () => void;
   sizes?: string;
   quality?: number;
@@ -52,7 +52,7 @@ export default function GalleryImage({
   fill = false,
   className,
   blurDataURL,
-  priority = false,
+  preload = false,
   onClick,
   sizes,
   quality = 75,
@@ -150,8 +150,8 @@ export default function GalleryImage({
         )}
         sizes={sizes}
         quality={quality}
-        priority={priority}
-        loading={loading || (priority ? 'eager' : 'lazy')}
+        preload={preload}
+        loading={loading || (preload ? 'eager' : 'lazy')}
         placeholder={placeholder || (blurDataURL ? 'blur' : undefined)}
         blurDataURL={blurDataURL}
         onLoad={handleLoad}
