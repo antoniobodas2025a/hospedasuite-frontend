@@ -760,6 +760,93 @@
 }
 
 /* ====================================================
+   SHIMMER — Skeleton loading sweep
+   ==================================================== */
+@keyframes shimmer {
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+.shimmer-sweep {
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.12) 50%,
+    transparent 100%
+  );
+  animation: shimmer 1.8s ease-in-out infinite;
+  will-change: transform;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .shimmer-sweep {
+    animation: none;
+    opacity: 0.15;
+  }
+}
+
+/* ====================================================
+   PHOTOSWIPE THUMBNAIL STRIP — Bottom navigation
+   ==================================================== */
+.pswp__thumbnail-strip {
+  position: absolute;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 8px;
+  z-index: 100;
+  padding: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(12px) saturate(150%);
+  -webkit-backdrop-filter: blur(12px) saturate(150%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  max-width: calc(100vw - 40px);
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.pswp__thumbnail-strip::-webkit-scrollbar {
+  display: none;
+}
+
+.pswp__thumbnail {
+  width: 60px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  cursor: pointer;
+  opacity: 0.6;
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+  flex-shrink: 0;
+  border: 2px solid transparent;
+}
+
+.pswp__thumbnail:hover {
+  opacity: 0.85;
+  transform: scale(1.05);
+}
+
+.pswp__thumbnail--active {
+  opacity: 1;
+  border-color: white;
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.2), 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 640px) {
+  .pswp__thumbnail-strip {
+    bottom: 12px;
+    padding: 6px;
+    gap: 6px;
+  }
+  .pswp__thumbnail {
+    width: 48px;
+    height: 32px;
+  }
+}
+
+/* ====================================================
    UTILITY CLASSES
    ==================================================== */
 

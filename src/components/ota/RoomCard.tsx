@@ -132,7 +132,11 @@ function RoomCardInner({
       <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl transition-all duration-500 group-hover/card:scale-[1.01]">
 
         {/* ZONA VISUAL (Atraccion) */}
-        <div className="w-full md:w-72 aspect-[3/4] md:aspect-auto md:h-full md:min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner">
+        <motion.div
+          layoutId={`room-image-${room.id}`}
+          className="w-full md:w-72 aspect-[3/4] md:aspect-auto md:h-full md:min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner"
+          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+        >
           <Image
             src={getImageSizeUrl(coverImage, 'card')}
             alt={room.name}
@@ -198,7 +202,7 @@ function RoomCardInner({
               </motion.div>
             )}
           </div>
-        </div>
+        </motion.div>
 
         {/* ZONA LOGICA Y EMOCIONAL (Retencion y Cierre) */}
         <div className="flex-1 flex flex-col justify-between py-2 pr-2">

@@ -20,6 +20,8 @@ interface GalleryImageProps {
   placeholder?: 'blur' | 'empty';
   loading?: 'lazy' | 'eager';
   objectFit?: 'cover' | 'contain';
+  /** Called when the image finishes loading successfully */
+  onLoad?: () => void;
 }
 
 /**
@@ -57,6 +59,7 @@ export default function GalleryImage({
   placeholder,
   loading,
   objectFit = 'cover',
+  onLoad: onLoadProp,
 }: GalleryImageProps) {
   const t = useTranslations();
   const [isLoading, setIsLoading] = useState(true);
@@ -67,7 +70,8 @@ export default function GalleryImage({
   // so they don't block user interactions
   const handleLoad = useCallback(() => {
     startTransition(() => setIsLoading(false));
-  }, []);
+    onLoadProp?.();
+  }, [onLoadProp]);
 
   const handleError = useCallback(() => {
     startTransition(() => {
