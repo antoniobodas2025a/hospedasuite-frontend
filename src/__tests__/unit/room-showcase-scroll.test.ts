@@ -48,7 +48,7 @@ describe("RoomShowcaseModal — Scroll Layout Immunity", () => {
       // The gallery wrapper should NOT have shrink-0
       // It should be part of the natural scroll flow
       const galleryWrapperMatch = mobileBlock.match(
-        /Galeria compacta[\s\S]*?<div\s+className="([^"]*)"[^>]*>\s*<RoomGallery/,
+        /Galeria — ahora con grid[\s\S]*?<div\s+className="([^"]*)"[^>]*>\s*<RoomGalleryGrid/,
       );
       expect(galleryWrapperMatch).not.toBeNull();
 
@@ -157,12 +157,12 @@ describe("RoomShowcaseModal — Scroll Layout Immunity", () => {
       // Desktop uses a two-panel layout where gallery is in its own panel
       // shrink-0 is correct there — only mobile needs the fix
       const desktopBlock = source.slice(
-        source.indexOf("DESKTOP: full scroll"),
+        source.indexOf("DESKTOP: 2-column grid"),
         source.indexOf("MOBILE/ TABLET"),
       );
 
       const desktopGalleryMatch = desktopBlock.match(
-        /Galeria — scrolls[\s\S]*?<div\s+className="([^"]*)"[^>]*>\s*<RoomGallery/,
+        /Columna izquierda: Galería[\s\S]*?<div\s+className="([^"]*)"[^>]*>\s*<RoomGalleryGrid/,
       );
       expect(desktopGalleryMatch).not.toBeNull();
 

@@ -216,8 +216,10 @@ describe("AC9 — RoomShowcaseModal uses imported GlassCard (T3)", () => {
 	});
 
 	it("uses GlassCard as JSX element (imported)", () => {
-		// The imported GlassCard should be rendered via <GlassCard ...>
-		expect(roomShowcase).toMatch(/<GlassCard/);
+		// RoomInfoPanel (used by RoomShowcaseModal) should use imported GlassCard
+		const roomInfoPanel = readOtaComponent("RoomInfoPanel.tsx");
+		expect(roomInfoPanel).toMatch(/<GlassCard/);
+		expect(roomInfoPanel).not.toMatch(/function GlassCard/);
 	});
 });
 
