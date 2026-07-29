@@ -337,7 +337,8 @@
       "photoCount": "{count, plural, one {foto} other {fotos}}",
       "goToImage": "Ir a imagen {index}",
       "prevImage": "Imagen anterior",
-      "nextImage": "Imagen siguiente"
+      "nextImage": "Imagen siguiente",
+      "viewAllPhotos": "Ver todas las fotos"
     }
   },
   "onboarding": {

@@ -16,7 +16,7 @@ import { calculateTotalWithTax, DEFAULT_TAX_RATE } from "@/lib/pricing";
 import { format, parseISO } from "date-fns";
 import type { Room, GalleryItem } from "@/types";
 import { GlassCard } from "@/components/ui/glass";
-import RoomGallery from "./RoomGallery";
+import RoomGalleryGrid from "./RoomGalleryGrid";
 import { RoomInfoPanel } from "./RoomInfoPanel";
 import { useSearchParams } from "next/navigation";
 import { useTranslations, useLocale } from "next-intl";
@@ -208,10 +208,9 @@ export function RoomShowcaseModal({
 					{/* Columna izquierda: Galería (scrollable) */}
 					<div className="flex flex-col overflow-y-auto bg-foreground">
 						<div className="shrink-0 p-4">
-							<RoomGallery
+							<RoomGalleryGrid
 								images={images}
 								roomName={room.name ?? t("ota.showcase.fallbackRoom")}
-								variant="compact"
 							/>
 						</div>
 					</div>
@@ -286,12 +285,11 @@ export function RoomShowcaseModal({
 				<div className="lg:hidden flex flex-col flex-1 overflow-hidden bg-gradient-to-b from-muted/80 to-background/60">
 					{/* Scroll unificado: galería + amenidades + resumen (Miller's Law: 3 chunks, 1 scroll) */}
 					<div className="flex-1 overflow-y-auto custom-scrollbar">
-						{/* Galeria compacta — ahora dentro del flujo de scroll */}
+						{/* Galeria — ahora con grid asimétrico */}
 						<div className="p-2">
-							<RoomGallery
+							<RoomGalleryGrid
 								images={images}
 								roomName={room.name ?? t("ota.showcase.fallbackRoom")}
-								variant="compact"
 							/>
 						</div>
 
