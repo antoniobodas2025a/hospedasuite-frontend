@@ -65,7 +65,7 @@ export async function getApprovedTemplates(type?: string, locale?: string): Prom
     const supabase = await createClient();
     let query = supabase
       .from('community_templates')
-      .select('*')
+      .select('id, type, content, locale, propertyType, status, source, createdAt, updatedAt, hotelName, curatedBy, curatedAt, rejectionReason')
       .eq('status', 'approved');
 
     if (type) query = query.eq('type', type);
@@ -108,7 +108,7 @@ export async function getPendingTemplates(): Promise<CommunityTemplate[]> {
     const supabase = await createClient();
     const { data } = await supabase
       .from('community_templates')
-      .select('*')
+      .select('id, type, content, locale, propertyType, status, source, createdAt, updatedAt, hotelName, curatedBy, curatedAt, rejectionReason')
       .eq('status', 'pending')
       .order('createdAt', { ascending: false });
 
@@ -235,7 +235,7 @@ export async function getPendingAmenitySuggestions(): Promise<AmenitySuggestion[
     const supabase = await createClient();
     const { data } = await supabase
       .from('amenity_suggestions')
-      .select('*')
+      .select('id, name, description, locale, category, suggestedIcon, status, hotelName, created_at, updated_at')
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
@@ -281,7 +281,7 @@ export async function getApprovedAmenitySuggestions(): Promise<AmenitySuggestion
     const supabase = await createClient();
     const { data } = await supabase
       .from('amenity_suggestions')
-      .select('*')
+      .select('id, name, description, locale, category, suggestedIcon, status, hotelName, created_at, updated_at')
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
@@ -412,7 +412,7 @@ export async function generateRegistryMergeCode() {
     const supabase = await createClient();
     const { data: approved } = await supabase
       .from('amenity_suggestions')
-      .select('*')
+      .select('id, name, description, locale, category, suggestedIcon, status, hotelName, created_at, updated_at, merged_id')
       .eq('status', 'approved')
       .is('merged_id', null)
       .order('created_at', { ascending: true });

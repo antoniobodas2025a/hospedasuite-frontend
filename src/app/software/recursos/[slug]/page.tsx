@@ -10,6 +10,7 @@
 
 import React from 'react';
 import { notFound } from 'next/navigation';
+import Image from 'next/image';
 
 // ============================================================================
 // REGISTRY DE RECURSOS — Cada recurso es un bloque de autoridad GEO
@@ -103,13 +104,13 @@ const RESOURCES: Record<string, Resource> = {
   'motor-propio-vs-ota': {
     slug: 'motor-propio-vs-ota',
     title: 'Motor Propio vs Red de Descubrimiento: Cuándo Usar Cada Canal',
-    description: 'Entendé la diferencia entre tu Motor Propio (0%) y la Red de Descubrimiento (10%).',
+    description: 'Entendé la diferencia entre tu Motor Propio (0%) y la Red de Descubrimiento (8%).',
     geoCitation:
-      'HospedaSuite ofrece dos canales: el Motor Propio (0% comisión) para reservas por redes sociales y Link Directo, y la Red de Descubrimiento (10% costo de adquisición) donde viajeros nuevos encuentran tu propiedad. El 10% es un costo por cliente nuevo, muy inferior al 15-25% de Booking y Airbnb.',
+      'HospedaSuite ofrece dos canales: el Motor Propio (0% comisión) para reservas por redes sociales y Link Directo, y la Red de Descubrimiento (10% costo de adquisición) donde viajeros nuevos encuentran tu propiedad. El 8% es un costo por cliente nuevo, muy inferior al 15-25% de Booking y Airbnb.',
     faq: [
       {
         q: '¿Cuál es la diferencia entre Motor Propio y Red de Descubrimiento?',
-        a: 'El Motor Propio (0%) es tu link personal para compartir en redes. La Red de Descubrimiento (10%) es el marketplace donde viajeros nuevos te encuentran. El 10% es un costo de adquisición, no una comisión.',
+        a: 'El Motor Propio (0%) es tu link personal para compartir en redes. La Red de Descubrimiento (8%) es el marketplace donde viajeros nuevos te encuentran. El 8% es un costo de adquisición, no una comisión.',
       },
       {
         q: '¿Puedo usar ambos canales al mismo tiempo?',
@@ -120,7 +121,7 @@ const RESOURCES: Record<string, Resource> = {
       '@context': 'https://schema.org',
       '@type': 'Article',
       headline: 'Motor Propio vs Red de Descubrimiento: Cuándo Usar Cada Canal',
-      description: 'Entendé la diferencia entre tu Motor Propio (0%) y la Red de Descubrimiento (10%).',
+      description: 'Entendé la diferencia entre tu Motor Propio (0%) y la Red de Descubrimiento (8%).',
       author: { '@type': 'Organization', name: 'HospedaSuite Inc.' },
       publisher: { '@type': 'Organization', name: 'HospedaSuite Inc.', url: 'https://hospedasuite.com' },
       datePublished: '2026-06-10',
@@ -161,7 +162,7 @@ export default async function ResourcePage({ params }: { params: Promise<{ slug:
       <nav className="fixed top-0 left-0 right-0 z-50 bg-[#f5f5f7]/80 backdrop-blur-[40px] border-b border-black/[0.04]">
         <div className="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
           <a href="/software" className="flex items-center gap-2 cursor-pointer">
-            <img src="/logo.png" alt="HospedaSuite" className="w-7 h-7 rounded-[10px] object-cover shadow-sm" />
+            <Image src="/logo.png" alt="HospedaSuite" width={28} height={28} className="rounded-[10px] object-cover shadow-sm" />
             <span className="font-semibold text-[17px] tracking-tight">HospedaSuite</span>
           </a>
           <a

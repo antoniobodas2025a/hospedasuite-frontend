@@ -7,7 +7,7 @@
 
 // Constantes declaradas — Soberanía del Dato
 export const TRADITIONAL_CHANNEL_RATE = 0.18; // 18% promedio canal tradicional (Booking, Airbnb)
-export const HOSPEDASUITE_DISCOVERY_RATE = 0.10; // 10% Red de Descubrimiento (costo de adquisición)
+export const HOSPEDASUITE_DISCOVERY_RATE = 0.08; // 8% Red de Descubrimiento (costo de adquisición)
 export const OWN_MOTOR_RATE = 0.0; // 0% Motor Propio (WhatsApp, IG, FB)
 export const PRO_PLAN_COST = 99000; // Plan Pro mensual en COP
 

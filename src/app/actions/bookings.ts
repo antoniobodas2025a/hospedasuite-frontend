@@ -295,7 +295,7 @@ export async function duplicateBookingAction(bookingId: string, newRoomId: strin
 
     const { data: original, error: fetchErr } = await supabaseAdmin
       .from('bookings')
-      .select('*')
+      .select('guest_id, status, total_price')
       .eq('id', bookingId)
       .eq('hotel_id', currentHotel.id)
       .single();

@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ChevronDown, ArrowLeft, Shield, FileText, CreditCard, Lock, Ban } from 'lucide-react';
 
 const SECTIONS = [
@@ -101,7 +102,7 @@ const SECTIONS = [
         </p>
         <ul className="list-disc list-inside space-y-1 mb-3 ml-2">
           <li>El costo del plan de suscripción contratado</li>
-          <li>Las comisiones por reservas generadas a través de la Channel (10%)</li>
+          <li>Las comisiones por reservas generadas a través de la Channel (8%)</li>
         </ul>
         <p>
           Las facturas se emiten en pesos colombianos (COP) y se envían al correo electrónico
@@ -134,7 +135,7 @@ const SECTIONS = [
               Channel HospedaSuite
             </span>
             <span>
-              <strong>10% de comisión</strong> sobre reservas generadas a través del motor de
+              <strong>8% de comisión</strong> sobre reservas generadas a través del motor de
               búsqueda global de HospedaSuite.
             </span>
           </li>
@@ -285,7 +286,7 @@ export default function TermsPage() {
             </span>
           </div>
           <div className="flex items-center gap-2">
-            <img src="/logo.png" alt="HospedaSuite" className="w-6 h-6 rounded-lg object-cover" />
+            <Image src="/logo.png" alt="HospedaSuite" width={24} height={24} className="rounded-lg object-cover" />
             <span className="text-[13px] font-semibold text-[#1d1d1f]/80 tracking-tight hidden sm:block">HospedaSuite</span>
           </div>
         </div>
@@ -372,7 +373,7 @@ export default function TermsPage() {
           <div className="mt-8 pt-6 border-t border-black/5">
             <p className="text-[13px] text-[#1d1d1f]/50 leading-relaxed">
               <strong className="text-[#1d1d1f]/70">Comisiones:</strong> 0% en canales propios
-              (WhatsApp, Link Directo, tu web) y 10% en reservas por Channel HospedaSuite. El hotel siempre recibe el 100% del
+              (WhatsApp, Link Directo, tu web) y 8% en reservas por Channel HospedaSuite. El hotel siempre recibe el 100% del
               dinero de las reservas en su Wompi.
             </p>
           </div>

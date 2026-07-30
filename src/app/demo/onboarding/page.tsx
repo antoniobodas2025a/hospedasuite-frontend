@@ -1,7 +1,7 @@
 import { Suspense } from 'react';
 import DemoOnboardingClient from './DemoOnboardingClient';
 
-export const dynamic = 'force-static';
+export const dynamic = 'force-dynamic';
 
 export default function DemoOnboardingPage() {
   return (

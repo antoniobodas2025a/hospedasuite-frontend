@@ -12,7 +12,7 @@ export interface BillingStatement {
   hotelName: string;
   planName: string;
   subscriptionFee: number;
-  platformFeesTotal: number; // Suma de Channel (10%)
+  platformFeesTotal: number; // Suma de Channel (8%)
   otaCommissionDetails: OtaCommission[]; // Detalle de cada comisión Channel
   totalDue: number;
   bookingsCount: number;
@@ -28,7 +28,7 @@ export async function getHotelBillingAction() {
     // 2. Extracción de Plan de Suscripción
     const { data: hotel, error: hotelError } = await supabaseAdmin
       .from('hotels')
-      .select('*')
+      .select('name, subscription_status, subscription_plan, trial_ends_at')
       .eq('id', currentHotel.id)
       .single();
 
@@ -52,17 +52,17 @@ export async function getHotelBillingAction() {
 
     if (bookingsError) throw new Error('Error al calcular el libro mayor de comisiones.');
 
-    // 5. Consolidación de Deuda + cálculo de comisiones Channel (10%)
+    // 5. Consolidación de Deuda + cálculo de comisiones Channel (8%)
     const platformFeesTotal = bookings.reduce((sum: number, b: any) => sum + Number(b.platform_fee || 0), 0);
 
-    // Detalle de comisiones Channel: 10% sobre total_price de reservas con source='ota'
+    // Detalle de comisiones Channel: 8% sobre total_price de reservas con source='ota'
     const otaCommissionDetails: OtaCommission[] = (bookings || [])
       .filter((b: any) => b.source === 'ota')
       .map((b: any) => ({
         booking_id: b.id,
         source: 'ota',
         total: Number(b.total_price || 0),
-        commission: Math.round(Number(b.total_price || 0) * 0.10 * 100) / 100,
+        commission: Math.round(Number(b.total_price || 0) * 0.08 * 100) / 100,
       }));
 
     const otaCommissionsTotal = otaCommissionDetails.reduce((sum, c) => sum + c.commission, 0);
@@ -152,7 +152,7 @@ export async function calculateMonthlyInvoiceAction(
     const colTime = new Date(colTimeStr);
     const startOfMonth = new Date(colTime.getFullYear(), colTime.getMonth(), 1, 0, 0, 0);
 
-    // 4. Comisiones Channel (reservas de source='ota' en el ciclo) — 10% sobre total_price
+    // 4. Comisiones Channel (reservas de source='ota' en el ciclo) — 8% sobre total_price
     const { data: otaBookings, error: otaError } = await supabaseAdmin
       .from('bookings')
       .select('id, total_price, source')
@@ -169,7 +169,7 @@ export async function calculateMonthlyInvoiceAction(
       booking_id: b.id,
       source: 'ota',
       total: Number(b.total_price || 0),
-      commission: Math.round(Number(b.total_price || 0) * 0.10 * 100) / 100,
+      commission: Math.round(Number(b.total_price || 0) * 0.08 * 100) / 100,
     }));
 
     const otaCommissions = otaCommissionDetails.reduce((sum, c) => sum + c.commission, 0);
@@ -295,7 +295,7 @@ export async function getInvoiceHistoryAction(
   try {
     const { data, error } = await supabaseAdmin
       .from('billing_invoices')
-      .select('*')
+      .select('id, period_start, period_end, plan_fee, ota_commissions_total, ota_commissions, upsell_commissions, total, status, wompi_reference, paid_at, created_at')
       .eq('hotel_id', hotelId)
       .order('period_start', { ascending: false });
 
