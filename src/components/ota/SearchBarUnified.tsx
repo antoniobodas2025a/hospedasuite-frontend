@@ -9,6 +9,7 @@ import {
 } from "react";
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
+import dynamic from "next/dynamic";
 import { useScrollLock } from "@/hooks/useScrollLock";
 import {
 	Calendar as CalendarIcon,
@@ -26,12 +27,28 @@ import {
 	springBounce,
 } from "@/lib/mac2026/spring";
 import { GlassPanel } from "@/components/ui/glass";
-import GuestSelector from "@/components/ota/GuestSelector";
-import LocationAutocomplete from "@/components/ota/LocationAutocomplete";
 import "react-day-picker/dist/style.css";
 
 import { useTranslations, useLocale } from "next-intl";
 import { getDateFnsLocale } from "@/lib/date-locale";
+
+// Code splitting: LocationAutocomplete no es crítico para el render inicial
+const LocationAutocomplete = dynamic(
+  () => import("@/components/ota/LocationAutocomplete"),
+  {
+    ssr: false,
+    loading: () => <div className="h-10 bg-muted/30 rounded animate-pulse" />,
+  }
+);
+
+// Code splitting: GuestSelector no es crítico para el render inicial
+const GuestSelector = dynamic(
+  () => import("@/components/ota/GuestSelector"),
+  {
+    ssr: false,
+    loading: () => <div className="h-10 bg-muted/30 rounded animate-pulse" />,
+  }
+);
 
 interface SearchBarUnifiedProps {
 	onSearch?: (filters: {

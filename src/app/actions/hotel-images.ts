@@ -4,6 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { getPresignedReadUrl, getPresignedUploadUrl, R2_PUBLIC_URL } from '@/lib/r2-client';
 import { CATEGORY_PRIORITY, IMAGE_CATEGORIES } from '@/lib/image-category';
 import { validateNoJargon } from '@/lib/jargon-guard';
+import { revalidateTag } from 'next/cache';
 import type { CategorizedImage, ImageCategory } from '@/types';
 
 /**
@@ -211,6 +212,9 @@ export async function uploadHotelImageAction(
       sort_order: data.sort_order,
       blur_data: data.blur_data,
     };
+
+    // 🔄 Invalidar cache de imágenes del hotel
+    revalidateTag(`hotel-images-${hotelId}`);
 
     return { success: true, data: categorized };
   } catch (error: any) {

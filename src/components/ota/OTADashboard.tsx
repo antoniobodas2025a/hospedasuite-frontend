@@ -56,9 +56,17 @@ import L from "leaflet";
 import { filterHotelsByBounds, BoundsFilterResult } from "@/lib/bounds-filter";
 import { getCachedCoords } from "@/lib/geo-cache";
 import { deserializeMapParams, serializeMapParams } from "@/lib/map-url-state";
-import SearchSuggestions, { type SearchSuggestion } from "./SearchSuggestions";
 import { fuzzySearch } from "@/lib/fuzzy-search";
 import { Globe } from "lucide-react";
+
+// Code splitting: SearchSuggestions no es crítico para el render inicial
+const SearchSuggestions = dynamic(
+  () => import("./SearchSuggestions").then(mod => ({ default: mod.default, SearchSuggestion: mod.SearchSuggestion })),
+  {
+    ssr: false,
+    loading: () => null,
+  }
+);
 
 const CATEGORIES = [
 	{
