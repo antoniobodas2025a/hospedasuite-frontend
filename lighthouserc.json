@@ -2,10 +2,11 @@
   "ci": {
     "collect": {
       "url": [
-        "http://localhost:3000/",
-        "http://localhost:3000/hotel/pietra",
-        "http://localhost:3000/book/pietra",
-        "http://localhost:3000/software"
+        "https://hospedasuite.com/",
+  "https://hospedasuite.com/hotel/pietra",
+  "https://hospedasuite.com/book/pietra",
+  "https://hospedasuite.com/software"
+
       ],
       "numberOfRuns": 3,
       "settings": {
