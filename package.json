@@ -11,7 +11,9 @@
     "test:watch": "vitest",
     "typecheck": "tsc --noEmit",
     "check:lockfile": "node scripts/check-lockfile.js",
-    "prepare": "husky"
+    "prepare": "husky",
+    "lighthouse": "lhci autorun",
+    "lighthouse:install": "npm install -g @lhci/cli"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1053.0",
