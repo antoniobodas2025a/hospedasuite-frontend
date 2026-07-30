@@ -72,12 +72,12 @@ export default function HotelCard({
 				alt={hotel.name}
 				fill
 				priority
-				unoptimized
 				className="object-cover transition-transform duration-700 group-hover:scale-110"
 				sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
-				quality={75}
+				quality={85}
 				placeholder={hotel.main_image_blur ? "blur" : undefined}
 				blurDataURL={hotel.main_image_blur}
+				fetchpriority="high"
 				onError={(e) => {
 					// Fallback: SVG placeholder — keeps layout stable on 404/500
 					(e.target as HTMLImageElement).src =
