@@ -61,7 +61,7 @@ import { Globe } from "lucide-react";
 
 // Code splitting: SearchSuggestions no es crítico para el render inicial
 const SearchSuggestions = dynamic(
-  () => import("./SearchSuggestions").then(mod => ({ default: mod.default, SearchSuggestion: mod.SearchSuggestion })),
+  () => import("./SearchSuggestions"),
   {
     ssr: false,
     loading: () => null,

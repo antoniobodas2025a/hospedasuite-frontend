@@ -239,7 +239,14 @@ export async function getPendingAmenitySuggestions(): Promise<AmenitySuggestion[
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
 
-    return (data || []) as AmenitySuggestion[];
+    // Map snake_case DB columns to camelCase interface
+    const mapped = (data || []).map((item: any) => ({
+      ...item,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    }));
+
+    return mapped as AmenitySuggestion[];
   } catch {
     return getAmenitiesFromFile('pending');
   }
@@ -285,7 +292,14 @@ export async function getApprovedAmenitySuggestions(): Promise<AmenitySuggestion
       .eq('status', 'approved')
       .order('created_at', { ascending: false });
 
-    return (data || []) as AmenitySuggestion[];
+    // Map snake_case DB columns to camelCase interface
+    const mapped = (data || []).map((item: any) => ({
+      ...item,
+      createdAt: item.created_at,
+      updatedAt: item.updated_at,
+    }));
+
+    return mapped as AmenitySuggestion[];
   } catch {
     return getAmenitiesFromFile('approved');
   }
@@ -426,12 +440,12 @@ export async function generateRegistryMergeCode() {
 
     for (const amenity of approved) {
       const id = amenity.name.toLowerCase().replace(/[^a-z0-9]/g, '_');
-      const icon = amenity.suggested_icon || 'Star';
+      const icon = amenity.suggestedIcon || 'Star';
       const label = amenity.name;
       const description = amenity.description ? `\n    storyTitle: '${label}',\n    storyDescription: '${(amenity.description || '').replace(/'/g, "\\'")}',` : '';
       const category = amenity.category === 'room' ? 'ROOM_AMENITY' : 'AMENITY';
 
-      code += `// Sugerido por: ${amenity.hotel_name || 'Anónimo'} | ${amenity.locale}\n`;
+      code += `// Sugerido por: ${amenity.hotelName || 'Anónimo'} | ${amenity.locale}\n`;
       code += `${category === 'ROOM_AMENITY' ? '  ' : ''}${id}: {\n`;
       code += `    id: '${id}',\n`;
       code += `    label: '${label.replace(/'/g, "\\'")}',\n`;

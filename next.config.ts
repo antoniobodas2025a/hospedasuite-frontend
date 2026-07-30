@@ -15,8 +15,8 @@ const nextConfig = {
 	images: {
 		formats: ["image/avif", "image/webp"] as ["image/avif", "image/webp"], // AVIF primero, fallback WebP
 		minimumCacheTTL: 31536000, // 1 año — imágenes no cambian
-		qualities: [75, 85, 90], // 75 default, 85 for hero/cover, 90 for room galleries
-		imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
+		qualities: [60, 75, 85, 90, 95], // 60 thumbnails, 75 default, 85 hero, 90 gallery, 95 premium
+		imageSizes: [16, 32, 48, 64, 96, 128, 192, 256, 384, 512, 768, 1024], // Tamaños granulares para mejor LCP
 		remotePatterns: [
 			{
 				protocol: "https",
