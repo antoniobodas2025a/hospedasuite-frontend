@@ -243,7 +243,7 @@ export async function deleteHotelAction(hotelId: string, ownerId: string | null 
     // 📸 Snapshot pre-borrado para auditoría
     const { data: hotelSnapshot } = await supabaseAdmin
       .from('hotels')
-      .select('*')
+      .select('id, name, slug, owner_id, created_at')
       .eq('id', hotelId)
       .single();
 
@@ -341,7 +341,7 @@ export async function cancelSubscriptionAction(
     // Snapshot pre-mutación
     const { data: current } = await supabaseAdmin
       .from('saas_subscriptions')
-      .select('*')
+      .select('id, cancel_at_period_end, status, current_period_end, plan_key')
       .eq('id', subscriptionId)
       .single();
 
@@ -395,7 +395,7 @@ export async function reactivateSubscriptionAction(
   try {
     const { data: current } = await supabaseAdmin
       .from('saas_subscriptions')
-      .select('*')
+      .select('id, cancel_at_period_end, status, current_period_end, plan_key')
       .eq('id', subscriptionId)
       .single();
 
@@ -451,7 +451,7 @@ export async function extendTrialAction(
   try {
     const { data: current } = await supabaseAdmin
       .from('saas_subscriptions')
-      .select('*')
+      .select('id, cancel_at_period_end, status, current_period_end, plan_key')
       .eq('id', subscriptionId)
       .single();
 
@@ -526,7 +526,7 @@ export async function changePlanAction(
 
     const { data: current } = await supabaseAdmin
       .from('saas_subscriptions')
-      .select('*')
+      .select('id, cancel_at_period_end, status, current_period_end, plan_key')
       .eq('id', subscriptionId)
       .single();
 

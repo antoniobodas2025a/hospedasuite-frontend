@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useRef } from 'react';
+import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { RoomSchema } from '@/lib/validations/inventory';
@@ -37,7 +38,7 @@ function SortableThumbnail({ id, img, index, onRemove }: { id: string; img: any;
       style={style}
       className="relative shrink-0 w-24 h-20 rounded-[var(--radius-squircle-md)] overflow-hidden border border-border group cursor-grab active:cursor-grabbing"
     >
-      <img src={img.url || img} className="w-full h-full object-cover" draggable={false} />
+      <Image src={img.url || img} alt="" fill className="object-cover" draggable={false} />
       {/* Drag handle */}
       <div
         {...attributes}

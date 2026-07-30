@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion } from 'framer-motion';
 import { MapPin, Star, Eye } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -84,7 +85,7 @@ export default function PropertyPreview() {
           {/* Identity card */}
           <div className="bg-black/40 p-4 rounded-[var(--radius-squircle-xl)] border border-white/5 space-y-2">
             {logoPreview && (
-              <img src={logoPreview} alt="Logo" className="h-8 object-contain mb-2" />
+              <Image src={logoPreview} alt="Logo" width={128} height={32} className="object-contain mb-2" />
             )}
             <p className="text-white font-bold text-base">{hotelIdentity.name || 'Sin nombre'}</p>
             <p className="text-zinc-500 text-xs">{hotelIdentity.city}{hotelIdentity.location ? `, ${hotelIdentity.location}` : ''}</p>

@@ -5,7 +5,9 @@ import Image from 'next/image';
 import { MapPin, CalendarDays, KeyRound, Users, Star, ShieldCheck, Zap } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
 
-export const dynamic = 'force-dynamic';
+// ISR: Revalidate cada 60 segundos para balance entre frescura y performance
+export const revalidate = 60;
+export const dynamicParams = true;
 
 interface HotelShowcasePageProps {
   params: Promise<{ slug: string }>;

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Image from 'next/image';
 import { Menu, X, ArrowUpRight, Instagram } from 'lucide-react';
 import LeadCaptureModal from '@/components/public/LeadCaptureModal';
 import RoiSimulatorV2 from '@/components/public/RoiSimulatorV2';
@@ -71,7 +72,7 @@ export default function SoftwareClientShell({ children }: SoftwareClientShellPro
       `}>
         <div className="max-w-[980px] mx-auto px-6 h-14 flex items-center justify-between">
           <div className="flex items-center gap-2 cursor-pointer" onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}>
-            <img src="/logo.png" alt="HospedaSuite Logo" className="w-7 h-7 rounded-[10px] object-cover shadow-sm" />
+            <Image src="/logo.png" alt="HospedaSuite Logo" width={28} height={28} className="rounded-[10px] object-cover shadow-sm" />
             <span className="font-semibold text-[17px] tracking-tight hidden sm:block">HospedaSuite</span>
           </div>
 
@@ -191,7 +192,7 @@ export default function SoftwareClientShell({ children }: SoftwareClientShellPro
         <div className="max-w-[980px] mx-auto px-6">
           <div className="flex flex-col items-center gap-6">
             <div className="flex items-center gap-2 grayscale opacity-40 hover:grayscale-0 hover:opacity-100 transition-all duration-500">
-              <img src="/logo.png" alt="HospedaSuite Logo" className="w-6 h-6 rounded-[8px] object-cover" />
+              <Image src="/logo.png" alt="HospedaSuite Logo" width={24} height={24} className="rounded-[8px] object-cover" />
               <span className="font-semibold text-[15px] tracking-tight text-[#1d1d1f]">HospedaSuite</span>
             </div>
             

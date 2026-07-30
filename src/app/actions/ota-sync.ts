@@ -61,7 +61,7 @@ export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success
     // 2. Último sync log
     const { data: lastSync, error: lastSyncError } = await supabaseAdmin
       .from('ota_sync_log')
-      .select('*')
+      .select('id, hotel_id, rooms_synced, bookings_created, bookings_cancelled, bookings_unchanged, status, error_message, sync_source, executed_at, duration_ms')
       .eq('hotel_id', hotelId)
       .order('executed_at', { ascending: false })
       .limit(1)
@@ -75,7 +75,7 @@ export async function getOtaSyncStatusAction(hotelId: string): Promise<{ success
     // 3. Últimos 5 syncs
     const { data: recentSyncs, error: recentError } = await supabaseAdmin
       .from('ota_sync_log')
-      .select('*')
+      .select('id, hotel_id, rooms_synced, bookings_created, bookings_cancelled, bookings_unchanged, status, error_message, sync_source, executed_at, duration_ms')
       .eq('hotel_id', hotelId)
       .order('executed_at', { ascending: false })
       .limit(5);

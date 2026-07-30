@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import Image from 'next/image';
 import { motion, AnimatePresence } from 'framer-motion';
 import { UploadCloud, BedDouble, Bath, Maximize2, ChevronDown, ChevronUp, Droplets, ShowerHead, Mountain, Eye, EyeOff, Plus, X, Copy } from 'lucide-react';
 import { useTranslations } from 'next-intl';
@@ -377,7 +378,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
             >
               {room.imagePreviews.map((src, i) => (
                 <div key={i} className="relative group aspect-[4/3]">
-                  <img src={src} alt="" className="w-full h-full object-cover rounded-[var(--radius-squircle-md)] border border-white/10" />
+                  <Image src={src} alt="" fill className="object-cover rounded-[var(--radius-squircle-md)] border border-white/10" />
                   <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-[var(--radius-squircle-md)]" />
                   <button
                     type="button"

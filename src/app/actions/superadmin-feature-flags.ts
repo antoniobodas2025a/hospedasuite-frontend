@@ -49,7 +49,7 @@ export async function getFeatureFlagsAction(
   try {
     let query = supabaseAdmin
       .from('feature_flags')
-      .select('*')
+      .select('id, flag_key, flag_name, description, enabled, hotel_id, created_at, updated_at')
       .order('created_at', { ascending: false });
 
     if (hotelId !== undefined && hotelId !== null) {
@@ -160,7 +160,7 @@ export async function updateFeatureFlagAction(
     // Snapshot pre-mutation for audit
     const { data: currentFlag } = await supabaseAdmin
       .from('feature_flags')
-      .select('*')
+      .select('id, flag_key, flag_name, description, enabled, hotel_id, created_at, updated_at')
       .eq('id', id)
       .single();
 
@@ -215,7 +215,7 @@ export async function deleteFeatureFlagAction(
     // Snapshot pre-delete for audit
     const { data: flagSnapshot } = await supabaseAdmin
       .from('feature_flags')
-      .select('*')
+      .select('id, flag_key, flag_name, description, enabled, hotel_id, created_at, updated_at')
       .eq('id', id)
       .single();
 

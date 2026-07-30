@@ -198,7 +198,7 @@ export async function deleteLeadAction(
     // 📸 Snapshot pre-borrado para auditoría
     const { data: leadSnapshot } = await supabaseAdmin
       .from('hunted_leads')
-      .select('*')
+      .select('id, created_at, business_name, google_place_id, address, phone, rating, website, ai_pitch, city_search, status, notes, hotel_id')
       .eq('id', leadId)
       .single();
 

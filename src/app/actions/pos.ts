@@ -52,7 +52,7 @@ export async function getMenuAction() {
     const supabase = await createClient();
     const { data, error } = await supabase
       .from('menu_items')
-      .select('*')
+      .select('id, hotel_id, name, category, category_legacy, price, description, image_emoji, is_active')
       .eq('hotel_id', hotel.id)
       .order('category_legacy', { ascending: true });
 
