@@ -49,6 +49,8 @@ export default async function RootLayout({
       <head>
         <link rel="preconnect" href="https://auaqpomuivfhomlkvhju.supabase.co" />
         <link rel="preconnect" href={process.env.R2_PUBLIC_URL || "https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev"} />
+        <link rel="preconnect" href="https://www.googletagmanager.com" />
+        <link rel="preconnect" href="https://images.unsplash.com" />
       </head>
       <body className={geist.className}>
         {/* Gap D: Dark Funnel Analytics - GTM Container */}
