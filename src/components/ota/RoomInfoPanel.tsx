@@ -9,6 +9,7 @@ import { getDateFnsLocale } from "@/lib/date-locale";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
 import { AmenityGlass } from "./RoomShowcaseModal";
+import PriceBreakdown from "./PriceBreakdown";
 
 interface RoomInfoPanelProps {
 	room: Partial<Room> & { price_per_night?: number };
@@ -18,6 +19,7 @@ interface RoomInfoPanelProps {
 	isOverCapacity: boolean;
 	totalPrice: number;
 	nights: number;
+	taxRegime?: 'simplified' | 'responsible';
 	variant?: "desktop" | "mobile";
 	onAdjustGuests?: () => void;
 	onSeeLargerRooms?: () => void;
@@ -32,6 +34,7 @@ export function RoomInfoPanel({
 	isOverCapacity,
 	totalPrice,
 	nights,
+	taxRegime = 'simplified',
 	variant = "desktop",
 	onAdjustGuests,
 	onSeeLargerRooms,
@@ -210,25 +213,12 @@ export function RoomInfoPanel({
 					)}
 
 					{/* Desglose financiero */}
-					<div className="pt-3 border-t border-border/40">
-						<div className="flex justify-between items-center mb-1">
-							<span className="text-xs font-medium text-muted-foreground">
-								{t("ota.showcase.baseRate")} ({nights}{" "}
-								{t("ota.showcase.nights", { count: nights })})
-							</span>
-							<span className="text-sm font-bold text-foreground">
-								${totalPrice.toLocaleString()}
-							</span>
-						</div>
-						<div className="flex justify-between items-center">
-							<span className="text-xs font-medium text-muted-foreground">
-								{t("ota.showcase.taxesAndFees")}
-							</span>
-							<span className="text-[10px] font-bold bg-muted/60 text-muted-foreground px-2 py-0.5 rounded-full uppercase">
-								{t("ota.showcase.included")}
-							</span>
-						</div>
-					</div>
+					<PriceBreakdown
+						pricePerNight={room.price_per_night ?? room.price ?? 0}
+						nights={nights}
+						taxRegime={taxRegime}
+						showDetails={false}
+					/>
 				</div>
 			</GlassCard>
 		</div>

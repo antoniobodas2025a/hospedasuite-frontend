@@ -125,7 +125,7 @@ export default function SettingsStep() {
       {/* Section 4: Régimen Tributario */}
       <SectionCard
         icon={Banknote}
-        title="Régimen Tributario"
+        title="Régimen Fiscal"
         isOpen={openSection === 'tax'}
         onToggle={() => toggleSection('tax')}
       >
@@ -135,27 +135,28 @@ export default function SettingsStep() {
         <div className="grid grid-cols-2 gap-3">
           <button
             type="button"
-            onClick={() => updateSettings({ taxRate: 0 })}
-            className={`p-4 rounded-[var(--radius-squircle-lg)] border text-left transition-all ${
-              settings.taxRate === 0
-                ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
-                : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
+            onClick={() => updateSettings({ tax_regime: 'simplified' })}
+            className={`p-4 rounded-[var(--radius-squircle-lg)] border-2 text-left transition-all ${
+              settings.tax_regime === 'simplified'
+                ? 'border-indigo-500 bg-indigo-500/10'
+                : 'border-white/10 hover:border-white/20'
             }`}
           >
-            <p className="text-sm font-bold text-white">Simplificado</p>
-            <p className="text-[10px] text-zinc-500 mt-1">Sin IVA en precios</p>
+            <p className="text-sm font-bold text-white mb-1">Régimen Simplificado</p>
+            <p className="text-xs text-zinc-500">No cobras IVA al huésped</p>
           </button>
+          
           <button
             type="button"
-            onClick={() => updateSettings({ taxRate: 0.19 })}
-            className={`p-4 rounded-[var(--radius-squircle-lg)] border text-left transition-all ${
-              settings.taxRate === 0.19
-                ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
-                : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
+            onClick={() => updateSettings({ tax_regime: 'responsible' })}
+            className={`p-4 rounded-[var(--radius-squircle-lg)] border-2 text-left transition-all ${
+              settings.tax_regime === 'responsible'
+                ? 'border-indigo-500 bg-indigo-500/10'
+                : 'border-white/10 hover:border-white/20'
             }`}
           >
-            <p className="text-sm font-bold text-white">Ordinario</p>
-            <p className="text-[10px] text-zinc-500 mt-1">IVA 19% incluido</p>
+            <p className="text-sm font-bold text-white mb-1">Responsable de IVA</p>
+            <p className="text-xs text-zinc-500">Cobras 19% IVA adicional</p>
           </button>
         </div>
       </SectionCard>

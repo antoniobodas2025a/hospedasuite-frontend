@@ -49,6 +49,7 @@ export interface Hotel {
   primary_color?: string;
   cancellation_policy?: string;
   tax_rate?: number;
+  tax_regime?: 'simplified' | 'responsible';
   cover_photo_url?: string;
   main_image_url?: string;
   gallery_urls?: string[];

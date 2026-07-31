@@ -776,9 +776,10 @@ export interface Database {
        billing_cycle_start?: string
        date_paid?: string
        go_live?: boolean
-       go_live_at?: string
-        };
-        Insert: {
+        go_live_at?: string
+        tax_regime?: string
+         };
+         Insert: {
       id: string
       created_at?: string
       name: string
@@ -847,9 +848,10 @@ export interface Database {
        billing_cycle_start?: string
        date_paid?: string
        go_live?: boolean
-       go_live_at?: string
-        };
-        Update: {
+        go_live_at?: string
+        tax_regime?: string
+         };
+         Update: {
       id?: string
       created_at?: string
       name?: string
@@ -918,9 +920,10 @@ export interface Database {
        billing_cycle_start?: string
        date_paid?: string
        go_live?: boolean
-       go_live_at?: string
-        };
-        Relationships: [];
+        go_live_at?: string
+        tax_regime?: string
+         };
+         Relationships: [];
       };
       reviews: {
         Row: {

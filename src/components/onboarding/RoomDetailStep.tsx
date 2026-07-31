@@ -11,6 +11,7 @@ import { ROOM_AMENITY_REGISTRY, BATHROOM_AMENITY_REGISTRY, VIEW_AMENITY_REGISTRY
 import { generateBlurDataURL } from '@/lib/blur-generator';
 import AIPolicyAssistant from './AIPolicyAssistant';
 import GalleryPicker from './GalleryPicker';
+import PriceCalculator from '@/components/dashboard/PriceCalculator';
 
 const springs = {
   fast: { type: 'spring' as const, stiffness: 400, damping: 30, mass: 0.8 },
@@ -252,6 +253,17 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
             <span className="text-[10px] text-emerald-600">{t('currencyLabel')}</span>
           </div>
         </div>
+
+        {/* Price Calculator - shows when price > 0 */}
+        {room.price > 0 && (
+          <div className="mt-4">
+            <PriceCalculator
+              basePrice={room.price}
+              taxRegime="simplified"
+              compact
+            />
+          </div>
+        )}
 
         {/* Capacity + Beds inline */}
         <div className="grid grid-cols-2 gap-3">

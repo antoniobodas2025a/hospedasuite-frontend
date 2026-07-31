@@ -5,8 +5,9 @@ import { ShieldCheck, ArrowRight, ArrowLeft, User, Mail, Phone, CreditCard, Load
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPendingBookingAction } from '@/app/actions/bookings';
 import { Hotel, Room } from '@/types';
-import { calculateTaxAmount, DEFAULT_TAX_RATE } from '@/lib/pricing';
+import { calculateTaxAmount } from '@/lib/pricing';
 import { shakeHaptic, desaturateFeedback, springSnappy, springGentle } from '@/lib/mac2026/spring';
+import PriceBreakdown from '@/components/ota/PriceBreakdown';
 
 interface CheckoutFormProps {
   hotel: Hotel;
@@ -16,7 +17,6 @@ interface CheckoutFormProps {
   nights: number;
   basePrice: number;
   isOta: boolean;
-  taxRate?: number;
 }
 
 /**
@@ -41,7 +41,7 @@ function hashBookingKey(roomId: string, checkIn: string, checkOut: string): stri
  *
  * Upsells removed (R5): never had a revenue backend, zero revenue impact.
  */
-export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, basePrice, isOta, taxRate }: CheckoutFormProps) {
+export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, basePrice, isOta }: CheckoutFormProps) {
   const storageKey = hashBookingKey(room.id, checkIn, checkOut);
 
   const [step, setStep] = useState<1 | 2>(() => {
@@ -67,9 +67,10 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
   });
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Price coherence: use hotel's tax_rate for all displays
+  // Price coherence: use hotel's tax_regime for all displays
   const subtotal = basePrice;
-  const effectiveRate = taxRate ?? DEFAULT_TAX_RATE;
+  const taxRegime = hotel.tax_regime ?? 'simplified'; // backward compatibility
+  const effectiveRate = taxRegime === 'responsible' ? 0.19 : 0;
   const taxes = calculateTaxAmount(subtotal, effectiveRate);
   const grandTotal = subtotal + taxes;
   const hasTax = effectiveRate > 0;
@@ -348,20 +349,14 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                     <p className="font-bold">{nights} {nights === 1 ? 'Noche' : 'Noches'}</p>
                     <p className="text-xs text-background/40 mt-1">{checkIn} al {checkOut}</p>
                   </div>
-                  <p className="font-bold">${basePrice.toLocaleString()}</p>
                 </div>
-                {/* IVA breakdown — conditional on tax_rate */}
-                {hasTax && (
-                  <div className="flex justify-between items-start text-background/40">
-                    <p className="text-xs">IVA ({(effectiveRate * 100).toFixed(0)}%)</p>
-                    <p className="text-xs font-bold">${taxes.toLocaleString()}</p>
-                  </div>
-                )}
               </div>
-              <div className="flex justify-between items-end mb-8">
-                <p className="text-background/60">Total a Pagar</p>
-                <p className="text-3xl font-black">${grandTotal.toLocaleString()} <span className="text-sm text-background/40 font-medium">COP</span></p>
-              </div>
+              <PriceBreakdown
+                pricePerNight={Math.round(basePrice / nights)}
+                nights={nights}
+                taxRegime={taxRegime}
+                className="!bg-background/10 !border-background/20"
+              />
 
               {/* Error feedback — Mac 2026: organic haptic response */}
               <AnimatePresence>

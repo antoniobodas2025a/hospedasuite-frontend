@@ -487,13 +487,20 @@ export async function verifyBookingAction(bookingId: string) {
 
     const { data: booking, error } = await supabaseAdmin
       .from('bookings')
-      .select('id, status, total_price, check_in, check_out, source, guests(full_name, email), rooms(name), hotels(name, slug)')
+      .select('id, status, total_price, check_in, check_out, source, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_regime)')
       .eq('id', bookingId)
       .single();
 
     if (error || !booking) {
       return { success: false, error: 'Reserva no encontrada', status: 'not_found' };
     }
+
+    // Compute nights from check_in/check_out
+    const checkInDate = new Date(booking.check_in);
+    const checkOutDate = new Date(booking.check_out);
+    const nights = Math.max(1, Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24)));
+    const roomPrice = (booking.rooms as any[])?.[0]?.price ?? 0;
+    const taxRegime = (booking.hotels as any[])?.[0]?.tax_regime ?? 'simplified';
 
     return {
       success: true,
@@ -503,6 +510,9 @@ export async function verifyBookingAction(bookingId: string) {
         totalPrice: booking.total_price,
         checkIn: booking.check_in,
         checkOut: booking.check_out,
+        nights,
+        pricePerNight: roomPrice,
+        taxRegime: taxRegime as 'simplified' | 'responsible',
         guestName: (booking.guests as any[])?.[0]?.full_name,
         guestEmail: (booking.guests as any[])?.[0]?.email,
         roomName: (booking.rooms as any[])?.[0]?.name,

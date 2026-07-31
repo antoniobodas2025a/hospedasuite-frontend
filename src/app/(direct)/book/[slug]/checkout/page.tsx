@@ -29,7 +29,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
 
   const { data: hotel, error: hotelError } = await supabase
     .from('hotels')
-    .select('id, name, primary_color, cancellation_policy, location, main_image_url, tax_rate')
+    .select('id, name, primary_color, cancellation_policy, location, main_image_url, tax_rate, tax_regime')
     .eq('slug', slug)
     .single();
 
@@ -39,6 +39,9 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     console.error(`[AUDITORIA FATAL] Abortando: Hotel no encontrado para el slug "${slug}"`);
     notFound();
   }
+
+  // Fallback: si tax_regime no existe (migración pendiente), usar 'simplified'
+  const taxRegime = hotel.tax_regime ?? 'simplified';
 
   const { data: room, error: roomError } = await supabase
     .from('rooms')
@@ -72,14 +75,13 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
         <h1 className="text-3xl font-extrabold text-foreground mb-8 text-center">Completa tu Reserva</h1>
 
         <CheckoutForm
-          hotel={hotel}
+          hotel={{...hotel, tax_regime: taxRegime}}
           room={{...room, price: roomPrice}}
           checkIn={checkin}
           checkOut={checkout}
           nights={nights}
           basePrice={basePrice}
           isOta={isOta}
-          taxRate={hotel.tax_rate}
         />
 
       </div>

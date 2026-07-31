@@ -14,6 +14,7 @@ import { getPresignedUploadUrlAction } from '@/app/actions/settings';
 import { compressImage, generateBlurDataURL, uploadToR2 } from '@/lib/upload-utils';
 import { cn } from '@/lib/utils';
 import { ROOM_AMENITY_REGISTRY } from '@/lib/amenity-registry';
+import PriceCalculator from './PriceCalculator';
 import {
   X, Trash2, Copy, RefreshCw, Image as ImageIcon, Building2, Plus, UploadCloud, Loader2, GripVertical
 } from 'lucide-react';
@@ -238,6 +239,16 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                         <input type="number" {...register('capacity', { valueAsNumber: true })} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono" />
                       </div>
                     </div>
+
+                    {/* Price Calculator - shows when price > 0 */}
+                    {watch('price') > 0 && (
+                      <div className="mt-4">
+                        <PriceCalculator
+                          basePrice={watch('price')}
+                          taxRegime="simplified"
+                        />
+                      </div>
+                    )}
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
                         <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Tipo de Cama</label>

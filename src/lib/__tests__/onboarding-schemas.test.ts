@@ -5,6 +5,7 @@ import {
 	imageCategoryEnum,
 	categorizedImageSchema,
 	propertyGallerySchema,
+	settingsSchema,
 } from "../onboarding-schemas";
 import { validateNoJargon } from "../jargon-guard";
 
@@ -517,5 +518,69 @@ describe("T12: jargon-guard — forbidden terms", () => {
 	it("accepts an empty string", () => {
 		const result = validateNoJargon("");
 		expect(result).toBeNull();
+	});
+});
+
+// ─────────────────────────────────────────────────────────────
+// Tax Regime — settingsSchema validation
+// ─────────────────────────────────────────────────────────────
+describe("settingsSchema.tax_regime", () => {
+	const baseSettings = {
+		checkInTime: "15:00",
+		checkOutTime: "12:00",
+	};
+
+	it("accepts 'simplified' as valid tax_regime", () => {
+		const result = settingsSchema.safeParse({
+			...baseSettings,
+			tax_regime: "simplified",
+		});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.tax_regime).toBe("simplified");
+		}
+	});
+
+	it("accepts 'responsible' as valid tax_regime", () => {
+		const result = settingsSchema.safeParse({
+			...baseSettings,
+			tax_regime: "responsible",
+		});
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.tax_regime).toBe("responsible");
+		}
+	});
+
+	it("defaults to 'simplified' when tax_regime is not provided", () => {
+		const result = settingsSchema.safeParse(baseSettings);
+		expect(result.success).toBe(true);
+		if (result.success) {
+			expect(result.data.tax_regime).toBe("simplified");
+		}
+	});
+
+	it("rejects invalid tax_regime values", () => {
+		const result = settingsSchema.safeParse({
+			...baseSettings,
+			tax_regime: "invalid_regime",
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects null tax_regime", () => {
+		const result = settingsSchema.safeParse({
+			...baseSettings,
+			tax_regime: null,
+		});
+		expect(result.success).toBe(false);
+	});
+
+	it("rejects empty string tax_regime", () => {
+		const result = settingsSchema.safeParse({
+			...baseSettings,
+			tax_regime: "",
+		});
+		expect(result.success).toBe(false);
 	});
 });

@@ -29,6 +29,7 @@ interface HotelForModal {
 	name?: string;
 	rooms?: Array<Partial<Room> & { price_per_night?: number }>;
 	tax_rate?: number;
+	tax_regime?: 'simplified' | 'responsible';
 }
 
 // GlassCard imported from @/components/ui/glass (design system, theme-aware)
@@ -228,6 +229,7 @@ export function RoomShowcaseModal({
 									isOverCapacity={isOverCapacity}
 									totalPrice={totalPrice}
 									nights={nights}
+									taxRegime={hotel.tax_regime ?? 'simplified'}
 									variant="desktop"
 									onAdjustGuests={() => {
 										onClose();
@@ -303,6 +305,7 @@ export function RoomShowcaseModal({
 								isOverCapacity={isOverCapacity}
 								totalPrice={totalPrice}
 								nights={nights}
+								taxRegime={hotel.tax_regime ?? 'simplified'}
 								variant="mobile"
 								onAdjustGuests={() => {
 									onClose();

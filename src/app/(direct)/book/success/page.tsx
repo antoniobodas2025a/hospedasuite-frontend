@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { CheckCircle2, ArrowRight, Clock, AlertTriangle } from 'lucide-react';
 import { verifyBookingAction } from '@/app/actions/bookings';
+import PriceBreakdown from '@/components/ota/PriceBreakdown';
 
 export const dynamic = 'force-dynamic';
 
@@ -114,11 +115,13 @@ export default async function BookingSuccessPage({
                 </div>
               </div>
             )}
-            {booking.totalPrice && (
-              <div>
-                <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Total Pagado</p>
-                <p className="text-lg font-mono font-bold text-secondary">${booking.totalPrice.toLocaleString('es-CO')}</p>
-              </div>
+            {booking.pricePerNight && booking.nights && (
+              <PriceBreakdown
+                pricePerNight={booking.pricePerNight}
+                nights={booking.nights}
+                taxRegime={booking.taxRegime ?? 'simplified'}
+                showDetails={false}
+              />
             )}
             {id_wompi && (
               <div>
