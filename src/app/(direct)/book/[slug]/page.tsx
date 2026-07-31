@@ -4,6 +4,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { MapPin, CalendarDays, KeyRound, Users, Star, ShieldCheck, Zap } from 'lucide-react';
 import { createClient } from '@/utils/supabase/server';
+import type { Metadata } from 'next';
 
 // ISR: Revalidate cada 60 segundos para balance entre frescura y performance
 export const revalidate = 60;
@@ -12,6 +13,49 @@ export const dynamicParams = true;
 interface HotelShowcasePageProps {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+}
+
+// SEO Metadata
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = await createClient();
+  
+  const { data: hotel } = await supabase
+    .from('hotels')
+    .select('name, description, main_image_url, location')
+    .eq('slug', slug)
+    .single();
+
+  if (!hotel) {
+    return {
+      title: 'Hotel no encontrado',
+      description: 'El hotel solicitado no está disponible',
+    };
+  }
+
+  const title = `Reserva ${hotel.name} - HospedaSuite`;
+  const description = hotel.description || `Reserva tu estadía en ${hotel.name} ubicado en ${hotel.location || 'Colombia'}`;
+  const image = hotel.main_image_url || '/logo.png';
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title,
+      description,
+      images: [{ url: image, width: 1200, height: 630 }],
+      type: 'website',
+    },
+    twitter: {
+      card: 'summary_large_image',
+      title,
+      description,
+      images: [image],
+    },
+    alternates: {
+      canonical: `/book/${slug}`,
+    },
+  };
 }
 
 export default async function HotelShowcasePage({ params, searchParams }: HotelShowcasePageProps) {
