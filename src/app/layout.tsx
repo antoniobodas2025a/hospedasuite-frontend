@@ -12,6 +12,8 @@ import RecoveryTokenDetector from '@/components/RecoveryTokenDetector';
 const geist = Geist({
   subsets: ['latin'],
   variable: '--font-sans',
+  preload: true,
+  display: 'swap',
 });
 
 // 🛡️ CONTRATO DE VIEWPORT ESTRICTO (MOBILE FIRST ZERO-TRUST)
@@ -32,6 +34,13 @@ export async function generateMetadata(): Promise<Metadata> {
     icons: {
       icon: '/favicon.ico',
       apple: '/logo.png',
+    },
+    other: {
+      // Preload critical resources
+      'link': [
+        '<https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev>; rel=preconnect',
+        '<https://auaqpomuivfhomlkvhju.supabase.co>; rel=preconnect',
+      ],
     },
   };
 }
