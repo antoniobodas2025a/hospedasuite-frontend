@@ -923,6 +923,24 @@
 }
 
 /* ====================================================
+   PHOTOSWIPE IMAGE ASPECT RATIO FIX
+   Prevents image distortion in lightbox
+   ==================================================== */
+.pswp__img {
+  object-fit: contain !important;
+  max-width: 100% !important;
+  max-height: 100% !important;
+  width: auto !important;
+  height: auto !important;
+}
+
+.pswp__content {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+}
+
+/* ====================================================
    PRINT PROTOCOL
    ==================================================== */
 @media print {

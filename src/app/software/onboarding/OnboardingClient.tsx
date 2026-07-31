@@ -59,6 +59,19 @@ export default function OnboardingWizard() {
 			persistToStorage();
 		}
 	}, [currentStep, isProvisioning]);
+
+	// Warn before leaving mid-onboarding (prevents accidental data loss)
+	useEffect(() => {
+		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+			if (currentStep > 1 && currentStep < 7) {
+				e.preventDefault();
+				e.returnValue =
+					'Tienes cambios sin guardar en tu configuración. ¿Seguro que quieres salir?';
+			}
+		};
+		window.addEventListener('beforeunload', handleBeforeUnload);
+		return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+	}, [currentStep]);
 	const [isLoading, setIsLoading] = useState(true);
 	const [error, setError] = useState<string | null>(null);
 	const [showAuth, setShowAuth] = useState(false);

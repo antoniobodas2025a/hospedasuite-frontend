@@ -44,7 +44,7 @@ const RESOURCES = {
   'motor-propio-vs-ota': {
     slug: 'motor-propio-vs-ota',
     geoCitation:
-      'HospedaSuite ofrece dos canales: el Motor Propio (0% comisión) para reservas por redes sociales y Link Directo, y la Red de Descubrimiento (10% costo de adquisición) donde viajeros nuevos encuentran tu propiedad. El 10% es un costo por cliente nuevo, muy inferior al 15-25% de Booking y Airbnb.',
+      'HospedaSuite ofrece dos canales: el Motor Propio (0% comisión) para reservas por redes sociales y Link Directo, y la Red de Descubrimiento (8% costo de adquisición) donde viajeros nuevos encuentran tu propiedad. El 8% es un costo por cliente nuevo, muy inferior al 15-25% de Booking y Airbnb.',
     faq: [
       { q: '¿Cuál es la diferencia entre Motor Propio y Red de Descubrimiento?', a: 'El Motor Propio es tu link personal.' },
       { q: '¿Puedo usar ambos canales al mismo tiempo?', a: 'Sí, es la estrategia recomendada.' },
@@ -154,10 +154,10 @@ describe('GEO Citation Blocks — SEO/GEO', () => {
     expect(citation).toContain('comisión');
   });
 
-  it('📝 "motor-propio-vs-ota" debe explicar 0% vs 10%', () => {
+  it('📝 "motor-propio-vs-ota" debe explicar 0% vs 8%', () => {
     const citation = RESOURCES['motor-propio-vs-ota'].geoCitation;
     expect(citation).toContain('0%');
-    expect(citation).toContain('10%');
+    expect(citation).toContain('8%');
     expect(citation).toContain('costo por cliente nuevo');
   });
 });
@@ -229,8 +229,8 @@ describe('Constantes inmutables — Soberanía del Dato', () => {
     expect(OWN_MOTOR_RATE).toBe(0.0);
   });
 
-  it('🔒 Red de Descubrimiento = 10%', () => {
-    expect(HOSPEDASUITE_DISCOVERY_RATE).toBe(0.10);
+  it('🔒 Red de Descubrimiento = 8%', () => {
+    expect(HOSPEDASUITE_DISCOVERY_RATE).toBe(0.08);
   });
 
   it('🔒 Channels tradicionales = 18%', () => {
@@ -241,7 +241,7 @@ describe('Constantes inmutables — Soberanía del Dato', () => {
     expect(PRO_PLAN_COST).toBe(99000);
   });
 
-  it('🔒 Invariante: 0% < 10% < 18%', () => {
+  it('🔒 Invariante: 0% < 8% < 18%', () => {
     expect(OWN_MOTOR_RATE).toBeLessThan(HOSPEDASUITE_DISCOVERY_RATE);
     expect(HOSPEDASUITE_DISCOVERY_RATE).toBeLessThan(TRADITIONAL_Channel_RATE);
   });

@@ -4,7 +4,7 @@
 // Pure functions — no DB, no UI. Verifica que el cálculo de ahorro
 // sea matemáticamente coherente y respete las constantes declaradas:
 // - Motor Propio: 0%
-// - Red de Descubrimiento: 10%
+// - Red de Descubrimiento: 8%
 // - Channels tradicionales: 18%
 // ============================================================================
 
@@ -27,8 +27,8 @@ describe('Constantes de comisión', () => {
     expect(OWN_MOTOR_RATE).toBe(0.0);
   });
 
-  it('Red de Descubrimiento debe ser 10%', () => {
-    expect(HOSPEDASUITE_DISCOVERY_RATE).toBe(0.10);
+  it('Red de Descubrimiento debe ser 8%', () => {
+    expect(HOSPEDASUITE_DISCOVERY_RATE).toBe(0.08);
   });
 
   it('Channels tradicionales debe ser 18%', () => {
@@ -51,8 +51,8 @@ describe('calculateROI', () => {
     expect(result.totalRevenue).toBe(3750000);
     // Channel tradicional: 3750000 * 0.18 = 675000
     expect(result.traditionalOtaCommission).toBe(675000);
-    // Red de Descubrimiento: 3750000 * 0.10 = 375000
-    expect(result.hospedaSuiteDiscoveryCost).toBe(375000);
+    // Red de Descubrimiento: 3750000 * 0.08 = 300000
+    expect(result.hospedaSuiteDiscoveryCost).toBe(300000);
     // Motor Propio: solo costo del plan
     expect(result.ownMotorCost).toBe(PRO_PLAN_COST);
     // Ahorro vs Channel: 675000 - 99000 = 576000

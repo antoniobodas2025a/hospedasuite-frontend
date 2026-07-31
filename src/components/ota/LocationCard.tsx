@@ -1,6 +1,7 @@
 'use client';
 
-import { MapPin, ExternalLink } from 'lucide-react';
+import { MapPin, ExternalLink, Shield } from 'lucide-react';
+import { useMemo } from 'react';
 
 interface NearbyPoint {
   name: string;
@@ -13,12 +14,16 @@ interface LocationCardProps {
   latitude?: number | null;
   longitude?: number | null;
   nearbyPoints?: NearbyPoint[];
+  /** Si es true, muestra ubicación exacta (solo post-pago) */
+  isPaidBooking?: boolean;
 }
 
 /**
- * LocationCard — Hybrid location display.
- * Shows Google Maps Static image when API key + coordinates available,
- * otherwise falls back to a textual card. No external links to prevent user leakage.
+ * LocationCard — Hybrid location display with Coordinate Firewall.
+ * 
+ * SECURITY: Before payment, coordinates are obfuscated with ~1.5km random offset
+ * to prevent guests from identifying the exact property location and searching
+ * for competitors. Exact location is only revealed after payment (isPaidBooking=true).
  */
 export default function LocationCard({
   hotelName,
@@ -26,26 +31,59 @@ export default function LocationCard({
   latitude,
   longitude,
   nearbyPoints,
+  isPaidBooking = false,
 }: LocationCardProps) {
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_API_KEY;
   const hasCoordinates = latitude != null && longitude != null;
+
+  // Coordinate Firewall: Apply random offset (~1.5km) for non-paid bookings
+  const displayCoords = useMemo(() => {
+    if (!hasCoordinates || isPaidBooking) {
+      return { lat: latitude, lng: longitude };
+    }
+
+    // Generate deterministic offset based on hotel name (consistent per hotel)
+    const seed = hotelName.split('').reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const randomOffset = (seed % 1000) / 1000; // 0 to 0.999
+
+    // ~1.5km offset in degrees (approximate)
+    const latOffset = (randomOffset - 0.5) * 0.027; // ~1.5km
+    const lngOffset = ((randomOffset * 7) % 1 - 0.5) * 0.027; // ~1.5km
+
+    return {
+      lat: (latitude as number) + latOffset,
+      lng: (longitude as number) + lngOffset,
+    };
+  }, [latitude, longitude, hotelName, isPaidBooking, hasCoordinates]);
+
   const showStaticMap = !!apiKey && hasCoordinates;
 
   return (
     <div className="w-full max-w-[600px] mx-auto space-y-4">
       {showStaticMap ? (
         <StaticMap
-          lat={latitude!}
-          lng={longitude!}
+          lat={displayCoords.lat!}
+          lng={displayCoords.lng!}
           hotelName={hotelName}
           apiKey={apiKey!}
+          isApproximate={!isPaidBooking}
         />
       ) : (
         <TextualCard address={address} nearbyPoints={nearbyPoints} />
       )}
 
-      {/* Coordenadas como texto (sin enlace externo) */}
-      {hasCoordinates && (
+      {/* Coordenadas ofuscadas (sin enlace externo) */}
+      {hasCoordinates && !isPaidBooking && (
+        <div className="flex items-center gap-2 text-xs text-muted-foreground">
+          <Shield size={12} className="text-amber-500" />
+          <span>
+            Ubicación aproximada (se revela tras la reserva)
+          </span>
+        </div>
+      )}
+
+      {/* Coordenadas exactas solo post-pago */}
+      {hasCoordinates && isPaidBooking && (
         <div className="flex items-center gap-2 text-xs text-muted-foreground">
           <MapPin size={12} />
           <span>
@@ -62,13 +100,15 @@ function StaticMap({
   lng,
   hotelName,
   apiKey,
+  isApproximate = false,
 }: {
   lat: number;
   lng: number;
   hotelName: string;
   apiKey: string;
+  isApproximate?: boolean;
 }) {
-  const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=15&size=600x300&markers=color:red%7C${lat},${lng}&key=${apiKey}`;
+  const mapUrl = `https://maps.googleapis.com/maps/api/staticmap?center=${lat},${lng}&zoom=${isApproximate ? 13 : 15}&size=600x300&markers=color:${isApproximate ? 'yellow' : 'red'}%7C${lat},${lng}&key=${apiKey}`;
 
   return (
     <div className="relative">
@@ -81,7 +121,7 @@ function StaticMap({
       {/* Badge indicando que es una imagen estática */}
       <div className="absolute top-2 right-2 bg-background/80 backdrop-blur-sm px-2 py-1 rounded-md text-xs font-medium flex items-center gap-1">
         <MapPin size={12} />
-        <span>Ubicación</span>
+        <span>{isApproximate ? 'Ubicación aproximada' : 'Ubicación'}</span>
       </div>
     </div>
   );

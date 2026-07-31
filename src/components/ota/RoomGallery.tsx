@@ -51,7 +51,7 @@ export default function RoomGallery({
 	// --------------------------------------------------------------------------
 	if (variant === "inline") {
 		return (
-			<div className="relative w-full h-full group">
+			<div className="relative w-full aspect-[4/3] group">
 				{/* Carrusel con scroll-snap nativo */}
 				<div className="flex overflow-x-auto snap-x snap-mandatory w-full h-full scrollbar-hide"
 					style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}
@@ -68,7 +68,7 @@ export default function RoomGallery({
 								src={img.url}
 								alt={img.alt ?? `${roomName} — ${i + 1}`}
 								fill
-								className="object-contain"
+								className="object-cover"
 								sizes="100vw"
 								quality={90}
 								preload={i === 0}

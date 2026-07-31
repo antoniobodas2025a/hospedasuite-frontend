@@ -132,7 +132,7 @@ export default function SoftwarePage() {
                   Publicación automática bilingüe. Si estás en el Cerebro Operativo, estás visible al mundo.
                 </p>
                 <div className="flex items-baseline gap-1.5">
-                  <span className="text-5xl font-semibold tracking-tight">10%</span>
+                  <span className="text-5xl font-semibold tracking-tight">8%</span>
                   <span className="text-sm text-[#1d1d1f]/30 font-medium uppercase tracking-wide">Costo de adquisición</span>
                 </div>
               </div>

@@ -284,7 +284,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
         />
       </div>
 
-      {/* ── Chunk 2: Baño y espacio (colapsable) ── */}
+      {/* ── Chunk 2: Baño, vistas y espacio (colapsable, unificado) ─ */}
       <RoomSection
         icon={Bath}
         title={t('bathroomSectionTitle')}
@@ -327,6 +327,56 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           onChange={(v) => onUpdate({ roomView: v as RoomDraft['roomView'] })}
           label={t('roomViewLabel')}
         />
+
+        {/* Bathroom amenities — detalles adicionales (Jacuzzi, etc.) */}
+        <div className="pt-2 border-t border-white/5">
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Detalles de baño</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.values(BATHROOM_AMENITY_REGISTRY).map(amenity => {
+              const isActive = room.amenities.includes(amenity.id);
+              const Icon = amenity.icon;
+              return (
+                <motion.button
+                  key={amenity.id}
+                  onClick={() => toggleAmenity(amenity.id)}
+                  whileTap={{ scale: 0.93 }}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-medium transition-all border ${
+                    isActive
+                      ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
+                      : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
+                  }`}
+                >
+                  <Icon size={10} /> {amenity.label}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* View amenities — detalles adicionales (Balcón, etc.) */}
+        <div className="pt-2 border-t border-white/5">
+          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Detalles de vista</p>
+          <div className="flex flex-wrap gap-1.5">
+            {Object.values(VIEW_AMENITY_REGISTRY).map(amenity => {
+              const isActive = room.amenities.includes(amenity.id);
+              const Icon = amenity.icon;
+              return (
+                <motion.button
+                  key={amenity.id}
+                  onClick={() => toggleAmenity(amenity.id)}
+                  whileTap={{ scale: 0.93 }}
+                  className={`flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-medium transition-all border ${
+                    isActive
+                      ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
+                      : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
+                  }`}
+                >
+                  <Icon size={10} /> {amenity.label}
+                </motion.button>
+              );
+            })}
+          </div>
+        </div>
       </RoomSection>
 
       {/* ── Chunk 3: Detalles (colapsable) ── */}
@@ -421,56 +471,6 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('amenitiesLabel')}</p>
           <div className="flex flex-wrap gap-1.5">
             {Object.values(ROOM_AMENITY_REGISTRY).map(amenity => {
-              const isActive = room.amenities.includes(amenity.id);
-              const Icon = amenity.icon;
-              return (
-                <motion.button
-                  key={amenity.id}
-                  onClick={() => toggleAmenity(amenity.id)}
-                  whileTap={{ scale: 0.93 }}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-medium transition-all border ${
-                    isActive
-                      ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
-                      : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
-                  }`}
-                >
-                  <Icon size={10} /> {amenity.label}
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Amenities — Baño */}
-        <div>
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Baño</p>
-          <div className="flex flex-wrap gap-1.5">
-            {Object.values(BATHROOM_AMENITY_REGISTRY).map(amenity => {
-              const isActive = room.amenities.includes(amenity.id);
-              const Icon = amenity.icon;
-              return (
-                <motion.button
-                  key={amenity.id}
-                  onClick={() => toggleAmenity(amenity.id)}
-                  whileTap={{ scale: 0.93 }}
-                  className={`flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-medium transition-all border ${
-                    isActive
-                      ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
-                      : 'bg-white/5 border-white/5 text-zinc-500 hover:bg-white/10'
-                  }`}
-                >
-                  <Icon size={10} /> {amenity.label}
-                </motion.button>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* Amenities — Vistas */}
-        <div>
-          <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">Vistas</p>
-          <div className="flex flex-wrap gap-1.5">
-            {Object.values(VIEW_AMENITY_REGISTRY).map(amenity => {
               const isActive = room.amenities.includes(amenity.id);
               const Icon = amenity.icon;
               return (

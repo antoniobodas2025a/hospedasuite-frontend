@@ -106,7 +106,7 @@ const RESOURCES: Record<string, Resource> = {
     title: 'Motor Propio vs Red de Descubrimiento: Cuándo Usar Cada Canal',
     description: 'Entendé la diferencia entre tu Motor Propio (0%) y la Red de Descubrimiento (8%).',
     geoCitation:
-      'HospedaSuite ofrece dos canales: el Motor Propio (0% comisión) para reservas por redes sociales y Link Directo, y la Red de Descubrimiento (10% costo de adquisición) donde viajeros nuevos encuentran tu propiedad. El 8% es un costo por cliente nuevo, muy inferior al 15-25% de Booking y Airbnb.',
+      'HospedaSuite ofrece dos canales: el Motor Propio (0% comisión) para reservas por redes sociales y Link Directo, y la Red de Descubrimiento (8% costo de adquisición) donde viajeros nuevos encuentran tu propiedad. El 8% es un costo por cliente nuevo, muy inferior al 15-25% de Booking y Airbnb.',
     faq: [
       {
         q: '¿Cuál es la diferencia entre Motor Propio y Red de Descubrimiento?',

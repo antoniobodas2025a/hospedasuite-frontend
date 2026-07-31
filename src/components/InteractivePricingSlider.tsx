@@ -289,7 +289,7 @@ export default function InteractivePricingSlider({ onCtaClick }: InteractivePric
             </div>
             <div className="bg-white rounded-[12px] p-3 border border-[#0071e3]/[0.12]">
               <p className="text-[11px] text-[#0071e3] font-semibold uppercase">Motor de Reservas</p>
-              <p className="text-2xl font-bold text-[#0071e3]">10%</p>
+              <p className="text-2xl font-bold text-[#0071e3]">8%</p>
             </div>
             <div className="bg-white rounded-[12px] p-3 border border-black/[0.04] opacity-60">
               <p className="text-[11px] text-[#1d1d1f]/40 font-semibold uppercase">Intermediarios tradicionales</p>
