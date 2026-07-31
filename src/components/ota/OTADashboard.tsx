@@ -21,12 +21,30 @@ import {
 	X,
 } from "lucide-react";
 import dynamic from "next/dynamic";
-import HotelCard from "./HotelCard";
-import FeaturedCard from "./FeaturedCard";
+// Code splitting: componentes con framer-motion se cargan dinámicamente
+const HotelCard = dynamic(() => import("./HotelCard"), {
+  ssr: false,
+  loading: () => <div className="aspect-[3/4] bg-muted/30 rounded animate-pulse" />,
+});
+const FeaturedCard = dynamic(() => import("./FeaturedCard"), {
+  ssr: false,
+  loading: () => <div className="h-64 bg-muted/30 rounded animate-pulse" />,
+});
 import LanguageSwitcher from "./LanguageSwitcher";
-import SearchBarUnified from "./SearchBarUnified";
-import MobileSearchSheet from "./MobileSearchSheet";
-import MapBottomSheet from "./MapBottomSheet";
+// Code splitting: componentes pesados se cargan solo cuando se necesitan
+const SearchBarUnified = dynamic(() => import("./SearchBarUnified"), {
+  ssr: false,
+  loading: () => <div className="h-14 bg-muted/30 rounded animate-pulse" />,
+});
+const MobileSearchSheet = dynamic(() => import("./MobileSearchSheet"), {
+  ssr: false,
+  loading: () => null,
+});
+// Code splitting: MapBottomSheet usa Leaflet (~150KB), cargar solo cuando se necesita
+const MapBottomSheet = dynamic(() => import("./MapBottomSheet"), {
+  ssr: false,
+  loading: () => null,
+});
 // import MapToggle from "./MapToggle"; // disabled in production V1
 
 // PRD-008 fix: Leaflet depends on window/document → must be client-only

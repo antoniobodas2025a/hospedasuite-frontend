@@ -77,7 +77,6 @@ export default function HotelCard({
 				quality={85}
 				placeholder={hotel.main_image_blur ? "blur" : undefined}
 				blurDataURL={hotel.main_image_blur}
-				fetchpriority="high"
 				onError={(e) => {
 					// Fallback: SVG placeholder — keeps layout stable on 404/500
 					(e.target as HTMLImageElement).src =

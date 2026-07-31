@@ -2,11 +2,11 @@
   {
     "name": "minScore",
     "expected": 0.85,
-    "actual": 0.48,
+    "actual": 0.55,
     "values": [
-      0.43,
-      0.44,
-      0.48
+      0.47,
+      0.53,
+      0.55
     ],
     "operator": ">=",
     "passed": false,
@@ -34,11 +34,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2000,
-    "actual": 2884.7248,
+    "actual": 3473.092,
     "values": [
-      4564.494000000001,
-      4524.403,
-      2884.7248
+      3500.761,
+      3473.092,
+      3509.389
     ],
     "operator": "<=",
     "passed": false,
@@ -51,11 +51,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2500,
-    "actual": 6795.697799999999,
+    "actual": 5807.092000000001,
     "values": [
-      11737.818399999998,
-      11284.024,
-      6795.697799999999
+      6055.761,
+      5807.092000000001,
+      5841.389000000001
     ],
     "operator": "<=",
     "passed": false,
@@ -68,11 +68,11 @@
   {
     "name": "maxNumericValue",
     "expected": 200,
-    "actual": 653,
+    "actual": 535,
     "values": [
-      653,
-      661,
-      757
+      814.0000000000005,
+      545.0000000000005,
+      535
     ],
     "operator": "<=",
     "passed": false,
@@ -85,11 +85,11 @@
   {
     "name": "minScore",
     "expected": 0.85,
-    "actual": 0.53,
+    "actual": 0.6,
     "values": [
-      0.53,
-      0.53,
-      0.48
+      0.47,
+      0.6,
+      0.51
     ],
     "operator": ">=",
     "passed": false,
@@ -117,11 +117,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2500,
-    "actual": 5766.380999999999,
+    "actual": 5104.785,
     "values": [
-      5766.380999999999,
-      10603.02,
-      5815.575
+      5910.614,
+      5104.785,
+      6023.9220000000005
     ],
     "operator": "<=",
     "passed": false,
@@ -134,11 +134,11 @@
   {
     "name": "maxNumericValue",
     "expected": 200,
-    "actual": 761.0000000000005,
+    "actual": 627,
     "values": [
-      938,
-      761.0000000000005,
-      841
+      805.9999999999995,
+      627,
+      650
     ],
     "operator": "<=",
     "passed": false,
@@ -151,10 +151,10 @@
   {
     "name": "minScore",
     "expected": 0.85,
-    "actual": 0.74,
+    "actual": 0.78,
     "values": [
-      0.7,
-      0.69,
+      0.78,
+      0.74,
       0.74
     ],
     "operator": ">=",
@@ -199,11 +199,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2500,
-    "actual": 3319.6825,
+    "actual": 2751.2715,
     "values": [
-      3466.9615,
-      3319.6825,
-      3368.2685
+      2751.2715,
+      3447.081,
+      3414.4505
     ],
     "operator": "<=",
     "passed": false,
@@ -216,11 +216,11 @@
   {
     "name": "maxNumericValue",
     "expected": 200,
-    "actual": 573,
+    "actual": 493.5,
     "values": [
-      591,
-      706.5,
-      573
+      537.5,
+      493.5,
+      553.5
     ],
     "operator": "<=",
     "passed": false,
@@ -249,11 +249,11 @@
   {
     "name": "maxNumericValue",
     "expected": 200,
-    "actual": 491.00000000000045,
+    "actual": 428,
     "values": [
-      540,
-      491.00000000000045,
-      625.0709999999999
+      476.5,
+      428,
+      462.64800000000014
     ],
     "operator": "<=",
     "passed": false,
