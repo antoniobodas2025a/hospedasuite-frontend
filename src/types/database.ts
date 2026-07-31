@@ -1216,6 +1216,159 @@ export interface Database {
         };
         Relationships: [];
       };
+      split_payments: {
+        Row: {
+          id: string
+          booking_id: string
+          hotel_id: string
+          total_amount: number
+          hotel_amount: number
+          platform_amount: number
+          wompi_transaction_id?: string
+          wompi_subaccount_id?: string
+          split_status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+          hotel_payout_status: 'PENDING' | 'DISBURSED' | 'FAILED'
+          platform_payout_status: 'PENDING' | 'DISBURSED' | 'FAILED'
+          invoice_generated: boolean
+          invoice_number?: string
+          invoice_generated_at?: string
+          created_at: string
+          completed_at?: string
+        };
+        Insert: {
+          id?: string
+          booking_id: string
+          hotel_id: string
+          total_amount: number
+          hotel_amount: number
+          platform_amount: number
+          wompi_transaction_id?: string
+          wompi_subaccount_id?: string
+          split_status?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+          hotel_payout_status?: 'PENDING' | 'DISBURSED' | 'FAILED'
+          platform_payout_status?: 'PENDING' | 'DISBURSED' | 'FAILED'
+          invoice_generated?: boolean
+          invoice_number?: string
+          invoice_generated_at?: string
+          created_at?: string
+          completed_at?: string
+        };
+        Update: {
+          id?: string
+          booking_id?: string
+          hotel_id?: string
+          total_amount?: number
+          hotel_amount?: number
+          platform_amount?: number
+          wompi_transaction_id?: string
+          wompi_subaccount_id?: string
+          split_status?: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+          hotel_payout_status?: 'PENDING' | 'DISBURSED' | 'FAILED'
+          platform_payout_status?: 'PENDING' | 'DISBURSED' | 'FAILED'
+          invoice_generated?: boolean
+          invoice_number?: string
+          invoice_generated_at?: string
+          created_at?: string
+          completed_at?: string
+        };
+        Relationships: [];
+      };
+      partner_ledger: {
+        Row: {
+          id: string
+          partner_id: string
+          hotel_id: string
+          booking_id?: string
+          commission_type: 'subscription' | 'reservation'
+          base_amount: number
+          commission_percentage: number
+          commission_amount: number
+          status: 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'
+          clawback_deadline?: string
+          payout_proof_url?: string
+          payout_method?: 'nequi' | 'daviplata' | 'bank_transfer'
+          created_at: string
+          approved_at?: string
+          paid_at?: string
+          cancelled_at?: string
+          cancellation_reason?: string
+        };
+        Insert: {
+          id?: string
+          partner_id: string
+          hotel_id: string
+          booking_id?: string
+          commission_type: 'subscription' | 'reservation'
+          base_amount: number
+          commission_percentage: number
+          commission_amount: number
+          status?: 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'
+          clawback_deadline?: string
+          payout_proof_url?: string
+          payout_method?: 'nequi' | 'daviplata' | 'bank_transfer'
+          created_at?: string
+          approved_at?: string
+          paid_at?: string
+          cancelled_at?: string
+          cancellation_reason?: string
+        };
+        Update: {
+          id?: string
+          partner_id?: string
+          hotel_id?: string
+          booking_id?: string
+          commission_type?: 'subscription' | 'reservation'
+          base_amount?: number
+          commission_percentage?: number
+          commission_amount?: number
+          status?: 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED'
+          clawback_deadline?: string
+          payout_proof_url?: string
+          payout_method?: 'nequi' | 'daviplata' | 'bank_transfer'
+          created_at?: string
+          approved_at?: string
+          paid_at?: string
+          cancelled_at?: string
+          cancellation_reason?: string
+        };
+        Relationships: [];
+      };
+      split_payment_config: {
+        Row: {
+          id: string
+          hotel_id: string
+          platform_percentage: number
+          hotel_percentage: number
+          wompi_subaccount_id?: string
+          is_active: boolean
+          kyc_completed_at?: string
+          created_at: string
+          updated_at: string
+        };
+        Insert: {
+          id?: string
+          hotel_id: string
+          platform_percentage?: number
+          hotel_percentage?: number
+          wompi_subaccount_id?: string
+          is_active?: boolean
+          kyc_completed_at?: string
+          created_at?: string
+          updated_at?: string
+        };
+        Update: {
+          id?: string
+          hotel_id?: string
+          platform_percentage?: number
+          hotel_percentage?: number
+          wompi_subaccount_id?: string
+          is_active?: boolean
+          kyc_completed_at?: string
+          created_at?: string
+          updated_at?: string
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: Record<string, never>;
@@ -1223,4 +1376,59 @@ export interface Database {
       image_category: 'exterior' | 'lobby' | 'habitacion' | 'bano' | 'amenidades' | 'restaurante' | 'entorno' | 'otros';
     };
   };
+}
+
+// ============================================================================
+// Standalone interfaces for Split Payments & Partner Ledger
+// ============================================================================
+
+export interface SplitPayment {
+  id: string;
+  booking_id: string;
+  hotel_id: string;
+  total_amount: number;
+  hotel_amount: number;
+  platform_amount: number;
+  wompi_transaction_id?: string;
+  wompi_subaccount_id?: string;
+  split_status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED';
+  hotel_payout_status: 'PENDING' | 'DISBURSED' | 'FAILED';
+  platform_payout_status: 'PENDING' | 'DISBURSED' | 'FAILED';
+  invoice_generated: boolean;
+  invoice_number?: string;
+  invoice_generated_at?: string;
+  created_at: string;
+  completed_at?: string;
+}
+
+export interface PartnerLedger {
+  id: string;
+  partner_id: string;
+  hotel_id: string;
+  booking_id?: string;
+  commission_type: 'subscription' | 'reservation';
+  base_amount: number;
+  commission_percentage: number;
+  commission_amount: number;
+  status: 'PENDING' | 'APPROVED' | 'PAID' | 'CANCELLED';
+  clawback_deadline?: string;
+  payout_proof_url?: string;
+  payout_method?: 'nequi' | 'daviplata' | 'bank_transfer';
+  created_at: string;
+  approved_at?: string;
+  paid_at?: string;
+  cancelled_at?: string;
+  cancellation_reason?: string;
+}
+
+export interface SplitPaymentConfig {
+  id: string;
+  hotel_id: string;
+  platform_percentage: number;
+  hotel_percentage: number;
+  wompi_subaccount_id?: string;
+  is_active: boolean;
+  kyc_completed_at?: string;
+  created_at: string;
+  updated_at: string;
 }
