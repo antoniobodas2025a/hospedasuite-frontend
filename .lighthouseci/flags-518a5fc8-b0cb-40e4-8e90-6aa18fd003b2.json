@@ -1,0 +1,1 @@
+{"chromeFlags":"--no-sandbox --headless --headless=new","throttlingMethod":"simulate","throttling":{"rttMs":150,"throughputKbps":1638.4,"cpuSlowdownMultiplier":4}}

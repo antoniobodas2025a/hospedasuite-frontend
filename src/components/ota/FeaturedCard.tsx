@@ -41,7 +41,7 @@ export default function FeaturedCard({
 								src={hotel.main_image_url}
 								alt={hotel.name}
 								fill
-								priority
+								loading="lazy"
 								className="object-cover group-hover:scale-105 transition-transform duration-500"
 								sizes="120px"
 							/>

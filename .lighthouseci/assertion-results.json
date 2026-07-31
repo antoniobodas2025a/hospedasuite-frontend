@@ -2,11 +2,11 @@
   {
     "name": "minScore",
     "expected": 0.85,
-    "actual": 0.55,
+    "actual": 0.48,
     "values": [
-      0.47,
-      0.53,
-      0.55
+      0.45,
+      0.45,
+      0.48
     ],
     "operator": ">=",
     "passed": false,
@@ -34,11 +34,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2000,
-    "actual": 3473.092,
+    "actual": 3397.6660000000006,
     "values": [
-      3500.761,
-      3473.092,
-      3509.389
+      3402.8590000000004,
+      3767.2239999999997,
+      3397.6660000000006
     ],
     "operator": "<=",
     "passed": false,
@@ -51,11 +51,11 @@
   {
     "name": "maxNumericValue",
     "expected": 2500,
-    "actual": 5807.092000000001,
+    "actual": 12778.841,
     "values": [
-      6055.761,
-      5807.092000000001,
-      5841.389000000001
+      15767.698,
+      13544.545,
+      12778.841
     ],
     "operator": "<=",
     "passed": false,
@@ -68,11 +68,11 @@
   {
     "name": "maxNumericValue",
     "expected": 200,
-    "actual": 535,
+    "actual": 690,
     "values": [
-      814.0000000000005,
-      545.0000000000005,
-      535
+      722,
+      690,
+      722.9999999999991
     ],
     "operator": "<=",
     "passed": false,
@@ -85,11 +85,11 @@
   {
     "name": "minScore",
     "expected": 0.85,
-    "actual": 0.6,
+    "actual": 0.5,
     "values": [
-      0.47,
-      0.6,
-      0.51
+      0.46,
+      0.5,
+      0.47
     ],
     "operator": ">=",
     "passed": false,
@@ -115,13 +115,46 @@
     "url": "https://hospedasuite.com/hotel/pietra"
   },
   {
+    "name": "minScore",
+    "expected": 0.9,
+    "actual": 0.83,
+    "values": [
+      0.83,
+      0.83,
+      0.83
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "seo",
+    "auditId": "categories",
+    "level": "error",
+    "url": "https://hospedasuite.com/hotel/pietra"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 2000,
+    "actual": 3502.735999999999,
+    "values": [
+      3701.9020000000005,
+      3502.735999999999,
+      3583.3089999999997
+    ],
+    "operator": "<=",
+    "passed": false,
+    "auditId": "first-contentful-paint",
+    "level": "warn",
+    "url": "https://hospedasuite.com/hotel/pietra",
+    "auditTitle": "First Contentful Paint",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/first-contentful-paint/"
+  },
+  {
     "name": "maxNumericValue",
     "expected": 2500,
-    "actual": 5104.785,
+    "actual": 8038.549999999997,
     "values": [
-      5910.614,
-      5104.785,
-      6023.9220000000005
+      8133.558000000001,
+      8038.549999999997,
+      8390.844
     ],
     "operator": "<=",
     "passed": false,
@@ -134,11 +167,11 @@
   {
     "name": "maxNumericValue",
     "expected": 200,
-    "actual": 627,
+    "actual": 633.4599999999991,
     "values": [
-      805.9999999999995,
-      627,
-      650
+      665.4999999999991,
+      633.4599999999991,
+      720
     ],
     "operator": "<=",
     "passed": false,
@@ -151,11 +184,11 @@
   {
     "name": "minScore",
     "expected": 0.85,
-    "actual": 0.78,
+    "actual": 0.65,
     "values": [
-      0.78,
-      0.74,
-      0.74
+      0.65,
+      0.56,
+      0.64
     ],
     "operator": ">=",
     "passed": false,
@@ -183,11 +216,11 @@
   {
     "name": "minScore",
     "expected": 0.9,
-    "actual": 0.66,
+    "actual": 0.58,
     "values": [
-      0.66,
-      0.66,
-      0.66
+      0.58,
+      0.58,
+      0.58
     ],
     "operator": ">=",
     "passed": false,
@@ -198,12 +231,29 @@
   },
   {
     "name": "maxNumericValue",
-    "expected": 2500,
-    "actual": 2751.2715,
+    "expected": 2000,
+    "actual": 2429.8600000000006,
     "values": [
-      2751.2715,
-      3447.081,
-      3414.4505
+      2507.169,
+      2575.791,
+      2429.8600000000006
+    ],
+    "operator": "<=",
+    "passed": false,
+    "auditId": "first-contentful-paint",
+    "level": "warn",
+    "url": "https://hospedasuite.com/book/pietra",
+    "auditTitle": "First Contentful Paint",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/first-contentful-paint/"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 2500,
+    "actual": 4907.137499999999,
+    "values": [
+      4907.137499999999,
+      7863.231000000001,
+      5072.290000000001
     ],
     "operator": "<=",
     "passed": false,
@@ -216,11 +266,11 @@
   {
     "name": "maxNumericValue",
     "expected": 200,
-    "actual": 493.5,
+    "actual": 533.5,
     "values": [
-      537.5,
-      493.5,
-      553.5
+      533.5,
+      603.5,
+      556.5
     ],
     "operator": "<=",
     "passed": false,
@@ -229,6 +279,22 @@
     "url": "https://hospedasuite.com/book/pietra",
     "auditTitle": "Total Blocking Time",
     "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/lighthouse-total-blocking-time/"
+  },
+  {
+    "name": "minScore",
+    "expected": 0.85,
+    "actual": 0.71,
+    "values": [
+      0.71,
+      0.71,
+      0.64
+    ],
+    "operator": ">=",
+    "passed": false,
+    "auditProperty": "performance",
+    "auditId": "categories",
+    "level": "error",
+    "url": "https://hospedasuite.com/software"
   },
   {
     "name": "minScore",
@@ -248,12 +314,46 @@
   },
   {
     "name": "maxNumericValue",
-    "expected": 200,
-    "actual": 428,
+    "expected": 2000,
+    "actual": 2281.52,
     "values": [
-      476.5,
-      428,
-      462.64800000000014
+      2281.52,
+      2477.8630000000003,
+      2487.366
+    ],
+    "operator": "<=",
+    "passed": false,
+    "auditId": "first-contentful-paint",
+    "level": "warn",
+    "url": "https://hospedasuite.com/software",
+    "auditTitle": "First Contentful Paint",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/first-contentful-paint/"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 2500,
+    "actual": 4194.187,
+    "values": [
+      4256.050000000001,
+      4194.187,
+      5785.346000000001
+    ],
+    "operator": "<=",
+    "passed": false,
+    "auditId": "largest-contentful-paint",
+    "level": "error",
+    "url": "https://hospedasuite.com/software",
+    "auditTitle": "Largest Contentful Paint",
+    "auditDocumentationLink": "https://developer.chrome.com/docs/lighthouse/performance/lighthouse-largest-contentful-paint/"
+  },
+  {
+    "name": "maxNumericValue",
+    "expected": 200,
+    "actual": 449,
+    "values": [
+      487.5050000000001,
+      473.58750000000055,
+      449
     ],
     "operator": "<=",
     "passed": false,

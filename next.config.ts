@@ -3,6 +3,10 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
+// Bundle Analyzer se activa manualmente cuando se necesita
+// Para usar: ANALYZE=true npm run build
+// Nota: Requiere configuración manual en next.config.ts
+
 // Single Source of Truth: el dominio R2 se lee de una sola env var
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || "https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev";
 const r2Url = new URL(R2_PUBLIC_URL);
@@ -114,6 +118,6 @@ const sentryOptions = {
 
 // EXPORTACIÓN DETERMINISTA
 export default withSentryConfig(
-	withNextIntl(nextConfig as import("next").NextConfig),
-	sentryOptions,
+  withNextIntl(nextConfig as import("next").NextConfig),
+  sentryOptions
 );

@@ -109,6 +109,7 @@ export default function HotelGallery({ images, hotelName, location, blurs }: Hot
               src={getImageSizeUrl(images[1].url, 'card')}
               alt={images[1].alt ?? `${hotelName} detalle`}
               fill
+              loading="lazy"
               className="object-cover transition-transform duration-1000 group-hover:scale-105"
               sizes="(max-width: 768px) 100vw, 33vw"
               quality={90}
@@ -143,6 +144,7 @@ export default function HotelGallery({ images, hotelName, location, blurs }: Hot
                   src={getImageSizeUrl(img.url, 'card')}
                   alt={img.alt ?? `${hotelName} ${i + 3}`}
                   fill
+                  loading="lazy"
                   className="object-cover transition-transform duration-700 group-hover:scale-105"
                   sizes="25vw"
                   quality={80}
