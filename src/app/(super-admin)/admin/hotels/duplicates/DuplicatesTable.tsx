@@ -303,7 +303,7 @@ export default function DuplicatesTable({
               <div className="p-5 space-y-4">
                 <p className="text-white/60 text-sm">
                   ¿Estás seguro de rechazar este hotel? Se suspenderá y su suscripción
-                  será cancelada. El hotel no será visible en la OTA.
+                  será cancelada. El hotel no será visible en la plataforma.
                 </p>
                 <div className="flex gap-3 pt-2">
                   <button
