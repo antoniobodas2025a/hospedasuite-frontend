@@ -41,6 +41,7 @@ export default function FloatingWhatsApp({ phoneNumber, message, hotelName }: Fl
           <button
             onClick={() => setIsOpen(false)}
             className="absolute top-2 right-2 size-6 flex items-center justify-center text-muted-foreground hover:text-foreground"
+            aria-label={t('ota.whatsapp.closeTooltip') || 'Cerrar'}
           >
             <X size={14} />
           </button>
