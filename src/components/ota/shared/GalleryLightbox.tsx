@@ -55,7 +55,13 @@ export default function GalleryLightbox({
   keyboard = { escape: true, arrows: true },
 }: GalleryLightboxProps) {
   const lightboxRef = useRef<PhotoSwipeLightbox | null>(null);
+  const onViewSlideRef = useRef(onViewSlide);
   const t = useTranslations();
+
+  // Keep onViewSlide ref current without triggering re-initialization
+  useEffect(() => {
+    onViewSlideRef.current = onViewSlide;
+  }, [onViewSlide]);
 
   const slideData = React.useMemo(
     () =>
@@ -118,8 +124,8 @@ export default function GalleryLightbox({
     });
 
     lightbox.on('change', () => {
-      if (pswpInstance && onViewSlide) {
-        onViewSlide(pswpInstance.currIndex);
+      if (pswpInstance && onViewSlideRef.current) {
+        onViewSlideRef.current(pswpInstance.currIndex);
       }
       updateActiveThumbnail(pswpInstance);
     });
@@ -204,7 +210,11 @@ export default function GalleryLightbox({
       lightbox.destroy();
       lightboxRef.current = null;
     };
-  }, [open, openIndex, slideData, onClose, onViewSlide, zoom, keyboard, t]);
+    // openIndex intentionally excluded: PhotoSwipe manages its own index internally.
+    // Re-creating the lightbox on every index change causes the "black box" bug.
+    // onViewSlide accessed via ref to avoid re-initialization on parent re-renders.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, slideData, onClose, zoom, keyboard, t]);
 
   // PhotoSwipe renders to document.body — no wrapper needed
   return null;
