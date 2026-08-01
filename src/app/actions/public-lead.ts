@@ -19,6 +19,7 @@ interface PublicLeadInput {
   city?: string;
   plan_interest?: string;
   room_count?: number; // S3: Dynamic room count from slider
+  referred_by?: string; // Partner ID that referred this lead
 }
 
 // ============================================================================
@@ -79,7 +80,8 @@ export async function createPublicLeadAction(lead: PublicLeadInput) {
     `Status: ${waitlistTag}`,
     `Trigger Upsell: ${triggerUpsell}`,
     `Fuente: Landing /software`,
-  ].join(' | ');
+    lead.referred_by ? `Referred by: ${lead.referred_by}` : null,
+  ].filter(Boolean).join(' | ');
 
   // 1. Guardar en DB interna (Siempre guardamos, incluso waitlist para análisis futuro)
   const dbResult = createLeadAction({

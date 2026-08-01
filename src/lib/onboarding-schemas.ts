@@ -136,6 +136,8 @@ export const settingsSchema = z.object({
 	wompi_public_key: z.string().optional(),
 	wompi_integrity_secret: z.string().optional(),
 	wompi_sandbox_mode: z.boolean().default(false),
+	// Partner attribution: tracks which partner/seller referred this hotel
+	referred_by: z.string().uuid().optional().nullable(),
 });
 
 // Step 6: Payment

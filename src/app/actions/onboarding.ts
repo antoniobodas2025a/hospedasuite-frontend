@@ -59,6 +59,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
           subscription_plan: 'starter',
           subscription_status: 'trialing',
           trial_ends_at: new Date(Date.now() + TRIAL_DAYS * 86400000).toISOString(),
+          referred_by: state.settings.referred_by || null,
         })
         .select()
         .single();

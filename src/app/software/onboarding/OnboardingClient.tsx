@@ -142,6 +142,12 @@ export default function OnboardingWizard() {
 				if (leadPhone) {
 					updateSettings({ whatsappNumber: leadPhone });
 				}
+
+				// Partner attribution: hydrate referred_by from query params
+				const refPartnerId = searchParams.get("ref");
+				if (refPartnerId) {
+					updateSettings({ referred_by: refPartnerId });
+				}
 			} catch {
 				setError("Error de conexión.");
 			} finally {

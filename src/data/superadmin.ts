@@ -97,6 +97,29 @@ export interface FeatureFlagRow {
   updated_at: string
 }
 
+export interface SplitPaymentRow {
+  id: string
+  booking_id: string
+  hotel_id: string
+  total_amount: number
+  hotel_amount: number
+  platform_amount: number
+  wompi_transaction_id: string | null
+  wompi_subaccount_id: string | null
+  split_status: 'PENDING' | 'COMPLETED' | 'FAILED' | 'REFUNDED'
+  hotel_payout_status: 'PENDING' | 'DISBURSED' | 'FAILED'
+  platform_payout_status: 'PENDING' | 'DISBURSED' | 'FAILED'
+  invoice_generated: boolean
+  invoice_number: string | null
+  invoice_generated_at: string | null
+  created_at: string
+  completed_at: string | null
+  hotels: {
+    name: string
+    slug: string
+  } | null
+}
+
 export interface AuditLogFilters {
   actorEmail?: string
   action?: string
@@ -370,4 +393,50 @@ export async function getAuditLogFilterOptions(): Promise<{
   ]
 
   return { actions, entityTypes }
+}
+
+// ─── Split Payments ───────────────────────────────────────────
+
+/**
+ * Get all split payments with hotel info for superadmin overview.
+ * Returns up to 500 most recent transactions.
+ */
+export async function getSplitPayments(): Promise<SplitPaymentRow[]> {
+  const supabase = getAdminClient()
+
+  const { data, error } = await supabase
+    .from('split_payments')
+    .select(
+      `
+      *,
+      hotels(name, slug)
+    `
+    )
+    .order('created_at', { ascending: false })
+    .limit(500)
+
+  if (error) {
+    console.error('[Superadmin DAL] Error fetching split payments:', error)
+    return []
+  }
+
+  return ((data || []) as any[]).map((p: any) => ({
+    id: p.id,
+    booking_id: p.booking_id,
+    hotel_id: p.hotel_id,
+    total_amount: p.total_amount,
+    hotel_amount: p.hotel_amount,
+    platform_amount: p.platform_amount,
+    wompi_transaction_id: p.wompi_transaction_id ?? null,
+    wompi_subaccount_id: p.wompi_subaccount_id ?? null,
+    split_status: p.split_status,
+    hotel_payout_status: p.hotel_payout_status,
+    platform_payout_status: p.platform_payout_status,
+    invoice_generated: p.invoice_generated ?? false,
+    invoice_number: p.invoice_number ?? null,
+    invoice_generated_at: p.invoice_generated_at ?? null,
+    created_at: p.created_at,
+    completed_at: p.completed_at ?? null,
+    hotels: Array.isArray(p.hotels) ? p.hotels[0] ?? null : p.hotels,
+  }))
 }

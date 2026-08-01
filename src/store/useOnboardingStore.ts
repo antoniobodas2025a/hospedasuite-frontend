@@ -123,6 +123,7 @@ const defaultSettings: SettingsData = {
 	wompi_public_key: "",
 	wompi_integrity_secret: "",
 	wompi_sandbox_mode: false,
+	referred_by: undefined,
 };
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({

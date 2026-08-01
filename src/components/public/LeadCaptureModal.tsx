@@ -106,10 +106,12 @@ export default function LeadCaptureModal({
     if (!validate()) return;
 
     startTransition(async () => {
+      const ref = searchParams.get('ref');
       const result = await createPublicLeadAction({
         ...formData,
         plan_interest: defaultPlan,
         room_count: roomCount, // S3: Inject room count into payload
+        referred_by: ref || undefined, // Partner attribution
       });
 
       if (result.success) {
@@ -133,6 +135,7 @@ export default function LeadCaptureModal({
         }
 
         // S1: Lead capturado → redirect al wizard con datos pre-hidratados
+        const ref = searchParams.get('ref');
         const params = new URLSearchParams({
           plan: defaultPlan,
           email: formData.email,
@@ -141,6 +144,7 @@ export default function LeadCaptureModal({
           hotelName: formData.business_name,
           city: formData.city,
           rooms: String(roomCount),
+          ...(ref ? { ref } : {}), // Pass partner ref to onboarding
         });
         router.push(`/software/onboarding?${params.toString()}`);
       } else {

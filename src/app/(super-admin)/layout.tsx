@@ -1,7 +1,7 @@
 import React from 'react';
 import '../globals.css';
 import Link from 'next/link';
-import { ShieldCheck, LayoutDashboard, CreditCard, Building2, Users, ScrollText, Activity, ToggleLeft } from 'lucide-react';
+import { ShieldCheck, LayoutDashboard, CreditCard, Building2, Users, ScrollText, Activity, ToggleLeft, Split } from 'lucide-react';
 
 export default function SuperAdminLayout({
   children,
@@ -52,6 +52,13 @@ export default function SuperAdminLayout({
             >
               <CreditCard size={18} />
               <span className='hidden lg:inline'>Pagos Pendientes</span>
+            </Link>
+            <Link
+              href='/admin/split-payments'
+              className='flex items-center gap-3 px-3 py-2.5 rounded-[var(--radius-squircle-lg)] text-white/60 hover:text-white hover:bg-white/5 transition-all text-sm font-medium'
+            >
+              <Split size={18} />
+              <span className='hidden lg:inline'>Split Payments</span>
             </Link>
             <Link
               href='/admin/hotels/duplicates'
