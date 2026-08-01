@@ -51,7 +51,7 @@ const CheckoutPanelView: React.FC<CheckoutPanelViewProps> = ({
             <LogOut className='text-indigo-400 size-5' /> Auditoría de Salida
           </h2>
           <p className='text-[10px] text-muted-foreground font-bold uppercase tracking-widest mt-1'>
-            {bookings.length} Unidades en Operación
+            {bookings.length} Reservas Activas
           </p>
         </div>
 
@@ -94,7 +94,7 @@ const CheckoutPanelView: React.FC<CheckoutPanelViewProps> = ({
           {!selectedBooking || !statement ? (
             <motion.div key="empty" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} className='h-full flex flex-col items-center justify-center text-muted-foreground'>
               <Receipt size={64} className='stroke-[1] opacity-20 mb-6' />
-              <p className='text-sm font-bold uppercase tracking-extreme opacity-40 text-muted-foreground'>Aguardando Selección de Nodo</p>
+              <p className='text-sm font-bold uppercase tracking-extreme opacity-40 text-muted-foreground'>Selecciona una reserva</p>
             </motion.div>
           ) : (
             <motion.div key={selectedBooking.id} initial={{ opacity: 0, scale: 0.98 }} animate={{ opacity: 1, scale: 1 }} className="flex flex-col h-full">

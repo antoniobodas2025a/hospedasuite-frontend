@@ -290,7 +290,7 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
         <div className='flex flex-col md:flex-row justify-between items-start md:items-center gap-4 glass-card p-6 rounded-[var(--radius-squircle-3xl)] border border-border shadow-2xl'>
           <div>
             <h2 className='text-2xl font-bold tracking-tight text-foreground flex items-center gap-3'>
-              <CalendarIcon className="size-6 text-indigo-400" /> Matriz de Ocupación
+              <CalendarIcon className="size-6 text-indigo-400" /> Calendario de Ocupación
             </h2>
             <p className='text-muted-foreground text-sm mt-1 capitalize'>{monthName}</p>
           </div>
@@ -336,7 +336,7 @@ export default function CalendarPanel({ rooms, initialBookings, hotelId }: { roo
                 <div className='min-w-[1200px]'>
                   <div className='flex sticky top-0 z-20 glass-panel border-b border-border !rounded-none'>
                     <div className='w-48 shrink-0 p-4 border-r border-border flex items-center justify-center sticky left-0 z-30 bg-background'>
-                      <span className='text-xs font-bold text-muted-foreground uppercase tracking-widest'>Unidad</span>
+                      <span className='text-xs font-bold text-muted-foreground uppercase tracking-widest'>Habitación</span>
                     </div>
                     {dateRange.map((date, idx) => (
                       <div key={idx} className={cn('flex-1 min-w-[100px] border-r border-border p-3 flex flex-col items-center justify-center', date.getDay() === 0 || date.getDay() === 6 ? 'bg-indigo-500/5' : '')}>

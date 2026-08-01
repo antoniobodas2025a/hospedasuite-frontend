@@ -65,6 +65,7 @@ import { cn } from "@/lib/utils";
 import { GlassTooltip } from "@/components/ui/GlassTooltip";
 import { AMENITY_REGISTRY } from "@/lib/amenity-registry";
 import PaymentConnectors from "./PaymentConnectors";
+import AIPolicyAssistant from "@/components/onboarding/AIPolicyAssistant";
 
 const HOTEL_AMENITIES = Object.values(AMENITY_REGISTRY);
 
@@ -1236,19 +1237,34 @@ export default function SettingsPanel({
 
 								{/* TIER 2: OPERATIVO — Protocolos */}
 								<DisclosureSection
-									title="Protocolos"
+									title="Políticas de Cancelación"
 									icon={ShieldAlert}
 									iconColor="text-amber-500/70"
-									description="Politicas de cancelacion y reglas"
+									description="Reglas para cancelaciones y modificaciones"
 									isOpen={showOtaProtocols}
 									onToggle={() => setShowOtaProtocols(!showOtaProtocols)}
 								>
 									<div className="bg-muted p-6 rounded-[var(--radius-squircle-2xl)] border border-amber-500/20">
+										<div className="flex items-center justify-between mb-3">
+											<p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+												Describe tus reglas de cancelación
+											</p>
+											<AIPolicyAssistant
+												type="cancellation"
+												context={{
+													propertyType: initialData?.property_type,
+													checkInTime: initialData?.check_in_time,
+													checkOutTime: initialData?.check_out_time,
+												}}
+												onAccept={(text) => setValue("cancellation_policy", text)}
+												hotelName={initialData?.name}
+											/>
+										</div>
 										<textarea
 											{...register("cancellation_policy")}
 											rows={6}
-											className="w-full bg-transparent outline-none resize-none text-muted-foreground text-xs italic"
-											placeholder="Reglas de cancelacion..."
+											className="w-full bg-transparent outline-none resize-none text-muted-foreground text-sm"
+											placeholder="Ej: Cancelación gratuita hasta 48 horas antes del check-in. Después se cobra el 100% de la primera noche."
 										/>
 									</div>
 								</DisclosureSection>
@@ -1648,7 +1664,7 @@ export default function SettingsPanel({
 							<Save size={24} />
 						)}
 						<span className="text-lg uppercase tracking-tight">
-							Sincronizar Bóveda
+							Guardar Cambios
 						</span>
 					</button>
 				</div>

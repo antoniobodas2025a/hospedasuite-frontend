@@ -137,7 +137,7 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
                           )}
                           {col.id === 'won' && (
                             <div className='w-full text-center text-[10px] text-emerald-400 font-bold flex items-center justify-center gap-1 py-1'>
-                              <CheckCircle size={12} /> Nodo Convertido
+                              <CheckCircle size={12} /> Reserva Confirmada
                             </div>
                           )}
                         </div>

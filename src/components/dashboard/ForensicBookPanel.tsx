@@ -164,7 +164,7 @@ const ForensicBookPanelView: React.FC<ForensicBookPanelViewProps> = ({
                   <td className='p-6'>
                     <div className='flex items-center gap-2.5 text-foreground font-medium'>
                       <BedDouble size={16} className='text-muted-foreground' />
-                      {entry.rooms?.name || 'Nodo No Asignado'}
+                      {entry.rooms?.name || 'Habitación No Asignada'}
                     </div>
                   </td>
 

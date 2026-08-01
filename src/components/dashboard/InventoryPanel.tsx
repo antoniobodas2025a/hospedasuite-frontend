@@ -83,10 +83,10 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
       <div className='flex flex-col lg:flex-row justify-between items-start lg:items-center gap-6 glass-panel p-6 sticky top-4 z-20'>
         <div>
           <h2 className='text-2xl font-bold tracking-tight text-white flex items-center gap-3'>
-            Matriz de Inventario
-            <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-full border border-indigo-500/30 uppercase tracking-widest">{rooms.length} Unidades</span>
+            Habitaciones
+            <span className="text-[10px] bg-indigo-500/20 text-indigo-300 px-2 py-1 rounded-full border border-indigo-500/30 uppercase tracking-widest">{rooms.length} Disponibles</span>
           </h2>
-          <p className='text-muted-foreground font-medium text-sm mt-1'>Control topológico de la propiedad y sincronización de canales.</p>
+          <p className='text-muted-foreground font-medium text-sm mt-1'>Gestiona las habitaciones y su disponibilidad en todos los canales.</p>
         </div>
         
         <div className='flex flex-wrap items-center gap-3 w-full lg:w-auto bg-muted p-2 rounded-[var(--radius-squircle-3xl)] border border-border shadow-inner'>
@@ -94,7 +94,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
             <Search className='absolute left-4 top-1/2 -translate-y-1/2 size-4 text-muted-foreground stroke-[2]' />
             <input
               type='text'
-              placeholder='Buscar unidad...'
+              placeholder='Buscar habitación...'
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className='w-full pl-11 pr-4 py-3 bg-card hover:bg-card border border-transparent hover:border-border rounded-[var(--radius-squircle-2xl)] text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-indigo-500/50 transition-all'
@@ -119,7 +119,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
             <RefreshCw className={cn("size-5 stroke-[2]", isSyncing && "animate-spin")} />
           </button>
           <button onClick={() => onOpenEditor()} className='flex items-center gap-2 px-6 py-3 bg-foreground hover:bg-accent text-black rounded-[var(--radius-squircle-2xl)] font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.15)] transition-all active:scale-95'>
-            <Plus className="size-5 stroke-[2]" /> Nueva
+            <Plus className="size-5 stroke-[2]" /> Nueva Habitación
           </button>
         </div>
       </div>
@@ -128,7 +128,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
       {isLoading && rooms.length === 0 ? (
         <InventorySkeleton />
       ) : rooms.length === 0 ? (
-        <EmptyState icon={BedDouble} title="Sin Coincidencias" description={searchTerm ? "Modifique los filtros de búsqueda superior." : "Inicie la configuración topológica de su hotel añadiendo una unidad."} actionLabel={searchTerm ? "Limpiar Filtros" : "Añadir Unidad"} actionOnClick={searchTerm ? () => { setSearchTerm(''); setFilterStatus('all'); } : () => onOpenEditor()} color="muted" />
+        <EmptyState icon={BedDouble} title="Sin Coincidencias" description={searchTerm ? "Modifica los filtros de búsqueda." : "Agrega tu primera habitación para empezar a vender."} actionLabel={searchTerm ? "Limpiar Filtros" : "Agregar Habitación"} actionOnClick={searchTerm ? () => { setSearchTerm(''); setFilterStatus('all'); } : () => onOpenEditor()} color="muted" />
       ) : (
         <motion.div layout className='grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6'>
           <AnimatePresence>
@@ -175,11 +175,11 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
 
                       <div className='space-y-2 mb-6'>
                         <div className='flex justify-between items-center text-foreground text-sm glass-card px-4 py-3 shadow-inner'>
-                          <span className='flex items-center font-medium text-muted-foreground text-xs uppercase tracking-wider'><Users className='size-4 mr-2' /> Aforo</span>
-                          <span className='font-bold'>{room.capacity} Pax</span>
+                          <span className='flex items-center font-medium text-muted-foreground text-xs uppercase tracking-wider'><Users className='size-4 mr-2' /> Capacidad</span>
+                          <span className='font-bold'>{room.capacity} personas</span>
                         </div>
                         <div className='flex justify-between items-center text-foreground text-sm glass-card px-4 py-3 shadow-inner'>
-                          <span className='flex items-center font-medium text-muted-foreground text-xs uppercase tracking-wider'><DollarSign className='size-4 mr-2 text-emerald-500/70' /> Tarifa Base</span>
+                          <span className='flex items-center font-medium text-muted-foreground text-xs uppercase tracking-wider'><DollarSign className='size-4 mr-2 text-emerald-500/70' /> Precio por Noche</span>
                           <span className='font-mono font-bold text-emerald-400'>${(room.price || 0).toLocaleString()}</span>
                         </div>
                         {room.ical_import_url && (
@@ -234,7 +234,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                   </div>
 
                   <button onClick={() => onOpenEditor(room)} className='relative z-10 w-full py-4 glass-card hover:bg-foreground hover:text-black text-foreground font-bold text-sm transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]'>
-                    <Edit className='size-4 stroke-[2]' /> Editar Unidad
+                    <Edit className='size-4 stroke-[2]' /> Editar Habitación
                   </button>
                 </motion.div>
               );

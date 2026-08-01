@@ -81,7 +81,7 @@ export default function HousekeepingPanel({ rooms }: { rooms: Room[] }) {
       {/* 2. GRID DE DISPONIBILIDAD (Estado de Planta) */}
       <section className="space-y-6">
         <h3 className="text-[10px] font-black uppercase tracking-extreme text-muted-foreground ml-2">
-          Inventario de Unidades ({rooms.length})
+          Estado de Habitaciones ({rooms.length})
         </h3>
         
         <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 gap-3">

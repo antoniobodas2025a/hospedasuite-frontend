@@ -107,9 +107,9 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
             <Calendar size={28} strokeWidth={1.5} />
           </div>
           <div>
-            <p className='text-muted-foreground text-[10px] font-bold uppercase tracking-ultra'>Nodos Facturados</p>
+            <p className='text-muted-foreground text-[10px] font-bold uppercase tracking-ultra'>Reservas Facturadas</p>
             <h3 className='text-3xl font-bold text-foreground tracking-tight'>
-              {filteredSales.length} <span className="text-muted-foreground text-sm font-normal">Unidades</span>
+              {filteredSales.length} <span className="text-muted-foreground text-sm font-normal">reservas</span>
             </h3>
           </div>
         </div>
@@ -134,11 +134,11 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
           <table className='w-full text-left border-collapse'>
             <thead>
               <tr className='bg-muted border-b border-border text-[10px] font-bold text-muted-foreground uppercase tracking-widest'>
-                <th className='p-6'>Vector Fecha</th>
-                <th className='p-6'>Entidad Huésped</th>
-                <th className='p-6'>Unidad Asignada</th>
-                <th className='p-6'>Estado Fiscal</th>
-                <th className='p-6 text-right'>Liquidación</th>
+                <th className='p-6'>Fecha</th>
+                <th className='p-6'>Huésped</th>
+                <th className='p-6'>Habitación</th>
+                <th className='p-6'>Estado</th>
+                <th className='p-6 text-right'>Total</th>
               </tr>
             </thead>
             <tbody className='divide-y divide-white/5'>
@@ -173,7 +173,7 @@ const ReportsPanelView: React.FC<ReportsPanelViewProps> = ({
                   <td colSpan={5} className='p-20 text-center'>
                     <div className='flex flex-col items-center gap-4 opacity-30'>
                       <Search size={48} strokeWidth={1} />
-                      <p className="text-muted-foreground font-mono text-sm uppercase tracking-widest">No se detectaron transacciones en este vector temporal.</p>
+                      <p className="text-muted-foreground font-mono text-sm uppercase tracking-widest">No hay reservas en este período.</p>
                     </div>
                   </td>
                 </tr>
@@ -214,7 +214,7 @@ export default function ReportsPanel({ sales }: ReportsPanelProps) {
       writeFile(wb, `Audit_Report_${dateRange}_${new Date().toISOString().split('T')[0]}.xlsx`);
     } catch (error) {
       console.error("[CRITICAL] Fallo en exportación de activos:", error);
-      alert("Error crítico al generar el libro de Excel.");
+      alert("Error al generar el archivo de Excel.");
     }
   };
 

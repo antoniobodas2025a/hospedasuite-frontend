@@ -144,7 +144,7 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
             <ShoppingBag size={18} className="text-indigo-400" /> Detalle del Pedido
           </h3>
           <span className='text-[10px] font-mono font-bold bg-muted text-muted-foreground px-2.5 py-1 rounded-[var(--radius-squircle-md)] border border-border uppercase'>
-            {cart.length} Nodos
+            {cart.length} Productos
           </span>
         </div>
 
@@ -195,7 +195,7 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
               value={selectedRoomId} 
               onChange={(e) => setSelectedRoomId(e.target.value)}
             >
-              <option value='' className="bg-card text-muted-foreground">-- Seleccionar Unidad --</option>
+              <option value='' className="bg-card text-muted-foreground">-- Seleccionar Habitación --</option>
               {rooms.map((room) => (
                 <option key={room.id} value={room.id} className="bg-card text-foreground">{room.name}</option>
               ))}
@@ -213,7 +213,7 @@ const POSPanelView: React.FC<POSPanelViewProps> = ({
             className='w-full py-5 bg-indigo-600 hover:bg-indigo-500 disabled:bg-muted disabled:text-muted-foreground text-white font-bold rounded-[1.5rem] shadow-xl shadow-indigo-500/20 transition-all flex justify-center items-center gap-3 active:scale-95 border border-indigo-400/20'
           >
             <CreditCard size={20} strokeWidth={2} /> 
-            {cart.length === 0 ? 'Cesta Vacía' : !selectedRoomId ? 'Falta Unidad' : 'Confirmar Cargo'}
+            {cart.length === 0 ? 'Cesta Vacía' : !selectedRoomId ? 'Falta Habitación' : 'Confirmar Cargo'}
           </button>
         </div>
       </div>

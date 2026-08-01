@@ -186,16 +186,28 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
   };
 
   const onSubmitHandler = async (data: RoomFormValues) => {
+    console.log('[RoomEditor] Form submitted with data:', data);
+    console.log('[RoomEditor] Form errors:', errors);
     setIsSaving(true);
     try {
       const result = await saveRoomAction(hotelId, data, initialData?.id);
-      if (result.success) onClose(true);
-      else alert(`Error en la mutación: ${result.error}`);
-    } catch (error) {
-      alert("Excepción crítica al intentar enlazar con la Bóveda.");
+      console.log('[RoomEditor] saveRoomAction result:', result);
+      if (result.success) {
+        onClose(true);
+      } else {
+        alert(`Error al guardar: ${result.error}`);
+      }
+    } catch (error: any) {
+      console.error('[RoomEditor] Error saving room:', error);
+      alert(`Error al guardar la habitación: ${error.message || 'Verifica tu conexión e intenta de nuevo.'}`);
     } finally {
       setIsSaving(false);
     }
+  };
+
+  const onErrorHandler = (errors: any) => {
+    console.error('[RoomEditor] Form validation errors:', errors);
+    alert('Hay errores en el formulario. Revisa los campos marcados en rojo.');
   };
 
   return (
@@ -211,7 +223,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
               <Building2 className="size-6 text-indigo-400" />
             </div>
             <h2 className="text-2xl font-bold text-white tracking-tight">
-              {initialData ? 'Afinación de Nodo' : 'Nuevo Nodo'}
+              {initialData ? 'Editar Habitación' : 'Nueva Habitación'}
             </h2>
           </div>
           <button onClick={() => onClose(false)} className="p-3 bg-muted hover:bg-rose-500/20 rounded-[var(--radius-squircle-2xl)] transition-colors text-muted-foreground hover:text-rose-400">
@@ -220,22 +232,22 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
         </div>
 
         <div className="p-6 md:p-8 overflow-y-auto custom-scrollbar font-poppins text-foreground">
-          <form id="room-form" onSubmit={handleSubmit(onSubmitHandler)} className="space-y-10">
+          <form id="room-form" onSubmit={handleSubmit(onSubmitHandler, onErrorHandler)} className="space-y-10">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
               <div className="space-y-8">
                 <div>
                   <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4 flex items-center gap-2">
-                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Núcleo Operativo
+                    <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Información Principal
                   </h3>
                   <div className="space-y-5">
-                    <input {...register('name')} className="w-full bg-transparent border-b border-border text-white px-2 py-3 focus:outline-none focus:border-indigo-500 font-black text-2xl placeholder:text-muted-foreground" placeholder="Nombre de Unidad" />
+                    <input {...register('name')} className="w-full bg-transparent border-b border-border text-white px-2 py-3 focus:outline-none focus:border-indigo-500 font-black text-2xl placeholder:text-muted-foreground" placeholder="Nombre de la Habitación" />
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
-                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Tarifa (COP)</label>
+                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Precio por Noche (COP)</label>
                         <input type="number" {...register('price', { valueAsNumber: true })} className="w-full bg-transparent text-emerald-400 focus:outline-none font-bold font-mono" />
                       </div>
                       <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
-                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Aforo</label>
+                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Capacidad</label>
                         <input type="number" {...register('capacity', { valueAsNumber: true })} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono" />
                       </div>
                     </div>
@@ -282,7 +294,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
 
               <div className="space-y-8 border-t lg:border-t-0 lg:border-l border-border pt-8 lg:pt-0 lg:pl-8">
                 <div>
-                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Galería Visual (WebP)</h3>
+                  <h3 className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-4">Fotos de la Habitación</h3>
                   <div className="space-y-4">
                     <input type="file" accept="image/*" multiple className="hidden" ref={fileInputRef} onChange={handleFileUpload} />
                     <div 
@@ -298,7 +310,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                       onDragLeave={handleDragLeave}
                       onDrop={handleDrop}
                     >
-                      {isUploadingMedia ? <><Loader2 className="size-4 animate-spin" /> Procesando...</> : <><UploadCloud className="size-4" /> {isDragging ? 'Soltá las fotos acá' : 'Subir desde el Equipo'}</>}
+                      {isUploadingMedia ? <><Loader2 className="size-4 animate-spin" /> Procesando...</> : <><UploadCloud className="size-4" /> {isDragging ? 'Soltá las fotos aquí' : 'Subir Fotos'}</>}
                     </div>
 
                     <DndContext sensors={sensors} collisionDetection={closestCenter} onDragEnd={handleDragEnd}>
@@ -324,9 +336,15 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
         </div>
 
         <div className="p-6 border-t border-border bg-card flex justify-end gap-4">
-          <button onClick={() => onClose(false)} className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Descartar</button>
-          <button type="submit" form="room-form" disabled={isSaving || isUploadingMedia} className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-white bg-indigo-600 rounded-[var(--radius-squircle-lg)] shadow-cta">
-            {isSaving ? 'Guardando...' : 'Compilar Mutación'}
+          <button onClick={() => { console.log('[RoomEditor] Cancelar clicked'); onClose(false); }} className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cancelar</button>
+          <button 
+            type="submit" 
+            form="room-form" 
+            disabled={isSaving || isUploadingMedia} 
+            onClick={() => console.log('[RoomEditor] Guardar clicked, isSaving:', isSaving, 'isUploadingMedia:', isUploadingMedia)}
+            className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-white bg-indigo-600 rounded-[var(--radius-squircle-lg)] shadow-cta disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            {isSaving ? 'Guardando...' : 'Guardar Cambios'}
           </button>
         </div>
       </motion.div>
