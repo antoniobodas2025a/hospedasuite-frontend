@@ -5,16 +5,17 @@ import * as z from "zod";
  * Resolución de error de grabación: Soporta URLs directas (WebP) y Objetos Legacy.
  */
 export const RoomSchema = z.object({
-  name: z.string().min(1, "El nombre/número de unidad es obligatorio."),
+  name: z.string().min(1, "El nombre de la habitación es obligatorio."),
   
-  capacity: z.number().min(1, "Aforo mínimo: 1 PAX."),
+  capacity: z.number().min(1, "La capacidad debe ser al menos 1 persona."),
   
-  price: z.number().min(0, "La tarifa no puede ser negativa."),
+  price: z.number().min(0, "El precio no puede ser negativo."),
   
   description: z.string().optional().nullable(),
   
   // 🛡️ Mantenemos el Enum para evitar inconsistencias en la lógica de UI
-  status: z.enum(['active', 'maintenance', 'dirty', 'clean', 'occupied']).default('active'),
+  // Se incluye 'available' por compatibilidad con datos históricos de la BD
+  status: z.enum(['active', 'available', 'maintenance', 'dirty', 'clean', 'occupied']).default('active'),
   
   // 🚨 REPARACIÓN CRÍTICA: Unión de tipos para evitar el bloqueo de grabación.
   // Acepta: "https://..." O { url: "https://...", alt: "..." }
@@ -32,8 +33,18 @@ export const RoomSchema = z.object({
   amenities: z.array(z.string()).default([]),
   
   // 🛏️ Configuración de cama (migration 022)
-  bed_type: z.enum(['sencilla', 'doble', 'queen', 'king']).optional(),
-  beds: z.number().min(1).max(10).optional().nullable(),
+  // Los preprocesos hacen que campos vacíos/undefined/NaN sean realmente opcionales,
+  // evitando el bug donde un select sin tocar bloqueaba el guardado.
+  bed_type: z.preprocess(
+    (val) => (val === '' || val === undefined || val === null ? undefined : val),
+    z.enum(['sencilla', 'doble', 'queen', 'king'], {
+      invalid_type_error: "Selecciona un tipo de cama válido.",
+    }).optional()
+  ),
+  beds: z.preprocess(
+    (val) => (val === '' || val === undefined || val === null || (typeof val === 'number' && isNaN(val)) ? null : val),
+    z.number().min(1, "Debe tener al menos 1 cama.").max(10, "No puede tener más de 10 camas.").nullable()
+  ),
   
   // 🌐 Sincronización Channel (Null-safe)
   ical_import_url: z.string()

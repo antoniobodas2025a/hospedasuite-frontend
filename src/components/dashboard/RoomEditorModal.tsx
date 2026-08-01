@@ -207,7 +207,20 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
 
   const onErrorHandler = (errors: any) => {
     console.error('[RoomEditor] Form validation errors:', errors);
-    alert('Hay errores en el formulario. Revisa los campos marcados en rojo.');
+    const errorMessages = Object.entries(errors)
+      .map(([field, err]: [string, any]) => {
+        const fieldLabels: Record<string, string> = {
+          name: 'Nombre de la Habitación',
+          price: 'Precio por Noche',
+          capacity: 'Capacidad',
+          bed_type: 'Tipo de Cama',
+          beds: 'Camas',
+          status: 'Estado',
+        };
+        return `${fieldLabels[field] || field}: ${err?.message || 'Dato inválido'}`;
+      })
+      .join('\n');
+    alert(`Faltan o están incorrectos los siguientes datos:\n\n${errorMessages}\n\nPor favor corrígelos y volvé a intentar.`);
   };
 
   return (
@@ -240,15 +253,32 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                     <span className="w-1.5 h-1.5 rounded-full bg-indigo-500"></span> Información Principal
                   </h3>
                   <div className="space-y-5">
-                    <input {...register('name')} className="w-full bg-transparent border-b border-border text-white px-2 py-3 focus:outline-none focus:border-indigo-500 font-black text-2xl placeholder:text-muted-foreground" placeholder="Nombre de la Habitación" />
+                    <div>
+                      <input id="room-name" {...register('name')} aria-invalid={errors.name ? 'true' : 'false'} className={cn("w-full bg-transparent border-b px-2 py-3 focus:outline-none font-black text-2xl placeholder:text-muted-foreground", errors.name ? "border-rose-500 text-rose-400" : "border-border text-white focus:border-indigo-500")} placeholder="Nombre de la Habitación" />
+                      {errors.name && (
+                        <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
+                          <span className="inline-block w-1 h-1 rounded-full bg-rose-500" /> {errors.name.message}
+                        </p>
+                      )}
+                    </div>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
-                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Precio por Noche (COP)</label>
-                        <input type="number" {...register('price', { valueAsNumber: true })} className="w-full bg-transparent text-emerald-400 focus:outline-none font-bold font-mono" />
+                        <label htmlFor="room-price" className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Precio por Noche (COP)</label>
+                        <input id="room-price" type="number" {...register('price', { valueAsNumber: true })} aria-invalid={errors.price ? 'true' : 'false'} className={cn("w-full bg-transparent focus:outline-none font-bold font-mono", errors.price ? "text-rose-400" : "text-emerald-400")} />
+                        {errors.price && (
+                          <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
+                            <span className="inline-block w-1 h-1 rounded-full bg-rose-500" /> {errors.price.message}
+                          </p>
+                        )}
                       </div>
                       <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
-                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Capacidad</label>
-                        <input type="number" {...register('capacity', { valueAsNumber: true })} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono" />
+                        <label htmlFor="room-capacity" className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Capacidad</label>
+                        <input id="room-capacity" type="number" {...register('capacity', { valueAsNumber: true })} aria-invalid={errors.capacity ? 'true' : 'false'} className={cn("w-full bg-transparent focus:outline-none font-bold font-mono", errors.capacity ? "text-rose-400" : "text-white")} />
+                        {errors.capacity && (
+                          <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
+                            <span className="inline-block w-1 h-1 rounded-full bg-rose-500" /> {errors.capacity.message}
+                          </p>
+                        )}
                       </div>
                     </div>
 
@@ -263,18 +293,28 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                     )}
                     <div className="grid grid-cols-2 gap-4 mt-4">
                       <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
-                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Tipo de Cama</label>
-                        <select {...register('bed_type')} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono">
+                        <label htmlFor="room-bed-type" className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Tipo de Cama</label>
+                        <select id="room-bed-type" {...register('bed_type')} aria-invalid={errors.bed_type ? 'true' : 'false'} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono">
                           <option value="">—</option>
                           <option value="sencilla">Sencilla</option>
                           <option value="doble">Doble</option>
                           <option value="queen">Queen</option>
                           <option value="king">King</option>
                         </select>
+                        {errors.bed_type && (
+                          <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
+                            <span className="inline-block w-1 h-1 rounded-full bg-rose-500" /> {errors.bed_type.message}
+                          </p>
+                        )}
                       </div>
                       <div className="bg-muted p-4 rounded-[var(--radius-squircle-2xl)] border border-border">
-                        <label className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Camas</label>
-                        <input type="number" {...register('beds', { valueAsNumber: true })} className="w-full bg-transparent text-white focus:outline-none font-bold font-mono" min={1} max={10} />
+                        <label htmlFor="room-beds" className="block text-[9px] font-bold text-muted-foreground mb-1 uppercase tracking-widest">Camas</label>
+                        <input id="room-beds" type="number" {...register('beds', { valueAsNumber: true })} aria-invalid={errors.beds ? 'true' : 'false'} className={cn("w-full bg-transparent focus:outline-none font-bold font-mono", errors.beds ? "text-rose-400" : "text-white")} min={1} max={10} />
+                        {errors.beds && (
+                          <p className="text-[10px] text-rose-400 mt-1.5 flex items-center gap-1">
+                            <span className="inline-block w-1 h-1 rounded-full bg-rose-500" /> {errors.beds.message}
+                          </p>
+                        )}
                       </div>
                     </div>
                   </div>
