@@ -24,14 +24,14 @@ vi.mock('photoswipe', () => ({
 
 // Mock photoswipe/lightbox
 vi.mock('photoswipe/lightbox', () => ({
-  default: vi.fn().mockImplementation(() => ({
-    init: vi.fn(),
-    destroy: vi.fn(),
-    on: vi.fn(),
-    off: vi.fn(),
-    loadAndOpen: vi.fn(),
-    pswp: null,
-  })),
+  default: class MockPhotoSwipeLightbox {
+    init = vi.fn();
+    destroy = vi.fn();
+    on = vi.fn();
+    off = vi.fn();
+    loadAndOpen = vi.fn();
+    pswp = null;
+  },
 }));
 
 // Mock photoswipe CSS

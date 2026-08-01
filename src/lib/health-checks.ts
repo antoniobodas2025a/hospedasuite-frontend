@@ -280,8 +280,9 @@ export async function checkStorageHealth(): Promise<StorageHealth> {
     clearTimeout(timeout);
 
     // R2 returns 200 or 403 (if bucket exists but no list permission)
-    // Both indicate connectivity is OK — the bucket exists and is reachable
-    if (response.ok || response.status === 403) {
+    // 400 is also returned for unauthenticated HEAD requests to the bucket root
+    // All indicate the bucket exists and is reachable
+    if (response.ok || response.status === 403 || response.status === 400) {
       return { ok: true };
     }
 
