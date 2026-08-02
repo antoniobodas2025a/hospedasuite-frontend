@@ -29,9 +29,9 @@ Chain strategy: stacked-to-main
 
 ## Phase 1: Foundation (PR 1 - Critical Fixes)
 
-- [ ] 1.1 Create `src/types/index.ts` additions: `BookingAnalyticsEvent` union type, `QuickDatePreset` interface
-- [ ] 1.2 Modify `src/lib/pricing.ts`: Add `getTaxLabel(rate: number)` and `formatPriceWithTax(base, rate, nights)` functions
-- [ ] 1.3 Create `src/hooks/useBookingFlow.ts`: Processing state, button disable logic, modal orchestration
+- [x] 1.1 Create `src/types/index.ts` additions: `BookingAnalyticsEvent` union type, `QuickDatePreset` interface
+- [x] 1.2 Modify `src/lib/pricing.ts`: Add `getTaxLabel(rate: number)` and `formatPriceWithTax(base, rate, nights)` functions
+- [x] 1.3 Create `src/hooks/useBookingFlow.ts`: Processing state, button disable logic, modal orchestration
 - [x] 1.4 Create `src/components/ota/InlineDatePicker.tsx`: Extract DayPicker with quick dates, availability coloring, collapsible behavior
 - [x] 1.5 Modify `src/app/(ota)/hotel/[slug]/page.tsx`: Thread `hotel.tax_rate` to all children (RoomCard, BookingWidget, RoomShowcaseModal)
 - [x] 1.6 Modify `src/components/ota/RoomCard.tsx`: Add `React.memo`, unified "Reservar →" button, price with IVA breakdown using `formatPriceWithTax`, `useMemo` for price calculations
@@ -96,7 +96,7 @@ Chain strategy: stacked-to-main
 
 ## Testing Tasks
 
-- [ ] T.1 Write unit tests for `pricing.ts`: tax_rate=0, null, 0.19 edge cases
+- [x] T.1 Write unit tests for `pricing.ts`: tax_rate=0, null, 0.19 edge cases
 - [x] T.2 Write unit tests for `InlineDatePicker`: quick dates, keyboard nav, availability coloring
 - [ ] T.3 Write integration tests for RoomCard price display with/without dates
 - [ ] T.4 Write integration tests for BookingWidget ↔ InlineDatePicker ↔ URL sync
