@@ -210,7 +210,7 @@ function RoomCardInner({
       className="group/card will-change-transform"
       initial={{ opacity: 0, y: 24 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ type: 'spring', stiffness: 200, damping: 20, duration: 0.4 }}
+      transition={{ type: 'spring' as const, stiffness: 200, damping: 20, duration: 0.4 }}
       whileHover={{ y: -4, transition: { duration: MOTION_DURATION.normal / 1000, ease: MOTION_EASING.easeOut } }}
       whileTap={{ scale: 0.96, transition: { duration: MOTION_DURATION.normal / 1000, ease: MOTION_EASING.easeOut } }}
     >
@@ -220,7 +220,7 @@ function RoomCardInner({
         <motion.div
           layoutId={`room-image-${room.id}`}
           className="w-full md:w-72 aspect-[3/4] md:aspect-auto md:h-full md:min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner"
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          transition={{ type: 'spring' as const, stiffness: 300, damping: 30 }}
         >
           <Image
             src={getImageSizeUrl(coverImage, 'card')}

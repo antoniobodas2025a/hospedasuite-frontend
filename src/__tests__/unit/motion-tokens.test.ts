@@ -8,9 +8,9 @@ describe('motion-tokens', () => {
     expect(MOTION_DURATION.slow).toBe(300);
   });
 
-  it('exports easing constants', () => {
-    expect(MOTION_EASING.easeOut).toBe('cubic-bezier(0, 0, 0.2, 1)');
-    expect(MOTION_EASING.easeInOut).toBe('cubic-bezier(0.4, 0, 0.2, 1)');
+  it('exports easing constants as bezier tuples for Framer Motion', () => {
+    expect(MOTION_EASING.easeOut).toEqual([0, 0, 0.2, 1]);
+    expect(MOTION_EASING.easeInOut).toEqual([0.4, 0, 0.2, 1]);
   });
 
   it('exports card stagger delay', () => {

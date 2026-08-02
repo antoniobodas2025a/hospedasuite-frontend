@@ -16,7 +16,7 @@ describe('motion.css', () => {
   it('disables animations when reduced motion is preferred', () => {
     const css = readFileSync(motionCssPath, 'utf-8');
     const reducedMotionBlock = css.match(
-      /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([^}]*)\}/s
+      /@media\s*\(prefers-reduced-motion:\s*reduce\)\s*\{([\s\S]*?)\n\}/
     );
     expect(reducedMotionBlock).toBeTruthy();
     const rules = reducedMotionBlock?.[1] ?? '';

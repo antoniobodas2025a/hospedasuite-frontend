@@ -11,8 +11,8 @@ export const MOTION_DURATION = {
 } as const;
 
 export const MOTION_EASING = {
-  easeOut: 'cubic-bezier(0, 0, 0.2, 1)',
-  easeInOut: 'cubic-bezier(0.4, 0, 0.2, 1)',
+  easeOut: [0, 0, 0.2, 1] as [number, number, number, number],
+  easeInOut: [0.4, 0, 0.2, 1] as [number, number, number, number],
 } as const;
 
 export const MOTION_STAGGER = {
