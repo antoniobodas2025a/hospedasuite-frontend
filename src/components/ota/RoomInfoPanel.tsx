@@ -19,7 +19,7 @@ interface RoomInfoPanelProps {
 	isOverCapacity: boolean;
 	totalPrice: number;
 	nights: number;
-	taxRegime?: 'simplified' | 'responsible';
+	taxRate?: number;
 	variant?: "desktop" | "mobile";
 	onAdjustGuests?: () => void;
 	onSeeLargerRooms?: () => void;
@@ -34,7 +34,7 @@ export function RoomInfoPanel({
 	isOverCapacity,
 	totalPrice,
 	nights,
-	taxRegime = 'simplified',
+	taxRate = 0.19,
 	variant = "desktop",
 	onAdjustGuests,
 	onSeeLargerRooms,
@@ -216,7 +216,7 @@ export function RoomInfoPanel({
 					<PriceBreakdown
 						pricePerNight={room.price_per_night ?? room.price ?? 0}
 						nights={nights}
-						taxRegime={taxRegime}
+						taxRate={taxRate}
 						showDetails={false}
 					/>
 				</div>

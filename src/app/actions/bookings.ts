@@ -487,7 +487,7 @@ export async function verifyBookingAction(bookingId: string) {
 
     const { data: booking, error } = await supabaseAdmin
       .from('bookings')
-      .select('id, status, total_price, check_in, check_out, source, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_regime)')
+      .select('id, status, total_price, check_in, check_out, source, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_rate, tax_regime)')
       .eq('id', bookingId)
       .single();
 
@@ -500,7 +500,8 @@ export async function verifyBookingAction(bookingId: string) {
     const checkOutDate = new Date(booking.check_out);
     const nights = Math.max(1, Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24)));
     const roomPrice = (booking.rooms as any[])?.[0]?.price ?? 0;
-    const taxRegime = (booking.hotels as any[])?.[0]?.tax_regime ?? 'simplified';
+    const hotelRecord = (booking.hotels as any[])?.[0] ?? {};
+    const taxRate = typeof hotelRecord.tax_rate === 'number' ? hotelRecord.tax_rate : (hotelRecord.tax_regime === 'responsible' ? 0.19 : 0);
 
     return {
       success: true,
@@ -512,7 +513,7 @@ export async function verifyBookingAction(bookingId: string) {
         checkOut: booking.check_out,
         nights,
         pricePerNight: roomPrice,
-        taxRegime: taxRegime as 'simplified' | 'responsible',
+        taxRate,
         guestName: (booking.guests as any[])?.[0]?.full_name,
         guestEmail: (booking.guests as any[])?.[0]?.email,
         roomName: (booking.rooms as any[])?.[0]?.name,

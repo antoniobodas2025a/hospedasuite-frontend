@@ -67,13 +67,11 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
   });
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Price coherence: use hotel's tax_regime for all displays
+  // Price coherence: use hotel's tax_rate for all displays
   const subtotal = basePrice;
-  const taxRegime = hotel.tax_regime ?? 'simplified'; // backward compatibility
-  const effectiveRate = taxRegime === 'responsible' ? 0.19 : 0;
+  const effectiveRate = hotel.tax_rate ?? 0.19;
   const taxes = calculateTaxAmount(subtotal, effectiveRate);
   const grandTotal = subtotal + taxes;
-  const hasTax = effectiveRate > 0;
 
   // Persist state to sessionStorage on every change (booking-scoped key)
   useEffect(() => {
@@ -354,7 +352,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
               <PriceBreakdown
                 pricePerNight={Math.round(basePrice / nights)}
                 nights={nights}
-                taxRegime={taxRegime}
+                taxRate={effectiveRate}
                 className="!bg-background/10 !border-background/20"
               />
 

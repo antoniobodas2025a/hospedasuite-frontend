@@ -119,7 +119,7 @@ export default async function BookingSuccessPage({
               <PriceBreakdown
                 pricePerNight={booking.pricePerNight}
                 nights={booking.nights}
-                taxRegime={booking.taxRegime ?? 'simplified'}
+                taxRate={booking.taxRate ?? 0.19}
                 showDetails={false}
               />
             )}

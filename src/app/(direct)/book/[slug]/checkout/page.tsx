@@ -40,8 +40,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     notFound();
   }
 
-  // Fallback: si tax_regime no existe (migración pendiente), usar 'simplified'
-  const taxRegime = hotel.tax_regime ?? 'simplified';
+
 
   const { data: room, error: roomError } = await supabase
     .from('rooms')
@@ -75,7 +74,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
         <h1 className="text-3xl font-extrabold text-foreground mb-8 text-center">Completa tu Reserva</h1>
 
         <CheckoutForm
-          hotel={{...hotel, tax_regime: taxRegime}}
+          hotel={hotel}
           room={{...room, price: roomPrice}}
           checkIn={checkin}
           checkOut={checkout}
