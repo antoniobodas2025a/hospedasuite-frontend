@@ -227,7 +227,6 @@ export function RoomShowcaseModal({
 									checkOut={checkOut}
 									defaultGuests={defaultGuests}
 									isOverCapacity={isOverCapacity}
-									totalPrice={totalPrice}
 									nights={nights}
 									taxRate={hotel.tax_rate ?? 0.19}
 									variant="desktop"
@@ -303,10 +302,9 @@ export function RoomShowcaseModal({
 								checkOut={checkOut}
 								defaultGuests={defaultGuests}
 								isOverCapacity={isOverCapacity}
-								totalPrice={totalPrice}
-								nights={nights}
-								taxRate={hotel.tax_rate ?? 0.19}
-								variant="mobile"
+									nights={nights}
+									taxRate={hotel.tax_rate ?? 0.19}
+									variant="mobile"
 								onAdjustGuests={() => {
 									onClose();
 									window.scrollTo({ top: 0, behavior: "smooth" });

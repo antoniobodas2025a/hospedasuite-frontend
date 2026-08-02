@@ -41,10 +41,10 @@ Chain strategy: stacked-to-main
 
 ## Phase 2: Core UX (PR 2 - Unified CTA)
 
-- [ ] 2.1 Modify `src/components/ota/RoomCard.tsx`: Remove conditional button text ("Explorar Unidad" / "Asegurar Refugio"), always show "Reservar →"
-- [ ] 2.2 Modify `src/components/ota/BookingWidget.tsx`: Unify button text to "Reservar →" in all states
-- [ ] 2.3 Modify `src/components/ota/RoomShowcaseModal.tsx`: Button text already "Reservar" — verify consistency
-- [ ] 2.4 Modify `src/components/ota/RoomShowcaseModal.tsx`: Remove redundant room description (already shown in RoomCard)
+- [x] 2.1 Modify `src/components/ota/RoomCard.tsx`: Remove conditional button text ("Explorar Unidad" / "Asegurar Refugio"), always show "Reservar →"
+- [x] 2.2 Modify `src/components/ota/BookingWidget.tsx`: Unify button text to "Reservar →" in all states
+- [x] 2.3 Modify `src/components/ota/RoomShowcaseModal.tsx`: Button text should be "Reservar" — verify it's consistent
+- [x] 2.4 Modify `src/components/ota/RoomShowcaseModal.tsx`: Remove redundant room description (already shown in RoomCard)
 
 ## Phase 3: Modal Redesign (PR 2b - Value Add)
 

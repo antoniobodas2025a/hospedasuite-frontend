@@ -31,9 +31,7 @@ vi.mock("next-intl", () => ({
       'ota.booking.onlyOneLeft': 'Solo queda 1 disponible',
       'ota.booking.onlyXLeft': 'Solo quedan {count} disponibles',
       'ota.booking.noAvailability': 'Sin disponibilidad',
-      'ota.booking.reserveNow': 'Reservar Ahora',
-      'ota.booking.checkAvailability': 'Ver Disponibilidad',
-      'ota.booking.viewRooms': 'Ver Habitaciones',
+      'ota.booking.reserve': 'Reservar',
       'ota.booking.bestPriceGuaranteed': 'Mejor precio garantizado',
       'ota.booking.bestPriceDesc': 'Reserva directo sin comisiones',
       'ota.booking.instantConfirmation': 'Confirmacion inmediata',
@@ -73,6 +71,46 @@ describe("BookingWidget", () => {
     cleanup();
     mockRouter.push.mockClear();
     mockSearchParams.forEach((_, key) => mockSearchParams.delete(key));
+  });
+
+  it("displays unified 'Reservar' button text without dates selected", () => {
+    const { getByRole } = render(
+      <BookingWidget
+        rooms={baseRooms}
+        taxRate={0.19}
+      />
+    );
+
+    expect(getByRole('button', { name: /Reservar/ })).toBeInTheDocument();
+  });
+
+  it("displays unified 'Reservar' button text with dates selected", () => {
+    const { getByRole } = render(
+      <BookingWidget
+        rooms={baseRooms}
+        checkIn="2026-08-10"
+        checkOut="2026-08-11"
+        taxRate={0.19}
+      />
+    );
+
+    expect(getByRole('button', { name: /Reservar/ })).toBeInTheDocument();
+  });
+
+  it("does not display conditional button text", () => {
+    const { queryByText } = render(
+      <BookingWidget
+        rooms={baseRooms}
+        taxRate={0.19}
+      />
+    );
+
+    expect(queryByText('Ver Habitaciones')).not.toBeInTheDocument();
+    expect(queryByText('Ver Disponibilidad')).not.toBeInTheDocument();
+    expect(queryByText('Reservar Ahora')).not.toBeInTheDocument();
+    expect(queryByText('Book Now')).not.toBeInTheDocument();
+    expect(queryByText('Check Availability')).not.toBeInTheDocument();
+    expect(queryByText('View Rooms')).not.toBeInTheDocument();
   });
 
   it("does not display 'Desde' label in the widget", () => {

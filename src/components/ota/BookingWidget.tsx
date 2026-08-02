@@ -91,13 +91,6 @@ export default function BookingWidget({
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
-  const handleViewRooms = () => {
-    const el = document.getElementById('rooms-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
-  };
-
   const handleDateChange = (range: { from: Date; to: Date }) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('checkin', range.from.toISOString().split('T')[0]);
@@ -238,9 +231,9 @@ export default function BookingWidget({
             </div>
           )}
 
-          {/* CTA principal — Smart: Ver habitaciones o Reservar */}
+          {/* CTA principal — Unified "Reservar" */}
           <motion.button
-            onClick={selectedRoom ? handleReserve : handleViewRooms}
+            onClick={handleReserve}
             disabled={availableCount === 0}
             whileTap={availableCount > 0 ? { scale: 0.96 } : undefined}
             transition={springSnappy()}
@@ -248,12 +241,10 @@ export default function BookingWidget({
               'w-full py-4 rounded-[var(--radius-squircle-2xl)] font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-colors duration-300',
               availableCount === 0
                 ? 'bg-muted text-muted-foreground/40 cursor-not-allowed shadow-none'
-                : selectedRoom
-                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta'
-                  : 'bg-foreground hover:bg-primary text-background shadow-foreground/20',
+                : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta',
             )}
           >
-            {selectedRoom ? (checkIn && checkOut ? t('ota.booking.reserveNow') : t('ota.booking.checkAvailability')) : t('ota.booking.viewRooms')}
+            {t('ota.booking.reserve')}
             <ArrowRight size={16} strokeWidth={2.5} />
           </motion.button>
 

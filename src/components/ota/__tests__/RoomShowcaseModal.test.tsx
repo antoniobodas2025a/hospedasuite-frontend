@@ -7,7 +7,24 @@ import { RoomShowcaseModal } from '../RoomShowcaseModal';
 
 // Mock next-intl
 vi.mock('next-intl', () => ({
-  useTranslations: () => (key: string) => key,
+  useTranslations: () => (key: string) => {
+    const messages: Record<string, string> = {
+      'ota.showcase.reserve': 'Reservar',
+      'ota.showcase.total': 'Total',
+      'ota.showcase.cop': 'COP',
+      'ota.showcase.fallbackDescription': 'Un refugio acogedor',
+      'ota.showcase.amenities': 'Amenidades',
+      'ota.showcase.premiumService': 'Servicio premium',
+      'ota.showcase.bookingSummary': 'Resumen de Reserva',
+      'ota.showcase.stay': 'Estadía',
+      'ota.showcase.nights_one': 'noche',
+      'ota.showcase.nights_other': 'noches',
+      'ota.showcase.occupancy': 'Ocupación',
+      'ota.showcase.guest_one': 'huésped',
+      'ota.showcase.guest_other': 'huéspedes',
+    };
+    return messages[key] ?? key;
+  },
   useLocale: () => 'es',
 }));
 
@@ -54,8 +71,8 @@ vi.mock('@/components/ui/glass', () => ({
   ),
 }));
 
-// Mock RoomGallery
-vi.mock('../RoomGallery', () => ({
+// Mock RoomGalleryGrid
+vi.mock('../RoomGalleryGrid', () => ({
   default: ({ images, roomName }: { images: any[]; roomName: string }) => (
     <div data-testid="room-gallery">{roomName} - {images.length} images</div>
   ),
@@ -181,6 +198,35 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         btn.textContent?.includes('reserve') || btn.textContent?.includes('Reservar')
       );
       expect(reserveButton).toBeTruthy();
+    });
+  });
+
+  it('displays reserve button with unified "Reservar" text', async () => {
+    const { getAllByRole } = render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+      />
+    );
+
+    await waitFor(() => {
+      const reserveButtons = getAllByRole('button', { name: /Reservar/ });
+      expect(reserveButtons.length).toBeGreaterThanOrEqual(1);
+    });
+  });
+
+  it('does not repeat the room description already shown on the card', async () => {
+    const { queryAllByText } = render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+      />
+    );
+
+    await waitFor(() => {
+      expect(queryAllByText('Habitación de lujo con vista al mar')).toHaveLength(0);
     });
   });
 

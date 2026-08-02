@@ -181,4 +181,23 @@ describe("RoomCard", () => {
     // 3 nights: $200.000 × 3 = $600.000 + IVA (19%): $114.000 | Total: $714.000
     expect(getByText(/\$714\.000/)).toBeInTheDocument();
   });
+
+  it("does not display legacy conditional button text", () => {
+    const { queryByText } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotel={{ tax_rate: 0.19 }}
+      />
+    );
+
+    expect(queryByText('Asegurar Refugio')).not.toBeInTheDocument();
+    expect(queryByText('Explorar Unidad')).not.toBeInTheDocument();
+    expect(queryByText('Secure Room')).not.toBeInTheDocument();
+    expect(queryByText('Explore Room')).not.toBeInTheDocument();
+  });
 });

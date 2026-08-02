@@ -17,7 +17,6 @@ interface RoomInfoPanelProps {
 	checkOut: string;
 	defaultGuests: number;
 	isOverCapacity: boolean;
-	totalPrice: number;
 	nights: number;
 	taxRate?: number;
 	variant?: "desktop" | "mobile";
@@ -32,7 +31,6 @@ export function RoomInfoPanel({
 	checkOut,
 	defaultGuests,
 	isOverCapacity,
-	totalPrice,
 	nights,
 	taxRate = 0.19,
 	variant = "desktop",
@@ -66,9 +64,6 @@ export function RoomInfoPanel({
 				>
 					{room.name}
 				</h2>
-				<p className="text-[15px] text-muted-foreground font-lora leading-relaxed italic">
-					{room.description || t("ota.showcase.fallbackDescription")}
-				</p>
 			</div>
 
 			{/* Amenidades */}
