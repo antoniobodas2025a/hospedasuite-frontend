@@ -175,4 +175,18 @@ describe("BookingWidget", () => {
       'Esta habitación se reserva rápido'
     );
   });
+
+  it("renders skeleton placeholders when isLoading is true", () => {
+    const { getAllByTestId, queryByRole, queryByTestId } = render(
+      <BookingWidget
+        rooms={baseRooms}
+        taxRate={0.19}
+        isLoading
+      />
+    );
+
+    expect(getAllByTestId('skeleton-loader').length).toBeGreaterThan(0);
+    expect(queryByRole('button', { name: /Reservar/i })).not.toBeInTheDocument();
+    expect(queryByTestId('inline-date-picker')).not.toBeInTheDocument();
+  });
 });

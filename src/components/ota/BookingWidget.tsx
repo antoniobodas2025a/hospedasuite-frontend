@@ -9,6 +9,7 @@ import { extendSearchParams } from '@/lib/handoff-url';
 import { calculateTotalWithTax, DEFAULT_TAX_RATE, formatPrice } from '@/lib/pricing';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import InlineDatePicker from './InlineDatePicker';
 import { useTranslations } from 'next-intl';
 
@@ -34,6 +35,7 @@ interface BookingWidgetProps {
   cancellationPolicy?: string | null;
   totalRooms?: number;
   taxRate?: number;
+  isLoading?: boolean;
 }
 
 export default function BookingWidget({
@@ -43,6 +45,7 @@ export default function BookingWidget({
   cancellationPolicy,
   totalRooms,
   taxRate,
+  isLoading,
 }: BookingWidgetProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -74,6 +77,25 @@ export default function BookingWidget({
   const subtotal = useMemo(() => (nights > 0 ? roomPrice * nights : roomPrice), [nights, roomPrice]);
   const effectiveRate = useMemo(() => taxRate ?? DEFAULT_TAX_RATE, [taxRate]);
   const { total: totalPrice, hasTax } = useMemo(() => calculateTotalWithTax(subtotal, effectiveRate), [subtotal, effectiveRate]);
+
+  // Loading skeleton — keep the same card shape so layout doesn't jump
+  if (isLoading) {
+    return (
+      <div className="sticky top-8">
+        <GlassCard className="overflow-hidden">
+          <div className="p-6 space-y-4 bg-gradient-to-br from-primary to-primary/90">
+            <SkeletonLoader width="40%" height={14} rounded="md" className="bg-white/20" />
+            <SkeletonLoader width="70%" height={40} rounded="lg" className="bg-white/20" />
+          </div>
+          <div className="p-6 space-y-5">
+            <SkeletonLoader width="100%" height={120} rounded="lg" />
+            <SkeletonLoader width="100%" height={72} rounded="xl" />
+            <SkeletonLoader width="100%" height={48} rounded="md" />
+          </div>
+        </GlassCard>
+      </div>
+    );
+  }
 
   // Hide widget when RoomShowcaseModal is open
   if (selectedRoomId) return null;
