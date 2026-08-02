@@ -18,6 +18,7 @@ import { DEFAULT_TAX_RATE, formatPrice, formatPriceWithTax } from '@/lib/pricing
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 import { trackTaxRateFallback } from '@/lib/analytics';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { MOTION_DURATION, MOTION_EASING } from '@/lib/motion-tokens';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
@@ -210,8 +211,10 @@ function RoomCardInner({
       initial={{ opacity: 0, y: 24 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ type: 'spring', stiffness: 200, damping: 20, duration: 0.4 }}
+      whileHover={{ y: -4, transition: { duration: MOTION_DURATION.normal / 1000, ease: MOTION_EASING.easeOut } }}
+      whileTap={{ scale: 0.96, transition: { duration: MOTION_DURATION.normal / 1000, ease: MOTION_EASING.easeOut } }}
     >
-      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl transition-all duration-500 group-hover/card:scale-[1.01]">
+      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl hover:shadow-brand-500/10 transition-all duration-500 group-hover/card:scale-[1.01]">
 
         {/* ZONA VISUAL (Atraccion) */}
         <motion.div
@@ -360,7 +363,8 @@ function RoomCardInner({
               scroll={false}
               onClick={trackClickReserve}
               className={cn(
-                "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] transition-transform bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta"
+                "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta",
+                "focus-visible:outline-2 focus-visible:outline focus-visible:outline-primary focus-visible:outline-offset-2"
               )}
             >
               {t('ota.roomCard.reserve', { defaultValue: 'Reservar' })} <ArrowRight size={16} strokeWidth={2.5} />

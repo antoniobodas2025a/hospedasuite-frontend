@@ -26,11 +26,28 @@ vi.mock("next/navigation", () => ({
   useSearchParams: () => mockSearchParams,
 }));
 
-// Mock framer-motion
+// Mock framer-motion and expose animation props as data attributes for assertions
 vi.mock("framer-motion", () => ({
   motion: {
-    div: ({ children, ...props }: { children?: React.ReactNode }) =>
-      React.createElement("div", props, children),
+    div: ({
+      children,
+      whileHover,
+      whileTap,
+      transition,
+      ...props
+    }: {
+      children?: React.ReactNode;
+      whileHover?: Record<string, unknown>;
+      whileTap?: Record<string, unknown>;
+      transition?: Record<string, unknown>;
+      [key: string]: unknown;
+    }) =>
+      React.createElement("div", {
+        ...props,
+        "data-whilehover": whileHover ? JSON.stringify(whileHover) : undefined,
+        "data-whiletap": whileTap ? JSON.stringify(whileTap) : undefined,
+        "data-transition": transition ? JSON.stringify(transition) : undefined,
+      }, children),
   },
   useInView: () => true,
   AnimatePresence: ({ children }: { children?: React.ReactNode }) =>
@@ -378,5 +395,49 @@ describe("RoomCard", () => {
 
     expect(getAllByTestId('skeleton-loader').length).toBeGreaterThan(0);
     expect(queryByText(baseRoom.name)).not.toBeInTheDocument();
+  });
+
+  it("configures hover lift and active scale-down micro-animations", () => {
+    const { container } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+      />
+    );
+
+    const card = container.querySelector('[data-testid="room-card"]');
+    expect(card).toBeInTheDocument();
+    expect(card?.hasAttribute('data-whilehover')).toBe(true);
+    expect(card?.hasAttribute('data-whiletap')).toBe(true);
+    expect(JSON.parse(card?.getAttribute('data-whilehover') || '{}')).toHaveProperty('y', -4);
+    expect(JSON.parse(card?.getAttribute('data-whiletap') || '{}')).toHaveProperty('scale', 0.96);
+  });
+
+  it("makes the reserve CTA keyboard focusable", () => {
+    const { container } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+      />
+    );
+
+    const cta = container.querySelector('a');
+    expect(cta).toBeTruthy();
+    act(() => {
+      cta?.focus();
+    });
+    expect(cta).toHaveFocus();
   });
 });
