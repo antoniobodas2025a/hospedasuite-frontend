@@ -17,6 +17,7 @@ import type { Room, GalleryItem } from '@/types';
 import { DEFAULT_TAX_RATE, formatPrice, formatPriceWithTax } from '@/lib/pricing';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 import { trackTaxRateFallback } from '@/lib/analytics';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
@@ -30,13 +31,14 @@ interface RoomCardProps {
   checkIn?: string | null;
   checkOut?: string | null;
   isSearchingDates: boolean;
+  isLoading?: boolean;
   allRooms?: (Partial<Room> & { id: string; name: string; cover_image_blur?: string })[];
   totalRooms?: number;
   availableCount?: number;
   hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
 }
 
-function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
+function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDates, isLoading, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
   const searchParams = useSearchParams();
   const guests = searchParams.get('guests');
 
@@ -100,6 +102,7 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
       checkIn={checkIn}
       checkOut={checkOut}
       isSearchingDates={isSearchingDates}
+      isLoading={isLoading}
       allRooms={allRooms}
       totalRooms={totalRooms}
       availableCount={availableCount}
@@ -125,6 +128,7 @@ export default memo(RoomCard);
 function RoomCardInner({
   room,
   isSearchingDates,
+  isLoading,
   availableCount,
   hotel,
   isBestValue,
@@ -154,6 +158,7 @@ function RoomCardInner({
   nights: number;
 }) {
   const t = useTranslations();
+
   const cardRef = useRef<HTMLElement | null>(null);
   const isInView = useInView(cardRef, { once: true, margin: '-50px' });
   const [badgeVisible, setBadgeVisible] = useState(false);
@@ -172,6 +177,30 @@ function RoomCardInner({
     },
     [trackViewRef]
   );
+
+  if (isLoading) {
+    return (
+      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-72 aspect-[3/4] md:aspect-auto md:min-h-[260px] rounded-[var(--radius-squircle-2xl)] overflow-hidden">
+          <SkeletonLoader width="100%" height="100%" rounded="2xl" />
+        </div>
+        <div className="flex-1 flex flex-col justify-between py-2 pr-2 gap-4">
+          <div className="space-y-3">
+            <SkeletonLoader width="60%" height={28} rounded="lg" />
+            <SkeletonLoader width="80%" height={16} rounded="md" />
+            <SkeletonLoader width="40%" height={16} rounded="md" />
+          </div>
+          <div className="mt-4 pt-5 flex flex-wrap items-end justify-between border-t border-border/40 gap-4">
+            <div className="space-y-2">
+              <SkeletonLoader width={120} height={20} rounded="md" />
+              <SkeletonLoader width={160} height={36} rounded="lg" />
+            </div>
+            <SkeletonLoader width={120} height={48} rounded="md" />
+          </div>
+        </div>
+      </GlassCard>
+    );
+  }
 
   return (
     <motion.div

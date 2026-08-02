@@ -360,4 +360,23 @@ describe("RoomCard", () => {
     expect(warnSpy).not.toHaveBeenCalled();
     warnSpy.mockRestore();
   });
+
+  it("renders skeleton placeholders when isLoading is true", () => {
+    const { getAllByTestId, queryByText } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+        isLoading
+      />
+    );
+
+    expect(getAllByTestId('skeleton-loader').length).toBeGreaterThan(0);
+    expect(queryByText(baseRoom.name)).not.toBeInTheDocument();
+  });
 });
