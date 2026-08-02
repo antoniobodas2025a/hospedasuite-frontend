@@ -6,11 +6,11 @@ import React from "react";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
 import RoomCard from "@/components/ota/RoomCard";
 
-// Mock next/image to render a simple img
+// Mock next/image to render a simple img that exposes priority/loading props
 vi.mock("next/image", () => ({
   __esModule: true,
-  default: ({ alt, src }: { alt: string; src: string }) =>
-    React.createElement("img", { alt, src }),
+  default: ({ alt, src, loading, priority }: { alt: string; src: string; loading?: 'eager' | 'lazy'; priority?: boolean }) =>
+    React.createElement("img", { alt, src, "data-loading": loading, "data-priority": priority ? 'true' : undefined }),
 }));
 
 // Mock next/link to render a simple anchor that forwards onClick
@@ -460,5 +460,26 @@ describe("RoomCard", () => {
     expect(cta).toBeTruthy();
     expect(cta?.getAttribute('href')).toContain('guests=2');
     expect(cta?.getAttribute('href')).toContain('showRoom=room-1');
+  });
+
+  it("loads hero image eagerly when imagePriority is true", () => {
+    const { container } = render(
+      <RoomCard
+        room={{ ...baseRoom, gallery: ['https://example.com/hero.jpg'] }}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+        imagePriority
+      />
+    );
+
+    const img = container.querySelector('img');
+    expect(img).toBeTruthy();
+    expect(img?.getAttribute('data-loading')).toBe('eager');
+    expect(img?.getAttribute('data-priority')).toBe('true');
   });
 });

@@ -148,10 +148,9 @@ export default function RoomsListWithFilters({
             variants={containerVariants}
           >
             <AnimatePresence mode="popLayout">
-              {filteredRooms.map((room) => (
+              {filteredRooms.map((room, i) => (
                 <motion.div
                   key={room.id}
-                  layout
                   variants={itemVariants}
                 >
                   <RoomCard
@@ -166,6 +165,8 @@ export default function RoomsListWithFilters({
                     availableCount={availableRooms.length}
                     hotel={hotel}
                     searchParams={searchParams}
+                    imagePriority={i < 2}
+                    index={i}
                   />
                 </motion.div>
               ))}

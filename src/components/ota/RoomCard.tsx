@@ -122,6 +122,8 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
       nights={nights}
       trackViewRef={trackViewRef}
       trackClickReserve={trackClickReserve}
+      imagePriority={imagePriority}
+      index={index}
     />
   );
 }
@@ -146,6 +148,8 @@ function RoomCardInner({
   nights,
   trackViewRef,
   trackClickReserve,
+  imagePriority,
+  index,
 }: RoomCardProps & {
   trackViewRef: (node: HTMLElement | null) => void;
   trackClickReserve: () => void;
@@ -159,6 +163,8 @@ function RoomCardInner({
   basePrice: number;
   priceBreakdown: ReturnType<typeof formatPriceWithTax>;
   nights: number;
+  imagePriority?: boolean;
+  index?: number;
 }) {
   const t = useTranslations();
 
@@ -231,7 +237,8 @@ function RoomCardInner({
             className="object-cover transition-transform duration-700 group-hover/card:scale-110"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 288px"
             quality={75}
-            loading="lazy"
+            loading={imagePriority ? 'eager' : 'lazy'}
+            priority={imagePriority}
             placeholder={room.cover_image_blur ? 'blur' : undefined}
             blurDataURL={room.cover_image_blur}
           />
