@@ -1,0 +1,90 @@
+/* ====================================================
+   MOTION DESIGN SYSTEM — Global motion tokens & accessibility
+   ====================================================
+   This file is imported in src/app/layout.tsx so these rules apply
+   globally. It pairs with the typed motion tokens in
+   src/lib/motion-tokens.ts.
+*/
+
+/* Smooth scrolling for in-page anchors and keyboard navigation */
+html {
+  scroll-behavior: smooth;
+}
+
+/* ====================================================
+   FOCUS STATES — Visible, accessible 2px outline
+   ==================================================== */
+
+/* Apply a consistent, high-contrast focus ring to all interactive controls */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  outline: 2px solid var(--primary, currentColor);
+  outline-offset: 2px;
+  border-radius: 0.25rem;
+}
+
+/* Remove the default browser outline when our custom ring is present */
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible,
+[role="button"]:focus-visible,
+[role="link"]:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
+  box-shadow: none;
+}
+
+/* ====================================================
+   REDUCED MOTION — Respect user preference
+   ==================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+    scroll-behavior: auto !important;
+  }
+
+  /* Keep the focus ring visible even when animations are disabled */
+  button:focus-visible,
+  a:focus-visible,
+  input:focus-visible,
+  select:focus-visible,
+  textarea:focus-visible,
+  [role="button"]:focus-visible,
+  [role="link"]:focus-visible,
+  [tabindex]:not([tabindex="-1"]):focus-visible {
+    transition: none !important;
+  }
+}
+
+/* ====================================================
+   UTILITY: Explicitly disable motion for a subtree
+   ==================================================== */
+
+.reduce-motion *,
+.reduce-motion *::before,
+.reduce-motion *::after {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ====================================================
+   UTILITY: Motion-safe container
+   ==================================================== */
+
+@media (prefers-reduced-motion: no-preference) {
+  .motion-safe {
+    animation: inherit;
+    transition: inherit;
+  }
+}

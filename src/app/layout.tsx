@@ -4,6 +4,7 @@ import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import { Geist } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
+import '../styles/motion.css';
 import { cn } from "@/lib/utils";
 import AIReferralTracker from '@/components/analytics/AIReferralTracker';
 import RecoveryTokenDetector from '@/components/RecoveryTokenDetector';
