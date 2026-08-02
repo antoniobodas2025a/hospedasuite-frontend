@@ -30,6 +30,7 @@ interface HotelForModal {
 	rooms?: Array<Partial<Room> & { price_per_night?: number }>;
 	tax_rate?: number;
 	tax_regime?: 'simplified' | 'responsible';
+	cancellation_policy?: string | null;
 }
 
 // GlassCard imported from @/components/ui/glass (design system, theme-aware)
@@ -230,6 +231,7 @@ export function RoomShowcaseModal({
 									nights={nights}
 									taxRate={hotel.tax_rate ?? 0.19}
 									variant="desktop"
+									cancellationPolicy={hotel.cancellation_policy}
 									onAdjustGuests={() => {
 										onClose();
 										window.scrollTo({ top: 0, behavior: "smooth" });
@@ -248,9 +250,9 @@ export function RoomShowcaseModal({
 							</div>
 						</div>
 
-						{/* Dock de cierre — barra flotante glass */}
-						<div className="shrink-0 p-4">
-							<div className="flex items-center justify-between px-5 py-4 glass-card">
+					{/* Dock de cierre — barra flotante glass */}
+					<div data-testid="modal-cta" className="shrink-0 p-4 sticky bottom-0 bg-gradient-to-t from-background/80 to-transparent backdrop-blur-xl z-20">
+						<div className="flex items-center justify-between px-5 py-4 glass-card">
 								<div>
 									<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-ultra mb-0.5">
 										{t("ota.showcase.total")}
@@ -284,7 +286,7 @@ export function RoomShowcaseModal({
 
 				{/* MOBILE/ TABLET STACKED (< lg) — Single scroll container */}
 				<div className="lg:hidden flex flex-col flex-1 overflow-hidden bg-gradient-to-b from-muted/80 to-background/60">
-					{/* Scroll unificado: galería + amenidades + resumen (Miller's Law: 3 chunks, 1 scroll) */}
+					{/* Scroll unificado: galería + amenidades + resumen + CTA sticky (Miller's Law: 3 chunks, 1 scroll) */}
 					<div className="flex-1 overflow-y-auto custom-scrollbar">
 						{/* Galeria — ahora con grid asimétrico */}
 						<div className="p-2">
@@ -295,7 +297,7 @@ export function RoomShowcaseModal({
 						</div>
 
 						{/* Info scrolleable */}
-						<div className="px-4 py-5 pb-32">
+						<div className="px-4 py-5">
 							<RoomInfoPanel
 								room={room}
 								checkIn={checkIn}
@@ -305,26 +307,26 @@ export function RoomShowcaseModal({
 									nights={nights}
 									taxRate={hotel.tax_rate ?? 0.19}
 									variant="mobile"
-								onAdjustGuests={() => {
-									onClose();
-									window.scrollTo({ top: 0, behavior: "smooth" });
-								}}
-								onSeeLargerRooms={() => {
-									onClose();
-									const section = document.getElementById("rooms-section");
-									if (section) section.scrollIntoView({ behavior: "smooth" });
-								}}
-								hasLargerRooms={
-									hotel.rooms?.some(
-										(r) => Number(r.capacity ?? 0) > Number(room.capacity ?? 0)
-									) ?? false
-								}
-							/>
+									cancellationPolicy={hotel.cancellation_policy}
+									onAdjustGuests={() => {
+										onClose();
+										window.scrollTo({ top: 0, behavior: "smooth" });
+									}}
+									onSeeLargerRooms={() => {
+										onClose();
+										const section = document.getElementById("rooms-section");
+										if (section) section.scrollIntoView({ behavior: "smooth" });
+									}}
+									hasLargerRooms={
+										hotel.rooms?.some(
+											(r) => Number(r.capacity ?? 0) > Number(room.capacity ?? 0)
+										) ?? false
+									}
+								/>
 						</div>
-					</div>
 
-					{/* Dock de cierre mobile — glass flotante */}
-					<div className="absolute bottom-0 left-0 right-0 p-3 z-20">
+					{/* Dock de cierre mobile — sticky al bottom del scroll */}
+					<div data-testid="modal-cta" className="sticky bottom-0 left-0 right-0 p-3 bg-gradient-to-t from-background/80 to-transparent backdrop-blur-xl z-20">
 						<div className="flex items-center justify-between px-5 py-4 glass-card">
 							<div>
 								<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-ultra mb-0.5">
@@ -355,7 +357,8 @@ export function RoomShowcaseModal({
 						</div>
 					</div>
 				</div>
-			</motion.div>
+			</div>
+		</motion.div>
 		</motion.div>
 	</AnimatePresence>
 	);

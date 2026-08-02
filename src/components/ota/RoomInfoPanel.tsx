@@ -1,5 +1,15 @@
 import React from "react";
-import { Star, Clock, Users, Info, ClipboardList } from "lucide-react";
+import {
+	Star,
+	Clock,
+	Users,
+	Info,
+	ClipboardList,
+	CreditCard,
+	Landmark,
+	Smartphone,
+	HelpCircle,
+} from "lucide-react";
 import { format } from "date-fns";
 import { GlassCard } from "@/components/ui/glass";
 import { getRoomAmenityById } from "@/lib/amenity-registry";
@@ -23,6 +33,7 @@ interface RoomInfoPanelProps {
 	onAdjustGuests?: () => void;
 	onSeeLargerRooms?: () => void;
 	hasLargerRooms?: boolean;
+	cancellationPolicy?: string | null;
 }
 
 export function RoomInfoPanel({
@@ -37,6 +48,7 @@ export function RoomInfoPanel({
 	onAdjustGuests,
 	onSeeLargerRooms,
 	hasLargerRooms,
+	cancellationPolicy,
 }: RoomInfoPanelProps) {
 	const t = useTranslations();
 	const appLocale = useLocale();
@@ -65,6 +77,29 @@ export function RoomInfoPanel({
 					{room.name}
 				</h2>
 			</div>
+
+			{/* Precio destacado */}
+			<GlassCard data-testid="modal-price" className={cn(isDesktop ? "p-5" : "p-4")}>
+				<div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
+					<div>
+						<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
+							{t("ota.showcase.total")}
+						</p>
+						<p className="text-2xl sm:text-3xl font-black text-foreground">
+							${((room.price_per_night ?? room.price ?? 0) * nights).toLocaleString()}{" "}
+							<span className="text-sm font-medium text-muted-foreground">
+								{t("ota.showcase.cop")}
+							</span>
+						</p>
+					</div>
+					<PriceBreakdown
+						pricePerNight={room.price_per_night ?? room.price ?? 0}
+						nights={nights}
+						taxRate={taxRate}
+						showDetails={false}
+					/>
+				</div>
+			</GlassCard>
 
 			{/* Amenidades */}
 			{room.amenities && room.amenities.length > 0 && (
@@ -207,13 +242,76 @@ export function RoomInfoPanel({
 						</div>
 					)}
 
-					{/* Desglose financiero */}
-					<PriceBreakdown
-						pricePerNight={room.price_per_night ?? room.price ?? 0}
-						nights={nights}
-						taxRate={taxRate}
-						showDetails={false}
-					/>
+					</div>
+			</GlassCard>
+
+			{/* Política de cancelación */}
+			<GlassCard data-testid="modal-policies" className={cn(isDesktop ? "p-5" : "p-4")}>
+				<div className="flex items-start justify-between gap-4">
+					<div className="flex-1 min-w-0">
+						<h3
+							className={cn(
+								"text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2",
+								isDesktop ? "mb-2" : "mb-1.5"
+							)}
+						>
+							<Info size={13} className="text-brand-500" />
+							{t("ota.showcase.cancellationPolicy")}
+						</h3>
+						<p className="text-sm font-semibold text-foreground leading-relaxed">
+							{cancellationPolicy || t("ota.showcase.noPolicy")}
+						</p>
+					</div>
+					<button
+						type="button"
+						className="shrink-0 size-8 rounded-full flex items-center justify-center text-muted-foreground hover:text-brand-600 hover:bg-brand-500/10 transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-brand-500"
+						aria-label={t("ota.showcase.cancellationPolicyHelp")}
+						title={t("ota.showcase.cancellationPolicyHelp")}
+					>
+						<HelpCircle size={16} />
+					</button>
+				</div>
+			</GlassCard>
+
+			{/* Métodos de pago */}
+			<GlassCard data-testid="modal-payment" className={cn(isDesktop ? "p-5" : "p-4")}>
+				<h3
+					className={cn(
+						"text-[10px] font-bold text-muted-foreground uppercase tracking-widest flex items-center gap-2",
+						isDesktop ? "mb-4" : "mb-3"
+					)}
+				>
+					<CreditCard size={13} className="text-brand-500" />
+					{t("ota.showcase.paymentMethods")}
+				</h3>
+				<div className={cn("grid gap-3", isDesktop ? "grid-cols-3" : "grid-cols-3")}>
+					<div
+						className="flex flex-col items-center gap-2 p-3 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-brand-500/5 to-warm-400/5 border border-brand-500/10"
+						aria-label={t("ota.showcase.cards")}
+					>
+						<CreditCard size={22} className="text-brand-500" strokeWidth={1.5} />
+						<span className="text-[10px] font-semibold text-center leading-tight">
+							{t("ota.showcase.cards")}
+						</span>
+					</div>
+					<div
+						className="flex flex-col items-center gap-2 p-3 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-brand-500/5 to-warm-400/5 border border-brand-500/10"
+						aria-label={t("ota.showcase.pse")}
+					>
+						<Landmark size={22} className="text-brand-500" strokeWidth={1.5} />
+						<span className="text-[10px] font-semibold text-center leading-tight">
+							{t("ota.showcase.pse")}
+						</span>
+					</div>
+					<div
+						className="flex flex-col items-center gap-2 p-3 rounded-[var(--radius-squircle-lg)] bg-gradient-to-br from-brand-500/5 to-warm-400/5 border border-brand-500/10"
+						aria-label={t("ota.showcase.nequi")}
+					>
+						<Smartphone size={22} className="text-brand-500" strokeWidth={1.5} />
+						<span className="text-[10px] font-semibold text-center leading-tight">
+							{t("ota.showcase.nequi")}
+						</span>
+					</div>
 				</div>
 			</GlassCard>
 		</div>

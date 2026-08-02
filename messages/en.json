@@ -209,6 +209,13 @@
       "adjustSearch": "Adjust Search",
       "adjust": "Adjust",
       "reserve": "Book Now",
+      "cancellationPolicy": "Cancellation Policy",
+      "cancellationPolicyHelp": "Cancel free up to 24h before check-in",
+      "noPolicy": "Check with the hotel",
+      "paymentMethods": "Payment methods",
+      "cards": "Credit/debit cards",
+      "pse": "PSE",
+      "nequi": "Nequi",
       "nights": "{count, plural, one {night} other {nights}}",
       "guest": "{count, plural, one {guest} other {guests}}"
     },

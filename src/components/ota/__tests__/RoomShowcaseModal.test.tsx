@@ -66,8 +66,8 @@ vi.mock('@/lib/pricing', () => ({
 
 // Mock @/components/ui/glass
 vi.mock('@/components/ui/glass', () => ({
-  GlassCard: ({ children, className }: { children: React.ReactNode; className?: string }) => (
-    <div className={className}>{children}</div>
+  GlassCard: ({ children, className, ...props }: { children: React.ReactNode; className?: string; [key: string]: any }) => (
+    <div className={className} {...props}>{children}</div>
   ),
 }));
 
@@ -268,6 +268,65 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
       // Ambas columnas deben tener overflow-y-auto para scroll independiente
       const scrollableColumns = container.querySelectorAll('.overflow-y-auto');
       expect(scrollableColumns.length).toBeGreaterThanOrEqual(2);
+    });
+  });
+
+  it('renders content hierarchy in order: Gallery → Title → Price → Policies → Payment → CTA', async () => {
+    const { container } = render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+      />
+    );
+
+    await waitFor(() => {
+      const gallery = container.querySelector('[data-testid="room-gallery"]');
+      const title = container.querySelector('#room-modal-title');
+      const price = container.querySelector('[data-testid="modal-price"]');
+      const policies = container.querySelector('[data-testid="modal-policies"]');
+      const payment = container.querySelector('[data-testid="modal-payment"]');
+      const cta = container.querySelector('[data-testid="modal-cta"]');
+
+      expect(gallery).toBeTruthy();
+      expect(title).toBeTruthy();
+      expect(price).toBeTruthy();
+      expect(policies).toBeTruthy();
+      expect(payment).toBeTruthy();
+      expect(cta).toBeTruthy();
+
+      const positions = [
+        gallery?.compareDocumentPosition(title!),
+        title?.compareDocumentPosition(price!),
+        price?.compareDocumentPosition(policies!),
+        policies?.compareDocumentPosition(payment!),
+        payment?.compareDocumentPosition(cta!),
+      ];
+
+      // DOCUMENT_POSITION_FOLLOWING = 4
+      positions.forEach((pos) => {
+        expect(pos! & 4).toBeTruthy();
+      });
+    });
+  });
+
+  it('keeps CTA sticky at bottom during scroll', async () => {
+    const { container } = render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+      />
+    );
+
+    await waitFor(() => {
+      const cta = container.querySelector('[data-testid="modal-cta"]');
+      expect(cta).toBeTruthy();
+      const ctaClasses = cta?.className || '';
+      expect(
+        ctaClasses.includes('sticky') || ctaClasses.includes('fixed') || ctaClasses.includes('absolute')
+      ).toBe(true);
+      expect(ctaClasses.includes('bottom-0') || ctaClasses.includes('bottom-4')).toBe(true);
     });
   });
 });

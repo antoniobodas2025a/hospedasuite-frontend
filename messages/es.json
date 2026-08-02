@@ -209,6 +209,13 @@
       "adjustSearch": "Ajuste la Busqueda",
       "adjust": "Ajuste",
       "reserve": "Reservar",
+      "cancellationPolicy": "Política de Cancelación",
+      "cancellationPolicyHelp": "Cancela gratis hasta 24h antes del check-in",
+      "noPolicy": "Consultar con el hotel",
+      "paymentMethods": "Métodos de pago",
+      "cards": "Tarjetas de crédito/débito",
+      "pse": "PSE",
+      "nequi": "Nequi",
       "nights": "{count, plural, one {noche} other {noches}}",
       "guest": "{count, plural, one {huésped} other {huéspedes}}"
     },
