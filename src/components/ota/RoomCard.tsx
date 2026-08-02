@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState, useMemo, memo } from 'react';
+import React, { useRef, useEffect, useState, useMemo, memo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -15,6 +15,8 @@ import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
 import { DEFAULT_TAX_RATE, formatPrice, formatPriceWithTax } from '@/lib/pricing';
+import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
+import { trackTaxRateFallback } from '@/lib/analytics';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
@@ -24,16 +26,17 @@ import { DEFAULT_TAX_RATE, formatPrice, formatPriceWithTax } from '@/lib/pricing
 interface RoomCardProps {
   room: Partial<Room> & { id: string; name: string; cover_image_blur?: string };
   hotelSlug: string;
+  hotelId?: string;
   checkIn?: string | null;
   checkOut?: string | null;
   isSearchingDates: boolean;
   allRooms?: (Partial<Room> & { id: string; name: string; cover_image_blur?: string })[];
   totalRooms?: number;
   availableCount?: number;
-  hotel?: { cancellation_policy?: string | null; tax_rate?: number };
+  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
 }
 
-function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
+function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
   const searchParams = useSearchParams();
   const guests = searchParams.get('guests');
 
@@ -54,6 +57,21 @@ function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRoo
   const basePrice = useMemo(() => room.price_per_night || room.price || 0, [room.price_per_night, room.price]);
   const taxRate = useMemo(() => hotel?.tax_rate ?? DEFAULT_TAX_RATE, [hotel?.tax_rate]);
   const priceBreakdown = useMemo(() => formatPriceWithTax(basePrice, taxRate, nights), [basePrice, taxRate, nights]);
+
+  useEffect(() => {
+    if (hotelId && hotel?.tax_rate == null) {
+      trackTaxRateFallback({ hotel_id: hotelId, fallback_rate: DEFAULT_TAX_RATE });
+    }
+  }, [hotelId, hotel?.tax_rate]);
+
+  const { trackViewRef, trackClickReserve } = useBookingAnalytics({
+    hotelId,
+    roomId: room.id,
+    price: basePrice,
+    nights,
+    hasDates: !!checkIn && !!checkOut,
+    taxRate,
+  });
 
   const allPrices = useMemo(() => allRooms.map((r) => r.price_per_night || r.price || 0).filter((p) => p > 0), [allRooms]);
   const minPrice = useMemo(() => (allPrices.length > 0 ? Math.min(...allPrices) : 0), [allPrices]);
@@ -96,6 +114,8 @@ function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRoo
       basePrice={basePrice}
       priceBreakdown={priceBreakdown}
       nights={nights}
+      trackViewRef={trackViewRef}
+      trackClickReserve={trackClickReserve}
     />
   );
 }
@@ -117,7 +137,11 @@ function RoomCardInner({
   basePrice,
   priceBreakdown,
   nights,
+  trackViewRef,
+  trackClickReserve,
 }: RoomCardProps & {
+  trackViewRef: (node: HTMLElement | null) => void;
+  trackClickReserve: () => void;
   isBestValue: boolean;
   isGreatDeal: boolean;
   isPopular: boolean;
@@ -130,8 +154,8 @@ function RoomCardInner({
   nights: number;
 }) {
   const t = useTranslations();
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+  const cardRef = useRef<HTMLElement | null>(null);
+  const isInView = useInView(cardRef, { once: true, margin: '-50px' });
   const [badgeVisible, setBadgeVisible] = useState(false);
 
   useEffect(() => {
@@ -141,9 +165,17 @@ function RoomCardInner({
     }
   }, [isInView]);
 
+  const setCardRef = useCallback(
+    (node: HTMLElement | null) => {
+      cardRef.current = node;
+      trackViewRef(node);
+    },
+    [trackViewRef]
+  );
+
   return (
     <motion.div
-      ref={ref}
+      ref={setCardRef}
       data-testid="room-card"
       className="group/card will-change-transform"
       initial={{ opacity: 0, y: 24 }}
@@ -297,6 +329,7 @@ function RoomCardInner({
             <Link
               href={destinationUrl}
               scroll={false}
+              onClick={trackClickReserve}
               className={cn(
                 "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] transition-transform bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta"
               )}

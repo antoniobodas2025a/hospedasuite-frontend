@@ -14,6 +14,9 @@ vi.mock('posthog-js', () => ({
 }));
 
 class FakeIntersectionObserver {
+  readonly root: Element | null = null;
+  readonly rootMargin: string = '0px';
+  readonly thresholds: readonly number[] = [0.5];
   private callback: IntersectionObserverCallback;
   private observed: Element[] = [];
   static instances: FakeIntersectionObserver[] = [];
@@ -25,6 +28,10 @@ class FakeIntersectionObserver {
   ) {
     this.callback = callback;
     FakeIntersectionObserver.instances.push(this);
+  }
+
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
   }
 
   observe(element: Element) {

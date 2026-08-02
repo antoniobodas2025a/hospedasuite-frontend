@@ -58,8 +58,8 @@ Chain strategy: stacked-to-main
 
 ## Phase 4: Analytics & Polish (PR 3)
 
-- [ ] 4.1 Create `src/hooks/useBookingAnalytics.ts`: 6 PostHog events with IntersectionObserver for `view_room`
-- [ ] 4.2 Modify `src/lib/analytics.ts`: Extend with booking flow events
+- [x] 4.1 Create `src/hooks/useBookingAnalytics.ts`: 6 PostHog events with IntersectionObserver for `view_room`
+- [x] 4.2 Modify `src/lib/analytics.ts`: Extend with booking flow events
 - [ ] 4.3 Modify `src/components/ota/RoomCard.tsx`: Integrate `useBookingAnalytics` for `view_room` and `click_reserve`
 - [ ] 4.4 Modify `src/components/ota/RoomShowcaseModal.tsx`: Fire `open_room_modal`, `close_room_modal`, `abandon_booking` events
 - [ ] 4.5 Modify `src/components/ota/RoomsListWithFilters.tsx`: Remove CSS `animate-fade-in-up` (use Framer Motion only)

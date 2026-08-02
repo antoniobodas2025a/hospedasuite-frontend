@@ -306,18 +306,19 @@ export default async function ChannelHotelDetailPage({
 								}
 							/>
 							<div className="mt-6">
-								<RoomsListWithFilters
-									rooms={hotel.rooms || []}
-									availableRooms={availableRooms}
-									slug={slug}
-									checkin={checkin ?? null}
-									checkout={checkout ?? null}
-									isSearchingDates={isSearchingDates}
-									hotel={{
-										cancellation_policy: hotel.cancellation_policy,
-										tax_rate: hotel.tax_rate,
-									}}
-								/>
+                <RoomsListWithFilters
+                  rooms={hotel.rooms || []}
+                  availableRooms={availableRooms}
+                  slug={slug}
+                  hotelId={hotel.id}
+                  checkin={checkin ?? null}
+                  checkout={checkout ?? null}
+                  isSearchingDates={isSearchingDates}
+                  hotel={{
+                    cancellation_policy: hotel.cancellation_policy,
+                    tax_rate: hotel.tax_rate,
+                  }}
+                />
 							</div>
 						</div>
 

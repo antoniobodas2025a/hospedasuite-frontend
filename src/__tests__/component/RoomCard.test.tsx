@@ -1,9 +1,9 @@
 // @vitest-environment jsdom
 import "../bun-test-dom-setup";
 import "@testing-library/jest-dom";
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, act, fireEvent } from "@testing-library/react";
 import RoomCard from "@/components/ota/RoomCard";
 
 // Mock next/image to render a simple img
@@ -13,11 +13,11 @@ vi.mock("next/image", () => ({
     React.createElement("img", { alt, src }),
 }));
 
-// Mock next/link to render a simple anchor
+// Mock next/link to render a simple anchor that forwards onClick
 vi.mock("next/link", () => ({
   __esModule: true,
-  default: ({ children, href }: { children: React.ReactNode; href: string }) =>
-    React.createElement("a", { href }, children),
+  default: ({ children, href, onClick }: { children: React.ReactNode; href: string; onClick?: () => void }) =>
+    React.createElement("a", { href, onClick }, children),
 }));
 
 // Mock next/navigation
@@ -75,6 +75,65 @@ vi.mock("@/components/ui/glass", () => ({
     React.createElement("div", null, children),
 }));
 
+// Mock posthog for analytics assertions
+vi.mock("posthog-js", () => ({
+  __esModule: true,
+  default: {
+    capture: vi.fn(),
+  },
+}));
+
+import posthog from "posthog-js";
+
+class FakeIntersectionObserver {
+  readonly root: Element | null = null;
+  readonly rootMargin: string = '0px';
+  readonly thresholds: readonly number[] = [0.5];
+  private callback: IntersectionObserverCallback;
+  private observed: Element[] = [];
+  static instances: FakeIntersectionObserver[] = [];
+
+  constructor(
+    callback: IntersectionObserverCallback,
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _options?: IntersectionObserverInit
+  ) {
+    this.callback = callback;
+    FakeIntersectionObserver.instances.push(this);
+  }
+
+  takeRecords(): IntersectionObserverEntry[] {
+    return [];
+  }
+
+  observe(element: Element) {
+    this.observed.push(element);
+  }
+
+  unobserve(element: Element) {
+    this.observed = this.observed.filter((el) => el !== element);
+  }
+
+  disconnect() {
+    this.observed = [];
+  }
+
+  trigger(isIntersecting: boolean, intersectionRatio: number) {
+    this.callback(
+      this.observed.map((target) => ({
+        target,
+        isIntersecting,
+        intersectionRatio,
+        boundingClientRect: {} as DOMRectReadOnly,
+        intersectionRect: {} as DOMRectReadOnly,
+        rootBounds: null,
+        time: Date.now(),
+      })) as IntersectionObserverEntry[],
+      this
+    );
+  }
+}
+
 const baseRoom = {
   id: 'room-1',
   name: 'Suite Deluxe',
@@ -87,6 +146,12 @@ const baseRoom = {
 };
 
 describe("RoomCard", () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+    FakeIntersectionObserver.instances = [];
+    globalThis.IntersectionObserver = FakeIntersectionObserver as unknown as typeof IntersectionObserver;
+  });
+
   afterEach(() => {
     cleanup();
     mockSearchParams.forEach((_, key) => mockSearchParams.delete(key));
@@ -101,6 +166,7 @@ describe("RoomCard", () => {
         allRooms={[baseRoom]}
         totalRooms={1}
         availableCount={1}
+        hotelId="hotel-test"
         hotel={{ tax_rate: 0.19 }}
       />
     );
@@ -119,6 +185,7 @@ describe("RoomCard", () => {
         allRooms={[baseRoom]}
         totalRooms={1}
         availableCount={1}
+        hotelId="hotel-test"
         hotel={{ tax_rate: 0.19 }}
       />
     );
@@ -135,6 +202,7 @@ describe("RoomCard", () => {
         allRooms={[baseRoom]}
         totalRooms={1}
         availableCount={1}
+        hotelId="hotel-test"
         hotel={{ tax_rate: 0.19 }}
       />
     );
@@ -155,6 +223,7 @@ describe("RoomCard", () => {
         allRooms={[baseRoom]}
         totalRooms={1}
         availableCount={1}
+        hotelId="hotel-test"
         hotel={{ tax_rate: 0 }}
       />
     );
@@ -174,6 +243,7 @@ describe("RoomCard", () => {
         allRooms={[baseRoom]}
         totalRooms={1}
         availableCount={1}
+        hotelId="hotel-test"
         hotel={{ tax_rate: 0.19 }}
       />
     );
@@ -191,6 +261,7 @@ describe("RoomCard", () => {
         allRooms={[baseRoom]}
         totalRooms={1}
         availableCount={1}
+        hotelId="hotel-test"
         hotel={{ tax_rate: 0.19 }}
       />
     );
@@ -199,5 +270,94 @@ describe("RoomCard", () => {
     expect(queryByText('Explorar Unidad')).not.toBeInTheDocument();
     expect(queryByText('Secure Room')).not.toBeInTheDocument();
     expect(queryByText('Explore Room')).not.toBeInTheDocument();
+  });
+
+  it("fires view_room when the card becomes 50% visible", () => {
+    render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+      />
+    );
+
+    const instance = FakeIntersectionObserver.instances[0];
+    act(() => instance.trigger(true, 0.5));
+
+    expect(posthog.capture).toHaveBeenCalledWith('view_room', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      price: 200000,
+      has_dates: false,
+      tax_rate: 0.19,
+    });
+  });
+
+  it("fires click_reserve when the reserve CTA is clicked", () => {
+    const { container } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        checkIn="2026-08-10"
+        checkOut="2026-08-11"
+        isSearchingDates={true}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+      />
+    );
+
+    const cta = container.querySelector('a');
+    expect(cta).toBeTruthy();
+    act(() => fireEvent.click(cta!));
+
+    expect(posthog.capture).toHaveBeenCalledWith('click_reserve', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      price: 200000,
+      nights: 1,
+      has_dates: true,
+      tax_rate: 0.19,
+    });
+  });
+
+  it("uses DEFAULT_TAX_RATE and fires tax_rate_fallback when tax_rate is null", () => {
+    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: null as unknown as number }}
+      />
+    );
+
+    const instance = FakeIntersectionObserver.instances[0];
+    act(() => instance.trigger(true, 0.5));
+
+    expect(posthog.capture).toHaveBeenCalledWith('tax_rate_fallback', {
+      hotel_id: 'hotel-test',
+      fallback_rate: 0.19,
+    });
+    expect(posthog.capture).toHaveBeenCalledWith('view_room', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      price: 200000,
+      has_dates: false,
+      tax_rate: 0.19,
+    });
+    expect(warnSpy).not.toHaveBeenCalled();
+    warnSpy.mockRestore();
   });
 });

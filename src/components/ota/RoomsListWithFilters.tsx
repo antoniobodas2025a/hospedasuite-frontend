@@ -25,16 +25,18 @@ interface RoomsListWithFiltersProps {
   rooms: RoomItem[];
   availableRooms: RoomItem[];
   slug: string;
+  hotelId?: string;
   checkin?: string | null;
   checkout?: string | null;
   isSearchingDates: boolean;
-  hotel?: { cancellation_policy?: string | null; tax_rate?: number };
+  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
 }
 
 export default function RoomsListWithFilters({
   rooms,
   availableRooms,
   slug,
+  hotelId,
   checkin,
   checkout,
   isSearchingDates,
@@ -135,6 +137,7 @@ export default function RoomsListWithFilters({
                 <RoomCard
                   room={room}
                   hotelSlug={slug}
+                  hotelId={hotelId}
                   checkIn={checkin}
                   checkOut={checkout}
                   isSearchingDates={isSearchingDates}
