@@ -102,6 +102,8 @@ vi.mock('@/lib/pricing', () => ({
     total: subtotal * (1 + rate),
     hasTax: rate > 0,
   }),
+  calculateTaxAmount: (subtotal: number, rate: number) => subtotal * rate,
+  getTaxLabel: (rate: number) => (rate > 0 ? 'IVA (19%)' : ''),
   DEFAULT_TAX_RATE: 0.19,
 }));
 
