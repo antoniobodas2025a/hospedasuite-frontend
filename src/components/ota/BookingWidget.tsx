@@ -1,14 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { preserveSearchParams, extendSearchParams } from '@/lib/handoff-url';
-import { calculateTotalWithTax, DEFAULT_TAX_RATE } from '@/lib/pricing';
+import { extendSearchParams } from '@/lib/handoff-url';
+import { calculateTotalWithTax, DEFAULT_TAX_RATE, formatPrice } from '@/lib/pricing';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
+import InlineDatePicker from './InlineDatePicker';
 import { useTranslations } from 'next-intl';
 
 // ============================================================================
@@ -20,7 +21,6 @@ import { useTranslations } from 'next-intl';
 // ============================================================================
 
 interface BookingWidgetProps {
-  hotelName: string;
   rooms: Array<{
     id: string;
     name: string;
@@ -37,7 +37,6 @@ interface BookingWidgetProps {
 }
 
 export default function BookingWidget({
-  hotelName,
   rooms,
   checkIn,
   checkOut,
@@ -52,33 +51,32 @@ export default function BookingWidget({
   const [showPolicy, setShowPolicy] = useState(false);
   const [showDateError, setShowDateError] = useState(false);
 
-  const activeRooms = rooms.filter((r) => r.status === 'active');
-  const minPrice = activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price_per_night || r.price)) : 0;
+  const activeRooms = useMemo(() => rooms.filter((r) => r.status === 'active'), [rooms]);
+  const minPrice = useMemo(() => activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price_per_night || r.price)) : 0, [activeRooms]);
   const availableCount = activeRooms.length;
 
   // Detect selected room from URL
   const selectedRoomId = searchParams.get('showRoom');
   const selectedRoom = selectedRoomId ? activeRooms.find(r => r.id === selectedRoomId) : null;
 
-  // Hide widget when RoomShowcaseModal is open
-  if (selectedRoomId) return null;
-
   // Guest count from guests filter
   const guestsParam = searchParams.get('guests');
   const guestCount = guestsParam ? Number(guestsParam) : null;
 
-  let nights = 0;
-  if (checkIn && checkOut) {
+  const nights = useMemo(() => {
+    if (!checkIn || !checkOut) return 0;
     const d1 = new Date(checkIn);
     const d2 = new Date(checkOut);
-    nights = Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
-  }
+    return Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
+  }, [checkIn, checkOut]);
 
-  const roomPrice = selectedRoom ? (selectedRoom.price_per_night || selectedRoom.price) : minPrice;
-  // Price coherence: use hotel's tax_rate for all displays
-  const subtotal = nights > 0 ? roomPrice * nights : roomPrice;
-  const effectiveRate = taxRate ?? DEFAULT_TAX_RATE;
-  const { total: totalPrice, hasTax } = calculateTotalWithTax(subtotal, effectiveRate);
+  const roomPrice = useMemo(() => selectedRoom ? (selectedRoom.price_per_night || selectedRoom.price) : minPrice, [selectedRoom, minPrice]);
+  const subtotal = useMemo(() => (nights > 0 ? roomPrice * nights : roomPrice), [nights, roomPrice]);
+  const effectiveRate = useMemo(() => taxRate ?? DEFAULT_TAX_RATE, [taxRate]);
+  const { total: totalPrice, hasTax } = useMemo(() => calculateTotalWithTax(subtotal, effectiveRate), [subtotal, effectiveRate]);
+
+  // Hide widget when RoomShowcaseModal is open
+  if (selectedRoomId) return null;
 
   const handleReserve = () => {
     if (!checkIn || !checkOut) {
@@ -100,6 +98,14 @@ export default function BookingWidget({
     }
   };
 
+  const handleDateChange = (range: { from: Date; to: Date }) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('checkin', range.from.toISOString().split('T')[0]);
+    params.set('checkout', range.to.toISOString().split('T')[0]);
+    params.delete('showRoom');
+    router.push(`?${params.toString()}`, { scroll: false });
+  };
+
   return (
     <div className="sticky top-8">
       <GlassCard className="overflow-hidden">
@@ -112,28 +118,44 @@ export default function BookingWidget({
             <>
               <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">{selectedRoom.name}</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-4xl font-black tracking-tight">${totalPrice.toLocaleString('es-CO')}</p>
+                <p className="text-4xl font-black tracking-tight">${formatPrice(totalPrice)}</p>
                 <span className="text-primary-foreground/70 text-sm font-medium">{t('ota.booking.totalCOP')}</span>
               </div>
-              {nights > 1 && (
-                <p className="text-xs text-primary-foreground/70 mt-1">
-                  ${roomPrice.toLocaleString()} x {nights} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
-                </p>
-              )}
+              <p className="text-xs text-primary-foreground/70 mt-1">
+                ${formatPrice(roomPrice)} x {nights > 0 ? nights : 1} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
+              </p>
             </>
           ) : (
             <>
-              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">{t('ota.booking.from')}</p>
+              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">
+                {nights > 0 ? t('ota.booking.totalCOP') : t('ota.booking.copPerNight')}
+              </p>
               <div className="flex items-baseline gap-2">
-                <p className="text-4xl font-black tracking-tight">${minPrice.toLocaleString()}</p>
-                <span className="text-primary-foreground/70 text-sm font-medium">{t('ota.booking.copPerNight')}</span>
+                <p className="text-4xl font-black tracking-tight">${nights > 0 ? formatPrice(totalPrice) : formatPrice(minPrice)}</p>
+                <span className="text-primary-foreground/70 text-sm font-medium">
+                  {nights > 0 ? t('ota.booking.totalCOP') : t('ota.booking.copPerNight')}
+                </span>
               </div>
+              {nights > 0 && (
+                <p className="text-xs text-primary-foreground/70 mt-1">
+                  ${formatPrice(minPrice)} x {nights} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
+                </p>
+              )}
             </>
           )}
         </div>
 
         {/* Cuerpo del widget */}
         <div className="p-6 space-y-5">
+          {/* Inline date picker */}
+          <InlineDatePicker
+            checkIn={checkIn}
+            checkOut={checkOut}
+            onChange={handleDateChange}
+            defaultExpanded={activeRooms.length <= 2}
+            className="w-full"
+          />
+
           {/* Fechas seleccionadas */}
           {checkIn && checkOut ? (
             <div className="flex items-start gap-3 p-4 bg-secondary/10 rounded-[var(--radius-squircle-2xl)] border border-secondary/30">
@@ -199,7 +221,10 @@ export default function BookingWidget({
                 </div>
               )}
               {availableCount <= 2 && (
-                <p className="text-xs font-bold text-destructive flex items-center gap-1">
+                <p
+                  className="text-xs font-bold text-destructive flex items-center gap-1"
+                  title="Esta habitación se reserva rápido"
+                >
                   <span className="inline-block size-2 rounded-full bg-destructive animate-pulse" />
                   {availableCount === 1 ? t('ota.booking.onlyOneLeft') : t('ota.booking.onlyXLeft', { count: availableCount })}
                 </p>
