@@ -81,18 +81,18 @@ Chain strategy: stacked-to-main
 
 ## Phase 6: Performance Optimization (PR 5)
 
-- [ ] 6.1 Modify `src/components/ota/RoomCard.tsx`: Wrap in `React.memo`, add `useMemo` for allPrices/minPrice/avgPrice calculations
-- [ ] 6.2 Modify `src/components/ota/RoomsListWithFilters.tsx`: Move `useSearchParams()` to parent, pass as prop to RoomCard
-- [ ] 6.3 Modify `src/components/ota/RoomsListWithFilters.tsx`: Integrate `@tanstack/react-virtual` for 10+ rooms
-- [ ] 6.4 Modify `src/components/ota/RoomCard.tsx`: Add `priority` prop to hero image, `loading="eager"` for above-fold images
-- [ ] 6.5 Modify `src/app/(ota)/hotel/[slug]/page.tsx`: Add `priority` to hotel hero image
-- [ ] 6.6 Modify `src/components/ota/RoomComparison.tsx`: Wrap with `next/dynamic` for code splitting
-- [ ] 6.7 Modify `src/components/ota/ReviewsSection.tsx`: Wrap with `next/dynamic` for code splitting
-- [ ] 6.8 Modify `src/components/ota/RoomsListWithFilters.tsx`: Remove `layout` prop from AnimatePresence (causes reflows)
-- [ ] 6.9 Modify `src/components/ota/RoomCard.tsx`: Memoize date calculations with `useMemo`
-- [ ] 6.10 Add `content-visibility: auto` to cards outside initial viewport
-- [ ] 6.11 Implement `IntersectionObserver` for lazy loading heavy components
-- [ ] 6.12 Add font preloading with `<link rel="preload">` in layout
+- [x] 6.1 Modify `src/components/ota/RoomCard.tsx`: Wrap in `React.memo`, add `useMemo` for allPrices/minPrice/avgPrice calculations
+- [x] 6.2 Modify `src/components/ota/RoomsListWithFilters.tsx`: Move `useSearchParams()` to parent, pass as prop to RoomCard
+- [x] 6.3 Modify `src/components/ota/RoomsListWithFilters.tsx`: Integrate `@tanstack/react-virtual` for 10+ rooms
+- [x] 6.4 Modify `src/components/ota/RoomCard.tsx`: Add `priority` prop to hero image, `loading="eager"` for above-fold images
+- [x] 6.5 Modify `src/app/(ota)/hotel/[slug]/page.tsx`: Add `priority` to hotel hero image
+- [x] 6.6 Modify `src/components/ota/RoomComparison.tsx`: Wrap with `next/dynamic` for code splitting
+- [x] 6.7 Modify `src/components/ota/ReviewsSection.tsx`: Wrap with `next/dynamic` for code splitting
+- [x] 6.8 Modify `src/components/ota/RoomsListWithFilters.tsx`: Remove `layout` prop from AnimatePresence (causes reflows)
+- [x] 6.9 Modify `src/components/ota/RoomCard.tsx`: Memoize date calculations with `useMemo`
+- [x] 6.10 Add `content-visibility: auto` to cards outside initial viewport
+- [x] 6.11 Implement `IntersectionObserver` for lazy loading heavy components
+- [x] 6.12 Add font preloading with `<link rel="preload">` in layout
 
 ## Testing Tasks
 

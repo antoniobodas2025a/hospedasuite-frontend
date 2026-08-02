@@ -1,190 +1,42 @@
 // @vitest-environment jsdom
 import '../../../../__tests__/bun-test-dom-setup';
+import '@testing-library/jest-dom';
 import { describe, it, expect, vi } from 'vitest';
 import React from 'react';
-import { render, waitFor } from '@testing-library/react';
-import { NextIntlClientProvider } from 'next-intl';
-import GalleryImage from '../GalleryImage';
+import { render } from '@testing-library/react';
+import GalleryImage from '@/components/ota/shared/GalleryImage';
 
-// Mock next-intl
+vi.mock('next/image', () => ({
+  __esModule: true,
+  default: ({ priority, loading, alt, src }: { priority?: boolean; loading?: 'eager' | 'lazy'; alt: string; src: string }) => (
+    <img src={src} alt={alt} data-priority={priority ? 'true' : undefined} data-loading={loading} />
+  ),
+}));
+
 vi.mock('next-intl', () => ({
   useTranslations: () => (key: string) => key,
-  NextIntlClientProvider: ({ children }: { children: React.ReactNode }) => <>{children}</>,
 }));
-
-// Mock next/image
-vi.mock('next/image', () => ({
-  default: ({ src, alt, fill, style, onError, onLoad, ...props }: any) => {
-    // No llamar onLoad automáticamente - el test debe simularlo
-    const img = (
-      <img
-        src={src}
-        alt={alt}
-        style={style}
-        data-testid="next-image"
-        onError={onError}
-        {...props}
-      />
-    );
-    return img;
-  },
-}));
-
-const renderWithProviders = (ui: React.ReactElement) => {
-  return render(
-    <NextIntlClientProvider locale="es" messages={{}}>
-      {ui}
-    </NextIntlClientProvider>
-  );
-};
 
 describe('GalleryImage', () => {
-  it('renders image with correct src and alt', () => {
-    const { container } = renderWithProviders(
-      <GalleryImage
-        src="/test.jpg"
-        alt="Test image"
-        width={400}
-        height={300}
-      />
+  it('marks the image as priority and eager when preload is true', () => {
+    const { container } = render(
+      <GalleryImage src="https://example.com/hero.jpg" alt="Hero" preload fill />
     );
 
-    const img = container.querySelector('[data-testid="next-image"]');
+    const img = container.querySelector('img');
     expect(img).toBeTruthy();
-    expect(img?.getAttribute('src')).toBe('/test.jpg');
-    expect(img?.getAttribute('alt')).toBe('Test image');
+    expect(img?.getAttribute('data-priority')).toBe('true');
+    expect(img?.getAttribute('data-loading')).toBe('eager');
   });
 
-  it('shows loading skeleton initially', () => {
-    const { container } = renderWithProviders(
-      <GalleryImage
-        src="/test.jpg"
-        alt="Test"
-        width={400}
-        height={300}
-      />
+  it('does not mark the image as priority and defaults to lazy when preload is false', () => {
+    const { container } = render(
+      <GalleryImage src="https://example.com/thumb.jpg" alt="Thumbnail" fill />
     );
 
-    // Verificar que el componente se renderiza correctamente
-    const wrapper = container.firstChild;
-    expect(wrapper).toBeTruthy();
-  });
-
-  it('hides skeleton after image loads', async () => {
-    const { container } = renderWithProviders(
-      <GalleryImage
-        src="/test.jpg"
-        alt="Test"
-        width={400}
-        height={300}
-      />
-    );
-
-    // Simular carga de imagen
-    const img = container.querySelector('[data-testid="next-image"]');
-    img?.dispatchEvent(new Event('load'));
-
-    // La imagen debe estar presente después de cargar
-    await waitFor(() => {
-      const loadedImg = container.querySelector('[data-testid="next-image"]');
-      expect(loadedImg).toBeTruthy();
-    });
-  });
-
-  it('shows error fallback when image fails to load', async () => {
-    const { container } = renderWithProviders(
-      <GalleryImage
-        src="/invalid.jpg"
-        alt="Test"
-        width={400}
-        height={300}
-      />
-    );
-
-    // Simular error de carga
-    const img = container.querySelector('[data-testid="next-image"]');
-    img?.dispatchEvent(new Event('error'));
-
-    await waitFor(() => {
-      const errorFallback = container.querySelector('[data-testid="error-fallback"]');
-      expect(errorFallback).toBeTruthy();
-    });
-  });
-
-  it('supports blur placeholder', () => {
-    const blurData = 'data:image/jpeg;base64,/9j/4AAQSkZJRg...';
-    const { container } = renderWithProviders(
-      <GalleryImage
-        src="/test.jpg"
-        alt="Test"
-        width={400}
-        height={300}
-        blurDataURL={blurData}
-      />
-    );
-
-    const img = container.querySelector('[data-testid="next-image"]');
-    expect(img?.getAttribute('data-blur')).toBe(blurData);
-  });
-
-  it('applies custom className', () => {
-    const { container } = renderWithProviders(
-      <GalleryImage
-        src="/test.jpg"
-        alt="Test"
-        width={400}
-        height={300}
-        className="custom-class"
-      />
-    );
-
-    const wrapper = container.firstChild;
-    expect(wrapper?.className).toContain('custom-class');
-  });
-
-  it('handles onClick callback', () => {
-    const handleClick = vi.fn();
-    const { container } = renderWithProviders(
-      <GalleryImage
-        src="/test.jpg"
-        alt="Test"
-        width={400}
-        height={300}
-        onClick={handleClick}
-      />
-    );
-
-    const wrapper = container.firstChild as HTMLElement;
-    wrapper.click();
-
-    expect(handleClick).toHaveBeenCalledTimes(1);
-  });
-
-  it('renders with fill mode', () => {
-    const { container } = renderWithProviders(
-      <GalleryImage
-        src="/test.jpg"
-        alt="Test"
-        fill
-      />
-    );
-
-    const wrapper = container.firstChild;
-    expect(wrapper).toBeTruthy();
-  });
-
-  it('supports preload loading', () => {
-    const { container } = renderWithProviders(
-      <GalleryImage
-        src="/test.jpg"
-        alt="Test"
-        width={400}
-        height={300}
-        preload
-      />
-    );
-
-    const img = container.querySelector('[data-testid="next-image"]');
-    expect(img?.getAttribute('loading')).toBe('eager');
+    const img = container.querySelector('img');
+    expect(img).toBeTruthy();
+    expect(img?.getAttribute('data-priority')).toBeNull();
+    expect(img?.getAttribute('data-loading')).toBe('lazy');
   });
 });

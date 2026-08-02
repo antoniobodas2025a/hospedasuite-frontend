@@ -22,6 +22,7 @@ import RoomsListWithFilters from "@/components/ota/RoomsListWithFilters";
 import HotelJsonLd from "@/components/seo/HotelJsonLd";
 import ReviewSkeleton from "@/components/ota/ReviewSkeleton";
 import MapSkeleton from "@/components/ota/MapSkeleton";
+import LazySection from "@/components/ota/LazySection";
 import { SectionHeader } from "@/components/ui/glass";
 import { ErrorBoundary } from "@/components/ota/ErrorBoundary";
 import LanguageSwitcher from "@/components/ota/LanguageSwitcher";
@@ -49,6 +50,11 @@ export async function generateMetadata({
 
 	if (!success || !hotel) return { title: t("propertyNotFound") };
 
+	const heroImageUrl =
+		hotel.seo_og_image_url ||
+		hotel.main_image_url ||
+		"https://images.unsplash.com/photo-1542314831-068cd1dbfeeb";
+
 	return {
 		title:
 			hotel.seo_meta_title ||
@@ -73,6 +79,11 @@ export async function generateMetadata({
 		alternates: hotel.seo_canonical_url
 			? { canonical: hotel.seo_canonical_url }
 			: undefined,
+		other: {
+			link: [
+				`<${heroImageUrl}>; rel=preload; as=image; fetchpriority=high`,
+			],
+		},
 	};
 }
 
@@ -324,9 +335,9 @@ export default async function ChannelHotelDetailPage({
 
 						{/* Reviews Section */}
 						<div id="reviews-section">
-							<Suspense fallback={<ReviewSkeleton />}>
+							<LazySection placeholder={<ReviewSkeleton />} rootMargin="200px">
 								<ReviewsSection hotelId={hotel.id} hotelName={hotel.name} />
-							</Suspense>
+							</LazySection>
 						</div>
 
 						{/* Hotel Info Section */}
