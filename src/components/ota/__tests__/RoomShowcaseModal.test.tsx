@@ -2,8 +2,9 @@
 import '../../../__tests__/bun-test-dom-setup';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
-import { render, waitFor } from '@testing-library/react';
+import { render, waitFor, fireEvent } from '@testing-library/react';
 import { RoomShowcaseModal } from '../RoomShowcaseModal';
+import posthog from 'posthog-js';
 
 // Mock next-intl
 vi.mock('next-intl', () => ({
@@ -26,6 +27,14 @@ vi.mock('next-intl', () => ({
     return messages[key] ?? key;
   },
   useLocale: () => 'es',
+}));
+
+// Mock posthog for analytics assertions
+vi.mock('posthog-js', () => ({
+  __esModule: true,
+  default: {
+    capture: vi.fn(),
+  },
 }));
 
 // Mock next/navigation
@@ -114,6 +123,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -134,6 +144,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -157,6 +168,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -184,6 +196,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -207,6 +220,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -222,6 +236,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -243,6 +258,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -261,6 +277,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -277,6 +294,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -316,6 +334,7 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
         hotel={mockHotel}
         onClose={mockOnClose}
         onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
       />
     );
 
@@ -328,5 +347,178 @@ describe('RoomShowcaseModal - Desktop Layout', () => {
       ).toBe(true);
       expect(ctaClasses.includes('bottom-0') || ctaClasses.includes('bottom-4')).toBe(true);
     });
+  });
+});
+
+describe('RoomShowcaseModal - Analytics', () => {
+  const mockHotel = {
+    slug: 'test-hotel',
+    name: 'Test Hotel',
+    id: 'hotel-test',
+    tax_rate: 0.19,
+    rooms: [
+      {
+        id: 'room-1',
+        name: 'Suite Deluxe',
+        description: 'Habitación de lujo con vista al mar',
+        price: 150000,
+        price_per_night: 150000,
+        capacity: 4,
+        status: 'active',
+        amenities: ['wifi', 'tv', 'minibar'],
+        gallery: [
+          { url: '/test1.jpg', alt: 'Test 1' },
+          { url: '/test2.jpg', alt: 'Test 2' },
+        ],
+      },
+    ],
+  };
+
+  const mockOnClose = vi.fn();
+  const mockOnCheckout = vi.fn();
+
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('fires open_room_modal on mount', async () => {
+    render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
+      />
+    );
+
+    await waitFor(() => {
+      expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', {
+        room_id: 'room-1',
+        hotel_id: 'hotel-test',
+        source: 'card',
+      });
+    });
+  });
+
+  it('fires close_room_modal action back and abandon_booking when close button is clicked', async () => {
+    const { container } = render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
+      />
+    );
+
+    await waitFor(() => {
+      expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', expect.any(Object));
+    });
+
+    const closeButton = container.querySelector('button[aria-label="Cerrar"]');
+    expect(closeButton).toBeTruthy();
+    fireEvent.click(closeButton!);
+
+    expect(posthog.capture).toHaveBeenCalledWith('close_room_modal', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      action: 'back',
+    });
+    expect(posthog.capture).toHaveBeenCalledWith('abandon_booking', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      step: 'modal',
+      time_spent: expect.any(Number),
+    });
+    expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it('fires close_room_modal action back and abandon_booking when backdrop is clicked', async () => {
+    const { container } = render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
+      />
+    );
+
+    await waitFor(() => {
+      expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', expect.any(Object));
+    });
+
+    const backdrop = container.querySelector('[data-testid="modal-backdrop"]');
+    expect(backdrop).toBeTruthy();
+    fireEvent.click(backdrop!);
+
+    expect(posthog.capture).toHaveBeenCalledWith('close_room_modal', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      action: 'back',
+    });
+    expect(posthog.capture).toHaveBeenCalledWith('abandon_booking', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      step: 'modal',
+      time_spent: expect.any(Number),
+    });
+    expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it('fires close_room_modal action esc and abandon_booking when Escape is pressed', async () => {
+    render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
+      />
+    );
+
+    await waitFor(() => {
+      expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', expect.any(Object));
+    });
+
+    fireEvent.keyDown(document, { key: 'Escape' });
+
+    expect(posthog.capture).toHaveBeenCalledWith('close_room_modal', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      action: 'esc',
+    });
+    expect(posthog.capture).toHaveBeenCalledWith('abandon_booking', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      step: 'modal',
+      time_spent: expect.any(Number),
+    });
+    expect(mockOnClose).toHaveBeenCalled();
+  });
+
+  it('fires close_room_modal action reserve and not abandon_booking when reserve CTA is clicked', async () => {
+    const { getAllByRole } = render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
+      />
+    );
+
+    await waitFor(() => {
+      expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', expect.any(Object));
+    });
+
+    const reserveButtons = getAllByRole('button', { name: /Reservar/ });
+    expect(reserveButtons.length).toBeGreaterThanOrEqual(1);
+    fireEvent.click(reserveButtons[0]);
+
+    expect(posthog.capture).toHaveBeenCalledWith('close_room_modal', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      action: 'reserve',
+    });
+    expect(posthog.capture).not.toHaveBeenCalledWith('abandon_booking', expect.any(Object));
+    expect(mockOnClose).toHaveBeenCalled();
+    expect(mockOnCheckout).toHaveBeenCalledWith('room-1', 2);
   });
 });

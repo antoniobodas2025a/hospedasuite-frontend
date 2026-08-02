@@ -162,7 +162,7 @@ export default async function ChannelHotelDetailPage({
 	];
 
 	// Modal data optimization: pass minimal data when closed
-	const modalHotelData = showRoom ? hotel : { slug: hotel.slug, rooms: [] };
+	const modalHotelData = showRoom ? hotel : { id: hotel.id, slug: hotel.slug, rooms: [] };
 
 	// Build search context for banner
 	const searchContext = {

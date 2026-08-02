@@ -13,6 +13,7 @@ export function RoomShowcaseModalWrapper({ hotel }: WrapperProps) {
   return (
     <RoomShowcaseModal
       hotel={hotel}
+      hotelId={hotel.id}
       onClose={() => {
         const params = new URLSearchParams(window.location.search);
         params.delete("showRoom");

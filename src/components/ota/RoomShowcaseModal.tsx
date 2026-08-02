@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useMemo } from "react";
+import React, { useMemo, useRef, useCallback, useEffect } from "react";
 import { X, ArrowRight, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculateTotalWithTax, DEFAULT_TAX_RATE } from "@/lib/pricing";
@@ -11,9 +11,11 @@ import { RoomInfoPanel } from "./RoomInfoPanel";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useModalAccessibility } from "@/hooks/useModalAccessibility";
+import { useBookingAnalytics } from "@/hooks/useBookingAnalytics";
 import { AnimatePresence, motion } from "framer-motion";
 
 interface HotelForModal {
+	id?: string;
 	slug: string;
 	name?: string;
 	rooms?: Array<Partial<Room> & { price_per_night?: number }>;
@@ -65,10 +67,12 @@ export function AmenityGlass({
 
 export function RoomShowcaseModal({
 	hotel,
+	hotelId,
 	onClose,
 	onCheckout,
 }: {
 	hotel: HotelForModal;
+	hotelId?: string;
 	onClose: () => void;
 	onCheckout: (roomId: string, guests: number) => void;
 }) {
@@ -88,10 +92,60 @@ export function RoomShowcaseModal({
 		[hotel.rooms, roomId],
 	);
 
-	// Accessibility: focus trap, ESC handler, scroll lock, ARIA
-	const { modalRef, ariaProps } = useModalAccessibility(!!roomId, onClose, 'room-modal-title');
+	const nights = useMemo(() => {
+		if (!checkIn || !checkOut) return 1;
+		const dateFrom = parseISO(checkIn);
+		const dateTo = parseISO(checkOut);
+		return Math.max(
+			1,
+			Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 3600 * 24)),
+		);
+	}, [checkIn, checkOut]);
 
-	// onClose handled by parent via onClose callback
+	const basePrice = room?.price_per_night || room?.price || 0;
+	const effectiveRate = hotel.tax_rate ?? DEFAULT_TAX_RATE;
+
+	const {
+		trackOpenRoomModal,
+		trackCloseRoomModal,
+		trackAbandonBooking,
+	} = useBookingAnalytics({
+		hotelId,
+		roomId: roomId ?? undefined,
+		price: basePrice,
+		nights,
+		hasDates: !!checkIn && !!checkOut,
+		taxRate: effectiveRate,
+	});
+
+	const modalOpenTime = useRef<number | null>(null);
+	const trackedRoomId = useRef<string | null>(null);
+
+	useEffect(() => {
+		if (!hotelId || !roomId || !room || roomId === trackedRoomId.current) return;
+		trackOpenRoomModal({ source: 'card' });
+		modalOpenTime.current = Date.now();
+		trackedRoomId.current = roomId;
+	}, [hotelId, roomId, room, trackOpenRoomModal]);
+
+	const handleClose = useCallback(
+		(action: 'reserve' | 'back' | 'esc') => {
+			if (hotelId && roomId) {
+				trackCloseRoomModal({ action });
+				if (action !== 'reserve' && modalOpenTime.current) {
+					trackAbandonBooking({
+						step: 'modal',
+						time_spent: Math.round((Date.now() - modalOpenTime.current) / 1000),
+					});
+				}
+			}
+			onClose();
+		},
+		[hotelId, roomId, trackCloseRoomModal, trackAbandonBooking, onClose]
+	);
+
+	// Accessibility: focus trap, ESC handler, scroll lock, ARIA
+	const { modalRef, ariaProps } = useModalAccessibility(!!roomId, () => handleClose('esc'), 'room-modal-title');
 
 	if (!roomId) return null;
 
@@ -100,8 +154,9 @@ export function RoomShowcaseModal({
 		return (
 			<div className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4">
 				<div
+					data-testid="modal-backdrop"
 					className="absolute inset-0 bg-foreground/40 backdrop-blur-xl"
-					onClick={onClose}
+					onClick={() => handleClose('back')}
 				/>
 				<div className="relative z-10 glass-panel p-10 w-full max-w-md text-center shadow-2xl shadow-elev-2 animate-in zoom-in-95 duration-200">
 					<div className="size-16 rounded-[var(--radius-squircle-2xl)] bg-gradient-to-br from-brand-500/10 to-warm-400/10 border border-brand-500/15 flex items-center justify-center mx-auto mb-6">
@@ -115,7 +170,7 @@ export function RoomShowcaseModal({
 					</p>
 					<button
 						onClick={() => {
-							onClose();
+							handleClose('back');
 							window.scrollTo({ top: 0, behavior: "smooth" });
 						}}
 						className="w-full glass-card text-foreground font-semibold py-4 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-[0.98]"
@@ -129,16 +184,7 @@ export function RoomShowcaseModal({
 
 	if (!room) return null;
 
-	const dateFrom = parseISO(checkIn);
-	const dateTo = parseISO(checkOut);
-	const nights = Math.max(
-		1,
-		Math.ceil((dateTo.getTime() - dateFrom.getTime()) / (1000 * 3600 * 24)),
-	);
-	const basePrice = room.price_per_night || room.price || 0;
-	// Price coherence: use hotel's tax_rate for all displays
 	const subtotal = basePrice * nights;
-	const effectiveRate = hotel.tax_rate ?? DEFAULT_TAX_RATE;
 	const { total: totalPrice } = calculateTotalWithTax(subtotal, effectiveRate);
 	const isOverCapacity = defaultGuests > Number(room.capacity ?? 0);
 
@@ -167,8 +213,9 @@ export function RoomShowcaseModal({
 			>
 				{/* Backdrop con blur pesado */}
 				<motion.div
+					data-testid="modal-backdrop"
 					className="absolute inset-0 bg-foreground/50 backdrop-blur-2xl"
-					onClick={onClose}
+					onClick={() => handleClose('back')}
 					aria-hidden="true"
 					initial={{ opacity: 0 }}
 					animate={{ opacity: 1 }}
@@ -186,7 +233,8 @@ export function RoomShowcaseModal({
 				>
 				{/* Boton cerrar glass */}
 				<button
-					onClick={onClose}
+					aria-label="Cerrar"
+					onClick={() => handleClose('back')}
 					className="absolute top-4 right-4 z-30 size-10 flex items-center justify-center rounded-full glass-pill text-foreground/70 hover:bg-accent/25 hover:scale-110 hover:text-foreground transition-all shadow-lg shadow-elev-1 active:scale-95"
 				>
 					<X size={18} strokeWidth={2.5} />
@@ -220,11 +268,11 @@ export function RoomShowcaseModal({
 									variant="desktop"
 									cancellationPolicy={hotel.cancellation_policy}
 									onAdjustGuests={() => {
-										onClose();
+										handleClose('back');
 										window.scrollTo({ top: 0, behavior: "smooth" });
 									}}
 									onSeeLargerRooms={() => {
-										onClose();
+										handleClose('back');
 										const section = document.getElementById("rooms-section");
 										if (section) section.scrollIntoView({ behavior: "smooth" });
 									}}
@@ -253,7 +301,10 @@ export function RoomShowcaseModal({
 								</div>
 								<button
 									disabled={isOverCapacity}
-									onClick={() => onCheckout(room.id!, defaultGuests)}
+									onClick={() => {
+										handleClose('reserve');
+										onCheckout(room.id!, defaultGuests);
+									}}
 									className={cn(
 										"px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97] shadow-cta",
 										isOverCapacity
@@ -296,11 +347,11 @@ export function RoomShowcaseModal({
 									variant="mobile"
 									cancellationPolicy={hotel.cancellation_policy}
 									onAdjustGuests={() => {
-										onClose();
+										handleClose('back');
 										window.scrollTo({ top: 0, behavior: "smooth" });
 									}}
 									onSeeLargerRooms={() => {
-										onClose();
+										handleClose('back');
 										const section = document.getElementById("rooms-section");
 										if (section) section.scrollIntoView({ behavior: "smooth" });
 									}}
@@ -328,7 +379,10 @@ export function RoomShowcaseModal({
 							</div>
 							<button
 								disabled={isOverCapacity}
-								onClick={() => onCheckout(room.id!, defaultGuests)}
+								onClick={() => {
+									handleClose('reserve');
+									onCheckout(room.id!, defaultGuests);
+								}}
 								className={cn(
 									"px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
 									isOverCapacity
