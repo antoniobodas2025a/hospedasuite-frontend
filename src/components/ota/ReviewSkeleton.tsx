@@ -1,6 +1,6 @@
 export default function ReviewSkeleton() {
   return (
-    <div className="pb-6 border-b border-border/40 last:border-0 last:pb-0">
+    <div className="pb-6 border-b border-border/40 last:border-0 last:pb-0" data-testid="review-skeleton">
       {/* Avatar + name + date */}
       <div className="flex items-start justify-between mb-3">
         <div className="flex items-center gap-3">

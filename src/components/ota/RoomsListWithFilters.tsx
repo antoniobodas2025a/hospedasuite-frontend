@@ -7,6 +7,8 @@ import { SlidersHorizontal, Users, CalendarX2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RoomCard from './RoomCard';
 import RoomComparison from './RoomComparison';
+import RoomComparisonSkeleton from './RoomComparisonSkeleton';
+import LazySection from './LazySection';
 import { useTranslations } from 'next-intl';
 import { MOTION_STAGGER } from '@/lib/motion-tokens';
 
@@ -197,7 +199,9 @@ export default function RoomsListWithFilters({
     <>
       {/* Tabla comparativa — solo desktop (en mobile es inutilizable) */}
       <div className="hidden lg:block">
-        <RoomComparison rooms={availableRooms} />
+        <LazySection placeholder={<RoomComparisonSkeleton />} rootMargin="200px">
+          <RoomComparison rooms={availableRooms} />
+        </LazySection>
       </div>
 
       <div id="rooms-section" className="space-y-6">
