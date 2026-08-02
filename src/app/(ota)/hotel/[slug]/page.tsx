@@ -350,7 +350,6 @@ export default async function ChannelHotelDetailPage({
 					{/* Sidebar — Booking Widget (desktop only) */}
 					<aside className="lg:sticky lg:top-8 lg:self-start">
 						<BookingWidget
-							hotelName={hotel.name}
 							rooms={hotel.rooms || []}
 							checkIn={checkin ?? null}
 							checkOut={checkout ?? null}

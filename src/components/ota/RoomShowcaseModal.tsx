@@ -229,7 +229,7 @@ export function RoomShowcaseModal({
 									isOverCapacity={isOverCapacity}
 									totalPrice={totalPrice}
 									nights={nights}
-									taxRegime={hotel.tax_regime ?? 'simplified'}
+									taxRate={hotel.tax_rate ?? 0.19}
 									variant="desktop"
 									onAdjustGuests={() => {
 										onClose();
@@ -305,7 +305,7 @@ export function RoomShowcaseModal({
 								isOverCapacity={isOverCapacity}
 								totalPrice={totalPrice}
 								nights={nights}
-								taxRegime={hotel.tax_regime ?? 'simplified'}
+								taxRate={hotel.tax_rate ?? 0.19}
 								variant="mobile"
 								onAdjustGuests={() => {
 									onClose();
