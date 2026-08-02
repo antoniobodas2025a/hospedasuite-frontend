@@ -67,17 +67,17 @@ Chain strategy: stacked-to-main
 
 ## Phase 5: Motion & Visual Design (PR 4)
 
-- [ ] 5.1 Create `src/lib/motion-tokens.ts`: Centralized motion tokens (duration: fast/normal/slow, easing: ease-out/ease-in-out)
-- [ ] 5.2 Create `src/components/ui/SkeletonLoader.tsx`: Reusable skeleton loader with shimmer effect
-- [ ] 5.3 Modify `src/components/ota/RoomCard.tsx`: Add skeleton loader for loading state
-- [ ] 5.4 Modify `src/components/ota/BookingWidget.tsx`: Add skeleton loader for loading state
-- [ ] 5.5 Modify `src/components/ota/RoomCard.tsx`: Add micro-animations (hover lift + shadow, active scale 0.96, focus outline)
-- [ ] 5.6 Modify `src/components/ota/RoomsListWithFilters.tsx`: Add staggered animation (50ms delay between cards)
-- [ ] 5.7 Modify `src/components/ota/RoomShowcaseModal.tsx`: Add modal transition (scale 0.95→1 + fade + backdrop blur, 200ms)
-- [ ] 5.8 Create `src/components/ui/ProgressIndicator.tsx`: Checkout progress indicator (3 steps: Datos → Pago → Confirmación)
-- [ ] 5.9 Create `src/components/ui/CelebrationAnimation.tsx`: Confetti + checkmark animation on booking complete
-- [ ] 5.10 Create `src/styles/motion.css`: Global motion styles, `prefers-reduced-motion` support
-- [ ] 5.11 Modify all interactive elements: Add visible hover states and focus states (2px solid outline)
+- [x] 5.1 Create `src/lib/motion-tokens.ts`: Centralized motion tokens (duration: fast/normal/slow, easing: ease-out/ease-in-out)
+- [x] 5.2 Create `src/components/ui/SkeletonLoader.tsx`: Reusable skeleton loader with shimmer effect
+- [x] 5.3 Modify `src/components/ota/RoomCard.tsx`: Add skeleton loader for loading state
+- [x] 5.4 Modify `src/components/ota/BookingWidget.tsx`: Add skeleton loader for loading state
+- [x] 5.5 Modify `src/components/ota/RoomCard.tsx`: Add micro-animations (hover lift + shadow, active scale 0.96, focus outline)
+- [x] 5.6 Modify `src/components/ota/RoomsListWithFilters.tsx`: Add staggered animation (50ms delay between cards)
+- [x] 5.7 Modify `src/components/ota/RoomShowcaseModal.tsx`: Add modal transition (scale 0.95→1 + fade + backdrop blur, 200ms)
+- [x] 5.8 Create `src/components/ui/ProgressIndicator.tsx`: Checkout progress indicator (3 steps: Datos → Pago → Confirmación)
+- [x] 5.9 Create `src/components/ui/CelebrationAnimation.tsx`: Confetti + checkmark animation on booking complete
+- [x] 5.10 Create `src/styles/motion.css`: Global motion styles, `prefers-reduced-motion` support
+- [x] 5.11 Modify all interactive elements: Add visible hover states and focus states (2px solid outline)
 
 ## Phase 6: Performance Optimization (PR 5)
 

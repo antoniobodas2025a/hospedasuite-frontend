@@ -309,7 +309,7 @@ export default function BookingWidget({
                 <div className="pt-4">
                   <button
                     onClick={() => setShowPolicy(!showPolicy)}
-                    className="flex items-center justify-between w-full text-left mb-2"
+                    className="flex items-center justify-between w-full text-left mb-2 hover:text-foreground hover:bg-muted/50 transition-colors rounded-sm px-2 py-1"
                   >
                     <p className="text-xs font-bold text-foreground">{t('ota.booking.cancellationPolicy')}</p>
                     {showPolicy ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}
