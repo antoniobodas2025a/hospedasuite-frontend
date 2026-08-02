@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import RoomCard from './RoomCard';
 import RoomComparison from './RoomComparison';
 import { useTranslations } from 'next-intl';
+import { MOTION_STAGGER } from '@/lib/motion-tokens';
 
 interface RoomItem {
   id: string;
@@ -20,6 +21,30 @@ interface RoomItem {
   gallery?: any[];
   description?: string;
 }
+
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: MOTION_STAGGER.card / 1000,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring',
+      stiffness: 300,
+      damping: 25,
+    },
+  },
+  exit: { opacity: 0, scale: 0.95 },
+};
 
 interface RoomsListWithFiltersProps {
   rooms: RoomItem[];
@@ -117,36 +142,34 @@ export default function RoomsListWithFilters({
             </p>
           </div>
         ) : (
-          <AnimatePresence mode="popLayout">
-            {filteredRooms.map((room, index) => (
-              <motion.div
-                key={room.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ 
-                  type: 'spring', 
-                  stiffness: 300, 
-                  damping: 25,
-                  delay: index * 0.04 
-                }}
-              >
-                <RoomCard
-                  room={room}
-                  hotelSlug={slug}
-                  hotelId={hotelId}
-                  checkIn={checkin}
-                  checkOut={checkout}
-                  isSearchingDates={isSearchingDates}
-                  allRooms={filteredRooms}
-                  totalRooms={rooms.length}
-                  availableCount={availableRooms.length}
-                  hotel={hotel}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredRooms.map((room) => (
+                <motion.div
+                  key={room.id}
+                  layout
+                  variants={itemVariants}
+                >
+                  <RoomCard
+                    room={room}
+                    hotelSlug={slug}
+                    hotelId={hotelId}
+                    checkIn={checkin}
+                    checkOut={checkout}
+                    isSearchingDates={isSearchingDates}
+                    allRooms={filteredRooms}
+                    totalRooms={rooms.length}
+                    availableCount={availableRooms.length}
+                    hotel={hotel}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
     </>

@@ -15,9 +15,28 @@ vi.mock('next-intl', () => ({
 
 vi.mock('framer-motion', () => ({
   motion: {
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    div: ({ children, className, style, layout: _layout, ...props }: { children?: React.ReactNode; className?: string; style?: React.CSSProperties; layout?: boolean }) =>
-      React.createElement('div', { className, style, ...props }, children),
+    div: ({
+      children,
+      className,
+      style,
+      variants,
+      transition,
+      ...props
+    }: {
+      children?: React.ReactNode;
+      className?: string;
+      style?: React.CSSProperties;
+      variants?: Record<string, unknown>;
+      transition?: Record<string, unknown>;
+      [key: string]: unknown;
+    }) =>
+      React.createElement('div', {
+        className,
+        style,
+        ...props,
+        'data-variants': variants ? JSON.stringify(variants) : undefined,
+        'data-transition': transition ? JSON.stringify(transition) : undefined,
+      }, children),
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
 }));
@@ -62,5 +81,26 @@ describe('RoomsListWithFilters', () => {
 
     const withDelay = container.querySelectorAll('[style*="animationDelay"]');
     expect(withDelay.length).toBe(0);
+  });
+
+  it('staggers room card animations with a 50ms delay', () => {
+    const { container } = render(
+      <RoomsListWithFilters
+        rooms={rooms}
+        availableRooms={rooms}
+        slug="hotel-test"
+        isSearchingDates={false}
+      />
+    );
+
+    const animatedItems = container.querySelectorAll('[data-variants]');
+    const parent = Array.from(animatedItems).find((el) => {
+      const parsed = JSON.parse(el.getAttribute('data-variants') || '{}');
+      return parsed?.visible?.transition?.staggerChildren !== undefined;
+    });
+
+    expect(parent).toBeTruthy();
+    const parsed = JSON.parse(parent?.getAttribute('data-variants') || '{}');
+    expect(parsed.visible.transition.staggerChildren).toBe(0.05);
   });
 });
