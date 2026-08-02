@@ -64,6 +64,38 @@ vi.mock('@/lib/amenity-registry', () => ({
   }),
 }));
 
+// Mock framer-motion and expose animation props for assertions
+vi.mock('framer-motion', () => ({
+  motion: {
+    div: ({
+      children,
+      className,
+      initial,
+      animate,
+      exit,
+      transition,
+      ...props
+    }: {
+      children?: React.ReactNode;
+      className?: string;
+      initial?: Record<string, unknown>;
+      animate?: Record<string, unknown>;
+      exit?: Record<string, unknown>;
+      transition?: Record<string, unknown>;
+      [key: string]: unknown;
+    }) =>
+      React.createElement('div', {
+        className,
+        ...props,
+        'data-initial': initial ? JSON.stringify(initial) : undefined,
+        'data-animate': animate ? JSON.stringify(animate) : undefined,
+        'data-exit': exit ? JSON.stringify(exit) : undefined,
+        'data-transition': transition ? JSON.stringify(transition) : undefined,
+      }, children),
+  },
+  AnimatePresence: ({ children }: { children?: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
+}));
+
 // Mock @/lib/pricing
 vi.mock('@/lib/pricing', () => ({
   calculateTotalWithTax: (subtotal: number, rate: number) => ({
@@ -520,5 +552,35 @@ describe('RoomShowcaseModal - Analytics', () => {
     expect(posthog.capture).not.toHaveBeenCalledWith('abandon_booking', expect.any(Object));
     expect(mockOnClose).toHaveBeenCalled();
     expect(mockOnCheckout).toHaveBeenCalledWith('room-1', 2);
+  });
+
+  it('scales the modal container from 0.95 to 1 with a 200ms fade transition', async () => {
+    const { container } = render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
+      />
+    );
+
+    await waitFor(() => {
+      const animated = Array.from(container.querySelectorAll('[data-initial]'));
+      const scaledContainer = animated.find((el) => {
+        const initial = JSON.parse(el.getAttribute('data-initial') || '{}');
+        return initial.scale !== undefined;
+      });
+
+      expect(scaledContainer).toBeTruthy();
+      const initial = JSON.parse(scaledContainer?.getAttribute('data-initial') || '{}');
+      const animate = JSON.parse(scaledContainer?.getAttribute('data-animate') || '{}');
+      const transition = JSON.parse(scaledContainer?.getAttribute('data-transition') || '{}');
+
+      expect(initial.opacity).toBe(0);
+      expect(initial.scale).toBe(0.95);
+      expect(animate.opacity).toBe(1);
+      expect(animate.scale).toBe(1);
+      expect(transition.duration).toBe(0.2);
+    });
   });
 });

@@ -13,6 +13,7 @@ import { useTranslations } from "next-intl";
 import { useModalAccessibility } from "@/hooks/useModalAccessibility";
 import { useBookingAnalytics } from "@/hooks/useBookingAnalytics";
 import { AnimatePresence, motion } from "framer-motion";
+import { MOTION_DURATION, MOTION_EASING } from "@/lib/motion-tokens";
 
 interface HotelForModal {
 	id?: string;
@@ -224,12 +225,15 @@ export function RoomShowcaseModal({
 				/>
 
 				{/* MODAL CONTAINER — Liquid Glass */}
-				<motion.div 
+				<motion.div
 					className="relative w-full max-w-7xl h-[96vh] sm:h-[92vh] flex flex-col overflow-hidden sm:rounded-[var(--radius-squircle-2xl)] rounded-t-[2rem] glass-panel"
-					initial={{ opacity: 0, y: 50 }}
-					animate={{ opacity: 1, y: 0 }}
-					exit={{ opacity: 0, y: 50 }}
-					transition={{ duration: 0.3, ease: "easeOut" }}
+					initial={{ opacity: 0, scale: 0.95 }}
+					animate={{ opacity: 1, scale: 1 }}
+					exit={{ opacity: 0, scale: 0.95 }}
+					transition={{
+						duration: MOTION_DURATION.normal / 1000,
+						ease: MOTION_EASING.easeOut,
+					}}
 				>
 				{/* Boton cerrar glass */}
 				<button
