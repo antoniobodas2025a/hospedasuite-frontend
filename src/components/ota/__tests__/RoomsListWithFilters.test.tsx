@@ -21,6 +21,8 @@ vi.mock('framer-motion', () => ({
       style,
       variants,
       transition,
+      layout,
+      layoutId,
       ...props
     }: {
       children?: React.ReactNode;
@@ -28,6 +30,8 @@ vi.mock('framer-motion', () => ({
       style?: React.CSSProperties;
       variants?: Record<string, unknown>;
       transition?: Record<string, unknown>;
+      layout?: boolean;
+      layoutId?: string;
       [key: string]: unknown;
     }) =>
       React.createElement('div', {
@@ -36,6 +40,7 @@ vi.mock('framer-motion', () => ({
         ...props,
         'data-variants': variants ? JSON.stringify(variants) : undefined,
         'data-transition': transition ? JSON.stringify(transition) : undefined,
+        'data-layout': layout ? 'true' : undefined,
       }, children),
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) => React.createElement(React.Fragment, {}, children),
@@ -102,5 +107,19 @@ describe('RoomsListWithFilters', () => {
     expect(parent).toBeTruthy();
     const parsed = JSON.parse(parent?.getAttribute('data-variants') || '{}');
     expect(parsed.visible.transition.staggerChildren).toBe(0.05);
+  });
+
+  it('does not pass layout prop to animated room card items', () => {
+    const { container } = render(
+      <RoomsListWithFilters
+        rooms={rooms}
+        availableRooms={rooms}
+        slug="hotel-test"
+        isSearchingDates={false}
+      />
+    );
+
+    const items = container.querySelectorAll('[data-layout]');
+    expect(items.length).toBe(0);
   });
 });
