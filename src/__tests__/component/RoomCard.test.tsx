@@ -482,4 +482,44 @@ describe("RoomCard", () => {
     expect(img?.getAttribute('data-loading')).toBe('eager');
     expect(img?.getAttribute('data-priority')).toBe('true');
   });
+
+  it("applies content-visibility to cards outside the initial viewport", () => {
+    const { container: belowFold } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+        index={2}
+      />
+    );
+
+    const card = belowFold.querySelector('[data-testid="room-card"]');
+    expect(card).toBeTruthy();
+    expect(card?.getAttribute('style')).toContain('content-visibility');
+  });
+
+  it("does not apply content-visibility to above-the-fold cards", () => {
+    const { container } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+        index={0}
+      />
+    );
+
+    const card = container.querySelector('[data-testid="room-card"]');
+    expect(card).toBeTruthy();
+    expect(card?.getAttribute('style') ?? '').not.toContain('content-visibility');
+  });
 });

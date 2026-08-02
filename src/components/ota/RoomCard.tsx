@@ -216,6 +216,7 @@ function RoomCardInner({
       ref={setCardRef}
       data-testid="room-card"
       className="group/card will-change-transform"
+      style={index !== undefined && index >= 2 ? { contentVisibility: 'auto', containIntrinsicSize: '0 300px' } : undefined}
       initial={{ opacity: 0, y: 24 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ type: 'spring' as const, stiffness: 200, damping: 20, duration: 0.4 }}
