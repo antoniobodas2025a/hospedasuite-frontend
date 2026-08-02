@@ -186,12 +186,9 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
   };
 
   const onSubmitHandler = async (data: RoomFormValues) => {
-    console.log('[RoomEditor] Form submitted with data:', data);
-    console.log('[RoomEditor] Form errors:', errors);
     setIsSaving(true);
     try {
       const result = await saveRoomAction(hotelId, data, initialData?.id);
-      console.log('[RoomEditor] saveRoomAction result:', result);
       if (result.success) {
         onClose(true);
       } else {
@@ -206,7 +203,6 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
   };
 
   const onErrorHandler = (errors: any) => {
-    console.error('[RoomEditor] Form validation errors:', errors);
     const errorMessages = Object.entries(errors)
       .map(([field, err]: [string, any]) => {
         const fieldLabels: Record<string, string> = {
@@ -288,6 +284,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                         <PriceCalculator
                           basePrice={watch('price')}
                           taxRegime="simplified"
+                          readonly
                         />
                       </div>
                     )}
@@ -376,12 +373,11 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
         </div>
 
         <div className="p-6 border-t border-border bg-card flex justify-end gap-4">
-          <button onClick={() => { console.log('[RoomEditor] Cancelar clicked'); onClose(false); }} className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cancelar</button>
+          <button onClick={() => onClose(false)} className="px-6 py-3 text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Cancelar</button>
           <button 
             type="submit" 
             form="room-form" 
             disabled={isSaving || isUploadingMedia} 
-            onClick={() => console.log('[RoomEditor] Guardar clicked, isSaving:', isSaving, 'isUploadingMedia:', isUploadingMedia)}
             className="px-8 py-3 text-[10px] font-bold uppercase tracking-widest text-white bg-indigo-600 rounded-[var(--radius-squircle-lg)] shadow-cta disabled:opacity-50 disabled:cursor-not-allowed"
           >
             {isSaving ? 'Guardando...' : 'Guardar Cambios'}

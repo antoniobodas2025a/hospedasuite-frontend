@@ -154,6 +154,20 @@ describe('PriceCalculator Component', () => {
 		fireEvent.change(input, { target: { value: '300000' } });
 		
 		// Debe mostrar formato con separadores de miles
-		expect(screen.getAllByText(/\$ 300.000/i).length).toBeGreaterThan(0);
+		expect(screen.getAllByText(/\$ 300\.000/i).length).toBeGreaterThan(0);
+	});
+
+	describe('Modo readonly', () => {
+		it('no muestra el input de precio base', () => {
+			render(<PriceCalculator readonly />);
+			expect(screen.queryByPlaceholderText(/300000/i)).not.toBeInTheDocument();
+			expect(screen.queryByText(/Precio Base/i)).not.toBeInTheDocument();
+		});
+
+		it('muestra el desglose con el label "Precio por Noche"', () => {
+			render(<PriceCalculator basePrice={200000} readonly />);
+			expect(screen.getByText(/Precio por Noche/i)).toBeInTheDocument();
+			expect(screen.getByText(/\$ 176\.240/i)).toBeInTheDocument();
+		});
 	});
 });

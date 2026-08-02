@@ -14,6 +14,7 @@ interface PriceCalculatorProps {
 	basePrice?: number;
 	taxRegime?: TaxRegime;
 	compact?: boolean;
+	readonly?: boolean;
 	onChange?: (price: number, regime: TaxRegime) => void;
 }
 
@@ -25,6 +26,7 @@ export default function PriceCalculator({
 	basePrice: initialBasePrice = 300000,
 	taxRegime: initialTaxRegime = "simplified",
 	compact = false,
+	readonly = false,
 	onChange,
 }: PriceCalculatorProps) {
 	const [basePrice, setBasePrice] = useState(initialBasePrice);
@@ -102,26 +104,28 @@ export default function PriceCalculator({
 					</div>
 				</div>
 
-				{/* Input: Precio base */}
-				<div className="mb-6">
-					<label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-						Precio Base
-					</label>
-					<div className="relative">
-						<span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground">
-							$
-						</span>
-						<input
-							type="number"
-							value={basePrice || ""}
-							onChange={handlePriceChange}
-							className="w-full rounded-[var(--radius-squircle-lg)] border border-border bg-background/50 py-3 pl-10 pr-4 text-lg font-bold text-foreground placeholder:text-muted-foreground/50 focus:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
-							placeholder="300000"
-							min="0"
-							step="1000"
-						/>
+				{/* Input: Precio base — hidden when readonly (e.g., inside RoomEditorModal) */}
+				{!readonly && (
+					<div className="mb-6">
+						<label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
+							Precio Base
+						</label>
+						<div className="relative">
+							<span className="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-muted-foreground">
+								$
+							</span>
+							<input
+								type="number"
+								value={basePrice || ""}
+								onChange={handlePriceChange}
+								className="w-full rounded-[var(--radius-squircle-lg)] border border-border bg-background/50 py-3 pl-10 pr-4 text-lg font-bold text-foreground placeholder:text-muted-foreground/50 focus:border-indigo-500/50 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 transition-all"
+								placeholder="300000"
+								min="0"
+								step="1000"
+							/>
+						</div>
 					</div>
-				</div>
+				)}
 
 				{/* Selector: Régimen fiscal */}
 				<div className="mb-6">
@@ -160,7 +164,9 @@ export default function PriceCalculator({
 				<div className="space-y-3">
 					{/* Precio base */}
 					<div className="flex items-center justify-between border-b border-border/50 py-2">
-						<span className="text-sm text-muted-foreground">Precio Neto</span>
+						<span className="text-sm text-muted-foreground">
+							{readonly ? "Precio por Noche" : "Precio Neto"}
+						</span>
 						<span className="text-sm font-bold text-foreground">
 							{formatCOP(basePrice)}
 						</span>
