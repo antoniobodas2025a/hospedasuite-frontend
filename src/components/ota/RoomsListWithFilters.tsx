@@ -165,6 +165,7 @@ export default function RoomsListWithFilters({
                     totalRooms={rooms.length}
                     availableCount={availableRooms.length}
                     hotel={hotel}
+                    searchParams={searchParams}
                   />
                 </motion.div>
               ))}

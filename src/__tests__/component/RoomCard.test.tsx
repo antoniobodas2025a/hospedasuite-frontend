@@ -440,4 +440,25 @@ describe("RoomCard", () => {
     });
     expect(cta).toHaveFocus();
   });
+
+  it("uses searchParams prop to preserve guests in reserve link", () => {
+    const { container } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+        searchParams={new URLSearchParams({ guests: "2" })}
+      />
+    );
+
+    const cta = container.querySelector('a');
+    expect(cta).toBeTruthy();
+    expect(cta?.getAttribute('href')).toContain('guests=2');
+    expect(cta?.getAttribute('href')).toContain('showRoom=room-1');
+  });
 });

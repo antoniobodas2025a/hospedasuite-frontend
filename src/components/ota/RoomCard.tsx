@@ -3,7 +3,6 @@
 import React, { useRef, useEffect, useState, useMemo, memo, useCallback } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
 import { motion, useInView } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } from 'lucide-react';
@@ -37,10 +36,13 @@ interface RoomCardProps {
   totalRooms?: number;
   availableCount?: number;
   hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
+  searchParams?: URLSearchParams;
+  imagePriority?: boolean;
+  index?: number;
 }
 
-function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDates, isLoading, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
-  const searchParams = useSearchParams();
+function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDates, isLoading, allRooms = [], totalRooms = 0, availableCount = 0, hotel, searchParams: searchParamsProp, imagePriority, index }: RoomCardProps) {
+  const searchParams = searchParamsProp ?? new URLSearchParams();
   const guests = searchParams.get('guests');
 
   const coverImage = useMemo(() =>
