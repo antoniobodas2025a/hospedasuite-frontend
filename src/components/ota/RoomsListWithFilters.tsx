@@ -131,8 +131,6 @@ export default function RoomsListWithFilters({
                   damping: 25,
                   delay: index * 0.04 
                 }}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${index * 80}ms` }}
               >
                 <RoomCard
                   room={room}
