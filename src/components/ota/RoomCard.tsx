@@ -52,12 +52,16 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
     [room.gallery]
   );
 
-  const nights = useMemo(() => {
-    if (!checkIn || !checkOut) return 1;
-    const d1 = new Date(checkIn);
-    const d2 = new Date(checkOut);
-    return Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
+  const parsedDates = useMemo(() => {
+    if (!checkIn || !checkOut) return null;
+    return { checkInDate: new Date(checkIn), checkOutDate: new Date(checkOut) };
   }, [checkIn, checkOut]);
+
+  const nights = useMemo(() => {
+    if (!parsedDates) return 1;
+    const { checkInDate, checkOutDate } = parsedDates;
+    return Math.max(1, Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24)));
+  }, [parsedDates]);
 
   const basePrice = useMemo(() => room.price_per_night || room.price || 0, [room.price_per_night, room.price]);
   const taxRate = useMemo(() => hotel?.tax_rate ?? DEFAULT_TAX_RATE, [hotel?.tax_rate]);
@@ -128,7 +132,26 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
   );
 }
 
-export default memo(RoomCard);
+export function areRoomCardPropsEqual(prev: RoomCardProps, next: RoomCardProps): boolean {
+  if (prev.room !== next.room) return false;
+  if (prev.allRooms !== next.allRooms) return false;
+  if (prev.hotelSlug !== next.hotelSlug) return false;
+  if (prev.hotelId !== next.hotelId) return false;
+  if (prev.checkIn !== next.checkIn) return false;
+  if (prev.checkOut !== next.checkOut) return false;
+  if (prev.isSearchingDates !== next.isSearchingDates) return false;
+  if (prev.isLoading !== next.isLoading) return false;
+  if (prev.totalRooms !== next.totalRooms) return false;
+  if (prev.availableCount !== next.availableCount) return false;
+  if (prev.hotel?.tax_rate !== next.hotel?.tax_rate) return false;
+  if (prev.hotel?.cancellation_policy !== next.hotel?.cancellation_policy) return false;
+  if (prev.searchParams?.toString() !== next.searchParams?.toString()) return false;
+  if (prev.imagePriority !== next.imagePriority) return false;
+  if (prev.index !== next.index) return false;
+  return true;
+}
+
+export default memo(RoomCard, areRoomCardPropsEqual);
 
 function RoomCardInner({
   room,

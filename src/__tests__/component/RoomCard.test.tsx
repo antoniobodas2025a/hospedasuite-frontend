@@ -4,7 +4,7 @@ import "@testing-library/jest-dom";
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
-import RoomCard from "@/components/ota/RoomCard";
+import RoomCard, { areRoomCardPropsEqual } from "@/components/ota/RoomCard";
 
 // Mock next/image to render a simple img that exposes priority/loading props
 vi.mock("next/image", () => ({
@@ -521,5 +521,52 @@ describe("RoomCard", () => {
     const card = container.querySelector('[data-testid="room-card"]');
     expect(card).toBeTruthy();
     expect(card?.getAttribute('style') ?? '').not.toContain('content-visibility');
+  });
+});
+
+describe("areRoomCardPropsEqual", () => {
+  const baseProps = {
+    room: baseRoom,
+    hotelSlug: "hotel-test",
+    hotelId: "hotel-test",
+    checkIn: "2026-08-10",
+    checkOut: "2026-08-11",
+    isSearchingDates: false,
+    isLoading: false,
+    allRooms: [baseRoom],
+    totalRooms: 1,
+    availableCount: 1,
+    hotel: { tax_rate: 0.19, cancellation_policy: "Flexible" },
+    searchParams: new URLSearchParams({ guests: "2" }),
+    imagePriority: false,
+    index: 0,
+  };
+
+  it("returns true when all relevant props are equal", () => {
+    expect(areRoomCardPropsEqual(baseProps, { ...baseProps })).toBe(true);
+  });
+
+  it("returns false when room reference changes", () => {
+    expect(areRoomCardPropsEqual(baseProps, { ...baseProps, room: { ...baseRoom } })).toBe(false);
+  });
+
+  it("returns false when dates change", () => {
+    expect(areRoomCardPropsEqual(baseProps, { ...baseProps, checkOut: "2026-08-12" })).toBe(false);
+  });
+
+  it("returns false when tax_rate changes", () => {
+    expect(areRoomCardPropsEqual(baseProps, { ...baseProps, hotel: { ...baseProps.hotel, tax_rate: 0 } })).toBe(false);
+  });
+
+  it("returns false when searchParams change", () => {
+    expect(areRoomCardPropsEqual(baseProps, { ...baseProps, searchParams: new URLSearchParams({ guests: "3" }) })).toBe(false);
+  });
+
+  it("returns false when imagePriority changes", () => {
+    expect(areRoomCardPropsEqual(baseProps, { ...baseProps, imagePriority: true })).toBe(false);
+  });
+
+  it("returns false when index changes", () => {
+    expect(areRoomCardPropsEqual(baseProps, { ...baseProps, index: 1 })).toBe(false);
   });
 });
