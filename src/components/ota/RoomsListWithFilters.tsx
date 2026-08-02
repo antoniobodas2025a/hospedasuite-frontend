@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { SlidersHorizontal, Users, CalendarX2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RoomCard from './RoomCard';
@@ -45,6 +46,97 @@ const itemVariants = {
   },
   exit: { opacity: 0, scale: 0.95 },
 };
+
+const ROOMS_VIRTUALIZATION_THRESHOLD = 10;
+
+interface VirtualizedRoomListProps {
+  filteredRooms: RoomItem[];
+  slug: string;
+  hotelId?: string;
+  checkin?: string | null;
+  checkout?: string | null;
+  isSearchingDates: boolean;
+  totalRooms: number;
+  availableCount: number;
+  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
+  searchParams: URLSearchParams;
+}
+
+function VirtualizedRoomList({
+  filteredRooms,
+  slug,
+  hotelId,
+  checkin,
+  checkout,
+  isSearchingDates,
+  totalRooms,
+  availableCount,
+  hotel,
+  searchParams,
+}: VirtualizedRoomListProps) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: filteredRooms.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 300,
+    overscan: 3,
+    measureElement:
+      typeof window !== 'undefined'
+        ? (el: HTMLElement) => el.getBoundingClientRect().height
+        : undefined,
+  });
+
+  return (
+    <div
+      ref={listRef}
+      data-testid="virtual-list"
+      className="max-h-[80vh] overflow-auto"
+    >
+      <div
+        style={{
+          height: virtualizer.getTotalSize(),
+          position: 'relative',
+          width: '100%',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const room = filteredRooms[virtualItem.index];
+          return (
+            <div
+              key={virtualItem.key}
+              data-testid={`virtual-item-${virtualItem.index}`}
+              data-index={virtualItem.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              <RoomCard
+                room={room}
+                hotelSlug={slug}
+                hotelId={hotelId}
+                checkIn={checkin}
+                checkOut={checkout}
+                isSearchingDates={isSearchingDates}
+                allRooms={filteredRooms}
+                totalRooms={totalRooms}
+                availableCount={availableCount}
+                hotel={hotel}
+                searchParams={searchParams}
+                imagePriority={virtualItem.index < 2}
+                index={virtualItem.index}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
 
 interface RoomsListWithFiltersProps {
   rooms: RoomItem[];
@@ -141,6 +233,19 @@ export default function RoomsListWithFilters({
               {t('ota.roomsList.noResultsDesc')}
             </p>
           </div>
+        ) : filteredRooms.length >= ROOMS_VIRTUALIZATION_THRESHOLD ? (
+          <VirtualizedRoomList
+            filteredRooms={filteredRooms}
+            slug={slug}
+            hotelId={hotelId}
+            checkin={checkin}
+            checkout={checkout}
+            isSearchingDates={isSearchingDates}
+            totalRooms={rooms.length}
+            availableCount={availableRooms.length}
+            hotel={hotel}
+            searchParams={searchParams}
+          />
         ) : (
           <motion.div
             initial="hidden"
