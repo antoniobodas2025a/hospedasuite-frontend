@@ -1,26 +1,15 @@
 "use client";
 
 import React, { useMemo } from "react";
-import {
-	X,
-	ArrowRight,
-	Users,
-	Calendar,
-	Star,
-	Info,
-	ClipboardList,
-	Clock,
-} from "lucide-react";
+import { X, ArrowRight, Calendar } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculateTotalWithTax, DEFAULT_TAX_RATE } from "@/lib/pricing";
-import { format, parseISO } from "date-fns";
+import { parseISO } from "date-fns";
 import type { Room, GalleryItem } from "@/types";
-import { GlassCard } from "@/components/ui/glass";
 import RoomGalleryGrid from "./RoomGalleryGrid";
 import { RoomInfoPanel } from "./RoomInfoPanel";
 import { useSearchParams } from "next/navigation";
-import { useTranslations, useLocale } from "next-intl";
-import { getDateFnsLocale } from "@/lib/date-locale";
+import { useTranslations } from "next-intl";
 import { useModalAccessibility } from "@/hooks/useModalAccessibility";
 import { AnimatePresence, motion } from "framer-motion";
 
@@ -84,8 +73,6 @@ export function RoomShowcaseModal({
 	onCheckout: (roomId: string, guests: number) => void;
 }) {
 	const t = useTranslations();
-	const appLocale = useLocale();
-	const dateLocale = getDateFnsLocale(appLocale);
 	const searchParams = useSearchParams();
 
 	const roomId = searchParams.get("showRoom");

@@ -1,5 +1,7 @@
 // Bun test setup for DOM environment using jsdom
 import { JSDOM } from 'jsdom';
+import { cleanup } from '@testing-library/react';
+import { afterEach } from 'vitest';
 
 const dom = new JSDOM('<!DOCTYPE html><html><body></body></html>', {
   url: 'http://localhost',
@@ -28,8 +30,8 @@ globalThis.Event = dom.window.Event;
 globalThis.CustomEvent = dom.window.CustomEvent;
 globalThis.MouseEvent = dom.window.MouseEvent;
 globalThis.KeyboardEvent = dom.window.KeyboardEvent;
-globalThis.InputEvent = dom.window.InputEvent as any;
-globalThis.FormData = dom.window.FormData as any;
+globalThis.InputEvent = dom.window.InputEvent as unknown as typeof globalThis.InputEvent;
+globalThis.FormData = dom.window.FormData as unknown as typeof globalThis.FormData;
 globalThis.URL = dom.window.URL;
 globalThis.URLSearchParams = dom.window.URLSearchParams;
 globalThis.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
@@ -48,3 +50,6 @@ globalThis.matchMedia = dom.window.matchMedia?.bind(dom.window) || ((query: stri
   removeEventListener: () => {},
   dispatchEvent: () => false,
 }));
+
+// Clean up rendered components between tests to avoid DOM state leakage
+afterEach(() => cleanup());

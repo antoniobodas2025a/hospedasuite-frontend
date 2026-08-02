@@ -48,13 +48,13 @@ Chain strategy: stacked-to-main
 
 ## Phase 3: Modal Redesign (PR 2b - Value Add)
 
-- [ ] 3.1 Modify `src/components/ota/RoomShowcaseModal.tsx`: Implement content hierarchy (Gallery → Title → Price → Policies → Payment → CTA)
-- [ ] 3.2 Modify `src/components/ota/RoomShowcaseModal.tsx`: Make CTA sticky at bottom during scroll
-- [ ] 3.3 Modify `src/components/ota/RoomInfoPanel.tsx`: Add cancellation policy display using `hotel.cancellation_policy`
-- [ ] 3.4 Modify `src/components/ota/RoomInfoPanel.tsx`: Add payment methods display (Wompi: tarjetas, PSE, Nequi)
-- [ ] 3.5 Modify `src/components/ota/RoomInfoPanel.tsx`: Add help text for cancellation policy
-- [ ] 3.6 Modify `src/components/ota/RoomGalleryGrid.tsx`: Implement error boundary per image with placeholder
-- [ ] 3.7 Modify `src/components/ota/RoomGalleryGrid.tsx`: Add mobile carousel with "Foto 1 de 6" counter
+- [x] 3.1 Modify `src/components/ota/RoomShowcaseModal.tsx`: Implement content hierarchy (Gallery → Title → Price → Policies → Payment → CTA)
+- [x] 3.2 Modify `src/components/ota/RoomShowcaseModal.tsx`: Make CTA sticky at bottom during scroll
+- [x] 3.3 Modify `src/components/ota/RoomInfoPanel.tsx`: Add cancellation policy display using `hotel.cancellation_policy`
+- [x] 3.4 Modify `src/components/ota/RoomInfoPanel.tsx`: Add payment methods display (Wompi: tarjetas, PSE, Nequi)
+- [x] 3.5 Modify `src/components/ota/RoomInfoPanel.tsx`: Add help text for cancellation policy
+- [x] 3.6 Modify `src/components/ota/RoomGalleryGrid.tsx`: Implement error boundary per image with placeholder
+- [x] 3.7 Modify `src/components/ota/RoomGalleryGrid.tsx`: Add mobile carousel with "Foto 1 de 6" counter
 
 ## Phase 4: Analytics & Polish (PR 3)
 

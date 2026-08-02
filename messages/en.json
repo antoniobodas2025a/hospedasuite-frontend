@@ -339,6 +339,7 @@
       "viewImage": "View image {index}",
       "viewGallery": "View gallery of {name}",
       "photoCount": "{count, plural, one {photo} other {photos}}",
+      "photoCounter": "Photo {current} of {total}",
       "goToImage": "Go to image {index}",
       "prevImage": "Previous image",
       "nextImage": "Next image",

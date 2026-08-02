@@ -2,7 +2,7 @@
 import '../../../__tests__/bun-test-dom-setup';
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import React from 'react';
-import { render, screen, waitFor } from '@testing-library/react';
+import { render, waitFor } from '@testing-library/react';
 import { RoomShowcaseModal } from '../RoomShowcaseModal';
 
 // Mock next-intl
@@ -66,14 +66,14 @@ vi.mock('@/lib/pricing', () => ({
 
 // Mock @/components/ui/glass
 vi.mock('@/components/ui/glass', () => ({
-  GlassCard: ({ children, className, ...props }: { children: React.ReactNode; className?: string; [key: string]: any }) => (
+  GlassCard: ({ children, className, ...props }: { children: React.ReactNode; className?: string; [key: string]: unknown }) => (
     <div className={className} {...props}>{children}</div>
   ),
 }));
 
 // Mock RoomGalleryGrid
 vi.mock('../RoomGalleryGrid', () => ({
-  default: ({ images, roomName }: { images: any[]; roomName: string }) => (
+  default: ({ images, roomName }: { images: { url: string; alt?: string }[]; roomName: string }) => (
     <div data-testid="room-gallery">{roomName} - {images.length} images</div>
   ),
 }));
