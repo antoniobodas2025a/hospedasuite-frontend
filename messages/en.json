@@ -181,6 +181,7 @@
       "baseRate": "Base Rate",
       "copPerNight": "COP/night",
       "freeCancellation": "Free Cancellation Available",
+      "reserve": "Book",
       "secureRoom": "Secure Room",
       "exploreRoom": "Explore Room",
       "onlyXAvailable": "{count, plural, one {Only 1 available} other {Only {count} available}}",

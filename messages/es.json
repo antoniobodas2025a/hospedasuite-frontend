@@ -181,6 +181,7 @@
       "baseRate": "Tarifa Base",
       "copPerNight": "COP/noche",
       "freeCancellation": "Cancelacion Gratuita Disponible",
+      "reserve": "Reservar",
       "secureRoom": "Asegurar Refugio",
       "exploreRoom": "Explorar Unidad",
       "onlyXAvailable": "{count, plural, one {Solo 1 disponible} other {Solo {count} disponibles}}",

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo, memo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
@@ -14,7 +14,7 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
-import { calculateTotalWithTax, DEFAULT_TAX_RATE, formatPrice } from '@/lib/pricing';
+import { DEFAULT_TAX_RATE, formatPrice, formatPriceWithTax } from '@/lib/pricing';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
@@ -33,43 +33,47 @@ interface RoomCardProps {
   hotel?: { cancellation_policy?: string | null; tax_rate?: number };
 }
 
-export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
+function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
   const searchParams = useSearchParams();
   const guests = searchParams.get('guests');
 
-  const coverImage = Array.isArray(room.gallery) && room.gallery.length > 0
-    ? (typeof room.gallery[0] === 'string' ? room.gallery[0] : (room.gallery[0] as GalleryItem).url || '')
-    : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
+  const coverImage = useMemo(() =>
+    Array.isArray(room.gallery) && room.gallery.length > 0
+      ? (typeof room.gallery[0] === 'string' ? room.gallery[0] : (room.gallery[0] as GalleryItem).url || '')
+      : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32',
+    [room.gallery]
+  );
 
-  let nights = 1;
-  if (checkIn && checkOut) {
+  const nights = useMemo(() => {
+    if (!checkIn || !checkOut) return 1;
     const d1 = new Date(checkIn);
     const d2 = new Date(checkOut);
-    nights = Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
-  }
-  const basePrice = room.price_per_night || room.price || 0;
-  const displayPrice = isSearchingDates ? (basePrice * nights) : basePrice;
-  const taxRate = hotel?.tax_rate ?? DEFAULT_TAX_RATE;
-  const { total: totalPrice, tax: taxes, hasTax } = calculateTotalWithTax(displayPrice, taxRate);
+    return Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
+  }, [checkIn, checkOut]);
 
-  const allPrices = allRooms.map((r) => r.price_per_night || r.price || 0).filter((p) => p > 0);
-  const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
-  const avgPrice = allPrices.length > 0 ? Math.round(allPrices.reduce((a, b) => a + b, 0) / allPrices.length) : 0;
-  const isBestValue = basePrice === minPrice && allRooms.length > 1;
-  const isGreatDeal = avgPrice > 0 && basePrice <= avgPrice * 0.8 && !isBestValue;
-  const isPopular = (room.capacity ?? 0) >= 4;
+  const basePrice = useMemo(() => room.price_per_night || room.price || 0, [room.price_per_night, room.price]);
+  const taxRate = useMemo(() => hotel?.tax_rate ?? DEFAULT_TAX_RATE, [hotel?.tax_rate]);
+  const priceBreakdown = useMemo(() => formatPriceWithTax(basePrice, taxRate, nights), [basePrice, taxRate, nights]);
 
-  const availabilityRatio = totalRooms > 0 ? availableCount / totalRooms : 1;
-  const isLowStock = isSearchingDates && availabilityRatio <= 0.33;
-  const isAlmostGone = isSearchingDates && availableCount <= 2 && availableCount > 0;
+  const allPrices = useMemo(() => allRooms.map((r) => r.price_per_night || r.price || 0).filter((p) => p > 0), [allRooms]);
+  const minPrice = useMemo(() => (allPrices.length > 0 ? Math.min(...allPrices) : 0), [allPrices]);
+  const avgPrice = useMemo(() => (allPrices.length > 0 ? Math.round(allPrices.reduce((a, b) => a + b, 0) / allPrices.length) : 0), [allPrices]);
+  const isBestValue = useMemo(() => basePrice === minPrice && allRooms.length > 1, [basePrice, minPrice, allRooms.length]);
+  const isGreatDeal = useMemo(() => avgPrice > 0 && basePrice <= avgPrice * 0.8 && !isBestValue, [avgPrice, basePrice, isBestValue]);
+  const isPopular = useMemo(() => (room.capacity ?? 0) >= 4, [room.capacity]);
+
+  const availabilityRatio = useMemo(() => (totalRooms > 0 ? availableCount / totalRooms : 1), [totalRooms, availableCount]);
+  const isLowStock = useMemo(() => isSearchingDates && availabilityRatio <= 0.33, [isSearchingDates, availabilityRatio]);
+  const isAlmostGone = useMemo(() => isSearchingDates && availableCount <= 2 && availableCount > 0, [isSearchingDates, availableCount]);
 
   // Preserve existing params (location, category, filters) and add room selection
-  const queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
-  if (checkIn) queryParams.set('checkin', checkIn);
-  if (checkOut) queryParams.set('checkout', checkOut);
-  if (guests) queryParams.set('guests', guests);
-
-  const destinationUrl = `?${queryParams.toString()}`;
+  const destinationUrl = useMemo(() => {
+    const queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
+    if (checkIn) queryParams.set('checkin', checkIn);
+    if (checkOut) queryParams.set('checkout', checkOut);
+    if (guests) queryParams.set('guests', guests);
+    return `?${queryParams.toString()}`;
+  }, [searchParams, room.id, checkIn, checkOut, guests]);
 
   return (
     <RoomCardInner
@@ -89,24 +93,41 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
       isLowStock={isLowStock}
       destinationUrl={destinationUrl}
       coverImage={coverImage}
-      displayPrice={displayPrice}
       basePrice={basePrice}
-      totalPrice={totalPrice}
+      priceBreakdown={priceBreakdown}
       nights={nights}
     />
   );
 }
 
+export default memo(RoomCard);
+
 function RoomCardInner({
-  room, hotelSlug, checkIn, checkOut, isSearchingDates,
-  allRooms, totalRooms, availableCount, hotel, isBestValue, isGreatDeal,
-  isPopular, isAlmostGone, isLowStock, destinationUrl, coverImage,
-  displayPrice, basePrice, totalPrice, nights,
+  room,
+  isSearchingDates,
+  availableCount,
+  hotel,
+  isBestValue,
+  isGreatDeal,
+  isPopular,
+  isAlmostGone,
+  isLowStock,
+  destinationUrl,
+  coverImage,
+  basePrice,
+  priceBreakdown,
+  nights,
 }: RoomCardProps & {
-  isBestValue: boolean; isGreatDeal: boolean; isPopular: boolean;
-  isAlmostGone: boolean; isLowStock: boolean; destinationUrl: string;
-  coverImage: string; displayPrice: number; basePrice: number;
-  totalPrice: number; nights: number;
+  isBestValue: boolean;
+  isGreatDeal: boolean;
+  isPopular: boolean;
+  isAlmostGone: boolean;
+  isLowStock: boolean;
+  destinationUrl: string;
+  coverImage: string;
+  basePrice: number;
+  priceBreakdown: ReturnType<typeof formatPriceWithTax>;
+  nights: number;
 }) {
   const t = useTranslations();
   const ref = useRef(null);
@@ -243,30 +264,27 @@ function RoomCardInner({
 
           {/* DOCK DE CONVERSION */}
           <div className="mt-4 pt-5 flex flex-wrap items-end justify-between border-t border-border/40 gap-4">
-            <div>
-              {isSearchingDates ? (
-                <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-bold text-foreground">${formatPrice(basePrice)}</span> x {nights} {t('ota.roomCard.nights', { count: nights })}
-                    </p>
-                  <div className="flex items-end gap-2 pt-1">
-                    <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                      ${formatPrice(totalPrice)}
-                    </p>
-                    <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copTotal')}</span>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-xs text-muted-foreground/60 font-bold uppercase tracking-widest mb-1">{t('ota.roomCard.baseRate')}</p>
-                  <div className="flex items-end gap-2">
-                    <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                      ${formatPrice(displayPrice)}
-                    </p>
-                    <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copPerNight')}</span>
-                  </div>
-                </div>
-              )}
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
+                <span className="font-bold text-foreground">${formatPrice(basePrice)}</span>
+                {isSearchingDates ? (
+                  <span>x {nights} {t('ota.roomCard.nights', { count: nights })}</span>
+                ) : (
+                  <span>COP/noche</span>
+                )}
+                {priceBreakdown.hasTax && (
+                  <span>+ {priceBreakdown.taxLabel}: ${priceBreakdown.tax}</span>
+                )}
+                {!priceBreakdown.hasTax && (
+                  <span>(IVA incluido)</span>
+                )}
+              </div>
+              <div className="flex items-end gap-2 pt-1">
+                <p className="text-3xl font-mono font-bold text-secondary leading-none">
+                  ${priceBreakdown.total}
+                </p>
+                <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copTotal')}</span>
+              </div>
 
               {hotel?.cancellation_policy && (
                 <p className="text-xs font-medium text-secondary mt-2 flex items-center gap-1">
@@ -275,18 +293,15 @@ function RoomCardInner({
               )}
             </div>
 
-            {/* CTA — CSS active scale instead of motion.div whileTap */}
+            {/* CTA — Unified "Reservar" */}
             <Link
               href={destinationUrl}
               scroll={false}
               className={cn(
-                "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] transition-transform",
-                isSearchingDates
-                  ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta"
-                  : "bg-foreground hover:bg-primary text-background"
+                "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] transition-transform bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta"
               )}
             >
-              {isSearchingDates ? t('ota.roomCard.secureRoom') : t('ota.roomCard.exploreRoom')} <ArrowRight size={16} strokeWidth={2.5} />
+              {t('ota.roomCard.reserve', { defaultValue: 'Reservar' })} <ArrowRight size={16} strokeWidth={2.5} />
             </Link>
           </div>
         </div>
