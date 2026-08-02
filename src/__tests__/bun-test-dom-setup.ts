@@ -34,6 +34,7 @@ globalThis.InputEvent = dom.window.InputEvent as unknown as typeof globalThis.In
 globalThis.FormData = dom.window.FormData as unknown as typeof globalThis.FormData;
 globalThis.URL = dom.window.URL;
 globalThis.URLSearchParams = dom.window.URLSearchParams;
+globalThis.location = dom.window.location;
 globalThis.getComputedStyle = dom.window.getComputedStyle.bind(dom.window);
 globalThis.requestAnimationFrame = dom.window.requestAnimationFrame.bind(dom.window);
 globalThis.cancelAnimationFrame = dom.window.cancelAnimationFrame.bind(dom.window);
