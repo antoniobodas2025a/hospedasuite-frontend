@@ -4,11 +4,13 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { springGentle } from '@/lib/mac2026/spring';
 import { cn } from '@/lib/utils';
+import { calculateTaxAmount, getTaxLabel } from '@/lib/pricing';
 
 export interface PriceBreakdownProps {
   pricePerNight: number;
   nights: number;
-  taxRegime: 'simplified' | 'responsible';
+  taxRate?: number;
+  taxRegime?: 'simplified' | 'responsible';
   showDetails?: boolean;
   className?: string;
 }
@@ -18,12 +20,24 @@ const formatCOP = (amount: number) => amount.toLocaleString('es-CO');
 export default function PriceBreakdown({
   pricePerNight,
   nights,
+  taxRate,
   taxRegime,
   showDetails = true,
   className,
 }: PriceBreakdownProps) {
+  const effectiveRate = React.useMemo(() => {
+    if (typeof taxRegime === 'string') {
+      console.warn(
+        '[PriceBreakdown] `taxRegime` is deprecated. Use `taxRate: number` instead. This prop will be removed in 30 days.'
+      );
+      return taxRegime === 'responsible' ? 0.19 : 0;
+    }
+    return taxRate ?? 0.19;
+  }, [taxRate, taxRegime]);
+
+  const taxLabel = getTaxLabel(effectiveRate);
   const subtotal = pricePerNight * nights;
-  const iva = taxRegime === 'responsible' ? Math.round(subtotal * 0.19) : 0;
+  const iva = calculateTaxAmount(subtotal, effectiveRate);
   const total = subtotal + iva;
   const nightLabel = nights === 1 ? 'noche' : 'noches';
 
@@ -56,7 +70,7 @@ export default function PriceBreakdown({
 
         {iva > 0 && (
           <div className="flex justify-between items-baseline gap-3">
-            <p className="text-sm text-muted-foreground">IVA (19%)</p>
+            <p className="text-sm text-muted-foreground">{taxLabel}</p>
             <p className="text-sm font-medium text-foreground tabular-nums">
               ${formatCOP(iva)}
             </p>

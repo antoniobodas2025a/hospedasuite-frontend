@@ -234,3 +234,23 @@ export interface OtaCommission {
   total: number;
   commission: number;
 }
+
+// --------------------------------------------------------------------------
+// BOOKING ANALYTICS EVENTS (PostHog)
+// --------------------------------------------------------------------------
+export type BookingAnalyticsEvent =
+  | { event: 'view_room'; properties: { room_id: string; hotel_id: string; price: number; has_dates: boolean; tax_rate: number } }
+  | { event: 'click_reserve'; properties: { room_id: string; hotel_id: string; price: number; nights: number; has_dates: boolean; tax_rate: number } }
+  | { event: 'open_room_modal'; properties: { room_id: string; hotel_id: string; source: 'card' | 'sidebar' } }
+  | { event: 'close_room_modal'; properties: { room_id: string; hotel_id: string; action: 'reserve' | 'back' | 'esc' } }
+  | { event: 'complete_booking'; properties: { room_id: string; hotel_id: string; total_price: number; nights: number; guests: number; payment_method: string } }
+  | { event: 'abandon_booking'; properties: { room_id: string; hotel_id: string; step: 'card' | 'modal' | 'checkout'; time_spent: number } };
+
+// --------------------------------------------------------------------------
+// QUICK DATE PRESET (InlineDatePicker)
+// --------------------------------------------------------------------------
+export interface QuickDatePreset {
+  label: string;
+  tooltip: string;
+  getDates: () => { from: Date; to: Date };
+}

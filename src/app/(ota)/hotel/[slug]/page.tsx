@@ -22,6 +22,7 @@ import RoomsListWithFilters from "@/components/ota/RoomsListWithFilters";
 import HotelJsonLd from "@/components/seo/HotelJsonLd";
 import ReviewSkeleton from "@/components/ota/ReviewSkeleton";
 import MapSkeleton from "@/components/ota/MapSkeleton";
+import LazySection from "@/components/ota/LazySection";
 import { SectionHeader } from "@/components/ui/glass";
 import { ErrorBoundary } from "@/components/ota/ErrorBoundary";
 import LanguageSwitcher from "@/components/ota/LanguageSwitcher";
@@ -49,6 +50,11 @@ export async function generateMetadata({
 
 	if (!success || !hotel) return { title: t("propertyNotFound") };
 
+	const heroImageUrl =
+		hotel.seo_og_image_url ||
+		hotel.main_image_url ||
+		"https://images.unsplash.com/photo-1542314831-068cd1dbfeeb";
+
 	return {
 		title:
 			hotel.seo_meta_title ||
@@ -73,6 +79,11 @@ export async function generateMetadata({
 		alternates: hotel.seo_canonical_url
 			? { canonical: hotel.seo_canonical_url }
 			: undefined,
+		other: {
+			link: [
+				`<${heroImageUrl}>; rel=preload; as=image; fetchpriority=high`,
+			],
+		},
 	};
 }
 
@@ -162,7 +173,7 @@ export default async function ChannelHotelDetailPage({
 	];
 
 	// Modal data optimization: pass minimal data when closed
-	const modalHotelData = showRoom ? hotel : { slug: hotel.slug, rooms: [] };
+	const modalHotelData = showRoom ? hotel : { id: hotel.id, slug: hotel.slug, rooms: [] };
 
 	// Build search context for banner
 	const searchContext = {
@@ -306,26 +317,27 @@ export default async function ChannelHotelDetailPage({
 								}
 							/>
 							<div className="mt-6">
-								<RoomsListWithFilters
-									rooms={hotel.rooms || []}
-									availableRooms={availableRooms}
-									slug={slug}
-									checkin={checkin ?? null}
-									checkout={checkout ?? null}
-									isSearchingDates={isSearchingDates}
-									hotel={{
-										cancellation_policy: hotel.cancellation_policy,
-										tax_rate: hotel.tax_rate,
-									}}
-								/>
+                <RoomsListWithFilters
+                  rooms={hotel.rooms || []}
+                  availableRooms={availableRooms}
+                  slug={slug}
+                  hotelId={hotel.id}
+                  checkin={checkin ?? null}
+                  checkout={checkout ?? null}
+                  isSearchingDates={isSearchingDates}
+                  hotel={{
+                    cancellation_policy: hotel.cancellation_policy,
+                    tax_rate: hotel.tax_rate,
+                  }}
+                />
 							</div>
 						</div>
 
 						{/* Reviews Section */}
 						<div id="reviews-section">
-							<Suspense fallback={<ReviewSkeleton />}>
+							<LazySection placeholder={<ReviewSkeleton />} rootMargin="200px">
 								<ReviewsSection hotelId={hotel.id} hotelName={hotel.name} />
-							</Suspense>
+							</LazySection>
 						</div>
 
 						{/* Hotel Info Section */}
@@ -349,15 +361,15 @@ export default async function ChannelHotelDetailPage({
 
 					{/* Sidebar — Booking Widget (desktop only) */}
 					<aside className="lg:sticky lg:top-8 lg:self-start">
-						<BookingWidget
-							hotelName={hotel.name}
-							rooms={hotel.rooms || []}
-							checkIn={checkin ?? null}
-							checkOut={checkout ?? null}
-							cancellationPolicy={hotel.cancellation_policy}
-							totalRooms={(hotel.rooms || []).length}
-							taxRate={hotel.tax_rate}
-						/>
+					<BookingWidget
+						rooms={hotel.rooms || []}
+						checkIn={checkin ?? null}
+						checkOut={checkout ?? null}
+						cancellationPolicy={hotel.cancellation_policy}
+						totalRooms={(hotel.rooms || []).length}
+						taxRate={hotel.tax_rate}
+						hotelId={hotel.id}
+					/>
 					</aside>
 				</div>
 			</div>

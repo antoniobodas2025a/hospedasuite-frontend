@@ -1,9 +1,8 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useMemo, memo, useCallback } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import { motion, useInView } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } from 'lucide-react';
@@ -14,7 +13,12 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
-import { calculateTotalWithTax, DEFAULT_TAX_RATE, formatPrice } from '@/lib/pricing';
+import { DEFAULT_TAX_RATE, formatPrice, formatPriceWithTax } from '@/lib/pricing';
+import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
+import { useBookingFlow } from '@/hooks/useBookingFlow';
+import { trackTaxRateFallback } from '@/lib/analytics';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import { MOTION_DURATION, MOTION_EASING } from '@/lib/motion-tokens';
 
 // ============================================================================
 // BED TYPE FORMATTER — DB values → human-readable labels
@@ -24,52 +28,89 @@ import { calculateTotalWithTax, DEFAULT_TAX_RATE, formatPrice } from '@/lib/pric
 interface RoomCardProps {
   room: Partial<Room> & { id: string; name: string; cover_image_blur?: string };
   hotelSlug: string;
+  hotelId?: string;
   checkIn?: string | null;
   checkOut?: string | null;
   isSearchingDates: boolean;
+  isLoading?: boolean;
   allRooms?: (Partial<Room> & { id: string; name: string; cover_image_blur?: string })[];
   totalRooms?: number;
   availableCount?: number;
-  hotel?: { cancellation_policy?: string | null; tax_rate?: number };
+  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
+  searchParams?: URLSearchParams;
+  imagePriority?: boolean;
+  index?: number;
 }
 
-export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchingDates, allRooms = [], totalRooms = 0, availableCount = 0, hotel }: RoomCardProps) {
-  const searchParams = useSearchParams();
+function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDates, isLoading, allRooms = [], totalRooms = 0, availableCount = 0, hotel, searchParams: searchParamsProp, imagePriority, index }: RoomCardProps) {
+  const fallbackSearchParams = useMemo(() => new URLSearchParams(), []);
+  const searchParams = searchParamsProp ?? fallbackSearchParams;
   const guests = searchParams.get('guests');
 
-  const coverImage = Array.isArray(room.gallery) && room.gallery.length > 0
-    ? (typeof room.gallery[0] === 'string' ? room.gallery[0] : (room.gallery[0] as GalleryItem).url || '')
-    : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32';
+  const coverImage = useMemo(() =>
+    Array.isArray(room.gallery) && room.gallery.length > 0
+      ? (typeof room.gallery[0] === 'string' ? room.gallery[0] : (room.gallery[0] as GalleryItem).url || '')
+      : 'https://images.unsplash.com/photo-1611892440504-42a792e24d32',
+    [room.gallery]
+  );
 
-  let nights = 1;
-  if (checkIn && checkOut) {
-    const d1 = new Date(checkIn);
-    const d2 = new Date(checkOut);
-    nights = Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
-  }
-  const basePrice = room.price_per_night || room.price || 0;
-  const displayPrice = isSearchingDates ? (basePrice * nights) : basePrice;
-  const taxRate = hotel?.tax_rate ?? DEFAULT_TAX_RATE;
-  const { total: totalPrice, tax: taxes, hasTax } = calculateTotalWithTax(displayPrice, taxRate);
+  const parsedDates = useMemo(() => {
+    if (!checkIn || !checkOut) return null;
+    return { checkInDate: new Date(checkIn), checkOutDate: new Date(checkOut) };
+  }, [checkIn, checkOut]);
 
-  const allPrices = allRooms.map((r) => r.price_per_night || r.price || 0).filter((p) => p > 0);
-  const minPrice = allPrices.length > 0 ? Math.min(...allPrices) : 0;
-  const avgPrice = allPrices.length > 0 ? Math.round(allPrices.reduce((a, b) => a + b, 0) / allPrices.length) : 0;
-  const isBestValue = basePrice === minPrice && allRooms.length > 1;
-  const isGreatDeal = avgPrice > 0 && basePrice <= avgPrice * 0.8 && !isBestValue;
-  const isPopular = (room.capacity ?? 0) >= 4;
+  const nights = useMemo(() => {
+    if (!parsedDates) return 1;
+    const { checkInDate, checkOutDate } = parsedDates;
+    return Math.max(1, Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24)));
+  }, [parsedDates]);
 
-  const availabilityRatio = totalRooms > 0 ? availableCount / totalRooms : 1;
-  const isLowStock = isSearchingDates && availabilityRatio <= 0.33;
-  const isAlmostGone = isSearchingDates && availableCount <= 2 && availableCount > 0;
+  const basePrice = useMemo(() => room.price_per_night || room.price || 0, [room.price_per_night, room.price]);
+  const taxRate = useMemo(() => hotel?.tax_rate ?? DEFAULT_TAX_RATE, [hotel?.tax_rate]);
+  const priceBreakdown = useMemo(() => formatPriceWithTax(basePrice, taxRate, nights), [basePrice, taxRate, nights]);
+
+  useEffect(() => {
+    if (hotelId && hotel?.tax_rate == null) {
+      trackTaxRateFallback({ hotel_id: hotelId, fallback_rate: DEFAULT_TAX_RATE });
+    }
+  }, [hotelId, hotel?.tax_rate]);
+
+  const { trackViewRef, trackClickReserve } = useBookingAnalytics({
+    hotelId,
+    roomId: room.id,
+    price: basePrice,
+    nights,
+    hasDates: !!checkIn && !!checkOut,
+    taxRate,
+  });
 
   // Preserve existing params (location, category, filters) and add room selection
-  const queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
-  if (checkIn) queryParams.set('checkin', checkIn);
-  if (checkOut) queryParams.set('checkout', checkOut);
-  if (guests) queryParams.set('guests', guests);
+  const destinationUrl = useMemo(() => {
+    const queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
+    if (checkIn) queryParams.set('checkin', checkIn);
+    if (checkOut) queryParams.set('checkout', checkOut);
+    if (guests) queryParams.set('guests', guests);
+    return `?${queryParams.toString()}`;
+  }, [searchParams, room.id, checkIn, checkOut, guests]);
 
-  const destinationUrl = `?${queryParams.toString()}`;
+  const router = useRouter();
+  const { isProcessing, handleReserve } = useBookingFlow();
+
+  const onReserve = useCallback(() => {
+    trackClickReserve();
+    handleReserve(() => router.push(destinationUrl));
+  }, [trackClickReserve, handleReserve, router, destinationUrl]);
+
+  const allPrices = useMemo(() => allRooms.map((r) => r.price_per_night || r.price || 0).filter((p) => p > 0), [allRooms]);
+  const minPrice = useMemo(() => (allPrices.length > 0 ? Math.min(...allPrices) : 0), [allPrices]);
+  const avgPrice = useMemo(() => (allPrices.length > 0 ? Math.round(allPrices.reduce((a, b) => a + b, 0) / allPrices.length) : 0), [allPrices]);
+  const isBestValue = useMemo(() => basePrice === minPrice && allRooms.length > 1, [basePrice, minPrice, allRooms.length]);
+  const isGreatDeal = useMemo(() => avgPrice > 0 && basePrice <= avgPrice * 0.8 && !isBestValue, [avgPrice, basePrice, isBestValue]);
+  const isPopular = useMemo(() => (room.capacity ?? 0) >= 4, [room.capacity]);
+
+  const availabilityRatio = useMemo(() => (totalRooms > 0 ? availableCount / totalRooms : 1), [totalRooms, availableCount]);
+  const isLowStock = useMemo(() => isSearchingDates && availabilityRatio <= 0.33, [isSearchingDates, availabilityRatio]);
+  const isAlmostGone = useMemo(() => isSearchingDates && availableCount <= 2 && availableCount > 0, [isSearchingDates, availableCount]);
 
   return (
     <RoomCardInner
@@ -78,6 +119,7 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
       checkIn={checkIn}
       checkOut={checkOut}
       isSearchingDates={isSearchingDates}
+      isLoading={isLoading}
       allRooms={allRooms}
       totalRooms={totalRooms}
       availableCount={availableCount}
@@ -87,30 +129,80 @@ export default function RoomCard({ room, hotelSlug, checkIn, checkOut, isSearchi
       isPopular={isPopular}
       isAlmostGone={isAlmostGone}
       isLowStock={isLowStock}
-      destinationUrl={destinationUrl}
+      onReserve={onReserve}
+      isProcessing={isProcessing}
       coverImage={coverImage}
-      displayPrice={displayPrice}
       basePrice={basePrice}
-      totalPrice={totalPrice}
+      priceBreakdown={priceBreakdown}
       nights={nights}
+      trackViewRef={trackViewRef}
+      imagePriority={imagePriority}
+      index={index}
     />
   );
 }
 
+export function areRoomCardPropsEqual(prev: RoomCardProps, next: RoomCardProps): boolean {
+  if (prev.room !== next.room) return false;
+  if (prev.allRooms !== next.allRooms) return false;
+  if (prev.hotelSlug !== next.hotelSlug) return false;
+  if (prev.hotelId !== next.hotelId) return false;
+  if (prev.checkIn !== next.checkIn) return false;
+  if (prev.checkOut !== next.checkOut) return false;
+  if (prev.isSearchingDates !== next.isSearchingDates) return false;
+  if (prev.isLoading !== next.isLoading) return false;
+  if (prev.totalRooms !== next.totalRooms) return false;
+  if (prev.availableCount !== next.availableCount) return false;
+  if (prev.hotel?.tax_rate !== next.hotel?.tax_rate) return false;
+  if (prev.hotel?.cancellation_policy !== next.hotel?.cancellation_policy) return false;
+  if (prev.searchParams?.toString() !== next.searchParams?.toString()) return false;
+  if (prev.imagePriority !== next.imagePriority) return false;
+  if (prev.index !== next.index) return false;
+  return true;
+}
+
+export default memo(RoomCard, areRoomCardPropsEqual);
+
 function RoomCardInner({
-  room, hotelSlug, checkIn, checkOut, isSearchingDates,
-  allRooms, totalRooms, availableCount, hotel, isBestValue, isGreatDeal,
-  isPopular, isAlmostGone, isLowStock, destinationUrl, coverImage,
-  displayPrice, basePrice, totalPrice, nights,
+  room,
+  isSearchingDates,
+  isLoading,
+  availableCount,
+  hotel,
+  isBestValue,
+  isGreatDeal,
+  isPopular,
+  isAlmostGone,
+  isLowStock,
+  onReserve,
+  isProcessing,
+  coverImage,
+  basePrice,
+  priceBreakdown,
+  nights,
+  trackViewRef,
+  imagePriority,
+  index,
 }: RoomCardProps & {
-  isBestValue: boolean; isGreatDeal: boolean; isPopular: boolean;
-  isAlmostGone: boolean; isLowStock: boolean; destinationUrl: string;
-  coverImage: string; displayPrice: number; basePrice: number;
-  totalPrice: number; nights: number;
+  trackViewRef: (node: HTMLElement | null) => void;
+  isBestValue: boolean;
+  isGreatDeal: boolean;
+  isPopular: boolean;
+  isAlmostGone: boolean;
+  isLowStock: boolean;
+  onReserve: () => void;
+  isProcessing: boolean;
+  coverImage: string;
+  basePrice: number;
+  priceBreakdown: ReturnType<typeof formatPriceWithTax>;
+  nights: number;
+  imagePriority?: boolean;
+  index?: number;
 }) {
   const t = useTranslations();
-  const ref = useRef(null);
-  const isInView = useInView(ref, { once: true, margin: '-50px' });
+
+  const cardRef = useRef<HTMLElement | null>(null);
+  const isInView = useInView(cardRef, { once: true, margin: '-50px' });
   const [badgeVisible, setBadgeVisible] = useState(false);
 
   useEffect(() => {
@@ -120,22 +212,57 @@ function RoomCardInner({
     }
   }, [isInView]);
 
+  const setCardRef = useCallback(
+    (node: HTMLElement | null) => {
+      cardRef.current = node;
+      trackViewRef(node);
+    },
+    [trackViewRef]
+  );
+
+  if (isLoading) {
+    return (
+      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6">
+        <div className="w-full md:w-72 aspect-[3/4] md:aspect-auto md:min-h-[260px] rounded-[var(--radius-squircle-2xl)] overflow-hidden">
+          <SkeletonLoader width="100%" height="100%" rounded="2xl" />
+        </div>
+        <div className="flex-1 flex flex-col justify-between py-2 pr-2 gap-4">
+          <div className="space-y-3">
+            <SkeletonLoader width="60%" height={28} rounded="lg" />
+            <SkeletonLoader width="80%" height={16} rounded="md" />
+            <SkeletonLoader width="40%" height={16} rounded="md" />
+          </div>
+          <div className="mt-4 pt-5 flex flex-wrap items-end justify-between border-t border-border/40 gap-4">
+            <div className="space-y-2">
+              <SkeletonLoader width={120} height={20} rounded="md" />
+              <SkeletonLoader width={160} height={36} rounded="lg" />
+            </div>
+            <SkeletonLoader width={120} height={48} rounded="md" />
+          </div>
+        </div>
+      </GlassCard>
+    );
+  }
+
   return (
     <motion.div
-      ref={ref}
+      ref={setCardRef}
       data-testid="room-card"
       className="group/card will-change-transform"
+      style={index !== undefined && index >= 2 ? { contentVisibility: 'auto', containIntrinsicSize: '0 300px' } : undefined}
       initial={{ opacity: 0, y: 24 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
-      transition={{ type: 'spring', stiffness: 200, damping: 20, duration: 0.4 }}
+      transition={{ type: 'spring' as const, stiffness: 200, damping: 20, duration: 0.4 }}
+      whileHover={{ y: -4, transition: { duration: MOTION_DURATION.normal / 1000, ease: MOTION_EASING.easeOut } }}
+      whileTap={{ scale: 0.96, transition: { duration: MOTION_DURATION.normal / 1000, ease: MOTION_EASING.easeOut } }}
     >
-      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl transition-all duration-500 group-hover/card:scale-[1.01]">
+      <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl hover:shadow-brand-500/10 transition-all duration-500 group-hover/card:scale-[1.01]">
 
         {/* ZONA VISUAL (Atraccion) */}
         <motion.div
           layoutId={`room-image-${room.id}`}
           className="w-full md:w-72 aspect-[3/4] md:aspect-auto md:h-full md:min-h-[260px] bg-muted rounded-[var(--radius-squircle-2xl)] relative overflow-hidden shrink-0 shadow-inner"
-          transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+          transition={{ type: 'spring' as const, stiffness: 300, damping: 30 }}
         >
           <Image
             src={getImageSizeUrl(coverImage, 'card')}
@@ -144,7 +271,8 @@ function RoomCardInner({
             className="object-cover transition-transform duration-700 group-hover/card:scale-110"
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 288px"
             quality={75}
-            loading="lazy"
+            loading={imagePriority ? 'eager' : 'lazy'}
+            priority={imagePriority}
             placeholder={room.cover_image_blur ? 'blur' : undefined}
             blurDataURL={room.cover_image_blur}
           />
@@ -243,30 +371,27 @@ function RoomCardInner({
 
           {/* DOCK DE CONVERSION */}
           <div className="mt-4 pt-5 flex flex-wrap items-end justify-between border-t border-border/40 gap-4">
-            <div>
-              {isSearchingDates ? (
-                <div className="space-y-1">
-                    <p className="text-xs text-muted-foreground">
-                      <span className="font-bold text-foreground">${formatPrice(basePrice)}</span> x {nights} {t('ota.roomCard.nights', { count: nights })}
-                    </p>
-                  <div className="flex items-end gap-2 pt-1">
-                    <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                      ${formatPrice(totalPrice)}
-                    </p>
-                    <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copTotal')}</span>
-                  </div>
-                </div>
-              ) : (
-                <div>
-                  <p className="text-xs text-muted-foreground/60 font-bold uppercase tracking-widest mb-1">{t('ota.roomCard.baseRate')}</p>
-                  <div className="flex items-end gap-2">
-                    <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                      ${formatPrice(displayPrice)}
-                    </p>
-                    <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copPerNight')}</span>
-                  </div>
-                </div>
-              )}
+            <div className="space-y-1">
+              <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
+                <span className="font-bold text-foreground">${formatPrice(basePrice)}</span>
+                {isSearchingDates ? (
+                  <span>x {nights} {t('ota.roomCard.nights', { count: nights })}</span>
+                ) : (
+                  <span>COP/noche</span>
+                )}
+                {priceBreakdown.hasTax && (
+                  <span>+ {priceBreakdown.taxLabel}: ${priceBreakdown.tax}</span>
+                )}
+                {!priceBreakdown.hasTax && (
+                  <span>(IVA incluido)</span>
+                )}
+              </div>
+              <div className="flex items-end gap-2 pt-1">
+                <p className="text-3xl font-mono font-bold text-secondary leading-none">
+                  ${priceBreakdown.total}
+                </p>
+                <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copTotal')}</span>
+              </div>
 
               {hotel?.cancellation_policy && (
                 <p className="text-xs font-medium text-secondary mt-2 flex items-center gap-1">
@@ -275,19 +400,18 @@ function RoomCardInner({
               )}
             </div>
 
-            {/* CTA — CSS active scale instead of motion.div whileTap */}
-            <Link
-              href={destinationUrl}
-              scroll={false}
+            {/* CTA — Unified "Reservar" */}
+            <button
+              disabled={isProcessing}
+              onClick={onReserve}
               className={cn(
-                "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] transition-transform",
-                isSearchingDates
-                  ? "bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta"
-                  : "bg-foreground hover:bg-primary text-background"
+                "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta",
+                "focus-visible:outline-2 focus-visible:outline focus-visible:outline-primary focus-visible:outline-offset-2",
+                "disabled:opacity-70 disabled:cursor-not-allowed"
               )}
             >
-              {isSearchingDates ? t('ota.roomCard.secureRoom') : t('ota.roomCard.exploreRoom')} <ArrowRight size={16} strokeWidth={2.5} />
-            </Link>
+              {isProcessing ? 'Procesando...' : t('ota.roomCard.reserve', { defaultValue: 'Reservar' })} <ArrowRight size={16} strokeWidth={2.5} />
+            </button>
           </div>
         </div>
       </GlassCard>

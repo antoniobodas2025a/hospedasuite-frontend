@@ -2,16 +2,18 @@ import Link from 'next/link';
 import { CheckCircle2, ArrowRight, Clock, AlertTriangle } from 'lucide-react';
 import { verifyBookingAction } from '@/app/actions/bookings';
 import PriceBreakdown from '@/components/ota/PriceBreakdown';
+import { BookingSuccessTracker } from '@/components/ota/BookingSuccessTracker';
 
 export const dynamic = 'force-dynamic';
 
 export default async function BookingSuccessPage({
   searchParams,
 }: {
-  searchParams: Promise<{ id?: string; id_wompi?: string; transactionId?: string }>;
+  searchParams: Promise<{ id?: string; id_wompi?: string; transactionId?: string; guests?: string }>;
 }) {
-  const { id, id_wompi, transactionId } = await searchParams;
+  const { id, id_wompi, transactionId, guests } = await searchParams;
   const bookingId = id || transactionId;
+  const guestCount = Math.max(1, Number(guests) || 1);
 
   // Si no hay ID, mostrar error
   if (!bookingId) {
@@ -71,6 +73,14 @@ export default async function BookingSuccessPage({
   if (booking.status === 'CONFIRMED' || booking.status === 'confirmed') {
     return (
       <main className="min-h-screen bg-background flex items-center justify-center p-4">
+        <BookingSuccessTracker
+          roomId={booking.roomId}
+          hotelId={booking.hotelId}
+          totalPrice={booking.totalPrice}
+          nights={booking.nights}
+          guests={guestCount}
+          paymentMethod={id_wompi ? 'wompi' : booking.paymentMethod}
+        />
         <div className="bg-card max-w-lg w-full rounded-[var(--radius-squircle-3xl)] shadow-xl p-8 text-center border border-border">
           <div className="w-24 h-24 bg-secondary/10 text-secondary rounded-full flex items-center justify-center mx-auto mb-6">
             <CheckCircle2 size={48} strokeWidth={2.5} />
@@ -119,7 +129,7 @@ export default async function BookingSuccessPage({
               <PriceBreakdown
                 pricePerNight={booking.pricePerNight}
                 nights={booking.nights}
-                taxRegime={booking.taxRegime ?? 'simplified'}
+                taxRate={booking.taxRate ?? 0.19}
                 showDetails={false}
               />
             )}

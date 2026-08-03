@@ -10,6 +10,7 @@
  */
 
 import posthog from 'posthog-js';
+import type { BookingAnalyticsEvent } from '@/types';
 
 // Inicialización (se llama una vez en el layout)
 export function initPostHog() {
@@ -109,4 +110,52 @@ export function identifyHotel(hotelId: string, email?: string, name?: string) {
     name,
     type: 'hotel',
   });
+}
+
+// ——— Booking Flow Events ———
+
+function captureBookingEvent(event: BookingAnalyticsEvent) {
+  if (typeof window === 'undefined') return;
+  posthog.capture(event.event, event.properties);
+}
+
+export function trackViewRoom(
+  properties: Extract<BookingAnalyticsEvent, { event: 'view_room' }>['properties']
+) {
+  captureBookingEvent({ event: 'view_room', properties });
+}
+
+export function trackClickReserve(
+  properties: Extract<BookingAnalyticsEvent, { event: 'click_reserve' }>['properties']
+) {
+  captureBookingEvent({ event: 'click_reserve', properties });
+}
+
+export function trackOpenRoomModal(
+  properties: Extract<BookingAnalyticsEvent, { event: 'open_room_modal' }>['properties']
+) {
+  captureBookingEvent({ event: 'open_room_modal', properties });
+}
+
+export function trackCloseRoomModal(
+  properties: Extract<BookingAnalyticsEvent, { event: 'close_room_modal' }>['properties']
+) {
+  captureBookingEvent({ event: 'close_room_modal', properties });
+}
+
+export function trackCompleteBooking(
+  properties: Extract<BookingAnalyticsEvent, { event: 'complete_booking' }>['properties']
+) {
+  captureBookingEvent({ event: 'complete_booking', properties });
+}
+
+export function trackAbandonBooking(
+  properties: Extract<BookingAnalyticsEvent, { event: 'abandon_booking' }>['properties']
+) {
+  captureBookingEvent({ event: 'abandon_booking', properties });
+}
+
+export function trackTaxRateFallback(properties: { hotel_id: string; fallback_rate: number }) {
+  if (typeof window === 'undefined') return;
+  posthog.capture('tax_rate_fallback', properties);
 }

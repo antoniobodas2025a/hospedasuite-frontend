@@ -1,15 +1,18 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { preserveSearchParams, extendSearchParams } from '@/lib/handoff-url';
-import { calculateTotalWithTax, DEFAULT_TAX_RATE } from '@/lib/pricing';
+import { extendSearchParams } from '@/lib/handoff-url';
+import { calculateTotalWithTax, DEFAULT_TAX_RATE, formatPrice } from '@/lib/pricing';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
+import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
+import InlineDatePicker from './InlineDatePicker';
 import { useTranslations } from 'next-intl';
+import { useBookingFlow } from '@/hooks/useBookingFlow';
 
 // ============================================================================
 // BOOKING WIDGET — Smart Summary Sidebar
@@ -20,7 +23,6 @@ import { useTranslations } from 'next-intl';
 // ============================================================================
 
 interface BookingWidgetProps {
-  hotelName: string;
   rooms: Array<{
     id: string;
     name: string;
@@ -34,16 +36,19 @@ interface BookingWidgetProps {
   cancellationPolicy?: string | null;
   totalRooms?: number;
   taxRate?: number;
+  isLoading?: boolean;
+  hotelId?: string;
 }
 
 export default function BookingWidget({
-  hotelName,
   rooms,
   checkIn,
   checkOut,
   cancellationPolicy,
   totalRooms,
   taxRate,
+  isLoading,
+  hotelId,
 }: BookingWidgetProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -52,52 +57,76 @@ export default function BookingWidget({
   const [showPolicy, setShowPolicy] = useState(false);
   const [showDateError, setShowDateError] = useState(false);
 
-  const activeRooms = rooms.filter((r) => r.status === 'active');
-  const minPrice = activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price_per_night || r.price)) : 0;
+  const activeRooms = useMemo(() => rooms.filter((r) => r.status === 'active'), [rooms]);
+  const minPrice = useMemo(() => activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price_per_night || r.price)) : 0, [activeRooms]);
   const availableCount = activeRooms.length;
 
   // Detect selected room from URL
   const selectedRoomId = searchParams.get('showRoom');
   const selectedRoom = selectedRoomId ? activeRooms.find(r => r.id === selectedRoomId) : null;
 
-  // Hide widget when RoomShowcaseModal is open
-  if (selectedRoomId) return null;
-
   // Guest count from guests filter
   const guestsParam = searchParams.get('guests');
   const guestCount = guestsParam ? Number(guestsParam) : null;
 
-  let nights = 0;
-  if (checkIn && checkOut) {
+  const nights = useMemo(() => {
+    if (!checkIn || !checkOut) return 0;
     const d1 = new Date(checkIn);
     const d2 = new Date(checkOut);
-    nights = Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
-  }
+    return Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
+  }, [checkIn, checkOut]);
 
-  const roomPrice = selectedRoom ? (selectedRoom.price_per_night || selectedRoom.price) : minPrice;
-  // Price coherence: use hotel's tax_rate for all displays
-  const subtotal = nights > 0 ? roomPrice * nights : roomPrice;
-  const effectiveRate = taxRate ?? DEFAULT_TAX_RATE;
-  const { total: totalPrice, hasTax } = calculateTotalWithTax(subtotal, effectiveRate);
+  const roomPrice = useMemo(() => selectedRoom ? (selectedRoom.price_per_night || selectedRoom.price) : minPrice, [selectedRoom, minPrice]);
+  const subtotal = useMemo(() => (nights > 0 ? roomPrice * nights : roomPrice), [nights, roomPrice]);
+  const effectiveRate = useMemo(() => taxRate ?? DEFAULT_TAX_RATE, [taxRate]);
+  const { total: totalPrice, hasTax } = useMemo(() => calculateTotalWithTax(subtotal, effectiveRate), [subtotal, effectiveRate]);
 
-  const handleReserve = () => {
+  const { isProcessing, handleReserve } = useBookingFlow();
+
+  const handleSelectRoom = useCallback(() => {
+    // Preserve existing params (location, category, filters) and add room selection
+    const params = extendSearchParams(searchParams, 'showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
+    router.push(`?${params.toString()}`, { scroll: false });
+  }, [searchParams, selectedRoom, activeRooms, router]);
+
+  const handleReserveClick = () => {
     if (!checkIn || !checkOut) {
       setShowDateError(true);
       window.scrollTo({ top: 0, behavior: 'smooth' });
       return;
     }
     setShowDateError(false);
-
-    // Preserve existing params (location, category, filters) and add room selection
-    const params = extendSearchParams(searchParams, 'showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
-    router.push(`?${params.toString()}`, { scroll: false });
+    handleReserve(handleSelectRoom);
   };
 
-  const handleViewRooms = () => {
-    const el = document.getElementById('rooms-section');
-    if (el) {
-      el.scrollIntoView({ behavior: 'smooth' });
-    }
+  // Loading skeleton — keep the same card shape so layout doesn't jump
+  if (isLoading) {
+    return (
+      <div className="sticky top-8">
+        <GlassCard className="overflow-hidden">
+          <div className="p-6 space-y-4 bg-gradient-to-br from-primary to-primary/90">
+            <SkeletonLoader width="40%" height={14} rounded="md" className="bg-white/20" />
+            <SkeletonLoader width="70%" height={40} rounded="lg" className="bg-white/20" />
+          </div>
+          <div className="p-6 space-y-5">
+            <SkeletonLoader width="100%" height={120} rounded="lg" />
+            <SkeletonLoader width="100%" height={72} rounded="xl" />
+            <SkeletonLoader width="100%" height={48} rounded="md" />
+          </div>
+        </GlassCard>
+      </div>
+    );
+  }
+
+  // Hide widget when RoomShowcaseModal is open
+  if (selectedRoomId) return null;
+
+  const handleDateChange = (range: { from: Date; to: Date }) => {
+    const params = new URLSearchParams(searchParams.toString());
+    params.set('checkin', range.from.toISOString().split('T')[0]);
+    params.set('checkout', range.to.toISOString().split('T')[0]);
+    params.delete('showRoom');
+    router.push(`?${params.toString()}`, { scroll: false });
   };
 
   return (
@@ -112,28 +141,45 @@ export default function BookingWidget({
             <>
               <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">{selectedRoom.name}</p>
               <div className="flex items-baseline gap-2">
-                <p className="text-4xl font-black tracking-tight">${totalPrice.toLocaleString('es-CO')}</p>
+                <p className="text-4xl font-black tracking-tight">${formatPrice(totalPrice)}</p>
                 <span className="text-primary-foreground/70 text-sm font-medium">{t('ota.booking.totalCOP')}</span>
               </div>
-              {nights > 1 && (
-                <p className="text-xs text-primary-foreground/70 mt-1">
-                  ${roomPrice.toLocaleString()} x {nights} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
-                </p>
-              )}
+              <p className="text-xs text-primary-foreground/70 mt-1">
+                ${formatPrice(roomPrice)} x {nights > 0 ? nights : 1} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
+              </p>
             </>
           ) : (
             <>
-              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">{t('ota.booking.from')}</p>
+              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">
+                {nights > 0 ? t('ota.booking.totalCOP') : t('ota.booking.copPerNight')}
+              </p>
               <div className="flex items-baseline gap-2">
-                <p className="text-4xl font-black tracking-tight">${minPrice.toLocaleString()}</p>
-                <span className="text-primary-foreground/70 text-sm font-medium">{t('ota.booking.copPerNight')}</span>
+                <p className="text-4xl font-black tracking-tight">${nights > 0 ? formatPrice(totalPrice) : formatPrice(minPrice)}</p>
+                <span className="text-primary-foreground/70 text-sm font-medium">
+                  {nights > 0 ? t('ota.booking.totalCOP') : t('ota.booking.copPerNight')}
+                </span>
               </div>
+              {nights > 0 && (
+                <p className="text-xs text-primary-foreground/70 mt-1">
+                  ${formatPrice(minPrice)} x {nights} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
+                </p>
+              )}
             </>
           )}
         </div>
 
         {/* Cuerpo del widget */}
         <div className="p-6 space-y-5">
+          {/* Inline date picker */}
+          <InlineDatePicker
+            checkIn={checkIn}
+            checkOut={checkOut}
+            hotelId={hotelId}
+            onChange={handleDateChange}
+            defaultExpanded={activeRooms.length <= 2}
+            className="w-full"
+          />
+
           {/* Fechas seleccionadas */}
           {checkIn && checkOut ? (
             <div className="flex items-start gap-3 p-4 bg-secondary/10 rounded-[var(--radius-squircle-2xl)] border border-secondary/30">
@@ -199,7 +245,10 @@ export default function BookingWidget({
                 </div>
               )}
               {availableCount <= 2 && (
-                <p className="text-xs font-bold text-destructive flex items-center gap-1">
+                <p
+                  className="text-xs font-bold text-destructive flex items-center gap-1"
+                  title="Esta habitación se reserva rápido"
+                >
                   <span className="inline-block size-2 rounded-full bg-destructive animate-pulse" />
                   {availableCount === 1 ? t('ota.booking.onlyOneLeft') : t('ota.booking.onlyXLeft', { count: availableCount })}
                 </p>
@@ -213,22 +262,20 @@ export default function BookingWidget({
             </div>
           )}
 
-          {/* CTA principal — Smart: Ver habitaciones o Reservar */}
+          {/* CTA principal — Unified "Reservar" */}
           <motion.button
-            onClick={selectedRoom ? handleReserve : handleViewRooms}
-            disabled={availableCount === 0}
-            whileTap={availableCount > 0 ? { scale: 0.96 } : undefined}
+            onClick={handleReserveClick}
+            disabled={availableCount === 0 || isProcessing}
+            whileTap={availableCount > 0 && !isProcessing ? { scale: 0.96 } : undefined}
             transition={springSnappy()}
             className={cn(
               'w-full py-4 rounded-[var(--radius-squircle-2xl)] font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-colors duration-300',
-              availableCount === 0
+              availableCount === 0 || isProcessing
                 ? 'bg-muted text-muted-foreground/40 cursor-not-allowed shadow-none'
-                : selectedRoom
-                  ? 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta'
-                  : 'bg-foreground hover:bg-primary text-background shadow-foreground/20',
+                : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta',
             )}
           >
-            {selectedRoom ? (checkIn && checkOut ? t('ota.booking.reserveNow') : t('ota.booking.checkAvailability')) : t('ota.booking.viewRooms')}
+            {isProcessing ? 'Procesando...' : t('ota.booking.reserve')}
             <ArrowRight size={16} strokeWidth={2.5} />
           </motion.button>
 
@@ -271,7 +318,7 @@ export default function BookingWidget({
                 <div className="pt-4">
                   <button
                     onClick={() => setShowPolicy(!showPolicy)}
-                    className="flex items-center justify-between w-full text-left mb-2"
+                    className="flex items-center justify-between w-full text-left mb-2 hover:text-foreground hover:bg-muted/50 transition-colors rounded-sm px-2 py-1"
                   >
                     <p className="text-xs font-bold text-foreground">{t('ota.booking.cancellationPolicy')}</p>
                     {showPolicy ? <ChevronUp size={14} className="text-muted-foreground" /> : <ChevronDown size={14} className="text-muted-foreground" />}

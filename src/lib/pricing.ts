@@ -66,3 +66,28 @@ export function formatPrice(amount: number): string {
 export function getTaxLabel(taxRate: number = DEFAULT_TAX_RATE): string {
   return taxRate > 0 ? `IVA (${Math.round(taxRate * 100)}%)` : '';
 }
+
+/**
+ * Formats price with tax breakdown.
+ * Returns formatted strings for subtotal, tax, total, and tax metadata.
+ */
+export function formatPriceWithTax(
+  basePrice: number,
+  taxRate: number = DEFAULT_TAX_RATE,
+  nights: number = 1
+): {
+  subtotal: string;
+  tax: string;
+  total: string;
+  taxLabel: string;
+  hasTax: boolean;
+} {
+  const { total, tax, hasTax } = calculateTotalWithTax(basePrice * nights, taxRate);
+  return {
+    subtotal: formatPrice(basePrice * nights),
+    tax: formatPrice(tax),
+    total: formatPrice(total),
+    taxLabel: getTaxLabel(taxRate),
+    hasTax,
+  };
+}

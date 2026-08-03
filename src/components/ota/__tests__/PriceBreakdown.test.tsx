@@ -1,15 +1,19 @@
 // @vitest-environment jsdom
 import '../../../__tests__/bun-test-dom-setup';
-import { describe, it, expect, vi } from 'vitest';
+import '@testing-library/jest-dom';
+import { describe, it, expect, vi, afterEach } from 'vitest';
 import React from 'react';
-import { render, screen } from '@testing-library/react';
+import { render, cleanup } from '@testing-library/react';
 import PriceBreakdown from '../PriceBreakdown';
 
 // Mock framer-motion to avoid animation complexity in tests
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, ...props }: any) => {
-      const { initial, animate, exit, transition, layoutId, ...rest } = props;
+    div: ({ children, ...props }: React.PropsWithChildren<Record<string, unknown>>) => {
+      const rest = { ...props };
+      ['initial', 'animate', 'exit', 'transition', 'layoutId'].forEach((key) => {
+        delete rest[key];
+      });
       return <div {...rest}>{children}</div>;
     },
   },
@@ -17,94 +21,111 @@ vi.mock('framer-motion', () => ({
 }));
 
 describe('PriceBreakdown', () => {
+  afterEach(() => {
+    cleanup();
+  });
+
   describe('Basic rendering', () => {
     it('renders the price breakdown heading', () => {
-      render(
+      const { getByRole } = render(
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRegime="simplified"
+          taxRate={0}
         />
       );
 
-      expect(screen.getByRole('heading', { name: /desglose de precios/i })).toBeTruthy();
+      expect(getByRole('heading', { name: /desglose de precios/i })).toBeTruthy();
     });
 
     it('shows price per night × nights and the subtotal', () => {
-      render(
+      const { getByText, getAllByText } = render(
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRegime="simplified"
+          taxRate={0}
         />
       );
 
       // Price per night and nights label
-      expect(screen.getByText(/50.000/)).toBeTruthy();
-      expect(screen.getByText(/2 noches/)).toBeTruthy();
+      expect(getByText(/50.000/)).toBeTruthy();
+      expect(getByText(/2 noches/)).toBeTruthy();
       // Subtotal and total are both $100.000 when no IVA
-      expect(screen.getAllByText('$100.000').length).toBe(2);
+      expect(getAllByText('$100.000').length).toBe(2);
     });
 
     it('uses singular "noche" when nights === 1', () => {
-      render(
+      const { getByText, queryByText } = render(
         <PriceBreakdown
           pricePerNight={80000}
           nights={1}
-          taxRegime="simplified"
+          taxRate={0}
         />
       );
 
-      expect(screen.getByText(/1 noche/)).toBeTruthy();
+      expect(getByText(/1 noche/)).toBeTruthy();
       // Should not contain "1 noches"
-      expect(screen.queryByText(/1 noches/)).toBeNull();
+      expect(queryByText(/1 noches/)).toBeNull();
     });
   });
 
-  describe('Tax calculation', () => {
-    it('does NOT show IVA line when taxRegime is "simplified"', () => {
-      render(
+  describe('Tax calculation with taxRate', () => {
+    it('does NOT show IVA line when taxRate is 0', () => {
+      const { queryByText } = render(
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRegime="simplified"
+          taxRate={0}
         />
       );
 
-      expect(screen.queryByText(/IVA/)).toBeNull();
+      expect(queryByText(/IVA/)).toBeNull();
     });
 
-    it('shows IVA (19%) line when taxRegime is "responsible"', () => {
-      render(
+    it('shows IVA (19%) line when taxRate is 0.19', () => {
+      const { getByText } = render(
         <PriceBreakdown
           pricePerNight={100000}
           nights={1}
-          taxRegime="responsible"
+          taxRate={0.19}
         />
       );
 
-      expect(screen.getByText(/IVA \(19%\)/)).toBeTruthy();
+      expect(getByText(/IVA \(19%\)/)).toBeTruthy();
       // 100.000 * 0.19 = 19.000
-      expect(screen.getByText('$19.000')).toBeTruthy();
+      expect(getByText('$19.000')).toBeTruthy();
     });
 
-    it('computes total = subtotal + IVA for responsible regime', () => {
-      render(
+    it('computes total = subtotal + IVA for taxRate 0.19', () => {
+      const { getByText } = render(
         <PriceBreakdown
           pricePerNight={100000}
           nights={3}
-          taxRegime="responsible"
+          taxRate={0.19}
         />
       );
 
       // subtotal = 300.000, IVA = 57.000, total = 357.000
-      const totalLabel = screen.getByText(/total/i);
-      expect(totalLabel).toBeTruthy();
-      expect(screen.getByText('$357.000')).toBeTruthy();
+      expect(getByText(/total/i)).toBeTruthy();
+      expect(getByText('$357.000')).toBeTruthy();
     });
 
-    it('computes total = subtotal for simplified regime (no IVA)', () => {
-      render(
+    it('defaults to 19% taxRate when no tax prop is provided', () => {
+      const { getByText } = render(
+        <PriceBreakdown
+          pricePerNight={100000}
+          nights={1}
+        />
+      );
+
+      expect(getByText(/IVA \(19%\)/)).toBeTruthy();
+      expect(getByText('$119.000')).toBeTruthy();
+    });
+  });
+
+  describe('Backward compatibility with taxRegime', () => {
+    it('renders without IVA when taxRegime is "simplified"', () => {
+      const { queryByText, getAllByText } = render(
         <PriceBreakdown
           pricePerNight={75000}
           nights={4}
@@ -112,63 +133,92 @@ describe('PriceBreakdown', () => {
         />
       );
 
+      expect(queryByText(/IVA/)).toBeNull();
       // 75.000 * 4 = 300.000 — appears as both subtotal and total
-      expect(screen.getAllByText('$300.000').length).toBe(2);
+      expect(getAllByText('$300.000').length).toBe(2);
+    });
+
+    it('renders with IVA (19%) when taxRegime is "responsible"', () => {
+      const { getByText } = render(
+        <PriceBreakdown
+          pricePerNight={100000}
+          nights={1}
+          taxRegime="responsible"
+        />
+      );
+
+      expect(getByText(/IVA \(19%\)/)).toBeTruthy();
+      expect(getByText('$119.000')).toBeTruthy();
+    });
+
+    it('warns when taxRegime is used', () => {
+      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      render(
+        <PriceBreakdown
+          pricePerNight={50000}
+          nights={2}
+          taxRegime="simplified"
+        />
+      );
+
+      expect(warnSpy).toHaveBeenCalledWith(
+        expect.stringContaining('taxRegime')
+      );
+      warnSpy.mockRestore();
     });
   });
 
   describe('Transparency note (showDetails)', () => {
     it('shows transparency note when showDetails is true (default)', () => {
-      render(
+      const { getByText } = render(
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRegime="simplified"
+          taxRate={0}
         />
       );
 
-      expect(screen.getByText(/precio final sin cargos ocultos/i)).toBeTruthy();
+      expect(getByText(/precio final sin cargos ocultos/i)).toBeTruthy();
     });
 
     it('hides transparency note when showDetails is false', () => {
-      render(
+      const { queryByText } = render(
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRegime="simplified"
+          taxRate={0}
           showDetails={false}
         />
       );
 
-      expect(screen.queryByText(/precio final sin cargos ocultos/i)).toBeNull();
+      expect(queryByText(/precio final sin cargos ocultos/i)).toBeNull();
     });
   });
 
   describe('Accessibility', () => {
     it('exposes the total as a labeled region for screen readers', () => {
-      render(
+      const { getByText } = render(
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRegime="simplified"
+          taxRate={0}
         />
       );
 
       // Total should be identifiable — either via aria-label or role
-      const totalEl = screen.getByText(/total/i);
-      expect(totalEl).toBeTruthy();
+      expect(getByText(/total/i)).toBeTruthy();
     });
 
     it('uses a semantic heading level', () => {
-      render(
+      const { getByRole } = render(
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRegime="simplified"
+          taxRate={0}
         />
       );
 
-      const heading = screen.getByRole('heading');
+      const heading = getByRole('heading');
       expect(heading.tagName).toMatch(/^H[1-6]$/);
     });
   });

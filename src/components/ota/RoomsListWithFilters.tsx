@@ -1,12 +1,16 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useMemo, useRef } from 'react';
 import { useSearchParams } from 'next/navigation';
+import { useVirtualizer } from '@tanstack/react-virtual';
 import { SlidersHorizontal, Users, CalendarX2 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import RoomCard from './RoomCard';
 import RoomComparison from './RoomComparison';
+import RoomComparisonSkeleton from './RoomComparisonSkeleton';
+import LazySection from './LazySection';
 import { useTranslations } from 'next-intl';
+import { MOTION_STAGGER } from '@/lib/motion-tokens';
 
 interface RoomItem {
   id: string;
@@ -21,20 +25,137 @@ interface RoomItem {
   description?: string;
 }
 
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: MOTION_STAGGER.card / 1000,
+    },
+  },
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: {
+      type: 'spring' as const,
+      stiffness: 300,
+      damping: 25,
+    },
+  },
+  exit: { opacity: 0, scale: 0.95 },
+};
+
+const ROOMS_VIRTUALIZATION_THRESHOLD = 10;
+
+interface VirtualizedRoomListProps {
+  filteredRooms: RoomItem[];
+  slug: string;
+  hotelId?: string;
+  checkin?: string | null;
+  checkout?: string | null;
+  isSearchingDates: boolean;
+  totalRooms: number;
+  availableCount: number;
+  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
+  searchParams: URLSearchParams;
+}
+
+function VirtualizedRoomList({
+  filteredRooms,
+  slug,
+  hotelId,
+  checkin,
+  checkout,
+  isSearchingDates,
+  totalRooms,
+  availableCount,
+  hotel,
+  searchParams,
+}: VirtualizedRoomListProps) {
+  const listRef = useRef<HTMLDivElement>(null);
+  const virtualizer = useVirtualizer({
+    count: filteredRooms.length,
+    getScrollElement: () => listRef.current,
+    estimateSize: () => 300,
+    overscan: 3,
+    measureElement:
+      typeof window !== 'undefined'
+        ? (el: HTMLElement) => el.getBoundingClientRect().height
+        : undefined,
+  });
+
+  return (
+    <div
+      ref={listRef}
+      data-testid="virtual-list"
+      className="max-h-[80vh] overflow-auto"
+    >
+      <div
+        style={{
+          height: virtualizer.getTotalSize(),
+          position: 'relative',
+          width: '100%',
+        }}
+      >
+        {virtualizer.getVirtualItems().map((virtualItem) => {
+          const room = filteredRooms[virtualItem.index];
+          return (
+            <div
+              key={virtualItem.key}
+              data-testid={`virtual-item-${virtualItem.index}`}
+              data-index={virtualItem.index}
+              ref={virtualizer.measureElement}
+              style={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                width: '100%',
+                transform: `translateY(${virtualItem.start}px)`,
+              }}
+            >
+              <RoomCard
+                room={room}
+                hotelSlug={slug}
+                hotelId={hotelId}
+                checkIn={checkin}
+                checkOut={checkout}
+                isSearchingDates={isSearchingDates}
+                allRooms={filteredRooms}
+                totalRooms={totalRooms}
+                availableCount={availableCount}
+                hotel={hotel}
+                searchParams={searchParams}
+                imagePriority={virtualItem.index < 2}
+                index={virtualItem.index}
+              />
+            </div>
+          );
+        })}
+      </div>
+    </div>
+  );
+}
+
 interface RoomsListWithFiltersProps {
   rooms: RoomItem[];
   availableRooms: RoomItem[];
   slug: string;
+  hotelId?: string;
   checkin?: string | null;
   checkout?: string | null;
   isSearchingDates: boolean;
-  hotel?: { cancellation_policy?: string | null; tax_rate?: number };
+  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
 }
 
 export default function RoomsListWithFilters({
   rooms,
   availableRooms,
   slug,
+  hotelId,
   checkin,
   checkout,
   isSearchingDates,
@@ -78,7 +199,9 @@ export default function RoomsListWithFilters({
     <>
       {/* Tabla comparativa — solo desktop (en mobile es inutilizable) */}
       <div className="hidden lg:block">
-        <RoomComparison rooms={availableRooms} />
+        <LazySection placeholder={<RoomComparisonSkeleton />} rootMargin="200px">
+          <RoomComparison rooms={availableRooms} />
+        </LazySection>
       </div>
 
       <div id="rooms-section" className="space-y-6">
@@ -114,38 +237,50 @@ export default function RoomsListWithFilters({
               {t('ota.roomsList.noResultsDesc')}
             </p>
           </div>
+        ) : filteredRooms.length >= ROOMS_VIRTUALIZATION_THRESHOLD ? (
+          <VirtualizedRoomList
+            filteredRooms={filteredRooms}
+            slug={slug}
+            hotelId={hotelId}
+            checkin={checkin}
+            checkout={checkout}
+            isSearchingDates={isSearchingDates}
+            totalRooms={rooms.length}
+            availableCount={availableRooms.length}
+            hotel={hotel}
+            searchParams={searchParams}
+          />
         ) : (
-          <AnimatePresence mode="popLayout">
-            {filteredRooms.map((room, index) => (
-              <motion.div
-                key={room.id}
-                layout
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, scale: 0.95 }}
-                transition={{ 
-                  type: 'spring', 
-                  stiffness: 300, 
-                  damping: 25,
-                  delay: index * 0.04 
-                }}
-                className="animate-fade-in-up"
-                style={{ animationDelay: `${index * 80}ms` }}
-              >
-                <RoomCard
-                  room={room}
-                  hotelSlug={slug}
-                  checkIn={checkin}
-                  checkOut={checkout}
-                  isSearchingDates={isSearchingDates}
-                  allRooms={filteredRooms}
-                  totalRooms={rooms.length}
-                  availableCount={availableRooms.length}
-                  hotel={hotel}
-                />
-              </motion.div>
-            ))}
-          </AnimatePresence>
+          <motion.div
+            initial="hidden"
+            animate="visible"
+            variants={containerVariants}
+          >
+            <AnimatePresence mode="popLayout">
+              {filteredRooms.map((room, i) => (
+                <motion.div
+                  key={room.id}
+                  variants={itemVariants}
+                >
+                  <RoomCard
+                    room={room}
+                    hotelSlug={slug}
+                    hotelId={hotelId}
+                    checkIn={checkin}
+                    checkOut={checkout}
+                    isSearchingDates={isSearchingDates}
+                    allRooms={filteredRooms}
+                    totalRooms={rooms.length}
+                    availableCount={availableRooms.length}
+                    hotel={hotel}
+                    searchParams={searchParams}
+                    imagePriority={i < 2}
+                    index={i}
+                  />
+                </motion.div>
+              ))}
+            </AnimatePresence>
+          </motion.div>
         )}
       </div>
     </>

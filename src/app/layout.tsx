@@ -4,6 +4,7 @@ import { getLocale, getMessages, getTranslations } from 'next-intl/server';
 import { Geist } from 'next/font/google';
 import Script from 'next/script';
 import './globals.css';
+import '../styles/motion.css';
 import { cn } from "@/lib/utils";
 import AIReferralTracker from '@/components/analytics/AIReferralTracker';
 import RecoveryTokenDetector from '@/components/RecoveryTokenDetector';
@@ -35,13 +36,14 @@ export async function generateMetadata(): Promise<Metadata> {
       icon: '/favicon.ico',
       apple: '/logo.png',
     },
-    other: {
-      // Preload critical resources
-      'link': [
-        '<https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev>; rel=preconnect',
-        '<https://auaqpomuivfhomlkvhju.supabase.co>; rel=preconnect',
-      ],
-    },
+      other: {
+        // Preload critical resources
+        'link': [
+          '<https://fonts.gstatic.com>; rel=preconnect; crossorigin=anonymous',
+          '<https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev>; rel=preconnect',
+          '<https://auaqpomuivfhomlkvhju.supabase.co>; rel=preconnect',
+        ],
+      },
   };
 }
 
@@ -56,6 +58,7 @@ export default async function RootLayout({
   return (
     <html lang={locale} className={cn("font-sans", geist.variable)} suppressHydrationWarning>
       <head>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
         <link rel="preconnect" href="https://auaqpomuivfhomlkvhju.supabase.co" />
         <link rel="preconnect" href={process.env.R2_PUBLIC_URL || "https://pub-75809b4a12c441b891f9b5a2316c2cc2.r2.dev"} />
         <link rel="preconnect" href="https://www.googletagmanager.com" />

@@ -150,7 +150,7 @@ export default function GalleryImage({
         )}
         sizes={sizes}
         quality={quality}
-        preload={preload}
+        priority={preload}
         loading={loading || (preload ? 'eager' : 'lazy')}
         placeholder={placeholder || (blurDataURL ? 'blur' : undefined)}
         blurDataURL={blurDataURL}

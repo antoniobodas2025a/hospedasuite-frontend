@@ -3,7 +3,9 @@
 import React, { useState, useCallback, useMemo, Suspense } from "react";
 import { useTranslations } from "next-intl";
 import { motion } from "framer-motion";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import type { GalleryItem } from "@/types";
+import { cn } from "@/lib/utils";
 import GalleryImage from "@/components/ota/shared/GalleryImage";
 import { DynamicGalleryLightbox as GalleryLightbox } from "@/components/ota/shared/DynamicGalleryLightbox";
 import { SkeletonImage } from "@/components/ota/SkeletonImage";
@@ -84,36 +86,46 @@ export default function RoomGalleryGrid({
 	// Single image
 	if (images.length === 1) {
 		return (
-			<div
-				className="relative w-full aspect-[4/3] rounded-[1.5rem] overflow-hidden group cursor-pointer"
-				onClick={() => handleOpen(0)}
-			>
-				{!loadedSet.has(0) && <SkeletonImage className="absolute inset-0 z-10" />}
-				<motion.div
-					{...(heroLayoutId ? { layoutId: heroLayoutId } : {})}
-					transition={heroTransition}
-					className="absolute inset-0"
+			<div className="relative w-full">
+				<MobileCarousel
+					images={images}
+					roomName={roomName}
+					blurDataURL={blurDataURL}
+					activeIndex={0}
+					setIndex={setIndex}
+					onOpen={handleOpen}
+				/>
+				<div
+					className="hidden lg:block relative w-full aspect-[4/3] rounded-[1.5rem] overflow-hidden group cursor-pointer"
+					onClick={() => handleOpen(0)}
 				>
-					<GalleryImage
-						src={images[0].url}
-						alt={images[0].alt ?? roomName}
-						fill
-						className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
-						preload
-						sizes="100vw"
-						quality={85}
-						placeholder={images[0].blurDataURL || blurDataURL ? "blur" : undefined}
-						blurDataURL={images[0].blurDataURL || blurDataURL}
-						onLoad={() => markLoaded(0)}
-					/>
-				</motion.div>
-				<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
+					{!loadedSet.has(0) && <SkeletonImage className="absolute inset-0 z-10" />}
+					<motion.div
+						{...(heroLayoutId ? { layoutId: heroLayoutId } : {})}
+						transition={heroTransition}
+						className="absolute inset-0"
+					>
+						<GalleryImage
+							src={images[0].url}
+							alt={images[0].alt ?? roomName}
+							fill
+							className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
+							preload
+							sizes="100vw"
+							quality={85}
+							placeholder={images[0].blurDataURL || blurDataURL ? "blur" : undefined}
+							blurDataURL={images[0].blurDataURL || blurDataURL}
+							onLoad={() => markLoaded(0)}
+						/>
+					</motion.div>
+					<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
 
-				<div className="absolute bottom-3 right-3">
-					<span className="inline-flex items-center gap-1.5 px-3 py-1.5 glass-pill text-white text-xs font-semibold shadow-lg">
-						<CameraIcon />
-						{images.length}
-					</span>
+					<div className="absolute bottom-3 right-3">
+						<span className="inline-flex items-center gap-1.5 px-3 py-1.5 glass-pill text-white text-xs font-semibold shadow-lg">
+							<CameraIcon />
+							{images.length}
+						</span>
+					</div>
 				</div>
 			</div>
 		);
@@ -123,6 +135,15 @@ export default function RoomGalleryGrid({
 	if (images.length <= 5) {
 		return (
 			<div className="relative w-full">
+				<MobileCarousel
+					images={images}
+					roomName={roomName}
+					blurDataURL={blurDataURL}
+					activeIndex={index}
+					setIndex={setIndex}
+					onOpen={handleOpen}
+				/>
+				<div className="hidden lg:block">
 				<div className="grid grid-cols-2 gap-2 rounded-[1.5rem] overflow-hidden">
 					{/* Hero image */}
 					<button
@@ -207,6 +228,7 @@ export default function RoomGalleryGrid({
 						zoom={{ maxZoomLevel: 3 }}
 					/>
 				</Suspense>
+				</div>
 			</div>
 		);
 	}
@@ -214,6 +236,15 @@ export default function RoomGalleryGrid({
 	// 6+ images: Airbnb asymmetric grid
 	return (
 		<div className="relative w-full">
+			<MobileCarousel
+				images={images}
+				roomName={roomName}
+				blurDataURL={blurDataURL}
+				activeIndex={index}
+				setIndex={setIndex}
+				onOpen={handleOpen}
+			/>
+			<div className="hidden lg:block">
 			<div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-[1.5rem] overflow-hidden h-[400px]">
 				{/* Hero — left half, full height */}
 				<button
@@ -296,6 +327,153 @@ export default function RoomGalleryGrid({
 					zoom={{ maxZoomLevel: 3 }}
 				/>
 			</Suspense>
+			</div>
+		</div>
+	);
+}
+
+// ============================================================================
+// MOBILE CAROUSEL — horizontal swipe with counter + dots
+// ============================================================================
+function MobileCarousel({
+	images,
+	roomName,
+	blurDataURL,
+	activeIndex,
+	setIndex,
+	onOpen,
+}: {
+	images: GalleryItem[];
+	roomName: string;
+	blurDataURL?: string;
+	activeIndex: number;
+	setIndex: (i: number) => void;
+	onOpen: (i: number) => void;
+}) {
+	const t = useTranslations();
+	const [touchStart, setTouchStart] = useState<number | null>(null);
+	const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+	const minSwipeDistance = 50;
+
+	const onTouchStart = useCallback((e: React.TouchEvent) => {
+		setTouchEnd(null);
+		setTouchStart(e.touches[0]?.clientX ?? 0);
+	}, []);
+
+	const onTouchMove = useCallback((e: React.TouchEvent) => {
+		setTouchEnd(e.touches[0]?.clientX ?? 0);
+	}, []);
+
+	const onTouchEnd = useCallback(() => {
+		if (touchStart === null || touchEnd === null) return;
+		const distance = touchStart - touchEnd;
+		const isLeftSwipe = distance > minSwipeDistance;
+		const isRightSwipe = distance < -minSwipeDistance;
+		if (isLeftSwipe) {
+			setIndex(Math.min(images.length - 1, activeIndex + 1));
+		} else if (isRightSwipe) {
+			setIndex(Math.max(0, activeIndex - 1));
+		}
+	}, [touchStart, touchEnd, activeIndex, images.length, setIndex]);
+
+	return (
+		<div className="relative w-full lg:hidden">
+			<div
+				data-testid="mobile-carousel"
+				className="relative aspect-[4/3] overflow-hidden rounded-[1.5rem] bg-foreground"
+				onTouchStart={onTouchStart}
+				onTouchMove={onTouchMove}
+				onTouchEnd={onTouchEnd}
+			>
+				<div
+					className="flex h-full transition-transform duration-300 ease-out"
+					style={{ transform: `translateX(-${activeIndex * 100}%)` }}
+				>
+					{images.map((img, i) => (
+						<button
+							key={i}
+							type="button"
+							className="relative w-full h-full flex-shrink-0 cursor-pointer"
+							onClick={() => onOpen(i)}
+							aria-label={t("ota.roomGallery.viewImage", { index: i + 1 })}
+						>
+							<GalleryImage
+								src={img.url}
+								alt={img.alt ?? `${roomName} — ${i + 1}`}
+								fill
+								className="object-cover"
+								preload={i === 0}
+								loading={i === 0 ? "eager" : "lazy"}
+								sizes="100vw"
+								quality={85}
+								placeholder={img.blurDataURL ? "blur" : undefined}
+								blurDataURL={img.blurDataURL || blurDataURL}
+							/>
+							<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
+						</button>
+					))}
+				</div>
+			</div>
+
+			{/* Navigation arrows */}
+			{images.length > 1 && (
+				<>
+					<button
+						type="button"
+						data-testid="carousel-prev"
+						onClick={() => setIndex(Math.max(0, activeIndex - 1))}
+						disabled={activeIndex === 0}
+						className="absolute left-2 top-1/2 -translate-y-1/2 z-10 size-9 rounded-full glass-pill text-white flex items-center justify-center shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+						aria-label={t("ota.roomGallery.prevImage")}
+					>
+						<ChevronLeft size={20} />
+					</button>
+					<button
+						type="button"
+						data-testid="carousel-next"
+						onClick={() => setIndex(Math.min(images.length - 1, activeIndex + 1))}
+						disabled={activeIndex === images.length - 1}
+						className="absolute right-2 top-1/2 -translate-y-1/2 z-10 size-9 rounded-full glass-pill text-white flex items-center justify-center shadow-lg disabled:opacity-30 disabled:cursor-not-allowed"
+						aria-label={t("ota.roomGallery.nextImage")}
+					>
+						<ChevronRight size={20} />
+					</button>
+				</>
+			)}
+
+			{/* Counter pill */}
+			<div className="absolute top-3 right-3">
+				<span
+					data-testid="photo-counter"
+					className="inline-flex items-center gap-1.5 px-3 py-1.5 glass-pill text-white text-xs font-semibold shadow-lg"
+				>
+					<CameraIcon />
+					{t("ota.roomGallery.photoCounter", { current: activeIndex + 1, total: images.length })}
+				</span>
+			</div>
+
+			{/* Dots indicator */}
+			{images.length > 1 && (
+				<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
+					{images.map((_, i) => (
+						<button
+							key={i}
+							type="button"
+							data-testid="carousel-dot"
+							onClick={() => setIndex(i)}
+							className={cn(
+								"w-2 h-2 rounded-full transition-all",
+								i === activeIndex
+									? "bg-white w-4"
+									: "bg-white/50 hover:bg-white/80"
+							)}
+							aria-label={t("ota.roomGallery.goToImage", { index: i + 1 })}
+							aria-current={i === activeIndex ? "true" : "false"}
+						/>
+					))}
+				</div>
+			)}
 		</div>
 	);
 }
