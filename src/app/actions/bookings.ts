@@ -487,7 +487,7 @@ export async function verifyBookingAction(bookingId: string) {
 
     const { data: booking, error } = await supabaseAdmin
       .from('bookings')
-      .select('id, status, total_price, check_in, check_out, source, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_rate, tax_regime)')
+      .select('id, status, total_price, check_in, check_out, source, room_id, hotel_id, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_rate, tax_regime), payments(method, status)')
       .eq('id', bookingId)
       .single();
 
@@ -503,6 +503,8 @@ export async function verifyBookingAction(bookingId: string) {
     const hotelRecord = (booking.hotels as any[])?.[0] ?? {};
     const taxRate = typeof hotelRecord.tax_rate === 'number' ? hotelRecord.tax_rate : (hotelRecord.tax_regime === 'responsible' ? 0.19 : 0);
 
+    const paymentMethod = ((booking.payments as any[])?.[0]?.method as string | undefined) || 'direct';
+
     return {
       success: true,
       booking: {
@@ -514,6 +516,9 @@ export async function verifyBookingAction(bookingId: string) {
         nights,
         pricePerNight: roomPrice,
         taxRate,
+        roomId: booking.room_id,
+        hotelId: booking.hotel_id,
+        paymentMethod,
         guestName: (booking.guests as any[])?.[0]?.full_name,
         guestEmail: (booking.guests as any[])?.[0]?.email,
         roomName: (booking.rooms as any[])?.[0]?.name,
