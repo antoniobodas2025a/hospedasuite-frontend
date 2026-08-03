@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useMemo, useRef, useCallback, useEffect } from "react";
-import { X, ArrowRight, Calendar } from "lucide-react";
+import { X, ArrowRight, Calendar, AlertTriangle } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { calculateTotalWithTax, DEFAULT_TAX_RATE } from "@/lib/pricing";
 import { parseISO } from "date-fns";
@@ -24,6 +24,10 @@ interface HotelForModal {
 	tax_rate?: number;
 	tax_regime?: 'simplified' | 'responsible';
 	cancellation_policy?: string | null;
+}
+
+function isRoomAvailable(room?: Partial<Room>): boolean {
+	return room?.status === 'active';
 }
 
 // GlassCard imported from @/components/ui/glass (design system, theme-aware)
@@ -186,6 +190,76 @@ export function RoomShowcaseModal({
 	}
 
 	if (!room) return null;
+
+	if (!isRoomAvailable(room)) {
+		return (
+			<AnimatePresence>
+				<motion.div
+					ref={modalRef}
+					{...ariaProps}
+					className="fixed inset-0 z-[var(--z-modal)] flex items-end sm:items-center justify-center sm:p-3 lg:p-5"
+					initial={{ opacity: 0 }}
+					animate={{ opacity: 1 }}
+					exit={{ opacity: 0 }}
+					transition={{ duration: 0.2 }}
+				>
+					{/* Backdrop */}
+					<motion.div
+						data-testid="modal-backdrop"
+						className="absolute inset-0 bg-foreground/50 backdrop-blur-2xl"
+						onClick={() => handleClose('back')}
+						aria-hidden="true"
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						exit={{ opacity: 0 }}
+						transition={{ duration: 0.2 }}
+					/>
+
+					{/* Sold-out card */}
+					<motion.div
+						className="relative w-full max-w-md flex flex-col overflow-hidden sm:rounded-[var(--radius-squircle-2xl)] rounded-t-[2rem] glass-panel p-8 text-center"
+						initial={{ opacity: 0, scale: 0.95 }}
+						animate={{ opacity: 1, scale: 1 }}
+						exit={{ opacity: 0, scale: 0.95 }}
+						transition={{
+							duration: MOTION_DURATION.normal / 1000,
+							ease: MOTION_EASING.easeOut,
+						}}
+					>
+						<button
+							aria-label="Cerrar"
+							onClick={() => handleClose('back')}
+							className="absolute top-4 right-4 z-30 size-10 flex items-center justify-center rounded-full glass-pill text-foreground/70 hover:bg-accent/25 hover:scale-110 hover:text-foreground transition-all shadow-lg shadow-elev-1 active:scale-95"
+						>
+							<X size={18} strokeWidth={2.5} />
+						</button>
+
+						<div className="size-16 rounded-[var(--radius-squircle-2xl)] bg-destructive/10 text-destructive flex items-center justify-center mx-auto mb-6">
+							<AlertTriangle size={28} strokeWidth={1.5} />
+						</div>
+
+						<h2 className="text-2xl font-black text-foreground mb-2">
+							{t("ota.showcase.soldOut")}
+						</h2>
+						<p className="text-muted-foreground mb-8 text-sm">
+							{t("ota.showcase.soldOutDesc")}
+						</p>
+
+						<button
+							onClick={() => {
+								handleClose('back');
+								const section = document.getElementById("rooms-section");
+								if (section) section.scrollIntoView({ behavior: "smooth" });
+							}}
+							className="w-full glass-card text-foreground font-semibold py-4 hover:bg-primary/90 transition-all flex items-center justify-center gap-2 shadow-lg shadow-brand-500/20 active:scale-[0.98]"
+						>
+							{t("ota.showcase.seeOtherRooms")} <ArrowRight size={18} />
+						</button>
+					</motion.div>
+				</motion.div>
+			</AnimatePresence>
+		);
+	}
 
 	const subtotal = basePrice * nights;
 	const { total: totalPrice } = calculateTotalWithTax(subtotal, effectiveRate);
