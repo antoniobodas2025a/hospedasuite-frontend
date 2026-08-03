@@ -1,8 +1,9 @@
 // @vitest-environment jsdom
 import '../../../__tests__/bun-test-dom-setup';
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import '@testing-library/jest-dom';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import React from 'react';
-import { render, waitFor, fireEvent } from '@testing-library/react';
+import { render, waitFor, fireEvent, act } from '@testing-library/react';
 import { RoomShowcaseModal } from '../RoomShowcaseModal';
 import posthog from 'posthog-js';
 
@@ -413,9 +414,14 @@ describe('RoomShowcaseModal - Analytics', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
   });
 
-  it('fires open_room_modal on mount', async () => {
+  afterEach(() => {
+    vi.useRealTimers();
+  });
+
+  it('fires open_room_modal on mount', () => {
     render(
       <RoomShowcaseModal
         hotel={mockHotel}
@@ -425,12 +431,10 @@ describe('RoomShowcaseModal - Analytics', () => {
       />
     );
 
-    await waitFor(() => {
-      expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', {
-        room_id: 'room-1',
-        hotel_id: 'hotel-test',
-        source: 'card',
-      });
+    expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', {
+      room_id: 'room-1',
+      hotel_id: 'hotel-test',
+      source: 'card',
     });
   });
 
@@ -528,7 +532,8 @@ describe('RoomShowcaseModal - Analytics', () => {
     expect(mockOnClose).toHaveBeenCalled();
   });
 
-  it('fires close_room_modal action reserve and not abandon_booking when reserve CTA is clicked', async () => {
+  it('fires close_room_modal action reserve and not abandon_booking after the processing delay', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
     const { getAllByRole } = render(
       <RoomShowcaseModal
         hotel={mockHotel}
@@ -538,13 +543,18 @@ describe('RoomShowcaseModal - Analytics', () => {
       />
     );
 
-    await waitFor(() => {
-      expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', expect.any(Object));
-    });
+    expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', expect.any(Object));
 
     const reserveButtons = getAllByRole('button', { name: /Reservar/ });
     expect(reserveButtons.length).toBeGreaterThanOrEqual(1);
     fireEvent.click(reserveButtons[0]);
+
+    expect(reserveButtons[0]).toBeDisabled();
+    expect(reserveButtons[0].textContent).toContain('Procesando...');
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(posthog.capture).toHaveBeenCalledWith('close_room_modal', {
       room_id: 'room-1',
@@ -554,6 +564,31 @@ describe('RoomShowcaseModal - Analytics', () => {
     expect(posthog.capture).not.toHaveBeenCalledWith('abandon_booking', expect.any(Object));
     expect(mockOnClose).toHaveBeenCalled();
     expect(mockOnCheckout).toHaveBeenCalledWith('room-1', 2);
+  });
+
+  it('ignores additional reserve clicks while processing', async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { getAllByRole } = render(
+      <RoomShowcaseModal
+        hotel={mockHotel}
+        onClose={mockOnClose}
+        onCheckout={mockOnCheckout}
+        hotelId="hotel-test"
+      />
+    );
+
+    expect(posthog.capture).toHaveBeenCalledWith('open_room_modal', expect.any(Object));
+
+    const reserveButtons = getAllByRole('button', { name: /Reservar/ });
+    expect(reserveButtons.length).toBeGreaterThanOrEqual(1);
+    fireEvent.click(reserveButtons[0]);
+    fireEvent.click(reserveButtons[0]);
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(mockOnCheckout).toHaveBeenCalledTimes(1);
   });
 
   it('scales the modal container from 0.95 to 1 with a 200ms fade transition', async () => {

@@ -3,7 +3,7 @@ import "../bun-test-dom-setup";
 import "@testing-library/jest-dom";
 import { describe, it, expect, vi, afterEach } from "vitest";
 import React from "react";
-import { render, cleanup } from "@testing-library/react";
+import { render, cleanup, act, fireEvent } from "@testing-library/react";
 import BookingWidget from "@/components/ota/BookingWidget";
 
 // Mock next/navigation
@@ -67,8 +67,13 @@ const baseRooms = [
 ];
 
 describe("BookingWidget", () => {
+  beforeEach(() => {
+    vi.useRealTimers();
+  });
+
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
     mockRouter.push.mockClear();
     mockSearchParams.forEach((_, key) => mockSearchParams.delete(key));
   });
@@ -188,5 +193,53 @@ describe("BookingWidget", () => {
     expect(getAllByTestId('skeleton-loader').length).toBeGreaterThan(0);
     expect(queryByRole('button', { name: /Reservar/i })).not.toBeInTheDocument();
     expect(queryByTestId('inline-date-picker')).not.toBeInTheDocument();
+  });
+
+  it("shows processing state and navigates after the 300ms delay", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    mockSearchParams.set('guests', '2');
+    const { getByRole } = render(
+      <BookingWidget
+        rooms={baseRooms}
+        checkIn="2026-08-10"
+        checkOut="2026-08-11"
+        taxRate={0.19}
+      />
+    );
+
+    const cta = getByRole('button', { name: /Reservar/i });
+    act(() => fireEvent.click(cta));
+
+    expect(cta).toBeDisabled();
+    expect(cta.textContent).toContain('Procesando...');
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      expect.stringContaining('showRoom=room-1'),
+      { scroll: false }
+    );
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      expect.stringContaining('guests=2'),
+      { scroll: false }
+    );
+  });
+
+  it("does not trigger processing when dates are missing", () => {
+    const { getByRole } = render(
+      <BookingWidget
+        rooms={baseRooms}
+        taxRate={0.19}
+      />
+    );
+
+    const cta = getByRole('button', { name: /Reservar/i });
+    act(() => fireEvent.click(cta));
+
+    expect(cta.textContent).not.toContain('Procesando...');
+    expect(cta).not.toBeDisabled();
+    expect(mockRouter.push).not.toHaveBeenCalled();
   });
 });

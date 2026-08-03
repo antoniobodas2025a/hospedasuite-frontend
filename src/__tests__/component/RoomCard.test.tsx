@@ -5,6 +5,7 @@ import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
 import RoomCard, { areRoomCardPropsEqual } from "@/components/ota/RoomCard";
+import type { GalleryItem } from "@/types";
 
 // Mock next/image to render a simple img that exposes priority/loading props
 vi.mock("next/image", () => ({
@@ -21,8 +22,10 @@ vi.mock("next/link", () => ({
 }));
 
 // Mock next/navigation
+const mockRouter = { push: vi.fn() };
 const mockSearchParams = new URLSearchParams();
 vi.mock("next/navigation", () => ({
+  useRouter: () => mockRouter,
   useSearchParams: () => mockSearchParams,
 }));
 
@@ -158,19 +161,22 @@ const baseRoom = {
   price_per_night: 200000,
   capacity: 2,
   status: 'active',
-  gallery: [],
+  gallery: [] as GalleryItem[],
   description: 'Habitación amplia con vista al jardín',
 };
 
 describe("RoomCard", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    vi.useRealTimers();
     FakeIntersectionObserver.instances = [];
     globalThis.IntersectionObserver = FakeIntersectionObserver as unknown as typeof IntersectionObserver;
   });
 
   afterEach(() => {
     cleanup();
+    vi.useRealTimers();
+    mockRouter.push.mockClear();
     mockSearchParams.forEach((_, key) => mockSearchParams.delete(key));
   });
 
@@ -315,8 +321,9 @@ describe("RoomCard", () => {
     });
   });
 
-  it("fires click_reserve when the reserve CTA is clicked", () => {
-    const { container } = render(
+  it("fires click_reserve and navigates after the processing delay", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { getByRole } = render(
       <RoomCard
         room={baseRoom}
         hotelSlug="hotel-test"
@@ -331,9 +338,16 @@ describe("RoomCard", () => {
       />
     );
 
-    const cta = container.querySelector('a');
+    const cta = getByRole('button', { name: /Reservar/i });
     expect(cta).toBeTruthy();
-    act(() => fireEvent.click(cta!));
+
+    act(() => fireEvent.click(cta));
+    expect(cta).toBeDisabled();
+    expect(cta.textContent).toContain('Procesando...');
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
 
     expect(posthog.capture).toHaveBeenCalledWith('click_reserve', {
       room_id: 'room-1',
@@ -343,6 +357,12 @@ describe("RoomCard", () => {
       has_dates: true,
       tax_rate: 0.19,
     });
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      expect.stringContaining('showRoom=room-1')
+    );
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      expect.stringContaining('checkin=2026-08-10')
+    );
   });
 
   it("uses DEFAULT_TAX_RATE and fires tax_rate_fallback when tax_rate is null", () => {
@@ -420,7 +440,7 @@ describe("RoomCard", () => {
   });
 
   it("makes the reserve CTA keyboard focusable", () => {
-    const { container } = render(
+    const { getByRole } = render(
       <RoomCard
         room={baseRoom}
         hotelSlug="hotel-test"
@@ -433,7 +453,7 @@ describe("RoomCard", () => {
       />
     );
 
-    const cta = container.querySelector('a');
+    const cta = getByRole('button', { name: /Reservar/i });
     expect(cta).toBeTruthy();
     act(() => {
       cta?.focus();
@@ -441,8 +461,9 @@ describe("RoomCard", () => {
     expect(cta).toHaveFocus();
   });
 
-  it("uses searchParams prop to preserve guests in reserve link", () => {
-    const { container } = render(
+  it("preserves guests in reserve link after the processing delay", async () => {
+    vi.useFakeTimers({ shouldAdvanceTime: true });
+    const { getByRole } = render(
       <RoomCard
         room={baseRoom}
         hotelSlug="hotel-test"
@@ -456,16 +477,27 @@ describe("RoomCard", () => {
       />
     );
 
-    const cta = container.querySelector('a');
+    const cta = getByRole('button', { name: /Reservar/i });
     expect(cta).toBeTruthy();
-    expect(cta?.getAttribute('href')).toContain('guests=2');
-    expect(cta?.getAttribute('href')).toContain('showRoom=room-1');
+
+    act(() => fireEvent.click(cta));
+
+    await act(async () => {
+      vi.advanceTimersByTime(300);
+    });
+
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      expect.stringContaining('guests=2')
+    );
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      expect.stringContaining('showRoom=room-1')
+    );
   });
 
   it("loads hero image eagerly when imagePriority is true", () => {
     const { container } = render(
       <RoomCard
-        room={{ ...baseRoom, gallery: ['https://example.com/hero.jpg'] }}
+        room={{ ...baseRoom, gallery: [{ url: 'https://example.com/hero.jpg' }] as GalleryItem[] }}
         hotelSlug="hotel-test"
         isSearchingDates={false}
         allRooms={[baseRoom]}

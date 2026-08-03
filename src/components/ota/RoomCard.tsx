@@ -2,7 +2,7 @@
 
 import React, { useRef, useEffect, useState, useMemo, memo, useCallback } from 'react';
 import Image from 'next/image';
-import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion, useInView } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } from 'lucide-react';
@@ -15,6 +15,7 @@ import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
 import { DEFAULT_TAX_RATE, formatPrice, formatPriceWithTax } from '@/lib/pricing';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
+import { useBookingFlow } from '@/hooks/useBookingFlow';
 import { trackTaxRateFallback } from '@/lib/analytics';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { MOTION_DURATION, MOTION_EASING } from '@/lib/motion-tokens';
@@ -42,7 +43,8 @@ interface RoomCardProps {
 }
 
 function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDates, isLoading, allRooms = [], totalRooms = 0, availableCount = 0, hotel, searchParams: searchParamsProp, imagePriority, index }: RoomCardProps) {
-  const searchParams = searchParamsProp ?? new URLSearchParams();
+  const fallbackSearchParams = useMemo(() => new URLSearchParams(), []);
+  const searchParams = searchParamsProp ?? fallbackSearchParams;
   const guests = searchParams.get('guests');
 
   const coverImage = useMemo(() =>
@@ -82,6 +84,23 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
     taxRate,
   });
 
+  // Preserve existing params (location, category, filters) and add room selection
+  const destinationUrl = useMemo(() => {
+    const queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
+    if (checkIn) queryParams.set('checkin', checkIn);
+    if (checkOut) queryParams.set('checkout', checkOut);
+    if (guests) queryParams.set('guests', guests);
+    return `?${queryParams.toString()}`;
+  }, [searchParams, room.id, checkIn, checkOut, guests]);
+
+  const router = useRouter();
+  const { isProcessing, handleReserve } = useBookingFlow();
+
+  const onReserve = useCallback(() => {
+    trackClickReserve();
+    handleReserve(() => router.push(destinationUrl));
+  }, [trackClickReserve, handleReserve, router, destinationUrl]);
+
   const allPrices = useMemo(() => allRooms.map((r) => r.price_per_night || r.price || 0).filter((p) => p > 0), [allRooms]);
   const minPrice = useMemo(() => (allPrices.length > 0 ? Math.min(...allPrices) : 0), [allPrices]);
   const avgPrice = useMemo(() => (allPrices.length > 0 ? Math.round(allPrices.reduce((a, b) => a + b, 0) / allPrices.length) : 0), [allPrices]);
@@ -92,15 +111,6 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
   const availabilityRatio = useMemo(() => (totalRooms > 0 ? availableCount / totalRooms : 1), [totalRooms, availableCount]);
   const isLowStock = useMemo(() => isSearchingDates && availabilityRatio <= 0.33, [isSearchingDates, availabilityRatio]);
   const isAlmostGone = useMemo(() => isSearchingDates && availableCount <= 2 && availableCount > 0, [isSearchingDates, availableCount]);
-
-  // Preserve existing params (location, category, filters) and add room selection
-  const destinationUrl = useMemo(() => {
-    const queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
-    if (checkIn) queryParams.set('checkin', checkIn);
-    if (checkOut) queryParams.set('checkout', checkOut);
-    if (guests) queryParams.set('guests', guests);
-    return `?${queryParams.toString()}`;
-  }, [searchParams, room.id, checkIn, checkOut, guests]);
 
   return (
     <RoomCardInner
@@ -119,13 +129,13 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
       isPopular={isPopular}
       isAlmostGone={isAlmostGone}
       isLowStock={isLowStock}
-      destinationUrl={destinationUrl}
+      onReserve={onReserve}
+      isProcessing={isProcessing}
       coverImage={coverImage}
       basePrice={basePrice}
       priceBreakdown={priceBreakdown}
       nights={nights}
       trackViewRef={trackViewRef}
-      trackClickReserve={trackClickReserve}
       imagePriority={imagePriority}
       index={index}
     />
@@ -164,24 +174,24 @@ function RoomCardInner({
   isPopular,
   isAlmostGone,
   isLowStock,
-  destinationUrl,
+  onReserve,
+  isProcessing,
   coverImage,
   basePrice,
   priceBreakdown,
   nights,
   trackViewRef,
-  trackClickReserve,
   imagePriority,
   index,
 }: RoomCardProps & {
   trackViewRef: (node: HTMLElement | null) => void;
-  trackClickReserve: () => void;
   isBestValue: boolean;
   isGreatDeal: boolean;
   isPopular: boolean;
   isAlmostGone: boolean;
   isLowStock: boolean;
-  destinationUrl: string;
+  onReserve: () => void;
+  isProcessing: boolean;
   coverImage: string;
   basePrice: number;
   priceBreakdown: ReturnType<typeof formatPriceWithTax>;
@@ -391,17 +401,17 @@ function RoomCardInner({
             </div>
 
             {/* CTA — Unified "Reservar" */}
-            <Link
-              href={destinationUrl}
-              scroll={false}
-              onClick={trackClickReserve}
+            <button
+              disabled={isProcessing}
+              onClick={onReserve}
               className={cn(
                 "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta",
-                "focus-visible:outline-2 focus-visible:outline focus-visible:outline-primary focus-visible:outline-offset-2"
+                "focus-visible:outline-2 focus-visible:outline focus-visible:outline-primary focus-visible:outline-offset-2",
+                "disabled:opacity-70 disabled:cursor-not-allowed"
               )}
             >
-              {t('ota.roomCard.reserve', { defaultValue: 'Reservar' })} <ArrowRight size={16} strokeWidth={2.5} />
-            </Link>
+              {isProcessing ? 'Procesando...' : t('ota.roomCard.reserve', { defaultValue: 'Reservar' })} <ArrowRight size={16} strokeWidth={2.5} />
+            </button>
           </div>
         </div>
       </GlassCard>

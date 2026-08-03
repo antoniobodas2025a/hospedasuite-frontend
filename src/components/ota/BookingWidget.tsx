@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useCallback } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
@@ -12,6 +12,7 @@ import { GlassCard } from '@/components/ui/glass';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import InlineDatePicker from './InlineDatePicker';
 import { useTranslations } from 'next-intl';
+import { useBookingFlow } from '@/hooks/useBookingFlow';
 
 // ============================================================================
 // BOOKING WIDGET — Smart Summary Sidebar
@@ -78,6 +79,24 @@ export default function BookingWidget({
   const effectiveRate = useMemo(() => taxRate ?? DEFAULT_TAX_RATE, [taxRate]);
   const { total: totalPrice, hasTax } = useMemo(() => calculateTotalWithTax(subtotal, effectiveRate), [subtotal, effectiveRate]);
 
+  const { isProcessing, handleReserve } = useBookingFlow();
+
+  const handleSelectRoom = useCallback(() => {
+    // Preserve existing params (location, category, filters) and add room selection
+    const params = extendSearchParams(searchParams, 'showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
+    router.push(`?${params.toString()}`, { scroll: false });
+  }, [searchParams, selectedRoom, activeRooms, router]);
+
+  const handleReserveClick = () => {
+    if (!checkIn || !checkOut) {
+      setShowDateError(true);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+      return;
+    }
+    setShowDateError(false);
+    handleReserve(handleSelectRoom);
+  };
+
   // Loading skeleton — keep the same card shape so layout doesn't jump
   if (isLoading) {
     return (
@@ -99,19 +118,6 @@ export default function BookingWidget({
 
   // Hide widget when RoomShowcaseModal is open
   if (selectedRoomId) return null;
-
-  const handleReserve = () => {
-    if (!checkIn || !checkOut) {
-      setShowDateError(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    setShowDateError(false);
-
-    // Preserve existing params (location, category, filters) and add room selection
-    const params = extendSearchParams(searchParams, 'showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
-    router.push(`?${params.toString()}`, { scroll: false });
-  };
 
   const handleDateChange = (range: { from: Date; to: Date }) => {
     const params = new URLSearchParams(searchParams.toString());
@@ -255,18 +261,18 @@ export default function BookingWidget({
 
           {/* CTA principal — Unified "Reservar" */}
           <motion.button
-            onClick={handleReserve}
-            disabled={availableCount === 0}
-            whileTap={availableCount > 0 ? { scale: 0.96 } : undefined}
+            onClick={handleReserveClick}
+            disabled={availableCount === 0 || isProcessing}
+            whileTap={availableCount > 0 && !isProcessing ? { scale: 0.96 } : undefined}
             transition={springSnappy()}
             className={cn(
               'w-full py-4 rounded-[var(--radius-squircle-2xl)] font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-colors duration-300',
-              availableCount === 0
+              availableCount === 0 || isProcessing
                 ? 'bg-muted text-muted-foreground/40 cursor-not-allowed shadow-none'
                 : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta',
             )}
           >
-            {t('ota.booking.reserve')}
+            {isProcessing ? 'Procesando...' : t('ota.booking.reserve')}
             <ArrowRight size={16} strokeWidth={2.5} />
           </motion.button>
 

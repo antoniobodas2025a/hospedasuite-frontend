@@ -12,6 +12,7 @@ import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useModalAccessibility } from "@/hooks/useModalAccessibility";
 import { useBookingAnalytics } from "@/hooks/useBookingAnalytics";
+import { useBookingFlow } from "@/hooks/useBookingFlow";
 import { AnimatePresence, motion } from "framer-motion";
 import { MOTION_DURATION, MOTION_EASING } from "@/lib/motion-tokens";
 
@@ -79,6 +80,7 @@ export function RoomShowcaseModal({
 }) {
 	const t = useTranslations();
 	const searchParams = useSearchParams();
+	const { isProcessing, handleReserve } = useBookingFlow();
 
 	const roomId = searchParams.get("showRoom");
 	const checkIn = searchParams.get("checkin");
@@ -304,21 +306,23 @@ export function RoomShowcaseModal({
 									</p>
 								</div>
 								<button
-									disabled={isOverCapacity}
-									onClick={() => {
+									disabled={isOverCapacity || isProcessing}
+									onClick={() => handleReserve(() => {
 										handleClose('reserve');
 										onCheckout(room.id!, defaultGuests);
-									}}
+									})}
 									className={cn(
 										"px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97] shadow-cta",
-										isOverCapacity
+										isOverCapacity || isProcessing
 											? "bg-muted/60 text-muted-foreground cursor-not-allowed"
 											: "bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta hover:shadow-cta",
 									)}
 								>
 									{isOverCapacity
 										? t("ota.showcase.adjustSearch")
-										: t("ota.showcase.reserve")}{" "}
+										: isProcessing
+											? "Procesando..."
+											: t("ota.showcase.reserve")}{" "}
 									<ArrowRight size={16} strokeWidth={2.5} />
 								</button>
 							</div>
@@ -382,21 +386,23 @@ export function RoomShowcaseModal({
 								</p>
 							</div>
 							<button
-								disabled={isOverCapacity}
-								onClick={() => {
+								disabled={isOverCapacity || isProcessing}
+								onClick={() => handleReserve(() => {
 									handleClose('reserve');
 									onCheckout(room.id!, defaultGuests);
-								}}
+								})}
 								className={cn(
 									"px-7 py-3.5 rounded-[var(--radius-squircle-lg)] font-semibold text-foreground transition-all flex items-center justify-center gap-2 active:scale-[0.97]",
-									isOverCapacity
+									isOverCapacity || isProcessing
 										? "bg-muted/60 text-muted-foreground cursor-not-allowed"
 										: "bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta hover:shadow-cta",
 								)}
 							>
 								{isOverCapacity
 									? t("ota.showcase.adjust")
-									: t("ota.showcase.reserve")}{" "}
+									: isProcessing
+										? "Procesando..."
+										: t("ota.showcase.reserve")}{" "}
 								<ArrowRight size={16} strokeWidth={2.5} />
 							</button>
 						</div>
