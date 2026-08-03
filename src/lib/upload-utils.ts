@@ -55,18 +55,85 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
 // ─── Compression presets ───────────────────────────────────────────
 
 export const DEFAULT_COMPRESSION = {
-  maxSizeMB: 1,
+  maxSizeMB: 0.5,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
   fileType: 'image/webp',
+  initialQuality: 0.75,
 } as const;
 
 export const THUMBNAIL_COMPRESSION = {
-  maxSizeMB: 0.3,
-  maxWidthOrHeight: 640,
+  maxSizeMB: 0.1,
+  maxWidthOrHeight: 400,
   useWebWorker: true,
   fileType: 'image/webp',
+  initialQuality: 0.70,
 } as const;
+
+export const CARD_COMPRESSION = {
+  maxSizeMB: 0.3,
+  maxWidthOrHeight: 800,
+  useWebWorker: true,
+  fileType: 'image/webp',
+  initialQuality: 0.75,
+} as const;
+
+export type CompressionPreset = 'full' | 'card' | 'thumbnail';
+
+/**
+ * Returns compression preset by name.
+ * Defaults to DEFAULT_COMPRESSION for unknown presets.
+ */
+export function getCompressionPreset(preset: CompressionPreset) {
+  switch (preset) {
+    case 'thumbnail':
+      return THUMBNAIL_COMPRESSION;
+    case 'card':
+      return CARD_COMPRESSION;
+    case 'full':
+    default:
+      return DEFAULT_COMPRESSION;
+  }
+}
+
+export interface CompressionMetrics {
+  originalSize: number;
+  compressedSize: number;
+  compressionRatio: number;
+  savings: number;
+  isOptimal: boolean;
+  warning?: string;
+}
+
+/**
+ * Validates compression effectiveness and returns metrics.
+ * Optimal compression should achieve >70% size reduction.
+ */
+export function validateCompression(original: File, compressed: File): CompressionMetrics {
+  const originalSize = original.size;
+  const compressedSize = compressed.size;
+  const compressionRatio = compressedSize / originalSize;
+  const savings = (1 - compressionRatio) * 100;
+  
+  const isOptimal = savings >= 70 && compressedSize < originalSize;
+  
+  let warning: string | undefined;
+  
+  if (compressedSize >= originalSize) {
+    warning = 'Compressed file is larger than original';
+  } else if (savings < 60) {
+    warning = `Low compression: only ${savings.toFixed(1)}% savings (target: >70%)`;
+  }
+  
+  return {
+    originalSize,
+    compressedSize,
+    compressionRatio,
+    savings,
+    isOptimal,
+    warning,
+  };
+}
 
 /**
  * Comprime una imagen en el browser usando WebWorkers.
