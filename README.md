@@ -133,12 +133,19 @@ Supabase Postgres with 27 migrations under `supabase/migrations/`. Key RPC funct
 
 ## Deployment
 
-Deployed on **Vercel** with Edge Functions. See `vercel.json` for routing configuration.
+Deployed on **Coolify** (self-hosted PaaS) on Hetzner VPS (78.47.36.250). Auto-deploys on push to `main` branch.
+
+- **Production**: https://hospedasuite.com
+- **Coolify Dashboard**: http://78.47.36.250:8000
+- **Deploy time**: ~3-4 minutes (Docker build + Next.js compilation)
 
 ## Documentation
 
 - `docs/PRD-*.md` — Product Requirement Documents
 - `docs/adr/` — Architecture Decision Records (ADR)
+- `docs/FEATURE-*.md` — Feature implementation guides
+  - `FEATURE-image-compression-optimization.md` — Image compression optimization (70-80% reduction)
+  - `FEATURE-booking-flow-ux-redesign.md` — Booking flow UX redesign (6 PRs, 267 tests)
 - `openspec/` — SDD change management artifacts
 - `docs/FIN-001-enterprise-financial-study.md` — Financial analysis
 - `docs/AUDIT-001-enterprise-vs-economy.md` — Pricing audit
