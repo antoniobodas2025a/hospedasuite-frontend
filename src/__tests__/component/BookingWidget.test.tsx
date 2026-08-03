@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 import "../bun-test-dom-setup";
 import "@testing-library/jest-dom";
-import { describe, it, expect, vi, afterEach } from "vitest";
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import React from "react";
 import { render, cleanup, act, fireEvent } from "@testing-library/react";
 import BookingWidget from "@/components/ota/BookingWidget";
