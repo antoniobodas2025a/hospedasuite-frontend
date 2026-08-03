@@ -110,12 +110,12 @@ describe("RoomShowcaseModal — Scroll Layout Immunity", () => {
   // MUTATION 3: Dock must remain fixed at bottom
   // ==========================================================================
   describe("Dock immunity: Fixed at bottom", () => {
-    it("MUST have absolute bottom-0 on the mobile dock", () => {
+    it("MUST have sticky bottom-0 on the mobile dock", () => {
       const dockMatch = source.match(
-        /Dock de cierre mobile[\s\S]*?className="([^"]*absolute[^"]*bottom-0[^"]*)"/,
+        /Dock de cierre mobile[\s\S]*?className="([^"]*sticky[^"]*bottom-0[^"]*)"/,
       );
       expect(dockMatch).not.toBeNull();
-      expect(dockMatch![1]).toContain("absolute");
+      expect(dockMatch![1]).toContain("sticky");
       expect(dockMatch![1]).toContain("bottom-0");
     });
 
