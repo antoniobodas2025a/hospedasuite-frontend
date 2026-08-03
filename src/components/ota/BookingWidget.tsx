@@ -37,6 +37,7 @@ interface BookingWidgetProps {
   totalRooms?: number;
   taxRate?: number;
   isLoading?: boolean;
+  hotelId?: string;
 }
 
 export default function BookingWidget({
@@ -47,6 +48,7 @@ export default function BookingWidget({
   totalRooms,
   taxRate,
   isLoading,
+  hotelId,
 }: BookingWidgetProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -172,6 +174,7 @@ export default function BookingWidget({
           <InlineDatePicker
             checkIn={checkIn}
             checkOut={checkOut}
+            hotelId={hotelId}
             onChange={handleDateChange}
             defaultExpanded={activeRooms.length <= 2}
             className="w-full"

@@ -14,6 +14,7 @@ import 'react-day-picker/dist/style.css';
 interface InlineDatePickerProps {
   checkIn?: string | null;
   checkOut?: string | null;
+  hotelId?: string;
   onChange?: (range: { from: Date; to: Date }) => void;
   availableDates?: string[];
   bookedDates?: string[];
@@ -21,9 +22,53 @@ interface InlineDatePickerProps {
   className?: string;
 }
 
+function getStorageKey(hotelId: string | undefined): string | null {
+  if (!hotelId) return null;
+  return `booking_dates_${hotelId}`;
+}
+
+function loadSavedDates(hotelId: string | undefined): { from: string; to: string } | null {
+  if (typeof window === 'undefined') return null;
+  const key = getStorageKey(hotelId);
+  if (!key) return null;
+
+  try {
+    const raw = window.localStorage.getItem(key);
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as { from?: string; to?: string };
+    if (!parsed.from || !parsed.to) return null;
+
+    const from = parseISO(parsed.from);
+    const to = parseISO(parsed.to);
+    const today = startOfDay(new Date());
+    if (!isValid(from) || !isValid(to)) return null;
+    if (from < today || to < today || to < from) return null;
+
+    return { from: parsed.from, to: parsed.to };
+  } catch {
+    return null;
+  }
+}
+
+function saveDates(hotelId: string | undefined, from: Date, to: Date): void {
+  if (typeof window === 'undefined') return;
+  const key = getStorageKey(hotelId);
+  if (!key) return;
+
+  try {
+    window.localStorage.setItem(
+      key,
+      JSON.stringify({ from: format(from, 'yyyy-MM-dd'), to: format(to, 'yyyy-MM-dd') })
+    );
+  } catch {
+    // Ignore storage errors (e.g. private mode quota)
+  }
+}
+
 export default function InlineDatePicker({
   checkIn,
   checkOut,
+  hotelId,
   onChange,
   availableDates = [],
   bookedDates = [],
@@ -45,8 +90,15 @@ export default function InlineDatePicker({
       const to = parseISO(co);
       if (isValid(from) && isValid(to)) return { from, to };
     }
+
+    const saved = loadSavedDates(hotelId);
+    if (saved) {
+      const from = parseISO(saved.from);
+      const to = parseISO(saved.to);
+      if (isValid(from) && isValid(to)) return { from, to };
+    }
     return undefined;
-  }, [checkIn, checkOut, searchParams]);
+  }, [checkIn, checkOut, searchParams, hotelId]);
 
   const [range, setRange] = useState<DateRange | undefined>(initialRange);
   const [isExpanded, setIsExpanded] = useState(defaultExpanded);
@@ -54,11 +106,14 @@ export default function InlineDatePicker({
   const handleSelect = useCallback(
     (newRange: DateRange | undefined) => {
       setRange(newRange);
-      if (newRange?.from && newRange?.to && onChange) {
-        onChange({ from: newRange.from, to: newRange.to });
+      if (newRange?.from && newRange?.to) {
+        saveDates(hotelId, newRange.from, newRange.to);
+        if (onChange) {
+          onChange({ from: newRange.from, to: newRange.to });
+        }
       }
     },
-    [onChange],
+    [onChange, hotelId],
   );
 
   const quickPresets: QuickDatePreset[] = useMemo(
@@ -99,9 +154,10 @@ export default function InlineDatePicker({
       const { from, to } = preset.getDates();
       const newRange = { from, to };
       setRange(newRange);
+      saveDates(hotelId, from, to);
       if (onChange) onChange(newRange);
     },
-    [onChange],
+    [onChange, hotelId],
   );
 
   const bookedSet = useMemo(() => new Set(bookedDates), [bookedDates]);

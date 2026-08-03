@@ -361,14 +361,15 @@ export default async function ChannelHotelDetailPage({
 
 					{/* Sidebar — Booking Widget (desktop only) */}
 					<aside className="lg:sticky lg:top-8 lg:self-start">
-						<BookingWidget
-							rooms={hotel.rooms || []}
-							checkIn={checkin ?? null}
-							checkOut={checkout ?? null}
-							cancellationPolicy={hotel.cancellation_policy}
-							totalRooms={(hotel.rooms || []).length}
-							taxRate={hotel.tax_rate}
-						/>
+					<BookingWidget
+						rooms={hotel.rooms || []}
+						checkIn={checkin ?? null}
+						checkOut={checkout ?? null}
+						cancellationPolicy={hotel.cancellation_policy}
+						totalRooms={(hotel.rooms || []).length}
+						taxRate={hotel.tax_rate}
+						hotelId={hotel.id}
+					/>
 					</aside>
 				</div>
 			</div>

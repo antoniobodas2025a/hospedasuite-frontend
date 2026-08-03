@@ -33,10 +33,25 @@ vi.mock("next/navigation", () => ({
 
 describe("InlineDatePicker", () => {
   const onChangeMock = vi.fn();
+  const localStorageMock = (() => {
+    let store: Record<string, string> = {};
+    return {
+      getItem: vi.fn((key: string) => store[key] ?? null),
+      setItem: vi.fn((key: string, value: string) => { store[key] = value; }),
+      removeItem: vi.fn((key: string) => { delete store[key]; }),
+      clear: vi.fn(() => { store = {}; }),
+    };
+  })();
+
+  Object.defineProperty(window, 'localStorage', {
+    value: localStorageMock,
+    writable: true,
+  });
 
   beforeEach(() => {
     onChangeMock.mockClear();
     mockSearchParams.forEach((_, key) => mockSearchParams.delete(key));
+    localStorageMock.clear();
   });
 
   afterEach(() => {
@@ -98,5 +113,84 @@ describe("InlineDatePicker", () => {
     const toInput = getByTestId("inline-date-picker-checkout");
     expect(fromInput).toHaveAttribute("value", "2026-08-10");
     expect(toInput).toHaveAttribute("value", "2026-08-12");
+  });
+
+  it("saves selected dates to localStorage for the given hotel", () => {
+    const { getByText } = render(
+      <InlineDatePicker onChange={onChangeMock} hotelId="hotel-1" />
+    );
+
+    fireEvent.click(getByText("Este fin de semana"));
+
+    expect(localStorageMock.setItem).toHaveBeenCalledWith(
+      "booking_dates_hotel-1",
+      expect.stringContaining("from")
+    );
+    const saved = JSON.parse(localStorageMock.setItem.mock.calls[0][1]);
+    expect(saved.from).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+    expect(saved.to).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+
+  it("loads saved dates from localStorage on mount when no URL dates are provided", () => {
+    const futureFrom = new Date();
+    futureFrom.setDate(futureFrom.getDate() + 10);
+    const futureTo = new Date(futureFrom);
+    futureTo.setDate(futureTo.getDate() + 2);
+    const fromIso = futureFrom.toISOString().split("T")[0];
+    const toIso = futureTo.toISOString().split("T")[0];
+
+    localStorageMock.setItem(
+      "booking_dates_hotel-2",
+      JSON.stringify({ from: fromIso, to: toIso })
+    );
+
+    const { getByTestId } = render(
+      <InlineDatePicker onChange={onChangeMock} hotelId="hotel-2" />
+    );
+
+    const fromInput = getByTestId("inline-date-picker-checkin");
+    const toInput = getByTestId("inline-date-picker-checkout");
+    expect(fromInput).toHaveAttribute("value", fromIso);
+    expect(toInput).toHaveAttribute("value", toIso);
+  });
+
+  it("ignores expired localStorage dates and keeps picker empty", () => {
+    const pastFrom = new Date();
+    pastFrom.setDate(pastFrom.getDate() - 10);
+    const pastTo = new Date(pastFrom);
+    pastTo.setDate(pastTo.getDate() + 2);
+    const fromIso = pastFrom.toISOString().split("T")[0];
+    const toIso = pastTo.toISOString().split("T")[0];
+
+    localStorageMock.setItem(
+      "booking_dates_hotel-3",
+      JSON.stringify({ from: fromIso, to: toIso })
+    );
+
+    const { queryByTestId } = render(
+      <InlineDatePicker onChange={onChangeMock} hotelId="hotel-3" />
+    );
+
+    expect(queryByTestId("inline-date-picker-checkin")).not.toBeInTheDocument();
+    expect(queryByTestId("inline-date-picker-checkout")).not.toBeInTheDocument();
+  });
+
+  it("gives URL params precedence over localStorage", () => {
+    mockSearchParams.set("checkin", "2026-12-01");
+    mockSearchParams.set("checkout", "2026-12-05");
+
+    localStorageMock.setItem(
+      "booking_dates_hotel-4",
+      JSON.stringify({ from: "2026-08-01", to: "2026-08-03" })
+    );
+
+    const { getByTestId } = render(
+      <InlineDatePicker onChange={onChangeMock} hotelId="hotel-4" />
+    );
+
+    const fromInput = getByTestId("inline-date-picker-checkin");
+    const toInput = getByTestId("inline-date-picker-checkout");
+    expect(fromInput).toHaveAttribute("value", "2026-12-01");
+    expect(toInput).toHaveAttribute("value", "2026-12-05");
   });
 });
