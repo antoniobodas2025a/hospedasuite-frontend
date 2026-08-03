@@ -110,3 +110,8 @@ Chain strategy: stacked-to-main
 - [ ] M.2 Update each usage to pass `taxRate` instead
 - [ ] M.3 Add deprecation warning for `taxRegime` prop (30-day sunset)
 - [ ] M.4 Remove `taxRegime` support after 30 days
+
+## Verify Critical Fixes
+
+- [x] V.1 Update `src/__tests__/unit/room-showcase-scroll.test.ts` assertion for sticky mobile dock
+- [x] V.2 Wire `useBookingFlow` into `RoomCard`, `BookingWidget` and `RoomShowcaseModal` CTAs
