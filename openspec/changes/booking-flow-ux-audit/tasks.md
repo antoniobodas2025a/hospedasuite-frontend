@@ -115,3 +115,6 @@ Chain strategy: stacked-to-main
 
 - [x] V.1 Update `src/__tests__/unit/room-showcase-scroll.test.ts` assertion for sticky mobile dock
 - [x] V.2 Wire `useBookingFlow` into `RoomCard`, `BookingWidget` and `RoomShowcaseModal` CTAs
+- [x] V.3 Fire `complete_booking` analytics event from booking success page (`BookingSuccessTracker`)
+- [x] V.4 Persist selected dates to `localStorage` in `InlineDatePicker` and load on mount
+- [x] V.5 Add sold-out handling in `RoomShowcaseModal` with "Ver otras habitaciones" scroll-to-list action
