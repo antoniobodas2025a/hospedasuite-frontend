@@ -4,10 +4,7 @@ import React, { useState, useRef } from 'react';
 import Image from 'next/image';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { RoomSchema } from '@/lib/validations/inventory';
-import * as z from 'zod';
-
-type RoomFormValues = z.input<typeof RoomSchema>;
+import { RoomSchema, type RoomFormValues } from '@/lib/validations/inventory';
 import { saveRoomAction } from '@/app/actions/inventory';
 import { motion } from 'framer-motion';
 import { getPresignedUploadUrlAction } from '@/app/actions/settings';
@@ -86,7 +83,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { register, handleSubmit, watch, setValue, formState: { errors } } = useForm<RoomFormValues>({
-    resolver: zodResolver(RoomSchema),
+    resolver: zodResolver(RoomSchema) as any,
     defaultValues: {
       name: initialData?.name || '',
       capacity: initialData?.capacity || 2,

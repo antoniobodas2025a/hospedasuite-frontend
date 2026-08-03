@@ -37,9 +37,7 @@ export const RoomSchema = z.object({
   // evitando el bug donde un select sin tocar bloqueaba el guardado.
   bed_type: z.preprocess(
     (val) => (val === '' || val === undefined || val === null ? undefined : val),
-    z.enum(['sencilla', 'doble', 'queen', 'king'], {
-      invalid_type_error: "Selecciona un tipo de cama válido.",
-    }).optional()
+    z.enum(['sencilla', 'doble', 'queen', 'king']).optional()
   ),
   beds: z.preprocess(
     (val) => (val === '' || val === undefined || val === null || (typeof val === 'number' && isNaN(val)) ? null : val),
