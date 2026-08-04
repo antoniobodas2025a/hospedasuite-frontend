@@ -8,6 +8,7 @@ import { requireSuperAdmin } from '@/lib/auth-guards';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { createClient } from '@/utils/supabase/server';
 import { sendHotelApprovedEmail, sendHotelRejectedEmail } from '@/lib/email-service';
+import { validateHotelQuality } from '@/lib/hotel-quality-service';
 
 // ============================================================================
 // 1. LISTAR HOTELES CON duplicate_review
@@ -74,10 +75,32 @@ export async function getDuplicateHotelsAction(): Promise<{
 // ============================================================================
 export async function approveDuplicateHotelAction(
   hotelId: string,
-): Promise<{ success: boolean; error?: string }> {
+): Promise<{ success: boolean; error?: string; qualityScore?: number }> {
   try {
     await requireSuperAdmin();
 
+    // 📋 Quality check before approval
+    const { data: hotelData } = await supabaseAdmin
+      .from('hotels')
+      .select('*')
+      .eq('id', hotelId)
+      .single();
+
+    if (!hotelData) {
+      return { success: false, error: 'Hotel not found' };
+    }
+
+    const qualityResult = validateHotelQuality(hotelData);
+
+    if (!qualityResult.isValid) {
+      return {
+        success: false,
+        error: `Hotel does not meet quality standards. Score: ${qualityResult.score}/100. Failed: ${qualityResult.failedCritical.join(', ')}`,
+        qualityScore: qualityResult.score,
+      };
+    }
+
+    // ✅ Quality check passed - proceed with approval
     const { error } = await supabaseAdmin
       .from('hotels')
       .update({
@@ -93,14 +116,12 @@ export async function approveDuplicateHotelAction(
     }
 
     // 📧 Send approval email (fire and forget - don't block on email failure)
-    const { data: hotel } = await supabaseAdmin
-      .from('hotels')
-      .select('name, slug, owner_email')
-      .eq('id', hotelId)
-      .single();
-
-    if (hotel?.owner_email) {
-      sendHotelApprovedEmail(hotel).catch(console.error);
+    if (hotelData.owner_email) {
+      sendHotelApprovedEmail({
+        name: hotelData.name,
+        slug: hotelData.slug,
+        owner_email: hotelData.owner_email,
+      }).catch(console.error);
     }
 
     // 🔍 Audit: duplicate hotel approved
@@ -121,7 +142,7 @@ export async function approveDuplicateHotelAction(
     });
 
     revalidatePath('/admin/hotels/duplicates');
-    return { success: true };
+    return { success: true, qualityScore: qualityResult.score };
   } catch (error: any) {
     console.error('Approve duplicate hotel error:', error.message);
     return { success: false, error: error.message || 'Error al aprobar hotel' };
