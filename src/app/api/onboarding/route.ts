@@ -4,13 +4,71 @@ import { supabaseAdmin } from '@/lib/supabase-admin';
 import { generateUniqueSlug } from '@/lib/slug';
 import { withRateLimit } from '@/lib/api-guards';
 
+/**
+ * Verifies reCAPTCHA v3 token with Google.
+ * Returns score (0.0-1.0) where higher is more human.
+ */
+async function verifyCaptcha(token: string, ip: string): Promise<{ success: boolean; score?: number; error?: string }> {
+  const secretKey = process.env.RECAPTCHA_SECRET_KEY;
+  
+  // Dev mode bypass
+  if (!secretKey) {
+    console.warn('RECAPTCHA_SECRET_KEY not configured - bypassing in dev');
+    return { success: true, score: 1.0 };
+  }
+  
+  try {
+    const response = await fetch('https://www.google.com/recaptcha/api/siteverify', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams({
+        secret: secretKey,
+        response: token,
+        remoteip: ip,
+      }),
+    });
+    
+    const data = await response.json();
+    
+    if (!data.success) {
+      return { success: false, error: 'CAPTCHA verification failed' };
+    }
+    
+    // Score: 0.0 = bot, 1.0 = human
+    // Threshold: 0.5 (blocks obvious bots)
+    if (data.score < 0.5) {
+      return { success: false, score: data.score, error: 'Suspicious activity detected' };
+    }
+    
+    return { success: true, score: data.score };
+  } catch (error) {
+    console.error('CAPTCHA verification error:', error);
+    return { success: false, error: 'CAPTCHA service unavailable' };
+  }
+}
+
 export const POST = withRateLimit(async (request: Request) => {
 
   let createdUserId: string | null = null;
 
   try {
     const body = await request.json();
-    const { adminData, hotelData, paymentToken, acceptanceToken } = body;
+    const { adminData, hotelData, paymentToken, acceptanceToken, captchaToken } = body;
+
+    // 🛡️ CAPTCHA VERIFICATION: Block bots
+    const ip = request.headers.get('x-forwarded-for')?.split(',')[0]?.trim() || 
+               request.headers.get('x-real-ip') || 
+               '127.0.0.1';
+    
+    if (captchaToken) {
+      const captchaResult = await verifyCaptcha(captchaToken, ip);
+      if (!captchaResult.success) {
+        return NextResponse.json(
+          { success: false, message: captchaResult.error || 'CAPTCHA verification failed' }, 
+          { status: 403 }
+        );
+      }
+    }
 
     // Validación de integridad de contrato (Zero Trust)
     if (!adminData?.email || !adminData?.password || !hotelData?.name || !paymentToken) {

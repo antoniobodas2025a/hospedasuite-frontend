@@ -28,9 +28,29 @@ function checkRateLimitMemory(ip: string): { success: boolean; retryAfter?: numb
   return { success: true };
 }
 
+/**
+ * Gets client IP safely.
+ * Uses x-forwarded-for only in production (behind known proxy).
+ * Falls back to direct connection IP.
+ */
+function getClientIp(request: NextRequest): string {
+  // In production behind Coolify/Hetzner proxy, use x-forwarded-for
+  if (process.env.NODE_ENV === 'production') {
+    const forwarded = request.headers.get('x-forwarded-for');
+    if (forwarded) {
+      // Take first IP (original client)
+      const firstIp = forwarded.split(',')[0]?.trim();
+      if (firstIp) return firstIp;
+    }
+  }
+  
+  // Fallback to direct connection or x-real-ip
+  return request.headers.get('x-real-ip') || '127.0.0.1';
+}
+
 export async function updateSession(request: NextRequest, initialResponse?: NextResponse) {
   // --- 🛡️ BARRERA 1: RATE LIMITING (Zero-Trust) ---
-  const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || '127.0.0.1';
+  const ip = getClientIp(request);
   
   // Skip rate limiting for localhost in development
   const isLocalhost = process.env.NODE_ENV !== 'production' && 

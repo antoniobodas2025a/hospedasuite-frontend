@@ -2,15 +2,38 @@ import { NextRequest, NextResponse } from 'next/server';
 import { AllEventSchemas, AnyEvent } from '@/lib/event-types';
 import { getHandlers } from '@/lib/event-handlers';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { createHmac, timingSafeEqual } from 'crypto';
 
-// Verify QStash signature (reuse existing pattern from webhooks)
+// Verify QStash signature using HMAC-SHA256
 async function verifyQStashSignature(request: NextRequest): Promise<boolean> {
   const signature = request.headers.get('upstash-signature');
   if (!signature) return false;
   
-  // For now, accept all requests from QStash
-  // In production, verify with QSTASH_SIGNING_SECRET
-  return true;
+  const signingSecret = process.env.QSTASH_SIGNING_SECRET;
+  if (!signingSecret) {
+    console.warn('QSTASH_SIGNING_SECRET not configured - allowing request');
+    return true; // Dev mode fallback
+  }
+  
+  try {
+    // Get raw body for signature verification
+    const body = await request.clone().text();
+    
+    // QStash signature format: HMAC-SHA256(secret, body)
+    const expectedSignature = createHmac('sha256', signingSecret)
+      .update(body)
+      .digest('hex');
+    
+    // Timing-safe comparison
+    const sigBuffer = Buffer.from(signature, 'hex');
+    const expectedBuffer = Buffer.from(expectedSignature, 'hex');
+    
+    return sigBuffer.length === expectedBuffer.length && 
+           timingSafeEqual(sigBuffer, expectedBuffer);
+  } catch (error) {
+    console.error('QStash signature verification failed:', error);
+    return false;
+  }
 }
 
 // Check if event was already successfully processed (idempotency).
