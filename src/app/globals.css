@@ -627,7 +627,6 @@
    ==================================================== */
 .modal-calendar .rdp {
   --rdp-cell-size: 40px;
-  --rdp-accent-color: oklch(0.52 0.18 35);
   --rdp-background-color: oklch(0.92 0.04 35);
   --rdp-outline: 2px solid var(--rdp-accent-color);
   margin: 0 auto;

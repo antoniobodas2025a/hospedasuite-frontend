@@ -103,6 +103,16 @@ describe("InlineDatePicker", () => {
     expect(calendar).toBeInTheDocument();
   });
 
+  it("applies the hotel primary color to the calendar accent", () => {
+    const { container } = render(
+      <InlineDatePicker onChange={onChangeMock} primaryColor="#c25a2a" />,
+    );
+
+    expect(container.querySelector(".modal-calendar")).toHaveStyle(
+      "--rdp-accent-color: #c25a2a",
+    );
+  });
+
   it("passes initial date range from URL params", () => {
     mockSearchParams.set("checkin", "2026-08-10");
     mockSearchParams.set("checkout", "2026-08-12");

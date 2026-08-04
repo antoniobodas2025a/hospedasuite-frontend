@@ -316,7 +316,12 @@ export default function MobileSearchSheet({
 											{t("common.close")}
 										</button>
 									</div>
-									<div className="modal-calendar">
+											<div
+												className="modal-calendar"
+												style={{
+													'--rdp-accent-color': primaryColor || 'var(--brand-600)',
+												} as React.CSSProperties}
+											>
 										<DayPicker
 											mode="range"
 											selected={pendingDate}
@@ -326,10 +331,10 @@ export default function MobileSearchSheet({
 											disabled={{ before: today }}
 											className="text-foreground font-sans"
 											modifiersClassNames={{
-												selected: `${primaryColor || 'bg-brand-600'} text-primary-foreground font-bold shadow-md border-transparent`,
+												selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md border-transparent',
 												range_middle: 'bg-brand-100 text-brand-900 border-y border-transparent rounded-none',
-												range_start: `${primaryColor || 'bg-brand-600'} text-primary-foreground rounded-l-xl rounded-r-none border-transparent`,
-												range_end: `${primaryColor || 'bg-brand-600'} text-primary-foreground rounded-r-xl rounded-l-none border-transparent`,
+												range_start: 'bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
+												range_end: 'bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
 											}}
 										/>
 									</div>
