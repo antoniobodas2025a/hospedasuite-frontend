@@ -15,6 +15,9 @@ import 'server-only'
 import { createClient } from '@supabase/supabase-js'
 import { SAAS_PLANS, normalizePlan, PlanKey, TRIAL_DAYS } from '@/config/saas-plans'
 import { getHotelWithPlan, verifyHotelOwnership } from './hotels'
+import { Resend } from 'resend'
+import { render } from '@react-email/render'
+import SubscriptionCancelled from '@/emails/SubscriptionCancelled'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -229,9 +232,22 @@ export async function cancelSubscription(
     return { ok: false, error: 'Unauthorized: you do not own this hotel' }
   }
 
-  // 2. Execute
+  // 2. Get current subscription and hotel data for email
   const supabase = getAdminClient()
+  
+  const { data: subscription } = await supabase
+    .from('saas_subscriptions')
+    .select('plan_key, current_period_end')
+    .eq('hotel_id', hotelId)
+    .single()
 
+  const { data: hotel } = await supabase
+    .from('hotels')
+    .select('name, email')
+    .eq('id', hotelId)
+    .single()
+
+  // 3. Execute cancellation
   const { error } = await supabase
     .from('saas_subscriptions')
     .update({
@@ -243,6 +259,46 @@ export async function cancelSubscription(
   if (error) {
     console.error('[Billing DAL] Error cancelling subscription:', error)
     return { ok: false, error: error.message }
+  }
+
+  // 4. Send cancellation email (don't fail if email fails)
+  if (hotel?.email && subscription) {
+    const resendApiKey = process.env.RESEND_API_KEY
+    
+    if (resendApiKey) {
+      try {
+        const resend = new Resend(resendApiKey)
+        
+        const plan = SAAS_PLANS[subscription.plan_key as PlanKey]
+        const planLabel = plan?.label || subscription.plan_key
+        
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const reactivateUrl = `${appUrl}/dashboard/billing`
+        
+        const emailHtml = await render(
+          <SubscriptionCancelled 
+            hotelName={hotel.name || 'Hotel'}
+            planLabel={planLabel}
+            periodEnd={new Date(subscription.current_period_end)}
+            reactivateUrl={reactivateUrl}
+          />
+        )
+        
+        await resend.emails.send({
+          from: 'HospedaSuite <facturacion@hospedasuite.com>',
+          to: hotel.email,
+          subject: `Suscripción cancelada — HospedaSuite ${planLabel}`,
+          html: emailHtml,
+        })
+        
+        console.log(`[Billing DAL] Cancellation email sent to ${hotel.email}`)
+      } catch (error) {
+        console.error(`[Billing DAL] Error sending cancellation email:`, error)
+        // Don't fail the operation if email fails
+      }
+    } else {
+      console.error('[Billing DAL] RESEND_API_KEY not configured')
+    }
   }
 
   return { ok: true }
