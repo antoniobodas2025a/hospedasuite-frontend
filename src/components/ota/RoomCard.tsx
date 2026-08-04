@@ -247,13 +247,14 @@ function RoomCardInner({
     <motion.div
       ref={setCardRef}
       data-testid="room-card"
-      className="group/card will-change-transform"
+      className="group/card will-change-transform cursor-pointer"
       style={index !== undefined && index >= 2 ? { contentVisibility: 'auto', containIntrinsicSize: '0 300px' } : undefined}
       initial={{ opacity: 0, y: 24 }}
       animate={isInView ? { opacity: 1, y: 0 } : {}}
       transition={{ type: 'spring' as const, stiffness: 200, damping: 20, duration: 0.4 }}
       whileHover={{ y: -4, transition: { duration: MOTION_DURATION.normal / 1000, ease: MOTION_EASING.easeOut } }}
       whileTap={{ scale: 0.96, transition: { duration: MOTION_DURATION.normal / 1000, ease: MOTION_EASING.easeOut } }}
+      onClick={() => onReserve()}
     >
       <GlassCard className="p-4 md:p-5 flex flex-col md:flex-row gap-6 hover:border-brand-500/30 hover:shadow-xl hover:shadow-brand-500/10 transition-all duration-500 group-hover/card:scale-[1.01]">
 
@@ -385,7 +386,10 @@ function RoomCardInner({
             {/* CTA — "Ver fotos" */}
             <button
               disabled={isProcessing}
-              onClick={onReserve}
+              onClick={(e) => {
+                e.stopPropagation();
+                onReserve();
+              }}
               className={cn(
                 "px-6 py-4 rounded-[var(--radius-squircle-md)] font-bold transition-all flex items-center gap-2 text-sm shadow-md active:scale-[0.96] bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta",
                 "focus-visible:outline-2 focus-visible:outline focus-visible:outline-primary focus-visible:outline-offset-2",
