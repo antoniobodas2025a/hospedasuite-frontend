@@ -444,8 +444,8 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 																	"bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]",
 																range_middle:
 																	"bg-brand-50 text-brand-900 rounded-none",
-																range_start: "rounded-l-xl rounded-r-none",
-																range_end: "rounded-r-xl rounded-l-none",
+																range_start: "bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none",
+																range_end: "bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none",
 															}}
 														/>
 													</div>
