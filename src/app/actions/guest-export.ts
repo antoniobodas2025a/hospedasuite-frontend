@@ -5,8 +5,11 @@
  * Fields: Nombre Completo, Tipo Documento, Número Documento, Nacionalidad, Fecha Check-in, Fecha Check-out
  */
 
+'use server';
+
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireHotelAccess } from '@/lib/tenant-guard';
+import { cookies } from 'next/headers';
 
 export interface GuestExportRecord {
   nombre_completo: string;
@@ -21,7 +24,7 @@ export interface GuestExportRecord {
 export async function exportGuestDataForSIRE(hotelId: string, startDate?: string, endDate?: string): Promise<{ success: boolean; data?: GuestExportRecord[]; error?: string }> {
   try {
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       return { success: false, error: guardError };
     }

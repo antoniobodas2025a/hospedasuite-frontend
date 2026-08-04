@@ -69,11 +69,3 @@ export async function generatePin(): Promise<{ plain: string; hash: string }> {
   const hash = await hashPin(plain);
   return { plain, hash };
 }
-
-/**
- * Verifies a PIN against a stored hash.
- */
-export async function verifyPinHash(pin: string, storedHash: string): Promise<boolean> {
-  const computedHash = await hashPin(pin);
-  return computedHash === storedHash;
-}

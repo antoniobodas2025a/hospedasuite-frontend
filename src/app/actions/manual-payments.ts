@@ -4,7 +4,7 @@ import { createClient } from '@/utils/supabase/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireSuperAdmin } from '@/lib/auth-guards';
 import { revalidatePath } from 'next/cache';
-import { headers } from 'next/headers';
+import { cookies, headers } from 'next/headers';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { uploadToR2, R2_BUCKET } from '@/lib/r2-upload';
 import { requireHotelAccess } from '@/lib/tenant-guard';
@@ -58,7 +58,7 @@ export async function createManualPayment(payload: {
 }): Promise<{ success: boolean; error?: string }> {
   try {
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error: guardError } = await requireHotelAccess(payload.hotel_id);
+    const { allowed, error: guardError } = await requireHotelAccess(payload.hotel_id, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       return { success: false, error: guardError };
     }

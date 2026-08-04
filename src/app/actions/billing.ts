@@ -7,6 +7,7 @@ import { isTrialActive, getEffectivePlanCost, type TrialHotel } from '@/lib/tria
 import { logAuditEvent } from '@/lib/audit-logger';
 import { trackDowngradeRequested } from '@/lib/analytics-server';
 import { requireHotelAccess } from '@/lib/tenant-guard';
+import { cookies } from 'next/headers';
 import type { OtaCommission } from '@/types';
 
 export interface BillingStatement {
@@ -128,7 +129,7 @@ export async function calculateMonthlyInvoiceAction(
 ): Promise<{ success: boolean; invoice?: MonthlyInvoice; error?: string }> {
   try {
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       return { success: false, error: guardError };
     }
@@ -224,7 +225,7 @@ export async function generateBillingPaymentLinkAction(
 ): Promise<{ success: boolean; link?: BillingPaymentLink; error?: string }> {
   try {
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       return { success: false, error: guardError };
     }
@@ -307,7 +308,7 @@ export async function getInvoiceHistoryAction(
 ): Promise<{ success: boolean; invoices?: InvoiceRecord[]; error?: string }> {
   try {
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       return { success: false, error: guardError };
     }
@@ -355,7 +356,7 @@ export async function requestPlanDowngradeAction(
 ): Promise<{ success: boolean; error?: string }> {
   try {
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       return { success: false, error: guardError };
     }

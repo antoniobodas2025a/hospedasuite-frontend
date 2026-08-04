@@ -13,7 +13,6 @@
  *   const { data } = await tenantQuery(supabase.from('rooms').select('*'), hotelId);
  */
 
-import { cookies } from 'next/headers';
 import { verifySession, type StaffSession } from '@/lib/session-utils';
 
 // ============================================================================
@@ -37,17 +36,15 @@ export interface TenantGuardResult {
  * Use this at the start of any action that accesses hotel-specific data.
  */
 export async function requireHotelAccess(
-  hotelId: string
+  hotelId: string,
+  staffSessionCookie?: string
 ): Promise<TenantGuardResult> {
   try {
-    const cookieStore = await cookies();
-    const staffCookie = cookieStore.get('hospeda_staff_session');
-    
-    if (!staffCookie?.value) {
-      return { allowed: false, session: null, error: 'No session found' };
+    if (!staffSessionCookie) {
+      return { allowed: false, session: null, error: 'No session cookie provided' };
     }
 
-    const session = verifySession(staffCookie.value);
+    const session = verifySession(staffSessionCookie);
     
     if (!session) {
       return { allowed: false, session: null, error: 'Invalid session' };

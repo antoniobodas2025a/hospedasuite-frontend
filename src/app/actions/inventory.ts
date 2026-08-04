@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { RoomSchema } from '@/lib/validations/inventory';
 import { requireHotelAccess } from '@/lib/tenant-guard';
+import { cookies } from 'next/headers';
 
 // ============================================================================
 /**
@@ -12,7 +13,7 @@ import { requireHotelAccess } from '@/lib/tenant-guard';
 export async function saveRoomAction(hotelId: string, data: any, roomId?: string) {
   try {
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error } = await requireHotelAccess(hotelId);
+    const { allowed, error } = await requireHotelAccess(hotelId, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       throw new Error(`SEC_VIOLATION: ${error}`);
     }

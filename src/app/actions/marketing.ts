@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { requireHotelAccess } from '@/lib/tenant-guard';
+import { cookies } from 'next/headers';
 
 // Definimos la interfaz de entrada
 interface LeadInput {
@@ -16,7 +17,7 @@ interface LeadInput {
 export async function createLeadAction(hotelId: string, lead: LeadInput) {
   try {
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       return { success: false, error: guardError };
     }
@@ -44,7 +45,7 @@ export async function updateLeadStatusAction(
 ) {
   try {
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       return { success: false, error: guardError };
     }
