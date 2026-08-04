@@ -181,6 +181,7 @@
       "copPerNight": "COP/noche",
       "freeCancellation": "Cancelacion Gratuita Disponible",
       "reserve": "Reservar",
+      "viewPhotos": "Ver fotos",
       "onlyXAvailable": "{count, plural, one {Solo 1 disponible} other {Solo {count} disponibles}}",
       "beds": "{count, plural, one {cama} other {camas}}",
       "nights": "{count, plural, one {noche} other {noches}}"

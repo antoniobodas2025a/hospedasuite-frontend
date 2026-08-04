@@ -8,7 +8,6 @@ import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { extendSearchParams } from '@/lib/handoff-url';
-import { getRoomAmenityById } from '@/lib/amenity-registry';
 import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
@@ -349,24 +348,7 @@ function RoomCardInner({
             </div>
             </div>
 
-            <p className="text-sm text-muted-foreground line-clamp-2 mb-4 font-lora italic">
-              {room.description || t('ota.roomCard.fallbackDescription')}
-            </p>
-
-            {/* Amenidades — Mac 2026: label escaneable, no marketing prose */}
-            <div className="flex flex-wrap gap-2 mb-6">
-              {room.amenities?.slice(0, 4).map((amenity: string | { id: string }, idx: number) => {
-                const id = typeof amenity === 'string' ? amenity : amenity.id;
-                const entry = getRoomAmenityById(id);
-                if (!entry) return null;
-                const Icon = entry.icon;
-                return (
-                  <div key={idx} className="flex items-center gap-1.5 bg-muted/60 text-muted-foreground border border-border/40 px-2.5 py-1 rounded-[var(--radius-squircle-md)] text-xs font-medium">
-                    <Icon size={14} /> {entry.label}
-                  </div>
-                );
-              })}
-            </div>
+            {/* Descripción y amenidades — se muestran en detalle de habitación */}
           </div>
 
           {/* DOCK DE CONVERSION */}
@@ -400,7 +382,7 @@ function RoomCardInner({
               )}
             </div>
 
-            {/* CTA — Unified "Reservar" */}
+            {/* CTA — "Ver fotos" */}
             <button
               disabled={isProcessing}
               onClick={onReserve}
@@ -410,7 +392,7 @@ function RoomCardInner({
                 "disabled:opacity-70 disabled:cursor-not-allowed"
               )}
             >
-              {isProcessing ? 'Procesando...' : t('ota.roomCard.reserve', { defaultValue: 'Reservar' })} <ArrowRight size={16} strokeWidth={2.5} />
+              {isProcessing ? 'Procesando...' : t('ota.roomCard.viewPhotos', { defaultValue: 'Ver fotos' })} <ArrowRight size={16} strokeWidth={2.5} />
             </button>
           </div>
         </div>
