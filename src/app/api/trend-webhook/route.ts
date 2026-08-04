@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { evaluateTrendPayload, TrendPayload } from '@/lib/trend-jacking';
 import { pushToKlaviyoMcp } from '@/lib/klaviyo-mcp';
+import { withQStashSignature } from '@/lib/api-guards';
 
 export const dynamic = 'force-dynamic';
 
-export async function POST(request: NextRequest) {
+export const POST = withQStashSignature(async (request: NextRequest) => {
   try {
     const body = await request.json();
 
@@ -48,4 +49,4 @@ export async function POST(request: NextRequest) {
       { status: 400 }
     );
   }
-}
+});

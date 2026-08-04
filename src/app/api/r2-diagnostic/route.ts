@@ -2,11 +2,12 @@
  * 🔍 R2 Diagnostic Endpoint
  * 
  * Tests R2 connectivity from the server side to isolate the issue.
- * Access: GET /api/r2-diagnostic
+ * Access: GET /api/r2-diagnostic (Super Admin only)
  */
 import { NextRequest, NextResponse } from 'next/server';
+import { withAuth } from '@/lib/api-guards';
 
-export async function GET(request: NextRequest) {
+export const GET = withAuth(async (request: NextRequest) => {
   const results: Record<string, any> = {};
 
   // 1. Check environment variables
@@ -99,4 +100,4 @@ export async function GET(request: NextRequest) {
   }
 
   return NextResponse.json(results, { status: 200 });
-}
+}, { role: 'super_admin' });

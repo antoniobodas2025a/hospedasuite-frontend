@@ -2,8 +2,9 @@ export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { generateUniqueSlug } from '@/lib/slug';
+import { withRateLimit } from '@/lib/api-guards';
 
-export async function POST(request: Request) {
+export const POST = withRateLimit(async (request: Request) => {
 
   let createdUserId: string | null = null;
 
@@ -153,4 +154,4 @@ export async function POST(request: Request) {
       message: error.message || 'Error interno del servidor' 
     }, { status: 500 });
   }
-}
+}, { limit: 10, windowMs: 60000 }); // 10 requests per minute

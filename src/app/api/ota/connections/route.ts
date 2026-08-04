@@ -9,12 +9,15 @@
  * - Starter: 0 Channels (Link Directo only)
  * - Pro: 3 Channels max
  * - Enterprise: 6 Channels max
+ *
+ * Access: Hotel Owner only
  */
 
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { createClient } from '@supabase/supabase-js';
 import { PLAN_LIMITS, normalizePlan, PlanKey } from '@/config/saas-plans';
+import { withAuth } from '@/lib/api-guards';
 
 // ─── Supabase Admin Client ───────────────────────────────────────
 function getAdminClient() {
@@ -34,7 +37,7 @@ interface ConnectRequest {
 }
 
 // ─── POST: Connect a new Channel ─────────────────────────────────────
-export async function POST(req: Request) {
+export const POST = withAuth(async (req: Request) => {
   try {
     const supabase = getAdminClient();
     const body: ConnectRequest = await req.json();
@@ -178,10 +181,10 @@ export async function POST(req: Request) {
       { status: 500 }
     );
   }
-}
+}, { role: 'hotel_owner' });
 
 // ─── GET: List Channel connections for a hotel ───────────────────────
-export async function GET(req: Request) {
+export const GET = withAuth(async (req: Request) => {
   try {
     const { searchParams } = new URL(req.url);
     const hotelId = searchParams.get('hotelId');
@@ -234,10 +237,10 @@ export async function GET(req: Request) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+}, { role: 'hotel_owner' });
 
 // ─── DELETE: Disconnect an Channel ───────────────────────────────────
-export async function DELETE(req: Request) {
+export const DELETE = withAuth(async (req: Request) => {
   try {
     const { searchParams } = new URL(req.url);
     const roomId = searchParams.get('roomId');
@@ -298,7 +301,7 @@ export async function DELETE(req: Request) {
   } catch (error: any) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
-}
+}, { role: 'hotel_owner' });
 
 // ─── Helpers ─────────────────────────────────────────────────────
 

@@ -2,6 +2,7 @@ export const dynamic = 'force-dynamic';
 
 import { NextRequest, NextResponse } from 'next/server';
 import { geocodeAddress, GeocodeError } from '@/lib/geocoding-service';
+import { withAuth } from '@/lib/api-guards';
 
 // ─── Request Schema ──────────────────────────────────────────────────────────
 
@@ -34,7 +35,7 @@ function validateBody(body: unknown): GeocodeRequest {
 
 // ─── POST Handler ────────────────────────────────────────────────────────────
 
-export async function POST(request: NextRequest): Promise<NextResponse> {
+export const POST = withAuth(async (request: NextRequest): Promise<NextResponse> => {
   try {
     const body: unknown = await request.json();
     const { address, city, country } = validateBody(body);
@@ -69,4 +70,4 @@ export async function POST(request: NextRequest): Promise<NextResponse> {
       { status: 400 },
     );
   }
-}
+});

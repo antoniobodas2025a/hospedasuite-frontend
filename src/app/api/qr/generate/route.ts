@@ -3,13 +3,15 @@
  *
  * Generates actual QR code images server-side using the 'qrcode' library.
  * Returns PNG image data as base64 or binary stream.
+ * Access: Authenticated users only
  */
 
 export const dynamic = 'force-dynamic'
 import { NextResponse } from 'next/server'
 import QRCode from 'qrcode'
+import { withAuth } from '@/lib/api-guards'
 
-export async function GET(req: Request) {
+export const GET = withAuth(async (req: Request) => {
   const { searchParams } = new URL(req.url)
   const data = searchParams.get('data')
 
@@ -37,9 +39,9 @@ export async function GET(req: Request) {
     const message = error instanceof Error ? error.message : 'QR generation failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }
-}
+})
 
-export async function POST(req: Request) {
+export const POST = withAuth(async (req: Request) => {
   try {
     const body = await req.json()
     const { data } = body
@@ -66,4 +68,4 @@ export async function POST(req: Request) {
     const message = error instanceof Error ? error.message : 'QR generation failed'
     return NextResponse.json({ error: message }, { status: 500 })
   }
-}
+})
