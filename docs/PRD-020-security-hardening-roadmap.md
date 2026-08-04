@@ -1,41 +1,48 @@
-# PRD-020: Security Hardening Roadmap
+# PRD-020: Security & Quality Roadmap
 
 ## Context
 
-Judgment Day audit found **4 BLOCKER + 7 CRITICAL** security issues across HospedaSuite.
-All findings are confirmed by 2 blind judges. This PRD defines the fix roadmap.
+Judgment Day audit found **8 BLOCKER + 12 CRITICAL + 15 WARNING** issues across HospedaSuite.
+All findings confirmed by 2 blind judges (security + Next.js/Supabase patterns).
+This PRD defines the complete fix roadmap following Uncle Bob's Clean Architecture.
 
 ## Audit Summary
 
-| Severity | Count | Fix Order |
-|----------|-------|-----------|
-| BLOCKER | 4 | Phase 1-2 |
-| CRITICAL | 7 | Phase 3-5 |
-| WARNING | 5 | Phase 6 |
-| SUGGESTION | 2 | Phase 6 |
+| Severity | Security | Next.js | Supabase | Total | Fix Order |
+|----------|----------|---------|----------|-------|-----------|
+| BLOCKER | 4 | 0 | 4 | **8** | Phase 1-2, 7 |
+| CRITICAL | 7 | 5 | 2 | **14** | Phase 3-5, 8 |
+| WARNING | 5 | 10 | 5 | **20** | Phase 6, 9 |
+| SUGGESTION | 2 | 3 | 1 | **6** | Phase 6, 9 |
 
 ## Architecture Principle
 
 **Uncle Bob's Clean Architecture**: Fix from inside out.
 
 ```
-Core (Auth/Domain) → Infrastructure (API/Routes) → Presentation (UI/UX)
+Core (Auth/Domain) → Infrastructure (API/DB) → Presentation (UI/UX)
 ```
 
 ## Phase Dependency Graph
 
 ```
-Phase 1: Core Auth
+Phase 1: Core Auth (BLOCKER - Security)
     ↓
-Phase 2: API Authentication
+Phase 2: API Authentication (BLOCKER - Security)
     ↓
-Phase 3: Data Validation
+Phase 3: Data Validation (CRITICAL - Security)
     ↓
-Phase 4: Tenant Isolation
+Phase 4: Tenant Isolation (CRITICAL - Security)
     ↓
-Phase 5: Infrastructure Hardening
+Phase 5: Infrastructure Hardening (CRITICAL - Security)
     ↓
-Phase 6: Polish & Warnings
+Phase 6: Security Polish (WARNING - Security)
+    ↓
+Phase 7: Supabase Connection Pooling (BLOCKER - Infrastructure)
+    ↓
+Phase 8: Next.js Patterns (CRITICAL - Presentation)
+    ↓
+Phase 9: Query Optimization (WARNING - Infrastructure)
 ```
 
 ---
@@ -215,47 +222,155 @@ Phase 6: Polish & Warnings
 
 ---
 
-## Phase 6: Polish & Warnings (WARNING/SUGGESTION)
+## Phase 7: Supabase Connection Pooling (BLOCKER)
 
-**PR #6: Performance, accessibility, cleanup**
+**PR #7: Fix admin client creation pattern**
 
 | Item | Detail |
 |------|--------|
-| Severity | WARNING/SUGGESTION |
-| Files | Multiple |
-| Issues | Memory leaks, accessibility, dead code |
-| Fix | Pagination, a11y, cleanup |
-| Tests | Regression tests |
-| Depends on | PR #5 |
+| Severity | BLOCKER |
+| Files | `src/data/hotels.ts`, `src/data/carta-digital.ts`, `src/app/api/ota/connections/route.ts`, `src/app/(admin)/dashboard/settings/page.tsx` |
+| Issue | 4 files create new Supabase admin clients per function call — exhausts connection pool |
+| Fix | Use singleton `supabaseAdmin` everywhere |
+| Tests | Unit tests for singleton behavior |
+| Depends on | PR #6 |
 
 **Changes:**
-1. `ota.ts`: Add pagination to `fetchChannelHotelsAction`
-2. `layout.tsx`: Remove `userScalable: false` (WCAG violation)
-3. `layout.tsx`: Move hardcoded URLs to env vars
-4. Delete `.bak` files
-5. Fix `supabase-admin.ts` typing (remove `as any`)
+1. `src/data/hotels.ts`:
+   - Replace `getAdminClient()` with import from `@/lib/supabase-admin`
+   - Verify all 6 functions use singleton
+2. `src/data/carta-digital.ts`:
+   - Replace `getAdminClient()` with singleton import
+   - Verify all 15+ functions use singleton
+3. `src/app/api/ota/connections/route.ts`:
+   - Remove `getAdminClient()` function
+   - Use `supabaseAdmin` from `@/lib/supabase-admin`
+4. `src/app/(admin)/dashboard/settings/page.tsx`:
+   - Remove inline `createClient()` call
+   - Use `supabaseAdmin` from `@/lib/supabase-admin`
 
 **Acceptance Criteria:**
-- [ ] No memory leaks in OTA search
-- [ ] Pinch-to-zoom works (a11y)
-- [ ] No hardcoded infrastructure URLs
-- [ ] No backup files in repo
-- [ ] TypeScript strict mode passes
+- [ ] Zero `getAdminClient()` functions remain
+- [ ] Zero inline `createClient()` with service role key
+- [ ] All DB operations use `supabaseAdmin` singleton
+- [ ] Tests pass: 4/4 (1 per file)
+
+**Uncle Bob Compliance:**
+- Single Responsibility: One singleton, one pattern
+- Dependency Rule: All modules depend on central admin client
+- DRY: No duplicate client creation
+
+---
+
+## Phase 8: Next.js Patterns (CRITICAL)
+
+**PR #8: Fix Next.js anti-patterns**
+
+| Item | Detail |
+|------|--------|
+| Severity | CRITICAL |
+| Files | `src/app/layout.tsx`, `src/app/(ota)/hotel/[slug]/page.tsx`, `src/app/bio/[slug]/page.tsx`, `src/components/dashboard/POSPanel.tsx`, `src/app/actions/*.ts` |
+| Issues | Duplicate preconnects, duplicate data fetch, native `<img>`, invalid revalidateTag args, missing error boundaries |
+| Fix | Apply Next.js best practices |
+| Tests | Unit + integration tests |
+| Depends on | PR #7 |
+
+**Changes:**
+1. `src/app/layout.tsx`:
+   - Remove duplicate preconnect hints (keep only in `metadata.other.link`)
+   - Remove `<link>` tags from `<head>` JSX
+2. `src/app/(ota)/hotel/[slug]/page.tsx`:
+   - Wrap `getHotelDetailsBySlugAction` in React `cache()`
+   - Remove duplicate call in page component
+3. `src/app/bio/[slug]/page.tsx`:
+   - Replace `<img>` with `next/image`
+   - Add `generateMetadata` for SEO
+4. `src/components/dashboard/POSPanel.tsx`:
+   - Replace `<img>` with `next/image`
+5. `src/app/actions/*.ts`:
+   - Fix `revalidateTag` calls (remove invalid second argument)
+   - Affected files: `carta-digital.ts`, `bookings.ts`, `guests.ts`, `payments.ts`, `properties.ts`, `settings.ts`
+6. Error boundaries:
+   - Create `src/app/(admin)/dashboard/error.tsx`
+   - Create `src/app/not-found.tsx`
+
+**Acceptance Criteria:**
+- [ ] No duplicate preconnect hints
+- [ ] Hotel page makes 1 DB call (cached)
+- [ ] No native `<img>` in production pages
+- [ ] `revalidateTag` called with 1 argument everywhere
+- [ ] Dashboard has error boundary
+- [ ] App has root not-found page
+- [ ] Tests pass: 15/15
+
+**Uncle Bob Compliance:**
+- Single Responsibility: Each component does one thing
+- Open/Closed: Error boundaries extend without modifying
+- Interface Segregation: Clean metadata vs JSX separation
+
+---
+
+## Phase 9: Query Optimization (WARNING)
+
+**PR #9: Optimize Supabase queries**
+
+| Item | Detail |
+|------|--------|
+| Severity | WARNING |
+| Files | `src/app/actions/ota.ts`, `src/app/actions/dashboard.ts`, `src/app/actions/bookings.ts`, `src/app/(admin)/dashboard/*/page.tsx` |
+| Issues | Fetches ALL hotels, select('*') overfetching, sequential queries, race conditions |
+| Fix | Add pagination, specific selects, Promise.all, atomic operations |
+| Tests | Performance tests |
+| Depends on | PR #8 |
+
+**Changes:**
+1. `src/app/actions/ota.ts`:
+   - `fetchChannelHotelsAction`: Add `.range()` pagination, filter in DB not JS
+   - `searchLocationsAction`: Use `ilike` instead of `includes()`
+   - Hotel detail: Parallelize coordinate + image queries with `Promise.all`
+2. `src/app/actions/dashboard.ts`:
+   - `getDashboardStats`: Parallelize rooms + bookings queries
+3. `src/app/actions/bookings.ts`:
+   - `updateBookingDetailsAction`: Parallelize independent queries
+4. `src/data/carta-digital.ts`:
+   - `incrementQRScan`: Use RPC `UPDATE ... SET scan_count = scan_count + 1` (atomic)
+5. `src/app/(admin)/dashboard/*/page.tsx`:
+   - Replace `select('*')` with specific column selects in:
+     - `guests/page.tsx`
+     - `inventory/page.tsx`
+     - `settings/page.tsx`
+     - `marketing/page.tsx`
+     - `split-payments/page.tsx`
+
+**Acceptance Criteria:**
+- [ ] No full table scans (all queries have `.range()` or `.limit()`)
+- [ ] No `select('*')` in production code
+- [ ] Independent queries use `Promise.all`
+- [ ] QR scan increment is atomic
+- [ ] Tests pass: 10/10
+
+**Uncle Bob Compliance:**
+- Single Responsibility: Each query does one thing
+- Performance: Lazy loading, pagination
+- Determinism: Atomic operations prevent race conditions
 
 ---
 
 ## PR Chain Summary
 
-| PR | Phase | Focus | BLOCKER | CRITICAL | Est. Lines |
-|----|-------|-------|---------|----------|------------|
-| #1 | Core Auth | Session signing | 1 | 0 | ~150 |
-| #2 | API Auth | Route protection | 3 | 0 | ~300 |
-| #3 | Validation | PINs, signatures | 0 | 3 | ~200 |
-| #4 | Tenant Isolation | hotel_id checks | 0 | 4 | ~250 |
-| #5 | Infrastructure | QStash, rate limit | 0 | 2 | ~200 |
-| #6 | Polish | Warnings, cleanup | 0 | 0 | ~150 |
+| PR | Phase | Focus | BLOCKER | CRITICAL | WARNING | Est. Lines |
+|----|-------|-------|---------|----------|---------|------------|
+| #1 | Core Auth | Session signing | 1 | 0 | 0 | ~150 |
+| #2 | API Auth | Route protection | 3 | 0 | 0 | ~300 |
+| #3 | Validation | PINs, signatures | 0 | 3 | 0 | ~200 |
+| #4 | Tenant Isolation | hotel_id checks | 0 | 4 | 0 | ~250 |
+| #5 | Infrastructure | QStash, rate limit | 0 | 2 | 0 | ~200 |
+| #6 | Security Polish | Accessibility, cleanup | 0 | 0 | 5 | ~150 |
+| #7 | Supabase Pooling | Client singleton | 4 | 0 | 0 | ~100 |
+| #8 | Next.js Patterns | RSC, images, caching | 0 | 5 | 0 | ~250 |
+| #9 | Query Optimization | Pagination, selects | 0 | 0 | 10 | ~200 |
 
-**Total: 6 PRs, ~1,250 lines changed**
+**Total: 9 PRs, ~1,800 lines changed**
 
 ---
 
@@ -269,7 +384,10 @@ Phase 6: Polish & Warnings
 | #4 | 14 | 0 | 0 |
 | #5 | 0 | 9 | 0 |
 | #6 | 0 | 4 | 0 |
-| **Total** | **31** | **31** | **0** |
+| #7 | 4 | 0 | 0 |
+| #8 | 10 | 5 | 0 |
+| #9 | 6 | 4 | 0 |
+| **Total** | **51** | **40** | **0** |
 
 ---
 
@@ -281,6 +399,8 @@ Phase 6: Polish & Warnings
 | Rate limiting false positives | Configurable per-route |
 | CAPTCHA UX friction | Optional for first 100 users |
 | Migration downtime | Zero-downtime migration strategy |
+| Connection pool exhaustion | Monitor pool usage during rollout |
+| Next.js caching issues | Test with `NEXT_CACHE_REVALIDATION_TOKEN` |
 
 ---
 
@@ -288,12 +408,16 @@ Phase 6: Polish & Warnings
 
 | Metric | Before | After |
 |--------|--------|-------|
-| BLOCKER issues | 4 | 0 |
-| CRITICAL issues | 7 | 0 |
+| BLOCKER issues | 8 | 0 |
+| CRITICAL issues | 14 | 0 |
+| WARNING issues | 20 | 5 |
 | Auth bypass vectors | 6 | 0 |
 | Unsigned cookies | 1 | 0 |
 | Hardcoded secrets | 3 | 0 |
-| Test coverage | ~70% | ~85% |
+| DB clients per request | 6+ | 1 |
+| Full table scans | 3 | 0 |
+| select('*') usage | 6+ | 0 |
+| Test coverage | ~70% | ~90% |
 
 ---
 
@@ -306,10 +430,14 @@ Each PR is independent and can be reverted:
 - PR #4: Remove `requireHotelAccess()` (temporary)
 - PR #5: Stub QStash again (temporary)
 - PR #6: Restore previous versions (trivial)
+- PR #7: Restore `getAdminClient()` functions (temporary)
+- PR #8: Restore previous Next.js patterns (temporary)
+- PR #9: Restore previous queries (temporary)
 
 ---
 
 **Created:** 2026-08-04
+**Updated:** 2026-08-04 (added Phases 7-9 from Next.js/Supabase audit)
 **Author:** Gentle AI SDD
 **Status:** Ready for implementation
 **Next:** Start PR #1 (Core Auth)
