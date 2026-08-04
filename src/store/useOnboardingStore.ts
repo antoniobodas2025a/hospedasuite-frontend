@@ -52,6 +52,7 @@ export interface OnboardingState {
 	paymentMethod: PaymentMethod | null;
 	manualReceiptUrl: string | null;
 	manualPaymentMethod: 'nequi' | 'daviplata' | null;
+	termsAccepted: boolean;
 
 	// State
 	isSubmitting: boolean;
@@ -90,6 +91,7 @@ export interface OnboardingState {
 	setPaymentMethod: (method: PaymentMethod | null) => void;
 	setManualReceiptUrl: (url: string | null) => void;
 	setManualPaymentMethod: (method: 'nequi' | 'daviplata') => void;
+	setTermsAccepted: (accepted: boolean) => void;
 
 	// General
 	setIsSubmitting: (value: boolean) => void;
@@ -151,6 +153,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 	paymentMethod: null,
 	manualReceiptUrl: null,
 	manualPaymentMethod: null,
+	termsAccepted: false,
 
 	isSubmitting: false,
 	error: null,
@@ -313,6 +316,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 	setPaymentMethod: (method) => set({ paymentMethod: method }),
 	setManualReceiptUrl: (url) => set({ manualReceiptUrl: url }),
 	setManualPaymentMethod: (method) => set({ manualPaymentMethod: method }),
+	setTermsAccepted: (accepted) => set({ termsAccepted: accepted }),
 
 	setIsSubmitting: (value) => set({ isSubmitting: value }),
 	setError: (error) => set({ error }),
@@ -444,6 +448,16 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 			}
 		}
 
+		if (step === 6) {
+			const state = useOnboardingStore.getState();
+			if (!state.paymentMethod) {
+				errors.push("Necesitas seleccionar un método de pago");
+			}
+			if (!state.termsAccepted) {
+				errors.push("Debés aceptar los Términos y Condiciones y la Política de Privacidad");
+			}
+		}
+
 		return { valid: errors.length === 0, errors };
 	},
 
@@ -467,6 +481,8 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 			paymentTransactionId: null,
 			paymentMethod: null,
 			manualReceiptUrl: null,
+			manualPaymentMethod: null,
+			termsAccepted: false,
 			isSubmitting: false,
 			error: null,
 			validationErrors: {},

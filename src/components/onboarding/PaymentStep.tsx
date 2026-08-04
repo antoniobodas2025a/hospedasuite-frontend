@@ -7,6 +7,7 @@ import { useOnboardingStore } from '@/store/useOnboardingStore';
 import type { PaymentMethod } from '@/lib/onboarding-schemas';
 import WompiButton from '@/components/payments/WompiButton';
 import ManualPaymentCard from './ManualPaymentCard';
+import TermsAcceptance from './TermsAcceptance';
 import { useIsMobile } from '@/hooks/useIsMediaQuery';
 
 const wompiRef = `ONB-${Date.now()}`;
@@ -22,6 +23,8 @@ export default function PaymentStep() {
     paymentTransactionId,
     setPaymentTransactionId,
     manualReceiptUrl,
+    termsAccepted,
+    setTermsAccepted,
   } = useOnboardingStore();
 
   const isMethodSelected = paymentMethod !== null;
@@ -170,6 +173,12 @@ export default function PaymentStep() {
           Seleccioná un método de pago para continuar
         </p>
       )}
+
+      {/* Terms and Conditions Acceptance */}
+      <TermsAcceptance
+        accepted={termsAccepted}
+        onAcceptanceChange={setTermsAccepted}
+      />
     </motion.div>
   );
 }
