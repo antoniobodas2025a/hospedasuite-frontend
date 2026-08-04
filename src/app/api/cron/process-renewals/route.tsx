@@ -17,6 +17,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { supabaseAdmin } from '@/lib/supabase-admin'
 import { SAAS_PLANS, type PlanKey } from '@/config/saas-plans'
+import { Resend } from 'resend'
+import { render } from '@react-email/render'
+import RenewalReminder from '@/emails/RenewalReminder'
 
 // ─── Supabase Admin Client ────────────────────────────────────
 
@@ -231,8 +234,7 @@ function generateWompiPaymentLink(invoice: any, plan: { priceCOP: number; label:
 }
 
 /**
- * Send renewal email to hotelier.
- * In production: use Resend, SendGrid, or Supabase Edge Function.
+ * Send renewal email to hotelier using Resend.
  */
 async function sendRenewalEmail(
   email: string,
@@ -242,32 +244,36 @@ async function sendRenewalEmail(
   paymentUrl: string,
   periodEnd: Date
 ): Promise<void> {
-  // TODO: Replace with actual email service (Resend, SendGrid, etc.)
-  // For now: log the email that would be sent
-
-  const subject = `Recordatorio de pago — HospedaSuite ${planLabel}`
-  const body = `
-    Hola ${hotelName},
-
-    Tu suscripción a HospedaSuite (${planLabel}) vence el ${periodEnd.toLocaleDateString('es-CO', { timeZone: 'America/Bogota' })}.
-
-    Monto: $${amount.toLocaleString('es-CO')} COP
-    Pagar ahora: ${paymentUrl}
-
-    Si ya realizaste el pago, puedes ignorar este email.
-
-    Saludos,
-    Equipo HospedaSuite
-  `
-
-  console.log(`[EmailQueued] To: ${email} | Subject: ${subject}`)
-  console.log(`[EmailQueued] Body: ${body}`)
-
-  // In production:
-  // await resend.emails.send({
-  //   from: 'HospedaSuite <facturacion@hospedasuite.com>',
-  //   to: email,
-  //   subject,
-  //   html: body,
-  // })
+  const resendApiKey = process.env.RESEND_API_KEY
+  
+  if (!resendApiKey) {
+    console.error('[Renewals Cron] RESEND_API_KEY not configured')
+    return
+  }
+  
+  const resend = new Resend(resendApiKey)
+  
+  try {
+    const emailHtml = await render(
+      <RenewalReminder 
+        hotelName={hotelName}
+        planLabel={planLabel}
+        amount={amount}
+        paymentUrl={paymentUrl}
+        periodEnd={periodEnd}
+      />
+    )
+    
+    await resend.emails.send({
+      from: 'HospedaSuite <facturacion@hospedasuite.com>',
+      to: email,
+      subject: `Recordatorio de pago — HospedaSuite ${planLabel}`,
+      html: emailHtml,
+    })
+    
+    console.log(`[Renewals Cron] Email sent to ${email}`)
+  } catch (error) {
+    console.error(`[Renewals Cron] Error sending email to ${email}:`, error)
+    // Don't throw - continue with other hotels
+  }
 }

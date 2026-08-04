@@ -54,29 +54,37 @@ export function validateImageFile(file: File): { valid: boolean; error?: string 
 
 // ─── Compression presets ───────────────────────────────────────────
 
-export const DEFAULT_COMPRESSION = {
+export interface CompressionOptions {
+  maxSizeMB: number;
+  maxWidthOrHeight: number;
+  useWebWorker: boolean;
+  fileType: string;
+  initialQuality: number;
+}
+
+export const DEFAULT_COMPRESSION: CompressionOptions = {
   maxSizeMB: 0.5,
   maxWidthOrHeight: 1920,
   useWebWorker: true,
   fileType: 'image/webp',
   initialQuality: 0.75,
-} as const;
+};
 
-export const THUMBNAIL_COMPRESSION = {
+export const THUMBNAIL_COMPRESSION: CompressionOptions = {
   maxSizeMB: 0.1,
   maxWidthOrHeight: 400,
   useWebWorker: true,
   fileType: 'image/webp',
   initialQuality: 0.70,
-} as const;
+};
 
-export const CARD_COMPRESSION = {
+export const CARD_COMPRESSION: CompressionOptions = {
   maxSizeMB: 0.3,
   maxWidthOrHeight: 800,
   useWebWorker: true,
   fileType: 'image/webp',
   initialQuality: 0.75,
-} as const;
+};
 
 export type CompressionPreset = 'full' | 'card' | 'thumbnail';
 
