@@ -324,11 +324,10 @@ export default function MobileSearchSheet({
 											disabled={{ before: today }}
 											className="text-foreground font-sans"
 											modifiersClassNames={{
-												selected:
-													"bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]",
-												range_middle: "bg-brand-50 text-brand-900 rounded-none",
-											range_start: "bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none",
-											range_end: "bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none",
+												selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md border-transparent',
+												range_middle: 'bg-brand-100 text-brand-900 border-y border-transparent rounded-none',
+												range_start: 'bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
+												range_end: 'bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
 											}}
 										/>
 									</div>
