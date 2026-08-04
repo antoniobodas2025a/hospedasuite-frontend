@@ -7,10 +7,7 @@ import { TRIAL_DAYS } from '@/config/saas-plans';
 import { requireSuperAdmin } from '@/lib/auth-guards';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { createClient } from '@/utils/supabase/server';
-import { Resend } from 'resend';
-import { render } from '@react-email/render';
-import { HotelApproved } from '@/emails/HotelApproved';
-import { HotelRejected } from '@/emails/HotelRejected';
+import { sendHotelApprovedEmail, sendHotelRejectedEmail } from '@/lib/email-service';
 
 // ============================================================================
 // 1. LISTAR HOTELES CON duplicate_review
@@ -95,6 +92,17 @@ export async function approveDuplicateHotelAction(
       return { success: false, error: 'Error al aprobar hotel: ' + error.message };
     }
 
+    // 📧 Send approval email (fire and forget - don't block on email failure)
+    const { data: hotel } = await supabaseAdmin
+      .from('hotels')
+      .select('name, slug, owner_email')
+      .eq('id', hotelId)
+      .single();
+
+    if (hotel?.owner_email) {
+      sendHotelApprovedEmail(hotel).catch(console.error);
+    }
+
     // 🔍 Audit: duplicate hotel approved
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
@@ -125,6 +133,7 @@ export async function approveDuplicateHotelAction(
 // ============================================================================
 export async function rejectDuplicateHotelAction(
   hotelId: string,
+  reason?: string,
 ): Promise<{ success: boolean; error?: string }> {
   try {
     await requireSuperAdmin();
@@ -140,6 +149,17 @@ export async function rejectDuplicateHotelAction(
 
     if (error) {
       return { success: false, error: 'Error al rechazar hotel: ' + error.message };
+    }
+
+    // 📧 Send rejection email (fire and forget - don't block on email failure)
+    const { data: hotel } = await supabaseAdmin
+      .from('hotels')
+      .select('name, owner_email')
+      .eq('id', hotelId)
+      .single();
+
+    if (hotel?.owner_email) {
+      sendHotelRejectedEmail(hotel, reason).catch(console.error);
     }
 
     // 🔍 Audit: duplicate hotel rejected
