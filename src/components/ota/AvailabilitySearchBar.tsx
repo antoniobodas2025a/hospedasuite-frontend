@@ -46,6 +46,7 @@ interface NavSection {
 interface AvailabilitySearchBarProps {
 	sticky?: boolean;
 	navSections?: NavSection[];
+	primaryColor?: string;
 }
 
 // ── URL builder ───────────────────────────────────────────────────────────────
@@ -86,6 +87,7 @@ function buildUrl(
 export default function AvailabilitySearchBar({
 	sticky = false,
 	navSections = [],
+	primaryColor,
 }: AvailabilitySearchBarProps) {
 	const router = useRouter();
 	const searchParams = useSearchParams();
@@ -646,10 +648,10 @@ export default function AvailabilitySearchBar({
 															disabled={{ before: today }}
 															className="text-foreground font-sans"
 															modifiersClassNames={{
-																selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md border-transparent',
+																selected: `${primaryColor || 'bg-brand-600'} text-primary-foreground font-bold shadow-md border-transparent`,
 																range_middle: 'bg-brand-100 text-brand-900 border-y border-transparent rounded-none',
-																range_start: 'bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
-																range_end: 'bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
+																range_start: `${primaryColor || 'bg-brand-600'} text-primary-foreground rounded-l-xl rounded-r-none border-transparent`,
+																range_end: `${primaryColor || 'bg-brand-600'} text-primary-foreground rounded-r-xl rounded-l-none border-transparent`,
 															}}
 														/>
 													</div>
