@@ -3,7 +3,7 @@
 import { createClient } from '@/utils/supabase/server';
 import { createAdminClient } from '@/utils/supabase/admin';
 import { revalidatePath, revalidateTag } from 'next/cache';
-import { redirect } from 'next/navigation';
+import { headers } from 'next/headers';
 import crypto from 'crypto';
 import { FullWizardState } from '@/lib/onboarding-schemas';
 import { checkUnitLimit } from '@/data/plan-guard';
@@ -16,9 +16,24 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
   const supabase = await createClient();
   
   try {
+    // ─── Validate terms acceptance (Ley 1581 de 2012 compliance) ────
+    if (!state.termsAccepted) {
+      return { 
+        success: false, 
+        error: 'Debés aceptar los Términos y Condiciones y la Política de Privacidad para continuar' 
+      };
+    }
+
     // Get current user
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'No autenticado' };
+
+    // Get consent metadata (IP, user agent)
+    const headersList = headers();
+    const consentIp = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
+    const consentUserAgent = headersList.get('user-agent') || null;
+    const termsVersion = 'v1.0';
+    const consentTimestamp = new Date().toISOString();
 
     // Check if user already has a hotel linked
     const { data: staff } = await supabase
@@ -86,6 +101,42 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       }
     }
 
+    // ─── Save consent evidence to hotels table (Ley 1581 de 2012) ────
+    const supabaseAdmin = createAdminClient();
+    const { error: consentUpdateError } = await supabaseAdmin
+      .from('hotels')
+      .update({
+        terms_accepted: true,
+        terms_version: termsVersion,
+        consent_timestamp: consentTimestamp,
+        consent_ip: consentIp,
+        consent_user_agent: consentUserAgent,
+      })
+      .eq('id', hotelId);
+
+    if (consentUpdateError) {
+      console.error('[Onboarding] Error saving consent to hotels:', consentUpdateError.message);
+      // Non-fatal: continue but log the error
+    }
+
+    // ─── Log consent to audit trail ────
+    const { error: auditError } = await supabaseAdmin
+      .from('consent_audit')
+      .insert({
+        user_id: user.id,
+        hotel_id: hotelId,
+        terms_version: termsVersion,
+        action: 'accept',
+        consent_timestamp: consentTimestamp,
+        consent_ip: consentIp,
+        consent_user_agent: consentUserAgent,
+      });
+
+    if (auditError) {
+      console.error('[Onboarding] Error logging consent to audit:', auditError.message);
+      // Non-fatal: continue but log the error
+    }
+
     // ─── Plan Gating: Check unit limit before creating rooms ────
     const roomCount = state.rooms.length
     if (roomCount > 0) {
@@ -111,7 +162,6 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     }
 
     // 1. Update hotel profile with wizard data
-    const supabaseAdmin = createAdminClient();
     const isManual = state.payment.paymentMethod === 'manual';
 
     // Ensure hotel has a slug (for hotels created before this fix)

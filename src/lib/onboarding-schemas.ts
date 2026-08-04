@@ -158,6 +158,9 @@ export const fullWizardStateSchema = z.object({
 	settings: settingsSchema,
 	payment: paymentSchema,
 	paymentTransactionId: z.string().optional().nullable(),
+	termsAccepted: z.boolean().refine(val => val === true, {
+		message: "Debés aceptar los Términos y Condiciones y la Política de Privacidad"
+	}),
 });
 
 export type HotelIdentityData = z.infer<typeof hotelIdentitySchema>;

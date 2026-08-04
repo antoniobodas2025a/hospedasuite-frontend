@@ -24,6 +24,7 @@ import { getPresignedOnboardingUrlAction } from "@/app/actions/onboarding-upload
 import { compressImage, uploadToR2 } from "@/lib/upload-utils";
 import { fullWizardStateSchema } from "@/lib/onboarding-schemas";
 import { detectUploadFailures } from "@/lib/upload-validator";
+import TermsAcceptance from "./TermsAcceptance";
 
 function generateSlug(name: string): string {
 	return name
@@ -41,13 +42,14 @@ export default function ProvisioningStep() {
 	const router = useRouter();
 	const {
 		hotelIdentity,
-		galleryFiles,
 		rooms,
 		settings,
 		paymentTransactionId,
 		paymentMethod,
 		manualReceiptUrl,
 		manualPaymentMethod,
+		termsAccepted,
+		setTermsAccepted,
 		reset,
 	} = useOnboardingStore();
 	const [status, setStatus] = useState<ProvisioningStatus>("provisioning");
@@ -74,6 +76,11 @@ export default function ProvisioningStep() {
 	};
 
 	useEffect(() => {
+		// Only start provisioning if terms are accepted
+		if (!termsAccepted) {
+			return;
+		}
+
 		async function provision() {
 			const isManual = paymentMethod === "manual";
 			const hasPayment = paymentMethod === "free" || (isManual ? !!manualReceiptUrl : !!paymentTransactionId);
@@ -297,7 +304,39 @@ export default function ProvisioningStep() {
 		}
 
 		provision();
-	}, []);
+	}, [termsAccepted]);
+
+	// Show terms acceptance before starting provisioning
+	if (!termsAccepted) {
+		return (
+			<motion.div
+				initial={{ opacity: 0, y: 20 }}
+				animate={{ opacity: 1, y: 0 }}
+				transition={{ type: "spring", stiffness: 300, damping: 24 }}
+				className="py-12 space-y-8 max-w-2xl mx-auto"
+			>
+				<div className="text-center space-y-2">
+					<h3 className="text-2xl font-bold text-white">
+						Términos y Condiciones
+					</h3>
+					<p className="text-zinc-500 text-sm">
+						Antes de activar tu propiedad, necesitás aceptar nuestros términos
+					</p>
+				</div>
+
+				<TermsAcceptance
+					accepted={termsAccepted}
+					onAcceptanceChange={setTermsAccepted}
+				/>
+
+				<div className="text-center">
+					<p className="text-zinc-600 text-xs">
+						Al aceptar, se iniciará automáticamente la activación de tu propiedad
+					</p>
+				</div>
+			</motion.div>
+		);
+	}
 
 	// --------------------------------------------------------------------------
 	// UPLOADING STATE — con diagnóstico visible
