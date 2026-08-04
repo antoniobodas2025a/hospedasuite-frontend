@@ -7,6 +7,10 @@ import { TRIAL_DAYS } from '@/config/saas-plans';
 import { requireSuperAdmin } from '@/lib/auth-guards';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { createClient } from '@/utils/supabase/server';
+import { Resend } from 'resend';
+import { render } from '@react-email/render';
+import { HotelApproved } from '@/emails/HotelApproved';
+import { HotelRejected } from '@/emails/HotelRejected';
 
 // ============================================================================
 // 1. LISTAR HOTELES CON duplicate_review
