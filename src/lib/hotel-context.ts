@@ -3,6 +3,8 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import type { Hotel } from '@/types';
+import { verifySession } from '@/lib/session-utils';
+import type { StaffSession } from '@/lib/session-utils';
 
 // Memoización de la solicitud para evitar redundancia de I/O en la misma renderización (RSC)
 // Garantiza que el contexto sea único por ciclo de vida de la solicitud (request lifecycle)
@@ -70,12 +72,6 @@ export const getCurrentHotel = cache(async (): Promise<Hotel> => {
 // ============================================================================
 // Staff Context — Resuelve hotel e identidad desde cookie de sesión operativa
 // ============================================================================
-export interface StaffSession {
-  id: string;
-  name: string;
-  role: string;
-  hotel_id: string;
-}
 
 export const getStaffSession = cache(async (): Promise<StaffSession | null> => {
   try {
@@ -83,8 +79,8 @@ export const getStaffSession = cache(async (): Promise<StaffSession | null> => {
     const staffCookie = cookieStore.get('hospeda_staff_session');
     if (!staffCookie) return null;
     
-    const session = JSON.parse(staffCookie.value) as StaffSession;
-    return session;
+    // Verify signed session (returns null if tampered)
+    return verifySession(staffCookie.value);
   } catch {
     return null;
   }

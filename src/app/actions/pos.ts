@@ -5,6 +5,7 @@ import { revalidatePath } from 'next/cache';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { verifySession } from '@/lib/session-utils';
 
 interface ProductPayload {
   hotel_id: string;
@@ -137,7 +138,8 @@ export async function processWalkInChargeAction(payload: {
     let staffId = null;
     try {
       if (staffCookie?.value) {
-        staffId = JSON.parse(staffCookie.value).id;
+        const session = verifySession(staffCookie.value);
+        staffId = session?.id || null;
       }
     } catch (e) {
       console.warn('⚠️ Staff session corrupta.');

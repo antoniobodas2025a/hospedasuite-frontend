@@ -7,6 +7,7 @@ import { isTemporalCollision, type PostgresError } from '@/lib/booking-helpers';
 import { emitEvent } from '@/lib/events';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { DEFAULT_TAX_RATE } from '@/lib/pricing';
+import { verifySession } from '@/lib/session-utils';
 
 // ==========================================
 // BLOQUE 1: INTERFACES Y CONTRATOS
@@ -74,8 +75,8 @@ async function getActiveStaffId(): Promise<string | null> {
     const cookieStore = await cookies();
     const staffCookie = cookieStore.get('hospeda_staff_session');
     if (staffCookie) {
-      const staffData = JSON.parse(staffCookie.value);
-      return staffData.id || null;
+      const session = verifySession(staffCookie.value);
+      return session?.id || null;
     }
   } catch (_error: unknown) {
     console.warn('Fallo al parsear la sesión del staff:', _error);

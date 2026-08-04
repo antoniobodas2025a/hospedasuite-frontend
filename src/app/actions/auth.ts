@@ -6,6 +6,7 @@ import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { getCurrentHotel } from '@/lib/hotel-context';
 import { hashPin, verifyPinHash } from '@/lib/pin-security';
+import { signSession, getSessionCookieOptions } from '@/lib/session-utils';
 
 // ------------------------------------------------------------------
 // 1. LOGIN DE ADMINISTRADOR / DISPOSITIVO (Email y Contraseña)
@@ -118,18 +119,14 @@ export async function verifyPin(formData: FormData) {
 
     // C. Crear una sesión "ligera" para el empleado usando Cookies (Turno de 12 horas)
     const cookieStore = await cookies();
-    cookieStore.set('hospeda_staff_session', JSON.stringify({
+    const signedSession = signSession({
       id: staffMember.id,
       name: staffMember.name,
       role: staffMember.role,
-      hotel_id: hotel.id // Vinculación explícita al hotel
-    }), {
-      httpOnly: true, // Protege contra XSS
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
-      path: '/',
-      maxAge: 60 * 60 * 12 // Expira en 12 horas
+      hotel_id: hotel.id,
     });
+    
+    cookieStore.set('hospeda_staff_session', signedSession, getSessionCookieOptions());
 
     return { success: true };
   } catch (error: any) {

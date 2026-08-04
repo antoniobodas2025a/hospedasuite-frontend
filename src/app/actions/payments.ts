@@ -6,13 +6,14 @@ import { getCurrentHotel } from '@/lib/hotel-context';
 import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createInvoiceOnCheckout } from './alegra-integration';
+import { verifySession } from '@/lib/session-utils';
 
 async function getActiveStaff() {
   try {
     const cookieStore = await cookies();
     const staffCookie = cookieStore.get('hospeda_staff_session');
     if (staffCookie) {
-      return JSON.parse(staffCookie.value);
+      return verifySession(staffCookie.value);
     }
   } catch (error) {
     console.warn('Fallo al parsear la cookie del staff:', error);
