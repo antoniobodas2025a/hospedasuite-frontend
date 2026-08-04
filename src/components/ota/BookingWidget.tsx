@@ -38,6 +38,7 @@ interface BookingWidgetProps {
   taxRate?: number;
   isLoading?: boolean;
   hotelId?: string;
+  primaryColor?: string;
 }
 
 export default function BookingWidget({
@@ -49,6 +50,7 @@ export default function BookingWidget({
   taxRate,
   isLoading,
   hotelId,
+  primaryColor,
 }: BookingWidgetProps) {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -178,6 +180,7 @@ export default function BookingWidget({
             onChange={handleDateChange}
             defaultExpanded={activeRooms.length <= 2}
             className="w-full"
+            primaryColor={primaryColor}
           />
 
           {/* Fechas seleccionadas */}

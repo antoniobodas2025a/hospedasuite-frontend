@@ -20,6 +20,7 @@ interface InlineDatePickerProps {
   bookedDates?: string[];
   defaultExpanded?: boolean;
   className?: string;
+  primaryColor?: string;
 }
 
 function getStorageKey(hotelId: string | undefined): string | null {
@@ -74,6 +75,7 @@ export default function InlineDatePicker({
   bookedDates = [],
   defaultExpanded = true,
   className,
+  primaryColor,
 }: InlineDatePickerProps) {
   const t = useTranslations();
   const locale = useLocale();
@@ -241,10 +243,10 @@ export default function InlineDatePicker({
                 booked: 'bg-destructive/5 text-destructive border border-destructive/20 line-through opacity-60',
                 disabled: 'bg-muted text-muted-foreground/40 border-transparent cursor-not-allowed',
                 outside: 'text-muted-foreground/30',
-                selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md border-transparent',
+                selected: `${primaryColor || 'bg-brand-600'} text-primary-foreground font-bold shadow-md border-transparent`,
                 range_middle: 'bg-brand-100 text-brand-900 border-y border-transparent rounded-none',
-                range_start: 'bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
-                range_end: 'bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
+                range_start: `${primaryColor || 'bg-brand-600'} text-primary-foreground rounded-l-xl rounded-r-none border-transparent`,
+                range_end: `${primaryColor || 'bg-brand-600'} text-primary-foreground rounded-r-xl rounded-l-none border-transparent`,
               }}
               className="text-foreground font-sans"
             />

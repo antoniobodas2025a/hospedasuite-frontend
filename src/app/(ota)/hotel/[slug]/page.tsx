@@ -369,6 +369,7 @@ export default async function ChannelHotelDetailPage({
 						totalRooms={(hotel.rooms || []).length}
 						taxRate={hotel.tax_rate}
 						hotelId={hotel.id}
+						primaryColor={hotel.primary_color}
 					/>
 					</aside>
 				</div>
