@@ -8,6 +8,7 @@ import { requireSuperAdmin } from '@/lib/auth-guards';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { createClient } from '@/utils/supabase/server';
 import { PlanKey, SAAS_PLANS } from '@/config/saas-plans';
+import { generatePin } from '@/lib/pin-security';
 import {
   getAllSubscriptions,
   getSubscriptionMetrics,
@@ -67,12 +68,14 @@ export async function createHotelAction(formData: FormData) {
 
     // 3. 🚀 RESTAURACIÓN DEL PUENTE DE IDENTIDAD
     // Vinculamos el staff inicial con el UUID de Auth para que el Wizard sea accesible.
+    const { plain: plainPin, hash: hashedPin } = await generatePin();
+    
     const { error: staffError } = await supabaseAdmin.from('staff').insert({
       hotel_id: createdHotelId,
       user_id: createdAuthId, // VINCULACIÓN CRÍTICA
       name: 'Administrador (Dueño)',
       role: 'admin',
-      pin_code: '1020'
+      pin_code: hashedPin, // Hashed, never stored as plaintext
     });
 
     if (staffError) throw staffError;
@@ -95,6 +98,9 @@ export async function createHotelAction(formData: FormData) {
       ip_address: headersList.get('x-forwarded-for') || 'unknown',
       user_agent: headersList.get('user-agent') || 'unknown',
     });
+    
+    // Return the plain PIN so admin can show it to the user
+    return { success: true, pin: plainPin };
     
   } catch (error: any) {
     console.error('⚠️ [Rollback] Error en creación:', error.message);
