@@ -15,17 +15,9 @@
 
 export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
-import { createClient } from '@supabase/supabase-js';
+import { supabaseAdmin } from '@/lib/supabase-admin';
 import { PLAN_LIMITS, normalizePlan, PlanKey } from '@/config/saas-plans';
 import { withAuth } from '@/lib/api-guards';
-
-// ─── Supabase Admin Client ───────────────────────────────────────
-function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  );
-}
 
 // ─── Types ───────────────────────────────────────────────────────
 interface ConnectRequest {
@@ -39,7 +31,7 @@ interface ConnectRequest {
 // ─── POST: Connect a new Channel ─────────────────────────────────────
 export const POST = withAuth(async (req: Request) => {
   try {
-    const supabase = getAdminClient();
+    // Uses singleton supabaseAdmin
     const body: ConnectRequest = await req.json();
     const { hotelId, otaName, icalImportUrl, icalExportUrl, roomId } = body;
 
@@ -193,7 +185,7 @@ export const GET = withAuth(async (req: Request) => {
       return NextResponse.json({ error: 'Falta hotelId' }, { status: 400 });
     }
 
-    const supabase = getAdminClient();
+    // Uses singleton supabaseAdmin
 
     const { data: rooms, error } = await supabase
       .from('rooms')
@@ -249,7 +241,7 @@ export const DELETE = withAuth(async (req: Request) => {
       return NextResponse.json({ error: 'Falta roomId' }, { status: 400 });
     }
 
-    const supabase = getAdminClient();
+    // Uses singleton supabaseAdmin
 
     // Get room info before clearing
     const { data: room } = await supabase

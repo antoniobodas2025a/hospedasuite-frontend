@@ -12,7 +12,7 @@
 
 import 'server-only'
 
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 
 // ─── Types ────────────────────────────────────────────────────
 
@@ -33,24 +33,13 @@ export interface HotelWithSettingsDTO extends HotelDTO {
   wompi_integrity_secret: string | null
 }
 
-// ─── Supabase Admin Client ────────────────────────────────────
-
-function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
-
 // ─── Queries ──────────────────────────────────────────────────
 
 /**
  * Get hotel with plan info. Minimal DTO — only what's needed for plan checks.
  */
 export async function getHotelWithPlan(hotelId: string): Promise<HotelDTO | null> {
-  const supabase = getAdminClient()
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('hotels')
     .select('id, name, slug, subscription_plan, subscription_status, trial_ends_at, owner_id, email, created_at')
     .eq('id', hotelId)
@@ -64,7 +53,7 @@ export async function getHotelWithPlan(hotelId: string): Promise<HotelDTO | null
  * Get hotel with settings (Wompi keys, etc).
  */
 export async function getHotelWithSettings(hotelId: string): Promise<HotelWithSettingsDTO | null> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('hotels')
@@ -80,7 +69,7 @@ export async function getHotelWithSettings(hotelId: string): Promise<HotelWithSe
  * Get all hotels owned by a user.
  */
 export async function getUserHotels(userId: string): Promise<HotelDTO[]> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('hotels')
@@ -95,7 +84,7 @@ export async function getUserHotels(userId: string): Promise<HotelDTO[]> {
  * Get hotel by slug.
  */
 export async function getHotelBySlug(slug: string): Promise<HotelDTO | null> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('hotels')
@@ -185,7 +174,7 @@ export async function updateHotelPlan(
   newPlan: string,
   newStatus: string
 ): Promise<{ ok: boolean; error?: string }> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { error } = await supabase
     .from('hotels')
@@ -210,7 +199,7 @@ export async function updateTrialEndsAt(
   hotelId: string,
   trialEndsAt: string
 ): Promise<{ ok: boolean; error?: string }> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { error } = await supabase
     .from('hotels')

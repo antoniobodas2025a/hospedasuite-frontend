@@ -12,7 +12,7 @@
 
 import 'server-only'
 
-import { createClient } from '@supabase/supabase-js'
+import { supabaseAdmin } from '@/lib/supabase-admin'
 import { verifyHotelOwnership } from './hotels'
 
 // ─── Types ────────────────────────────────────────────────────
@@ -112,21 +112,10 @@ export interface CreateQRCodeInput {
   qr_data: string
 }
 
-// ─── Supabase Admin Client ────────────────────────────────────
-
-function getAdminClient() {
-  return createClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.SUPABASE_SERVICE_ROLE_KEY!
-  )
-}
-
 // ─── Categories ───────────────────────────────────────────────
 
 export async function getHotelCategories(hotelId: string): Promise<MenuCategoryDTO[]> {
-  const supabase = getAdminClient()
-
-  const { data, error } = await supabase
+  const { data, error } = await supabaseAdmin
     .from('menu_categories')
     .select('*')
     .eq('hotel_id', hotelId)
@@ -137,7 +126,7 @@ export async function getHotelCategories(hotelId: string): Promise<MenuCategoryD
 }
 
 export async function getActiveCategories(hotelId: string): Promise<MenuCategoryDTO[]> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('menu_categories')
@@ -156,7 +145,7 @@ export async function createCategory(
   const isOwner = await verifyHotelOwnership(input.hotel_id)
   if (!isOwner) return { ok: false, error: 'Unauthorized' }
 
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('menu_categories')
@@ -179,7 +168,7 @@ export async function updateCategory(
   categoryId: string,
   updates: Partial<CreateCategoryInput>
 ): Promise<{ ok: boolean; data?: MenuCategoryDTO; error?: string }> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data: existing } = await supabase
     .from('menu_categories')
@@ -210,7 +199,7 @@ export async function updateCategory(
 }
 
 export async function deleteCategory(categoryId: string): Promise<{ ok: boolean; error?: string }> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data: existing } = await supabase
     .from('menu_categories')
@@ -235,7 +224,7 @@ export async function deleteCategory(categoryId: string): Promise<{ ok: boolean;
 // ─── Menu Items ───────────────────────────────────────────────
 
 export async function getHotelMenuItems(hotelId: string): Promise<MenuItemDTO[]> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('menu_items')
@@ -248,7 +237,7 @@ export async function getHotelMenuItems(hotelId: string): Promise<MenuItemDTO[]>
 }
 
 export async function getActiveMenuItems(hotelId: string): Promise<MenuItemDTO[]> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('menu_items')
@@ -262,7 +251,7 @@ export async function getActiveMenuItems(hotelId: string): Promise<MenuItemDTO[]
 }
 
 export async function getFeaturedMenuItems(hotelId: string): Promise<MenuItemDTO[]> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('menu_items')
@@ -282,7 +271,7 @@ export async function createMenuItem(
   const isOwner = await verifyHotelOwnership(input.hotel_id)
   if (!isOwner) return { ok: false, error: 'Unauthorized' }
 
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('menu_items')
@@ -314,7 +303,7 @@ export async function updateMenuItem(
   itemId: string,
   updates: Partial<CreateMenuItemInput> & { is_available?: boolean; is_featured?: boolean }
 ): Promise<{ ok: boolean; data?: MenuItemDTO; error?: string }> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data: existing } = await supabase
     .from('menu_items')
@@ -354,7 +343,7 @@ export async function updateMenuItem(
 }
 
 export async function deleteMenuItem(itemId: string): Promise<{ ok: boolean; error?: string }> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data: existing } = await supabase
     .from('menu_items')
@@ -379,7 +368,7 @@ export async function deleteMenuItem(itemId: string): Promise<{ ok: boolean; err
 // ─── QR Codes ─────────────────────────────────────────────────
 
 export async function getHotelQRCodes(hotelId: string): Promise<QRCodeDTO[]> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('qr_codes')
@@ -397,7 +386,7 @@ export async function createQRCode(
   const isOwner = await verifyHotelOwnership(input.hotel_id)
   if (!isOwner) return { ok: false, error: 'Unauthorized' }
 
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data, error } = await supabase
     .from('qr_codes')
@@ -420,7 +409,7 @@ export async function createQRCode(
 }
 
 export async function deleteQRCode(qrId: string): Promise<{ ok: boolean; error?: string }> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   const { data: existing } = await supabase
     .from('qr_codes')
@@ -443,7 +432,7 @@ export async function deleteQRCode(qrId: string): Promise<{ ok: boolean; error?:
 }
 
 export async function incrementQRScan(qrId: string): Promise<void> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   // Fetch current count, then increment (Supabase JS client doesn't support raw SQL)
   const { data } = await supabase
@@ -473,7 +462,7 @@ export async function recordMenuView(
     sessionId?: string
   }
 ): Promise<void> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
 
   await supabase
     .from('menu_views')
@@ -497,7 +486,7 @@ export async function getMenuAnalytics(
   popularItems: Array<{ item_id: string; item_name: string; views: number }>
   viewsByTable: Array<{ table_number: string; views: number }>
 }> {
-  const supabase = getAdminClient()
+  // Uses singleton supabaseAdmin
   const cutoff = new Date(Date.now() - days * 24 * 60 * 60 * 1000).toISOString()
 
   // Total views
