@@ -129,7 +129,7 @@ export async function setGoLiveAction(
     }
 
     // 4. Revalidate
-    revalidateTag(`readiness-${hotelId}`, 'max')
+    revalidateTag(`readiness-${hotelId}`)
 
     return { success: true, data: { goLive: true, goLiveAt } }
   } catch (error: unknown) {

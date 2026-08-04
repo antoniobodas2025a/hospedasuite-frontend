@@ -76,7 +76,7 @@ export async function createCategoryAction(input: Omit<CreateCategoryInput, 'hot
   })
   if (!result.ok) return { success: false, error: result.error }
 
-  revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
+  revalidateTag(`carta-${access.hotelId}`)
   return { success: true, category: result.data }
 }
 
@@ -105,7 +105,7 @@ export async function updateCategoryAction(categoryId: string, updates: Partial<
   })
   if (!result.ok) return { success: false, error: result.error }
 
-  revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
+  revalidateTag(`carta-${access.hotelId}`)
   return { success: true, category: result.data }
 }
 
@@ -116,7 +116,7 @@ export async function deleteCategoryAction(categoryId: string) {
   const result = await deleteCategory(categoryId)
   if (!result.ok) return { success: false, error: result.error }
 
-  revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
+  revalidateTag(`carta-${access.hotelId}`)
   return { success: true }
 }
 
@@ -148,7 +148,7 @@ export async function createMenuItemAction(input: Omit<CreateMenuItemInput, 'hot
   })
   if (!result.ok) return { success: false, error: result.error }
 
-  revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
+  revalidateTag(`carta-${access.hotelId}`)
   return { success: true, item: result.data }
 }
 
@@ -177,7 +177,7 @@ export async function updateMenuItemAction(itemId: string, updates: Partial<Omit
   })
   if (!result.ok) return { success: false, error: result.error }
 
-  revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
+  revalidateTag(`carta-${access.hotelId}`)
   return { success: true, item: result.data }
 }
 
@@ -188,7 +188,7 @@ export async function deleteMenuItemAction(itemId: string) {
   const result = await deleteMenuItem(itemId)
   if (!result.ok) return { success: false, error: result.error }
 
-  revalidateTag(`carta-${access.hotelId}`, CACHE_PROFILE)
+  revalidateTag(`carta-${access.hotelId}`)
   return { success: true }
 }
 

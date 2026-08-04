@@ -46,7 +46,7 @@ export async function approveReviewAction(reviewId: string) {
 
 // Revalidate the public reviews page for this hotel
     if (review?.hotel_id) {
-      revalidateTag(`reviews-${review.hotel_id}`, 'max');
+      revalidateTag(`reviews-${review.hotel_id}`);
     }
 
     return { success: true };
@@ -78,7 +78,7 @@ export async function rejectReviewAction(reviewId: string) {
 
     if (review?.hotel_id) {
       const { revalidateTag } = await import('next/cache');
-     revalidateTag(`reviews-${review.hotel_id}`, 'max');
+     revalidateTag(`reviews-${review.hotel_id}`);
     }
 
     return { success: true };

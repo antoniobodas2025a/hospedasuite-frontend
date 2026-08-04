@@ -487,7 +487,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     revalidatePath('/software/onboarding');
     revalidatePath('/admin/dashboard');
     revalidatePath(`/hotel/${hotelSlug}`);
-    revalidateTag(`hotel-${hotelId}`, 'max');
+    revalidateTag(`hotel-${hotelId}`);
     
     return { success: true, isDuplicate };
   } catch (error: any) {

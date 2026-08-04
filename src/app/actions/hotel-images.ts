@@ -214,7 +214,7 @@ export async function uploadHotelImageAction(
     };
 
     // 🔄 Invalidar cache de imágenes del hotel
-    revalidateTag(`hotel-images-${hotelId}`, 'max');
+    revalidateTag(`hotel-images-${hotelId}`);
 
     return { success: true, data: categorized };
   } catch (error: any) {
