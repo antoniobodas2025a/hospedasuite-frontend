@@ -6,6 +6,7 @@ import { SAAS_PLANS, normalizePlan, PLAN_LABELS, PLAN_LEVELS, type PlanKey } fro
 import { isTrialActive, getEffectivePlanCost, type TrialHotel } from '@/lib/trial-check';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { trackDowngradeRequested } from '@/lib/analytics-server';
+import { requireHotelAccess } from '@/lib/tenant-guard';
 import type { OtaCommission } from '@/types';
 
 export interface BillingStatement {
@@ -126,6 +127,12 @@ export async function calculateMonthlyInvoiceAction(
   hotelId: string
 ): Promise<{ success: boolean; invoice?: MonthlyInvoice; error?: string }> {
   try {
+    // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    if (!allowed) {
+      return { success: false, error: guardError };
+    }
+
     // 1. Obtener datos del hotel (incluyendo trial para cálculo correcto)
     const { data: hotel, error: hotelError } = await supabaseAdmin
       .from('hotels')
@@ -216,6 +223,12 @@ export async function generateBillingPaymentLinkAction(
   planUpgrade?: boolean
 ): Promise<{ success: boolean; link?: BillingPaymentLink; error?: string }> {
   try {
+    // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    if (!allowed) {
+      return { success: false, error: guardError };
+    }
+
     // 1. Calcular factura
     const { success, invoice, error } = await calculateMonthlyInvoiceAction(hotelId);
     if (!success || !invoice) {
@@ -293,6 +306,12 @@ export async function getInvoiceHistoryAction(
   hotelId: string
 ): Promise<{ success: boolean; invoices?: InvoiceRecord[]; error?: string }> {
   try {
+    // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    if (!allowed) {
+      return { success: false, error: guardError };
+    }
+
     const { data, error } = await supabaseAdmin
       .from('billing_invoices')
       .select('id, period_start, period_end, plan_fee, ota_commissions_total, ota_commissions, upsell_commissions, total, status, wompi_reference, paid_at, created_at')
@@ -335,6 +354,12 @@ export async function requestPlanDowngradeAction(
   newPlan: 'starter' | 'pro' | 'enterprise'
 ): Promise<{ success: boolean; error?: string }> {
   try {
+    // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    if (!allowed) {
+      return { success: false, error: guardError };
+    }
+
     // 1. Obtener hotel actual
     const { data: hotel, error: hotelError } = await supabaseAdmin
       .from('hotels')

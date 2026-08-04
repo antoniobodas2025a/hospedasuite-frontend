@@ -6,6 +6,7 @@
  */
 
 import { supabaseAdmin } from '@/lib/supabase-admin';
+import { requireHotelAccess } from '@/lib/tenant-guard';
 
 export interface GuestExportRecord {
   nombre_completo: string;
@@ -19,6 +20,12 @@ export interface GuestExportRecord {
 
 export async function exportGuestDataForSIRE(hotelId: string, startDate?: string, endDate?: string): Promise<{ success: boolean; data?: GuestExportRecord[]; error?: string }> {
   try {
+    // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
+    const { allowed, error: guardError } = await requireHotelAccess(hotelId);
+    if (!allowed) {
+      return { success: false, error: guardError };
+    }
+
     let query = supabaseAdmin
       .from('bookings')
       .select(`

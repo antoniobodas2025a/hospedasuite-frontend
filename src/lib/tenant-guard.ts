@@ -13,12 +13,67 @@
  *   const { data } = await tenantQuery(supabase.from('rooms').select('*'), hotelId);
  */
 
+import { cookies } from 'next/headers';
+import { verifySession, type StaffSession } from '@/lib/session-utils';
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
+export interface TenantGuardResult {
+  allowed: boolean;
+  session: StaffSession | null;
+  error?: string;
+}
+
+// ============================================================================
+// CORE FUNCTIONS
+// ============================================================================
+
 /**
- * Aplica automáticamente el filtro `hotel_id` a cualquier query de Supabase.
+ * Verifies that the current user has access to the specified hotel.
+ * Returns session if allowed, error if not.
  *
- * @param query - La query de Supabase (ej: `supabase.from('rooms').select('*')`)
- * @param hotelId - El ID del hotel actual (tenant)
- * @returns La query con el filtro aplicado
+ * Use this at the start of any action that accesses hotel-specific data.
+ */
+export async function requireHotelAccess(
+  hotelId: string
+): Promise<TenantGuardResult> {
+  try {
+    const cookieStore = await cookies();
+    const staffCookie = cookieStore.get('hospeda_staff_session');
+    
+    if (!staffCookie?.value) {
+      return { allowed: false, session: null, error: 'No session found' };
+    }
+
+    const session = verifySession(staffCookie.value);
+    
+    if (!session) {
+      return { allowed: false, session: null, error: 'Invalid session' };
+    }
+
+    // Check hotel_id ownership
+    if (session.hotel_id !== hotelId) {
+      return { 
+        allowed: false, 
+        session, 
+        error: 'Access denied: hotel_id mismatch' 
+      };
+    }
+
+    return { allowed: true, session };
+  } catch {
+    return { allowed: false, session: null, error: 'Session verification failed' };
+  }
+}
+
+/**
+ * Applies automatic `hotel_id` filter to any Supabase query.
+ *
+ * @param query - The Supabase query (e.g., `supabase.from('rooms').select('*')`)
+ * @param hotelId - The current hotel ID (tenant)
+ * @returns The query with filter applied
  */
 export function tenantQuery<T>(
   query: any,
@@ -28,8 +83,8 @@ export function tenantQuery<T>(
 }
 
 /**
- * Aplica filtro `hotel_id` para queries de inserción.
- * Útil para asegurar que los datos se inserten con el tenant correcto.
+ * Applies `hotel_id` filter for insert queries.
+ * Ensures data is inserted with the correct tenant.
  */
 export function tenantInsert<T extends { hotel_id?: string }>(
   data: T,

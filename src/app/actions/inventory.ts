@@ -2,7 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { RoomSchema } from '@/lib/validations/inventory';
-import { getCurrentHotel } from '@/lib/hotel-context';
+import { requireHotelAccess } from '@/lib/tenant-guard';
 
 // ============================================================================
 /**
@@ -11,10 +11,10 @@ import { getCurrentHotel } from '@/lib/hotel-context';
  */
 export async function saveRoomAction(hotelId: string, data: any, roomId?: string) {
   try {
-    // 🛡️ BARRERA DE SEGURIDAD TIER-1: Verificación de pertenencia de Tenant
-    const currentHotel = await getCurrentHotel();
-    if (!currentHotel || currentHotel.id !== hotelId) {
-      throw new Error("SEC_VIOLATION: Acceso no autorizado al hotel solicitado.");
+    // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
+    const { allowed, error } = await requireHotelAccess(hotelId);
+    if (!allowed) {
+      throw new Error(`SEC_VIOLATION: ${error}`);
     }
 
     const { supabaseAdmin } = await import('@/lib/supabase-admin');

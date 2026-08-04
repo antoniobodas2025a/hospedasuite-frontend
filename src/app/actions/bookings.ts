@@ -8,6 +8,7 @@ import { emitEvent } from '@/lib/events';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { DEFAULT_TAX_RATE } from '@/lib/pricing';
 import { verifySession } from '@/lib/session-utils';
+import { requireHotelAccess } from '@/lib/tenant-guard';
 
 // ==========================================
 // BLOQUE 1: INTERFACES Y CONTRATOS
@@ -494,6 +495,12 @@ export async function verifyBookingAction(bookingId: string) {
 
     if (error || !booking) {
       return { success: false, error: 'Reserva no encontrada', status: 'not_found' };
+    }
+
+    // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
+    const { allowed, error: guardError } = await requireHotelAccess(booking.hotel_id);
+    if (!allowed) {
+      return { success: false, error: guardError };
     }
 
     // Compute nights from check_in/check_out

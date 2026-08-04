@@ -7,6 +7,7 @@ import { revalidatePath } from 'next/cache';
 import { headers } from 'next/headers';
 import { logAuditEvent } from '@/lib/audit-logger';
 import { uploadToR2, R2_BUCKET } from '@/lib/r2-upload';
+import { requireHotelAccess } from '@/lib/tenant-guard';
 const R2_PUBLIC_URL = process.env.R2_PUBLIC_URL || 'https://pub-xxxxx.r2.dev';
 
 // ============================================================================
@@ -56,6 +57,12 @@ export async function createManualPayment(payload: {
   receipt_url: string;
 }): Promise<{ success: boolean; error?: string }> {
   try {
+    // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
+    const { allowed, error: guardError } = await requireHotelAccess(payload.hotel_id);
+    if (!allowed) {
+      return { success: false, error: guardError };
+    }
+
     const supabase = await createClient();
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return { success: false, error: 'No autenticado' };
