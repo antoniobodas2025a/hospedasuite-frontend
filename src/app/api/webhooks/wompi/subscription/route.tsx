@@ -17,6 +17,9 @@ import { NextResponse } from 'next/server'
 import { createClient } from '@supabase/supabase-js'
 import { SAAS_PLANS } from '@/config/saas-plans'
 import { logAuditEvent } from '@/lib/audit-logger'
+import { Resend } from 'resend'
+import { render } from '@react-email/render'
+import PaymentFailed from '@/emails/PaymentFailed'
 
 // ─── Supabase Admin Client ────────────────────────────────────
 
@@ -173,7 +176,7 @@ async function handlePaymentFailed(supabase: any, event: any) {
   // ─── Find invoice by reference ──────────────────────────────
   const { data: invoice } = await supabase
     .from('billing_invoices')
-    .select('hotel_id')
+    .select('hotel_id, plan_key, amount')
     .eq('wompi_reference', reference)
     .single()
 
@@ -181,6 +184,13 @@ async function handlePaymentFailed(supabase: any, event: any) {
     console.log(`[Wompi Webhook] No invoice found for reference: ${reference}`)
     return
   }
+
+  // ─── Get hotel details for email ────────────────────────────
+  const { data: hotel } = await supabase
+    .from('hotels')
+    .select('name, email')
+    .eq('id', invoice.hotel_id)
+    .single()
 
   // ─── Mark subscription as past_due ──────────────────────────
   await supabase
@@ -196,6 +206,55 @@ async function handlePaymentFailed(supabase: any, event: any) {
     .from('hotels')
     .update({ subscription_status: 'past_due' })
     .eq('id', invoice.hotel_id)
+
+  // ─── Send payment failed email ──────────────────────────────
+  if (hotel?.email) {
+    const resendApiKey = process.env.RESEND_API_KEY
+    
+    if (resendApiKey) {
+      try {
+        const resend = new Resend(resendApiKey)
+        
+        // Generate payment URL for retry
+        const publicKey = process.env.WOMPI_PLATFORM_PUBLIC_KEY || process.env.NEXT_PUBLIC_WOMPI_PUBLIC_KEY
+        const appUrl = process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'
+        const redirectUrl = `${appUrl}/dashboard/billing/success?invoice=${invoice.id}`
+        
+        const paymentUrl = publicKey
+          ? `https://checkout.wompi.co/p/?public-key=${encodeURIComponent(publicKey)}&currency=COP&amount-in-cents=${Math.round(invoice.amount * 100)}&reference=${encodeURIComponent(reference)}&redirect-url=${encodeURIComponent(redirectUrl)}`
+          : `${appUrl}/dashboard/billing`
+        
+        const plan = SAAS_PLANS[invoice.plan_key as keyof typeof SAAS_PLANS]
+        const planLabel = plan?.label || invoice.plan_key
+        
+        const failureReason = transaction.status_reason || transaction.error_message || undefined
+        
+        const emailHtml = await render(
+          <PaymentFailed 
+            hotelName={hotel.name || 'Hotel'}
+            planLabel={planLabel}
+            amount={invoice.amount}
+            paymentUrl={paymentUrl}
+            failureReason={failureReason}
+          />
+        )
+        
+        await resend.emails.send({
+          from: 'HospedaSuite <facturacion@hospedasuite.com>',
+          to: hotel.email,
+          subject: `⚠️ Pago rechazado — HospedaSuite ${planLabel}`,
+          html: emailHtml,
+        })
+        
+        console.log(`[Wompi Webhook] Payment failed email sent to ${hotel.email}`)
+      } catch (error) {
+        console.error(`[Wompi Webhook] Error sending payment failed email:`, error)
+        // Don't throw - continue with other operations
+      }
+    } else {
+      console.error('[Wompi Webhook] RESEND_API_KEY not configured')
+    }
+  }
 
   // ─── Audit log ──────────────────────────────────────────────
   await logAuditEvent({
