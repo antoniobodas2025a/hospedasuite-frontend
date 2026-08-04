@@ -262,7 +262,7 @@ export default function BookingWidget({
             </div>
           )}
 
-          {/* CTA principal — Unified "Reservar" */}
+          {/* CTA principal — "Ver fotos" para explorar habitación */}
           <motion.button
             onClick={handleReserveClick}
             disabled={availableCount === 0 || isProcessing}
@@ -275,7 +275,7 @@ export default function BookingWidget({
                 : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta',
             )}
           >
-            {isProcessing ? 'Procesando...' : t('ota.booking.reserve')}
+            {isProcessing ? 'Procesando...' : t('ota.booking.viewPhotos')}
             <ArrowRight size={16} strokeWidth={2.5} />
           </motion.button>
 

@@ -237,8 +237,8 @@ export default function InlineDatePicker({
                 booked: isDateBooked,
               }}
               modifiersClassNames={{
-                available: 'bg-success/20 text-success-foreground',
-                booked: 'bg-destructive/20 text-destructive-foreground line-through',
+                available: 'bg-success/10 border border-success/30 text-success-foreground',
+                booked: 'bg-destructive/10 border border-destructive/30 text-destructive-foreground line-through',
                 selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]',
                 range_middle: 'bg-brand-50 text-brand-900 rounded-none',
                 range_start: 'bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none',
