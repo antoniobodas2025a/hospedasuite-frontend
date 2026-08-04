@@ -28,7 +28,7 @@ async function MarketingContent({ hotel }: { hotel: { id: string } }) {
 
   const { data: leads } = await supabase
     .from('hunted_leads')
-    .select('*')
+    .select('id, hotel_id, business_name, phone, notes, city_search, status, created_at')
     .eq('hotel_id', hotel.id)
     .order('created_at', { ascending: false });
 

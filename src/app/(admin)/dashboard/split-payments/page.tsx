@@ -22,7 +22,7 @@ export default async function SplitPaymentsPage() {
   // Obtener split payments del hotel
   const { data: splitPayments } = await supabase
     .from('split_payments')
-    .select('*')
+    .select('id, hotel_id, booking_id, guest_name, total_amount, status, created_at')
     .eq('hotel_id', hotel.id)
     .order('created_at', { ascending: false })
     .limit(100);

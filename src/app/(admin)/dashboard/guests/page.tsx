@@ -13,7 +13,7 @@ export default async function GuestsPage() {
 
   const { data: guests } = await supabase
     .from('guests')
-    .select('*')
+    .select('id, hotel_id, full_name, email, phone, doc_type, doc_number, nationality, created_at')
     .eq('hotel_id', hotel.id)
     .order('created_at', { ascending: false })
     .limit(100);

@@ -20,8 +20,8 @@ export default async function SettingsPage() {
   try {
     // 2. Extraemos toda la configuración actual y el equipo en paralelo (Mejora de rendimiento)
     const [hotelResponse, staffResponse] = await Promise.all([
-      supabaseAdmin.from('hotels').select('*').eq('id', hotel.id).single(),
-      supabaseAdmin.from('staff').select('*').eq('hotel_id', hotel.id).order('created_at', { ascending: false })
+      supabaseAdmin.from('hotels').select('id, name, slug, subscription_plan, subscription_status, trial_ends_at, owner_id, email, phone, city, location, address, settings, wompi_public_key, wompi_integrity_secret, created_at').eq('id', hotel.id).single(),
+      supabaseAdmin.from('staff').select('id, hotel_id, user_id, name, role, pin_code, created_at').eq('hotel_id', hotel.id).order('created_at', { ascending: false })
     ]);
 
     if (hotelResponse.error) throw hotelResponse.error;

@@ -16,7 +16,7 @@ export default async function HousekeepingPage() {
   // Traemos todas las habitaciones para tener una visión total del estado del hotel.
   const { data: rooms, error } = await supabase
     .from('rooms')
-    .select('*')
+    .select('id, hotel_id, name, status, capacity, price, description')
     .eq('hotel_id', hotel.id)
     .order('name', { ascending: true });
 
