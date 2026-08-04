@@ -21,8 +21,8 @@ const geist = Geist({
 export const viewport: Viewport = {
   width: 'device-width',
   initialScale: 1,
-  maximumScale: 1, // 🚨 CRÍTICO: Bloquea el auto-zoom destructivo de Safari en inputs < 16px
-  userScalable: false, // Emula el comportamiento de una App Nativa (iOS/Android)
+  // maximumScale and userScalable removed for WCAG 2.1 Level A compliance
+  // Users must be able to zoom (1.4.4 Resize Text)
   viewportFit: 'cover', // Asegura que el color de fondo pase por debajo del Dynamic Island/Notch
 };
 

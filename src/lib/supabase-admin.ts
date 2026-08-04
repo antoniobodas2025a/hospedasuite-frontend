@@ -12,15 +12,16 @@
  * El archivo src/types/database.ts tiene los tipos generados como referencia.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import { createClient, type SupabaseClient } from '@supabase/supabase-js';
+import type { Database } from '@/types/database';
 
 // 1. Proveer valores temporales inofensivos si no existen durante el Buildtime
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || "https://dummy.supabase.co";
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY || "dummy_key_for_build_time_only";
 
 // 2. Inicializar el cliente administrador de forma segura
-// Typed as any to unblock builds — proper Database types should be generated later
-export const supabaseAdmin = createClient(
+// Using SupabaseClient type with Database generic for type safety
+export const supabaseAdmin: SupabaseClient<Database> = createClient<Database>(
   supabaseUrl,
   supabaseServiceKey,
   {
@@ -29,4 +30,4 @@ export const supabaseAdmin = createClient(
       autoRefreshToken: false,
     },
   }
-) as any;
+);
