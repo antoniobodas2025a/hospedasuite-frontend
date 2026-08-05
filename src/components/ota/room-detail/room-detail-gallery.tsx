@@ -137,6 +137,7 @@ export function RoomDetailGallery({
             images={output.gallery}
             roomName={output.roomName}
             roomId={output.roomId}
+            layout="detail-page"
           />
         </motion.div>
 

@@ -19,6 +19,7 @@ interface GalleryImageProps {
   quality?: number;
   placeholder?: 'blur' | 'empty';
   loading?: 'lazy' | 'eager';
+  fetchPriority?: 'high' | 'low' | 'auto';
   objectFit?: 'cover' | 'contain';
   /** Called when the image finishes loading successfully */
   onLoad?: () => void;
@@ -58,6 +59,7 @@ export default function GalleryImage({
   quality = 75,
   placeholder,
   loading,
+  fetchPriority,
   objectFit = 'cover',
   onLoad: onLoadProp,
 }: GalleryImageProps) {
@@ -151,6 +153,7 @@ export default function GalleryImage({
         sizes={sizes}
         quality={quality}
         priority={preload}
+        fetchPriority={fetchPriority}
         loading={loading || (preload ? 'eager' : 'lazy')}
         placeholder={placeholder || (blurDataURL ? 'blur' : undefined)}
         blurDataURL={blurDataURL}

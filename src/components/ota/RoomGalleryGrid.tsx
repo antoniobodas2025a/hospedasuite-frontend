@@ -22,6 +22,8 @@ interface RoomGalleryGridProps {
 	blurDataURL?: string;
 	/** roomId drives the shared element layoutId from RoomCard */
 	roomId?: string;
+	/** Layout variant drives LCP/image sizing strategy */
+	layout?: "hotel-page" | "detail-page";
 }
 
 export default function RoomGalleryGrid({
@@ -29,6 +31,7 @@ export default function RoomGalleryGrid({
 	roomName,
 	blurDataURL,
 	roomId,
+	layout = "hotel-page",
 }: RoomGalleryGridProps) {
 	const t = useTranslations();
 	const activeRoomId = roomId;
@@ -187,9 +190,10 @@ export default function RoomGalleryGrid({
 								alt={img.alt ?? `${roomName} — ${i + 2}`}
 								fill
 								className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
-								sizes="50vw"
+								sizes={layout === "detail-page" ? "(max-width: 1024px) 100vw, 27vw" : "50vw"}
 								quality={75}
 								loading="lazy"
+								fetchPriority={layout === "detail-page" && i < 3 ? "high" : undefined}
 								placeholder={img.blurDataURL ? "blur" : undefined}
 								blurDataURL={img.blurDataURL}
 								onLoad={() => markLoaded(i + 1)}
@@ -263,7 +267,7 @@ export default function RoomGalleryGrid({
 						fill
 						className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
 						preload
-						sizes="50vw"
+						sizes={layout === "detail-page" ? "(max-width: 1024px) 100vw, 55vw" : "50vw"}
 						quality={85}
 						placeholder={images[0].blurDataURL || blurDataURL ? "blur" : undefined}
 						blurDataURL={images[0].blurDataURL || blurDataURL}
@@ -288,9 +292,10 @@ export default function RoomGalleryGrid({
 							alt={img.alt ?? `${roomName} — ${i + 2}`}
 							fill
 							className="object-cover motion-safe:transition-transform motion-safe:duration-500 motion-safe:ease-out group-hover:motion-safe:scale-105"
-							sizes="25vw"
+							sizes={layout === "detail-page" ? "(max-width: 1024px) 100vw, 27vw" : "25vw"}
 							quality={75}
 							loading="lazy"
+							fetchPriority={layout === "detail-page" && i < 3 ? "high" : undefined}
 							placeholder={img.blurDataURL ? "blur" : undefined}
 							blurDataURL={img.blurDataURL}
 							onLoad={() => markLoaded(i + 1)}

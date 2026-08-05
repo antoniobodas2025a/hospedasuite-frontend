@@ -33,17 +33,20 @@ vi.mock('next/navigation', () => ({
 
 // Mock next/image
 vi.mock('next/image', () => ({
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; preload?: boolean; blurDataURL?: string; placeholder?: string; priority?: boolean }) => {
-    const { onLoad, onError, alt, fill, preload, blurDataURL, placeholder, priority, ...rest } = props;
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; preload?: boolean; blurDataURL?: string; placeholder?: string; priority?: boolean; fetchPriority?: 'high' | 'low' | 'auto' }) => {
+    const { onLoad, onError, alt, fill, preload, blurDataURL, placeholder, priority, sizes, loading, fetchPriority, ...rest } = props;
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
         alt={alt}
         {...rest}
+        sizes={sizes}
+        loading={loading}
         onLoad={onLoad}
         onError={onError}
         data-testid="gallery-image"
         data-priority={priority ? 'true' : undefined}
+        data-fetchpriority={fetchPriority}
       />
     );
   },
@@ -166,6 +169,65 @@ describe('RoomGalleryGrid - Mobile Carousel', () => {
     await waitFor(() => {
       const dots = container.querySelectorAll('[data-testid="carousel-dot"]');
       expect(dots.length).toBe(6);
+    });
+  });
+});
+
+describe('RoomGalleryGrid - Detail page LCP', () => {
+  beforeEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('applies hero LCP props in detail-page layout', async () => {
+    const { container } = render(
+      <RoomGalleryGrid images={mockImages} roomName="Suite Deluxe" layout="detail-page" />
+    );
+
+    await waitFor(() => {
+      const desktop = container.querySelector('.hidden.lg\\:block');
+      expect(desktop).toBeTruthy();
+      const images = desktop!.querySelectorAll('[data-testid="gallery-image"]');
+      expect(images.length).toBeGreaterThanOrEqual(4);
+
+      const hero = images[0];
+      expect(hero.getAttribute('sizes')).toBe('(max-width: 1024px) 100vw, 55vw');
+      expect(hero.getAttribute('loading')).toBe('eager');
+      expect(hero.getAttribute('data-priority')).toBe('true');
+    });
+  });
+
+  it('applies high fetch priority to images 1-3 in detail-page layout', async () => {
+    const { container } = render(
+      <RoomGalleryGrid images={mockImages} roomName="Suite Deluxe" layout="detail-page" />
+    );
+
+    await waitFor(() => {
+      const desktop = container.querySelector('.hidden.lg\\:block');
+      const images = desktop!.querySelectorAll('[data-testid="gallery-image"]');
+      expect(images.length).toBeGreaterThanOrEqual(4);
+
+      for (let i = 1; i <= 3; i++) {
+        const img = images[i];
+        expect(img.getAttribute('sizes')).toBe('(max-width: 1024px) 100vw, 27vw');
+        expect(img.getAttribute('loading')).toBe('lazy');
+        expect(img.getAttribute('data-fetchpriority')).toBe('high');
+      }
+    });
+  });
+
+  it('preserves hotel-page default sizes when no layout is provided', async () => {
+    const { container } = render(
+      <RoomGalleryGrid images={mockImages} roomName="Suite Deluxe" />
+    );
+
+    await waitFor(() => {
+      const desktop = container.querySelector('.hidden.lg\\:block');
+      const images = desktop!.querySelectorAll('[data-testid="gallery-image"]');
+      expect(images.length).toBeGreaterThanOrEqual(4);
+
+      expect(images[0].getAttribute('sizes')).toBe('50vw');
+      expect(images[1].getAttribute('sizes')).toBe('25vw');
+      expect(images[1].getAttribute('data-fetchpriority')).toBeFalsy();
     });
   });
 });
