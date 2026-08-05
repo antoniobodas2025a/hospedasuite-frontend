@@ -1,9 +1,10 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { ChevronRight, Calendar, Moon } from 'lucide-react';
+import { ChevronRight, Calendar, Moon, Users, Bed } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { format } from 'date-fns';
 import InlineDatePicker from '@/components/ota/InlineDatePicker';
@@ -87,30 +88,99 @@ export function RoomDetailCalendar({
     };
   }, [checkIn, checkOut, output.pricing, dateLocale]);
 
+  const heroImage = output.gallery[0]?.url || output.coverImage || undefined;
+
   return (
     <div data-testid="room-detail-calendar" data-state={state} className="p-4 lg:p-6 space-y-6">
-      {/* Breadcrumb + header */}
-      <div className="space-y-2">
-        <nav aria-label="breadcrumb">
-          <ol className="flex items-center text-xs text-muted-foreground">
-            <li>
-              <Link href={output.breadcrumb.href} className="hover:text-foreground transition-colors">
-                {output.hotelName}
-              </Link>
-            </li>
-            <li aria-hidden="true">
-              <ChevronRight size={12} className="mx-1.5" />
-            </li>
-            <li className="font-medium text-foreground">{output.roomName}</li>
-          </ol>
-        </nav>
-        <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
-          {output.roomName}
-        </h1>
-        <p className="text-sm text-muted-foreground">
-          {t('ota.roomDetail.selectDatesToContinue')}
-        </p>
-      </div>
+      {/* Hero image with overlaid breadcrumb + room name */}
+      {heroImage ? (
+        <>
+          <motion.div
+            data-testid="room-hero"
+            initial={{ scale: 1.05, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              duration: MOTION_DURATION.slow / 1000,
+              ease: MOTION_EASING.easeOut,
+            }}
+          >
+            <div className="relative aspect-[16/9] lg:aspect-[21/9] overflow-hidden rounded-[var(--radius-squircle-2xl)]">
+              <Image
+                src={heroImage}
+                alt={output.roomName}
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-4 lg:p-6 space-y-1">
+                <nav aria-label="breadcrumb">
+                  <ol className="flex items-center text-xs text-white/70">
+                    <li>
+                      <Link
+                        href={output.breadcrumb.href}
+                        className="text-white underline-offset-2 hover:underline transition-colors"
+                      >
+                        {output.hotelName}
+                      </Link>
+                    </li>
+                    <li aria-hidden="true">
+                      <ChevronRight size={12} className="mx-1.5" />
+                    </li>
+                    <li className="font-medium text-white">{output.roomName}</li>
+                  </ol>
+                </nav>
+                <h1 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
+                  {output.roomName}
+                </h1>
+              </div>
+            </div>
+          </motion.div>
+          <p className="text-sm text-muted-foreground">
+            {t('ota.roomDetail.selectDatesToContinue')}
+          </p>
+        </>
+      ) : (
+        <div className="space-y-2">
+          <nav aria-label="breadcrumb">
+            <ol className="flex items-center text-xs text-muted-foreground">
+              <li>
+                <Link href={output.breadcrumb.href} className="hover:text-foreground transition-colors">
+                  {output.hotelName}
+                </Link>
+              </li>
+              <li aria-hidden="true">
+                <ChevronRight size={12} className="mx-1.5" />
+              </li>
+              <li className="font-medium text-foreground">{output.roomName}</li>
+            </ol>
+          </nav>
+          <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
+            {output.roomName}
+          </h1>
+          <p className="text-sm text-muted-foreground">
+            {t('ota.roomDetail.selectDatesToContinue')}
+          </p>
+        </div>
+      )}
+
+      {/* Compact info strip */}
+      {output.capacity > 0 && (
+        <div
+          data-testid="room-info-strip"
+          className="flex items-center gap-2 text-sm text-muted-foreground"
+        >
+          <Users size={16} />
+          <span>
+            {output.capacity} {t('ota.roomDetail.guests')}
+          </span>
+          <span>·</span>
+          <Bed size={16} />
+          <span>
+            {output.beds} {output.bedType}
+          </span>
+        </div>
+      )}
 
       {/* Calendar protagonist */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
@@ -133,26 +203,31 @@ export function RoomDetailCalendar({
         <div className="order-1 lg:order-2">
           {/* Price teaser — shown when no dates selected */}
           {!isActive && (
-            <GlassCard className="p-5">
-              <div className="space-y-1">
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  {t('ota.booking.from')}
-                </p>
-                <div className="flex items-baseline gap-2">
-                  <span className="text-3xl font-black text-foreground">
-                    ${formatPrice(output.pricePerNight)}
-                  </span>
-                  <span className="text-sm text-muted-foreground">{t('ota.roomDetail.perNight')}</span>
-                </div>
-                {output.weekendPrice > 0 && output.weekendPrice !== output.pricePerNight && (
-                  <p className="text-xs text-muted-foreground">
-                    {t('ota.roomDetail.weekendPrice', {
-                      price: formatPrice(output.weekendPrice),
-                    })}
+            <div
+              data-testid="price-teaser"
+              className={cn(heroImage && '-mt-6 relative z-10')}
+            >
+              <GlassCard className="p-5">
+                <div className="space-y-1">
+                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                    {t('ota.booking.from')}
                   </p>
-                )}
-              </div>
-            </GlassCard>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-foreground">
+                      ${formatPrice(output.pricePerNight)}
+                    </span>
+                    <span className="text-sm text-muted-foreground">{t('ota.roomDetail.perNight')}</span>
+                  </div>
+                  {output.weekendPrice > 0 && output.weekendPrice !== output.pricePerNight && (
+                    <p className="text-xs text-muted-foreground">
+                      {t('ota.roomDetail.weekendPrice', {
+                        price: formatPrice(output.weekendPrice),
+                      })}
+                    </p>
+                  )}
+                </div>
+              </GlassCard>
+            </div>
           )}
 
           {/* Animated summary bar — shown when dates are selected */}

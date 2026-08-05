@@ -15,12 +15,24 @@ import type { RoomDetailClientAction } from '../room-detail-client';
 // Mock framer-motion to avoid DOM issues in jsdom
 vi.mock('framer-motion', () => ({
   motion: {
-    div: ({ children, initial, animate, exit, transition, whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
-      React.createElement('div', props, children),
-    button: ({ children, initial, animate, exit, transition, whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
-      React.createElement('button', props, children),
-    span: ({ children, initial, animate, exit, transition, whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
-      React.createElement('span', props, children),
+    div: ({ children, initial, animate, exit: _exit, transition: _transition, whileTap: _whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('div', {
+        ...props,
+        'data-initial': initial !== undefined ? JSON.stringify(initial) : undefined,
+        'data-animate': animate !== undefined ? JSON.stringify(animate) : undefined,
+      }, children),
+    button: ({ children, initial, animate, exit: _exit, transition: _transition, whileTap: _whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('button', {
+        ...props,
+        'data-initial': initial !== undefined ? JSON.stringify(initial) : undefined,
+        'data-animate': animate !== undefined ? JSON.stringify(animate) : undefined,
+      }, children),
+    span: ({ children, initial, animate, exit: _exit, transition: _transition, whileTap: _whileTap, ...props }: { children?: React.ReactNode; [key: string]: unknown }) =>
+      React.createElement('span', {
+        ...props,
+        'data-initial': initial !== undefined ? JSON.stringify(initial) : undefined,
+        'data-animate': animate !== undefined ? JSON.stringify(animate) : undefined,
+      }, children),
   },
   AnimatePresence: ({ children }: { children?: React.ReactNode }) =>
     React.createElement(React.Fragment, {}, children),
@@ -47,6 +59,7 @@ vi.mock('next-intl', () => ({
       'ota.roomDetail.selectDates': 'Seleccionar fechas',
       'ota.roomDetail.pricePerNight': '{nights} noches · ${price} por noche',
       'ota.roomDetail.taxIncluded': 'Impuestos incluidos',
+      'ota.roomDetail.guests': 'Huéspedes',
       'ota.roomDetail.errorTitle': 'Algo salió mal',
       'ota.roomDetail.genericError': 'No pudimos cargar la habitación',
       'ota.roomDetail.selectDatesToContinue': 'Selecciona tus fechas para continuar',
@@ -350,6 +363,145 @@ describe('T-09: RoomDetailCalendar', () => {
     expect(getByText('Ver detalle')).toBeInTheDocument();
     expect(getByText(/3 noches/)).toBeInTheDocument();
     expect(getByText('$1.130.500')).toBeInTheDocument();
+  });
+
+  it('renders hero image when gallery has images', () => {
+    const output = makeOutput({
+      state: 'calendar_first',
+      gallery: [{ url: '/hero.jpg' }],
+      coverImage: '/hero.jpg',
+    });
+    const dispatch = makeDispatch();
+
+    const { getByRole } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    const img = getByRole('img');
+    expect(img).toHaveAttribute('src', '/hero.jpg');
+    expect(img).toHaveAttribute('data-fill', 'true');
+    expect(img).toHaveAttribute('data-priority', 'true');
+  });
+
+  it('hides hero image when gallery is empty and no cover image', () => {
+    const output = makeOutput({
+      state: 'calendar_first',
+      gallery: [],
+      coverImage: '',
+    });
+    const dispatch = makeDispatch();
+
+    const { queryByRole } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    expect(queryByRole('img')).not.toBeInTheDocument();
+  });
+
+  it('hero has entrance animation', () => {
+    const output = makeOutput({ state: 'calendar_first' });
+    const dispatch = makeDispatch();
+
+    const { getByTestId } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    const hero = getByTestId('room-hero');
+    expect(hero).toHaveAttribute('data-initial', expect.stringContaining('"scale":1.05'));
+    expect(hero).toHaveAttribute('data-initial', expect.stringContaining('"opacity":0'));
+    expect(hero).toHaveAttribute('data-animate', expect.stringContaining('"scale":1'));
+    expect(hero).toHaveAttribute('data-animate', expect.stringContaining('"opacity":1'));
+  });
+
+  it('info strip shows capacity and beds', () => {
+    const output = makeOutput({
+      state: 'calendar_first',
+      capacity: 2,
+      beds: 1,
+      bedType: 'Queen',
+    });
+    const dispatch = makeDispatch();
+
+    const { getByTestId } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    const strip = getByTestId('room-info-strip');
+    expect(strip).toHaveTextContent('2 Huéspedes');
+    expect(strip).toHaveTextContent('1 Queen');
+  });
+
+  it('hides info strip when capacity is 0', () => {
+    const output = makeOutput({
+      state: 'calendar_first',
+      capacity: 0,
+      beds: 0,
+      bedType: '',
+    });
+    const dispatch = makeDispatch();
+
+    const { queryByTestId } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    expect(queryByTestId('room-info-strip')).not.toBeInTheDocument();
+  });
+
+  it('renders room name overlaid on hero', () => {
+    const output = makeOutput({ state: 'calendar_first' });
+    const dispatch = makeDispatch();
+
+    const { getByTestId, getByRole } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    const hero = getByTestId('room-hero');
+    const heading = getByRole('heading', { level: 1, name: 'Suite Mirador' });
+    expect(hero).toContainElement(heading);
+  });
+
+  it('breadcrumb hotel link is overlaid on hero with correct href', () => {
+    const output = makeOutput({ state: 'calendar_first' });
+    const dispatch = makeDispatch();
+
+    const { getByTestId, getByText } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    const hero = getByTestId('room-hero');
+    const link = getByText('Hotel Mirador').closest('a');
+    expect(link).toHaveAttribute('href', '/hotel/hotel-mirador');
+    expect(hero).toContainElement(link);
+  });
+
+  it('price teaser glass card overlaps hero with negative margin', () => {
+    const output = makeOutput({ state: 'calendar_first' });
+    const dispatch = makeDispatch();
+
+    const { getByTestId } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    const teaser = getByTestId('price-teaser');
+    expect(teaser.className).toMatch(/-mt-6/);
+  });
+
+  it('price teaser still renders correctly', () => {
+    const output = makeOutput({
+      state: 'calendar_first',
+      pricePerNight: 300000,
+      weekendPrice: 350000,
+    });
+    const dispatch = makeDispatch();
+
+    const { getByTestId, getByText } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    expect(getByTestId('price-teaser')).toBeInTheDocument();
+    expect(getByText('Desde')).toBeInTheDocument();
+    expect(getByText('$300.000')).toBeInTheDocument();
+    expect(getByText('Fin de semana: $350.000')).toBeInTheDocument();
   });
 });
 
