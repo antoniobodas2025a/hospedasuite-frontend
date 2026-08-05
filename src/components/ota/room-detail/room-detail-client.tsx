@@ -20,7 +20,7 @@ export interface RoomDetailClientState {
 
 export type RoomDetailClientAction =
   | { type: 'SELECT_DATES'; checkIn: Date; checkOut: Date }
-  | { type: 'CONFIRM_DATES'; available: boolean }
+  | { type: 'CONFIRM_DATES' }
   | { type: 'CLEAR_DATES' }
   | { type: 'SELECT_SUGGESTION'; checkIn: Date; checkOut: Date }
   | { type: 'CHANGE_DATES' }
@@ -47,7 +47,7 @@ export function roomDetailReducer(
       }
       return {
         ...state,
-        state: action.available ? 'detail' : 'sold_out',
+        state: 'detail',
       };
     case 'CLEAR_DATES':
       return {

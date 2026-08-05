@@ -63,7 +63,7 @@ export function RoomDetailCalendar({
   );
 
   const handleConfirm = React.useCallback(() => {
-    dispatch({ type: 'CONFIRM_DATES', available: true });
+    dispatch({ type: 'CONFIRM_DATES' });
   }, [dispatch]);
 
   const summary = useMemo(() => {

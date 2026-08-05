@@ -206,13 +206,13 @@ describe('roomDetailReducer', () => {
     expect(next.checkOut).toEqual(initial.checkOut);
   });
 
-  it('CONFIRM_DATES from calendar_active with availability → detail', () => {
+  it('CONFIRM_DATES from calendar_active → detail', () => {
     const initial: RoomDetailClientState = {
       state: 'calendar_active',
       checkIn: dates.checkIn,
       checkOut: dates.checkOut,
     };
-    const action: RoomDetailClientAction = { type: 'CONFIRM_DATES', available: true };
+    const action: RoomDetailClientAction = { type: 'CONFIRM_DATES' };
 
     const next = roomDetailReducer(initial, action);
 
@@ -221,26 +221,13 @@ describe('roomDetailReducer', () => {
     expect(next.checkOut).toEqual(dates.checkOut);
   });
 
-  it('CONFIRM_DATES from calendar_active without availability → sold_out', () => {
-    const initial: RoomDetailClientState = {
-      state: 'calendar_active',
-      checkIn: dates.checkIn,
-      checkOut: dates.checkOut,
-    };
-    const action: RoomDetailClientAction = { type: 'CONFIRM_DATES', available: false };
-
-    const next = roomDetailReducer(initial, action);
-
-    expect(next.state).toBe('sold_out');
-  });
-
   it('CONFIRM_DATES from non-calendar-active states is ignored', () => {
     const initial: RoomDetailClientState = {
       state: 'calendar_first',
       checkIn: null,
       checkOut: null,
     };
-    const action: RoomDetailClientAction = { type: 'CONFIRM_DATES', available: true };
+    const action: RoomDetailClientAction = { type: 'CONFIRM_DATES' };
 
     const next = roomDetailReducer(initial, action);
 
