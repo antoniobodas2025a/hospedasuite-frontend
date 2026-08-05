@@ -38,6 +38,49 @@ export async function getRoomDetailAction(
   }
 }
 
+export async function getRoomSitemapCountAction(): Promise<number> {
+  try {
+    const { data: hotels, error: hotelError } = await supabaseAdmin
+      .from("hotels")
+      .select("id, status, subscription_status, go_live")
+      .eq("status", "active");
+
+    if (hotelError || !hotels) {
+      console.error("[SITEMAP] Error fetching hotels for count:", hotelError?.message);
+      return 0;
+    }
+
+    const activeHotelIds = hotels
+      .filter(
+        (hotel) =>
+          hotel.status === "active" &&
+          hotel.go_live === true &&
+          hotel.subscription_status !== "cancelled",
+      )
+      .map((hotel) => hotel.id);
+
+    if (activeHotelIds.length === 0) return 0;
+
+    const { count, error: roomError } = await supabaseAdmin
+      .from("rooms")
+      .select("id", { count: "exact", head: true })
+      .in("hotel_id", activeHotelIds)
+      .neq("status", "maintenance")
+      .neq("status", "inactive");
+
+    if (roomError) {
+      console.error("[SITEMAP] Error counting rooms:", roomError.message);
+      return 0;
+    }
+
+    return count ?? 0;
+  } catch (error: unknown) {
+    const message = error instanceof Error ? error.message : "Unknown error";
+    console.error("[SITEMAP] Error counting room sitemap entries:", message);
+    return 0;
+  }
+}
+
 export async function getRoomSitemapEntriesAction(): Promise<RoomSitemapEntry[]> {
   try {
     const { data: hotels, error: hotelError } = await supabaseAdmin

@@ -3,19 +3,14 @@ import { describe, it, expect, vi } from 'vitest';
 
 vi.mock('@/app/actions/room-detail', () => ({
   getRoomSitemapEntriesAction: vi.fn(),
+  getRoomSitemapCountAction: vi.fn(),
 }));
 
-import { getRoomSitemapEntriesAction } from '@/app/actions/room-detail';
+import { getRoomSitemapEntriesAction, getRoomSitemapCountAction } from '@/app/actions/room-detail';
 
 describe('room detail sitemap', () => {
   it('returns sitemap ids based on entry count', async () => {
-    (getRoomSitemapEntriesAction as any).mockResolvedValue(
-      Array.from({ length: 250 }, (_, i) => ({
-        slug: `hotel-${i}`,
-        id: `room-${i}`,
-        updatedAt: '2026-08-05',
-      }))
-    );
+    (getRoomSitemapCountAction as any).mockResolvedValue(250);
 
     const { generateSitemaps } = await import('./sitemap');
     const sitemaps = await generateSitemaps();
@@ -47,6 +42,7 @@ describe('room detail sitemap', () => {
   });
 
   it('returns an empty sitemap when there are no rooms', async () => {
+    (getRoomSitemapCountAction as any).mockResolvedValue(0);
     (getRoomSitemapEntriesAction as any).mockResolvedValue([]);
 
     const { generateSitemaps, default: sitemap } = await import('./sitemap');

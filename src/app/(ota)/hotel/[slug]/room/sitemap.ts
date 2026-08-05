@@ -1,12 +1,12 @@
 import type { MetadataRoute } from "next";
-import { getRoomSitemapEntriesAction } from "@/app/actions/room-detail";
+import { getRoomSitemapEntriesAction, getRoomSitemapCountAction } from "@/app/actions/room-detail";
 
 const BASE_URL = "https://hospedasuite.com";
 const PAGE_SIZE = 100;
 
 export async function generateSitemaps(): Promise<{ id: number }[]> {
-  const entries = await getRoomSitemapEntriesAction();
-  const pages = Math.max(1, Math.ceil(entries.length / PAGE_SIZE));
+  const count = await getRoomSitemapCountAction();
+  const pages = Math.max(1, Math.ceil(count / PAGE_SIZE));
   return Array.from({ length: pages }, (_, index) => ({ id: index }));
 }
 
