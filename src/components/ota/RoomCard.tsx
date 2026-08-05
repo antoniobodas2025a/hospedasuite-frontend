@@ -246,6 +246,7 @@ function RoomCardInner({
 
   return (
     <motion.div
+      id={`room-${room.id}`}
       ref={setCardRef}
       data-testid="room-card"
       className="group/card will-change-transform cursor-pointer"

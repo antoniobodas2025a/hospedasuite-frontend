@@ -420,6 +420,25 @@ describe("RoomCard", () => {
     expect(queryByText(baseRoom.name)).not.toBeInTheDocument();
   });
 
+  it("renders a native scroll anchor id on the card wrapper", () => {
+    const { container } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{ tax_rate: 0.19 }}
+      />
+    );
+
+    const anchor = container.querySelector('#room-room-1');
+    expect(anchor).toBeInTheDocument();
+    expect(anchor).toHaveAttribute('data-testid', 'room-card');
+  });
+
   it("configures hover lift and active scale-down micro-animations", () => {
     const { container } = render(
       <RoomCard
