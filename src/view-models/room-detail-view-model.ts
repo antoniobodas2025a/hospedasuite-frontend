@@ -246,7 +246,7 @@ export function roomDetailViewModel(
     showOtherRooms,
     breadcrumb: {
       label: `${hotel.name} / ${room.name}`,
-      href: `/hotel/${hotel.slug}`,
+      href: `/hotel/${hotel.slug}${dates ? `?checkin=${dates.checkIn.toISOString().split('T')[0]}&checkout=${dates.checkOut.toISOString().split('T')[0]}` : ''}`,
     },
     canBook,
     error: null,

@@ -3,6 +3,7 @@
 import React, { useMemo } from 'react';
 import Image from 'next/image';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ChevronRight, Calendar, Moon, Users, Bed } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -44,6 +45,7 @@ export function RoomDetailCalendar({
 }: RoomDetailCalendarProps) {
   const t = useTranslations();
   const locale = useLocale();
+  const router = useRouter();
   const dateLocale = getDateFnsLocale(locale);
   const isActive = state === 'calendar_active';
 
@@ -65,7 +67,13 @@ export function RoomDetailCalendar({
 
   const handleConfirm = React.useCallback(() => {
     dispatch({ type: 'CONFIRM_DATES' });
-  }, [dispatch]);
+    if (checkInStr && checkOutStr) {
+      const params = new URLSearchParams(window.location.search);
+      params.set('checkin', checkInStr);
+      params.set('checkout', checkOutStr);
+      router.push(`?${params.toString()}`, { scroll: false });
+    }
+  }, [dispatch, checkInStr, checkOutStr, router]);
 
   const summary = useMemo(() => {
     if (!checkIn || !checkOut || !output.pricing) return null;

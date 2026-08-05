@@ -6,6 +6,7 @@ import { useTranslations, useLocale } from 'next-intl';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay, addDays, addWeeks, addMonths, nextSaturday, nextSunday } from 'date-fns';
 import { ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { getDateFnsLocale } from '@/lib/date-locale';
 import type { QuickDatePreset } from '@/types';
 
@@ -165,6 +166,16 @@ export default function InlineDatePicker({
   const bookedSet = useMemo(() => new Set(bookedDates), [bookedDates]);
   const availableSet = useMemo(() => new Set(availableDates), [availableDates]);
 
+  const displayRange = useMemo(() => {
+    if (range?.from && range?.to) {
+      return `${format(range.from, 'dd MMM', { locale: dateLocale })} — ${format(range.to, 'dd MMM', { locale: dateLocale })}`;
+    }
+    if (range?.from) {
+      return `${format(range.from, 'dd MMM', { locale: dateLocale })} — ${t('ota.search.departure')}`;
+    }
+    return null;
+  }, [range, dateLocale, t]);
+
   const isDateBooked = useCallback(
     (date: Date) => {
       const iso = format(date, 'yyyy-MM-dd');
@@ -195,7 +206,7 @@ export default function InlineDatePicker({
       >
         <span className="flex items-center gap-2">
           <Calendar size={16} className="text-brand-600" />
-          {t('ota.search.selectDates')}
+          {displayRange ?? t('ota.search.selectDates')}
         </span>
         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
@@ -208,8 +219,16 @@ export default function InlineDatePicker({
         <input data-testid="inline-date-picker-checkout" type="hidden" name="checkout" value={format(range.to, 'yyyy-MM-dd')} readOnly />
       )}
 
-      {isExpanded && (
-        <div id="inline-date-picker-content" className="mt-3 space-y-3">
+      <AnimatePresence initial={false}>
+        {isExpanded && (
+          <motion.div
+            id="inline-date-picker-content"
+            initial={{ opacity: 0, height: 0 }}
+            animate={{ opacity: 1, height: 'auto' }}
+            exit={{ opacity: 0, height: 0 }}
+            transition={{ duration: 0.2, ease: 'easeOut' }}
+            className="overflow-hidden"
+          >
           {/* Quick dates */}
           <div className="flex flex-wrap gap-2">
             {quickPresets.map((preset) => (
@@ -272,8 +291,9 @@ export default function InlineDatePicker({
               <span>Pasado</span>
             </div>
           </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
