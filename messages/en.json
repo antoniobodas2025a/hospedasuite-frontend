@@ -424,7 +424,20 @@
       "photosAmenitiesTitle": "Description, photos & amenities",
       "uploadPhotosLabel": "Upload photos",
       "previewAdmin": "Admin view",
-      "previewGuest": "Guest view"
+      "previewGuest": "Guest view",
+      "selectDatesToContinue": "Select dates to continue",
+      "viewDetail": "View room",
+      "changeDates": "Change dates",
+      "weekendPrice": "Weekend: ${price}/night",
+      "weekdayNights": "{count, plural, one {# weekday night} other {# weekday nights}}",
+      "weekendNights": "{count, plural, one {# weekend night} other {# weekend nights}}",
+      "tax": "VAT ({rate}%)",
+      "notAvailableForDates": "Not available from {from} to {to}",
+      "tryOtherDates": "Try other dates",
+      "alternativeOptions": "Available options",
+      "genericError": "Could not load room information",
+      "errorTitle": "Something went wrong",
+      "backToHotel": "Back to hotel"
     },
     "settings": {
       "title": "Settings",

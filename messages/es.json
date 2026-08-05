@@ -424,7 +424,20 @@
       "photosAmenitiesTitle": "Descripción, fotos y amenities",
       "uploadPhotosLabel": "Subir fotos",
       "previewAdmin": "Vista administrador",
-      "previewGuest": "Vista huésped"
+      "previewGuest": "Vista huésped",
+      "selectDatesToContinue": "Seleccioná las fechas para continuar",
+      "viewDetail": "Ver habitación",
+      "changeDates": "Cambiar fechas",
+      "weekendPrice": "Fin de semana: ${price}/noche",
+      "weekdayNights": "{count, plural, one {# noche entre semana} other {# noches entre semana}}",
+      "weekendNights": "{count, plural, one {# noche de finde} other {# noches de finde}}",
+      "tax": "IVA ({rate}%)",
+      "notAvailableForDates": "No está disponible del {from} al {to}",
+      "tryOtherDates": "Probá con otras fechas",
+      "alternativeOptions": "Opciones disponibles",
+      "genericError": "No se pudo cargar la info de la habitación",
+      "errorTitle": "Algo salió mal",
+      "backToHotel": "Volver al hotel"
     },
     "settings": {
       "title": "Configuración",

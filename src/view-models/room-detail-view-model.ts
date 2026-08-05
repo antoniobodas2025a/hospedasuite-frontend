@@ -222,9 +222,9 @@ export function roomDetailViewModel(
   const gallery = buildGallery(room.gallery);
   const amenities = buildAmenities(room.amenities);
   const showOtherRooms = hotel.totalRooms > 1;
-  const restricted = room.restricted === true;
   const pastDue = hotel.subscriptionStatus === 'past_due';
-  const canBook = !restricted && !pastDue;
+  const cancelled = hotel.subscriptionStatus === 'cancelled';
+  const canBook = !pastDue && !cancelled;
 
   const base = {
     roomName: room.name,
