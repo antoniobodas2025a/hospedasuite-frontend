@@ -2,7 +2,6 @@ import { describe, it, expect } from 'vitest';
 import {
   roomDetailViewModel,
   type RoomDetailViewModelInput,
-  type RoomDetailViewModelOutput,
 } from '@/view-models/room-detail-view-model';
 import type { RoomDetail, HotelContext, Availability } from '@/domain/room-availability';
 import { validateAndParseDates } from '@/domain/room-availability';
@@ -322,5 +321,30 @@ describe('roomDetailViewModel', () => {
 
     expect(result.initialCheckIn).toBeUndefined();
     expect(result.initialCheckOut).toBeUndefined();
+  });
+
+  it('exposes roomId and primaryColor from the room and hotel', () => {
+    const input: RoomDetailViewModelInput = {
+      room: makeRoom({ id: 'room-abc' }),
+      hotel: makeHotel({ primaryColor: '#c25a2a' }),
+      dates: null,
+    };
+
+    const result = roomDetailViewModel(input);
+
+    expect(result.roomId).toBe('room-abc');
+    expect(result.primaryColor).toBe('#c25a2a');
+  });
+
+  it('initializes bookedDates as an empty array', () => {
+    const input: RoomDetailViewModelInput = {
+      room: makeRoom(),
+      hotel: makeHotel(),
+      dates: null,
+    };
+
+    const result = roomDetailViewModel(input);
+
+    expect(result.bookedDates).toEqual([]);
   });
 });

@@ -46,6 +46,8 @@ export interface Suggestion {
   id: string;
   name: string;
   price: number;
+  checkIn?: Date;
+  checkOut?: Date;
 }
 
 export interface PriceBreakdown {
@@ -91,8 +93,11 @@ export interface RoomDetailViewModelOutput {
   breadcrumb: { label: string; href: string };
   canBook: boolean;
   error: string | null;
+  roomId: string;
+  primaryColor: string;
   initialCheckIn?: Date;
   initialCheckOut?: Date;
+  bookedDates?: string[];
 }
 
 // ============================================================================
@@ -230,6 +235,8 @@ function errorOutput(): RoomDetailViewModelOutput {
     breadcrumb: { label: '', href: '' },
     canBook: false,
     error: 'Room not found or hotel inactive',
+    roomId: '',
+    primaryColor: '',
   };
 }
 
@@ -274,8 +281,11 @@ export function roomDetailViewModel(
     },
     canBook,
     error: null,
+    roomId: room.id,
+    primaryColor: hotel.primaryColor,
     initialCheckIn: dates?.checkIn,
     initialCheckOut: dates?.checkOut,
+    bookedDates: [],
   };
 
   if (!dates) {

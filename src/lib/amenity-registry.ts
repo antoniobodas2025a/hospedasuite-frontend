@@ -58,7 +58,7 @@ export function getAmenityIcon(id: string): React.ElementType {
 // - AvailabilitySearchBar.tsx (filtros de amenidades Channel unificados)
 // - RoomComparison.tsx (tabla comparativa Channel)
 // - RoomCard.tsx (badges de storytelling Channel)
-// - RoomShowcaseModal.tsx (amenity glass Channel)
+// - RoomInfoPanel.tsx (amenity glass Channel)
 // - onboarding/page.tsx (wizard de aprovisionamiento)
 //
 // Para agregar una nueva amenidad de habitacion:

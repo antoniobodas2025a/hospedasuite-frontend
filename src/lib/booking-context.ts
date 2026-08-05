@@ -1,7 +1,7 @@
 /**
- * BookingContext — Pure data contract for the RoomShowcaseModal.
+ * BookingContext — Pure data contract for room detail checkout state.
  *
- * SRP: The modal should NOT know about useSearchParams, router, or Supabase.
+ * SRP: The detail page should NOT know about useSearchParams, router, or Supabase.
  * All booking state is injected as a read-only object by the parent page.
  *
  * Phase 1 of Uncle Bob refactor (contract defined, implementation pending).
