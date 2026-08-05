@@ -78,7 +78,7 @@ export default function MobileSearchSheet({
 	// State: guests
 	const [guests, setGuests] = useState<number>(() => {
 		const g = searchParams.get("guests");
-		return g ? Number(g) : 1;
+		return g ? Number(g) : 2;
 	});
 	const [pendingGuests, setPendingGuests] = useState<number>(guests);
 	const [showGuestPicker, setShowGuestPicker] = useState(false);

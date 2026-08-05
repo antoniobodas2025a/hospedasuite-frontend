@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DayPicker, DateRange } from "react-day-picker";
-import { format, parseISO, isValid, startOfDay } from "date-fns";
+import { format, parseISO, isValid, startOfDay, addDays, addWeeks, addMonths, nextSaturday, nextSunday } from "date-fns";
 import { cn } from "@/lib/utils";
 import {
 	springSnappy,
@@ -99,7 +99,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 	// State: guests
 	const [guests, setGuests] = useState<number>(() => {
 		const g = searchParams.get("guests");
-		return g ? Number(g) : 1;
+		return g ? Number(g) : 2;
 	});
 	const [pendingGuests, setPendingGuests] = useState<number>(guests);
 
@@ -175,14 +175,24 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 		[searchParams, pathname, router],
 	);
 
-	// Handlers: Dates
+	// Handlers: Dates — auto-confirm on complete range selection
 	const handleSelectDates = (newDate: DateRange | undefined) => {
 		if (newDate?.from && newDate?.to) {
 			if (newDate.from.getTime() === newDate.to.getTime()) {
 				setPendingDate({ from: newDate.from, to: undefined });
 				return;
 			}
-			setPendingDate(newDate);
+			// Auto-confirm: apply dates and close modal immediately
+			setDate({ from: newDate.from, to: newDate.to });
+			setPendingDate({ from: newDate.from, to: newDate.to });
+			setActiveModal(null);
+			pushUrl({ checkin: newDate.from, checkout: newDate.to });
+			onSearch?.({
+				location,
+				checkin: format(newDate.from, "yyyy-MM-dd"),
+				checkout: format(newDate.to, "yyyy-MM-dd"),
+				guests,
+			});
 		} else {
 			setPendingDate(newDate);
 		}
@@ -428,6 +438,27 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 													</motion.button>
 												</div>
 
+												{/* Quick date presets */}
+												<div className="flex flex-wrap gap-2 px-3 sm:px-4 pt-3">
+													{[
+														{ label: t("ota.search.thisWeekend"), getDates: () => ({ from: nextSaturday(today), to: nextSunday(nextSaturday(today)) }) },
+														{ label: t("ota.search.nextWeek"), getDates: () => ({ from: addWeeks(today, 1), to: addDays(addWeeks(today, 1), 3) }) },
+														{ label: t("ota.search.nextMonth"), getDates: () => ({ from: addMonths(today, 1), to: addDays(addMonths(today, 1), 3) }) },
+													].map((preset) => (
+														<button
+															key={preset.label}
+															type="button"
+															onClick={() => {
+																const dates = preset.getDates();
+																handleSelectDates(dates);
+															}}
+															className="px-3 py-1.5 text-xs font-semibold rounded-full border border-border bg-card hover:bg-muted transition-colors"
+														>
+															{preset.label}
+														</button>
+													))}
+												</div>
+
 												{/* Calendar */}
 												<div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-3 min-h-0">
 													<div className="modal-calendar">
@@ -503,7 +534,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 														{t("ota.search.guest", { count: pendingGuests })}
 													</p>
 													<motion.button
-														onClick={() => setActiveModal(null)}
+														onClick={handleConfirmGuests}
 														whileHover={{ scale: 1.08 }}
 														whileTap={{ scale: 0.9 }}
 														transition={springSnappy()}
@@ -522,19 +553,6 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 														min={1}
 														max={20}
 													/>
-												</div>
-
-												{/* Footer */}
-												<div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 shrink-0">
-													<motion.button
-														onClick={handleConfirmGuests}
-														whileHover={{ scale: 1.015 }}
-														whileTap={{ scale: 0.97 }}
-														transition={springBounce()}
-														className="w-full py-3.5 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight bg-primary text-primary-foreground shadow-lg ring-1 ring-primary/20 hover:shadow-xl transition-all"
-													>
-														{t("ota.search.confirmGuests")}
-													</motion.button>
 												</div>
 											</div>
 										)}

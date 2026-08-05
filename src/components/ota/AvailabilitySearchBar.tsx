@@ -155,7 +155,7 @@ export default function AvailabilitySearchBar({
 	// State: guests
 	const [guests, setGuests] = useState<number>(() => {
 		const g = searchParams.get("guests");
-		return g ? Number(g) : 1;
+		return g ? Number(g) : 2;
 	});
 	// Pending guest selection (not yet applied)
 	const [pendingGuests, setPendingGuests] = useState<number>(guests);
