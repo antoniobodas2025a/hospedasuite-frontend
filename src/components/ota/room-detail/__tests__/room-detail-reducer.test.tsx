@@ -14,10 +14,118 @@ import {
 vi.mock('framer-motion', () => ({
   AnimatePresence: ({ children }: { children: React.ReactNode }) => <>{children}</>,
   motion: {
-    div: ({ children, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
+    div: ({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, whileTap: _whileTap, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
       <div {...props}>{children}</div>
     ),
+    button: ({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, whileTap: _whileTap, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
+      <button {...props}>{children}</button>
+    ),
   },
+}));
+
+vi.mock('next-intl', () => ({
+  useTranslations: () => (key: string, params?: Record<string, unknown>) => {
+    const messages: Record<string, string> = {
+      'ota.booking.from': 'Desde',
+      'ota.booking.reserve': 'Reservar',
+      'ota.search.selectDates': 'Seleccionar fechas',
+      'ota.showcase.total': 'Total',
+      'ota.showcase.cop': 'COP',
+      'ota.showcase.nights': '{count} noches',
+      'ota.showcase.nights_one': '{count} noche',
+      'ota.showcase.nights_other': '{count} noches',
+      'ota.showcase.seeOtherRooms': 'Ver otras habitaciones',
+      'ota.roomDetail.backToHotel': 'Volver al hotel',
+      'ota.roomDetail.changeDates': 'Cambiar fechas',
+      'ota.roomDetail.notAvailableForDates': 'No disponible para {checkIn} - {checkOut}',
+      'ota.roomDetail.viewDetail': 'Ver detalle',
+      'ota.roomDetail.errorTitle': 'Algo salió mal',
+      'ota.roomDetail.genericError': 'No pudimos cargar la habitación',
+      'ota.roomDetail.selectDatesToContinue': 'Selecciona tus fechas para continuar',
+      'ota.roomDetail.weekendPrice': 'Fin de semana: ${price}',
+      'ota.roomDetail.weekdayNights_one': '{count} noche entre semana',
+      'ota.roomDetail.weekdayNights_other': '{count} noches entre semana',
+      'ota.roomDetail.weekendNights_one': '{count} noche fin de semana',
+      'ota.roomDetail.weekendNights_other': '{count} noches fin de semana',
+      'ota.roomDetail.tax': 'IVA ({rate}%)',
+      'ota.roomDetail.tryOtherDates': 'Prueba con otras fechas o habitaciones',
+      'ota.roomDetail.alternativeOptions': 'Otras opciones para estas fechas',
+    };
+    let text = messages[key] ?? key;
+    if (params) {
+      Object.entries(params).forEach(([k, v]) => {
+        text = text.replace(`{${k}}`, String(v));
+      });
+    }
+    return text;
+  },
+  useLocale: () => 'es',
+}));
+
+vi.mock('next/navigation', () => ({
+  useRouter: () => ({ push: vi.fn() }),
+  useSearchParams: () => new URLSearchParams(),
+}));
+
+vi.mock('next/link', () => ({
+  __esModule: true,
+  default: ({ children, href }: { children: React.ReactNode; href: string }) => (
+    <a href={href}>{children}</a>
+  ),
+}));
+
+vi.mock('next/image', () => ({
+  __esModule: true,
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement>) => <img {...props} />,
+}));
+
+vi.mock('@/components/ota/InlineDatePicker', () => ({
+  __esModule: true,
+  default: ({ onChange }: { onChange?: (range: { from: Date; to: Date }) => void }) => (
+    <div data-testid="inline-date-picker">
+      <button
+        type="button"
+        onClick={() => onChange?.({ from: new Date('2026-08-10T12:00:00Z'), to: new Date('2026-08-13T12:00:00Z') })}
+      >
+        Select dates
+      </button>
+    </div>
+  ),
+}));
+
+vi.mock('@/components/ota/RoomGalleryGrid', () => ({
+  __esModule: true,
+  default: () => <div data-testid="room-gallery-grid" />,
+}));
+
+vi.mock('@/components/ota/RoomInfoPanel', () => ({
+  RoomInfoPanel: () => <div data-testid="room-info-panel" />,
+}));
+
+vi.mock('@/components/ota/RoomCard', () => ({
+  __esModule: true,
+  default: () => <div data-testid="room-card" />,
+}));
+
+vi.mock('@/components/ota/PriceBreakdown', () => ({
+  __esModule: true,
+  default: () => <div data-testid="price-breakdown" />,
+}));
+
+vi.mock('@/components/ui/glass', () => ({
+  GlassCard: ({ children, 'data-testid': dataTestId, ...props }: { children?: React.ReactNode; 'data-testid'?: string; [key: string]: unknown }) => (
+    <div {...props} data-testid={dataTestId ?? 'glass-card'}>{children}</div>
+  ),
+  GlassPanel: ({ children, 'data-testid': dataTestId, ...props }: { children?: React.ReactNode; 'data-testid'?: string; [key: string]: unknown }) => (
+    <div {...props} data-testid={dataTestId ?? 'glass-panel'}>{children}</div>
+  ),
+  GlassPill: ({ children, 'data-testid': dataTestId, ...props }: { children?: React.ReactNode; 'data-testid'?: string; [key: string]: unknown }) => (
+    <div {...props} data-testid={dataTestId ?? 'glass-pill'}>{children}</div>
+  ),
+}));
+
+vi.mock('@/lib/amenity-registry', () => ({
+  getRoomAmenityById: () => null,
 }));
 
 function makeOutput(overrides: Partial<RoomDetailViewModelOutput> = {}): RoomDetailViewModelOutput {
@@ -41,6 +149,8 @@ function makeOutput(overrides: Partial<RoomDetailViewModelOutput> = {}): RoomDet
     breadcrumb: { label: 'Hotel Mirador / Suite Mirador', href: '/hotel/hotel-mirador' },
     canBook: true,
     error: null,
+    roomId: 'room-1',
+    primaryColor: '#3b82f6',
     ...overrides,
   };
 }
@@ -287,36 +397,71 @@ describe('RoomDetailClient', () => {
   });
 
   it('transitions from calendar_first to calendar_active when selecting dates', () => {
-    const { getByRole, queryByRole } = render(
+    const { getByRole, getByTestId } = render(
       <RoomDetailClient output={makeOutput({ state: 'calendar_first' })} />
     );
     fireEvent.click(getByRole('button', { name: 'Select dates' }));
-    expect(queryByRole('button', { name: 'Confirm availability' })).toBeInTheDocument();
+    expect(getByTestId('room-detail-calendar')).toHaveAttribute('data-state', 'calendar_active');
   });
 
   it('transitions from calendar_active to detail when confirming availability', () => {
-    const { getByRole, getByTestId, getByText } = render(
-      <RoomDetailClient output={makeOutput({ state: 'calendar_active' })} />
+    const { getByRole, getByTestId } = render(
+      <RoomDetailClient
+        output={makeOutput({
+          state: 'calendar_active',
+          pricing: {
+            weekdayPrice: 300000,
+            weekendPrice: 350000,
+            weekdayNights: 2,
+            weekendNights: 1,
+            subtotal: 950000,
+            tax: 180500,
+            total: 1130500,
+            taxRate: 0.19,
+            breakdown: [],
+          },
+          initialCheckIn: new Date('2026-08-10T12:00:00Z'),
+          initialCheckOut: new Date('2026-08-13T12:00:00Z'),
+        })}
+      />
     );
-    fireEvent.click(getByRole('button', { name: 'Confirm availability' }));
+    fireEvent.click(getByRole('button', { name: 'Ver detalle' }));
     expect(getByTestId('room-detail-gallery')).toBeInTheDocument();
-    expect(getByText('Suite Mirador')).toBeInTheDocument();
   });
 
-  it('transitions from calendar_active to sold_out when confirming no availability', () => {
+  it('passes user-selected dates from reducer into the detail gallery', () => {
     const { getByRole, getByTestId } = render(
-      <RoomDetailClient output={makeOutput({ state: 'calendar_active' })} />
+      <RoomDetailClient
+        output={makeOutput({
+          state: 'calendar_first',
+          pricing: {
+            weekdayPrice: 300000,
+            weekendPrice: 350000,
+            weekdayNights: 2,
+            weekendNights: 1,
+            subtotal: 950000,
+            tax: 180500,
+            total: 1130500,
+            taxRate: 0.19,
+            breakdown: [],
+          },
+        })}
+      />
     );
-    fireEvent.click(getByRole('button', { name: 'Confirm sold out' }));
-    expect(getByTestId('room-detail-sold-out')).toBeInTheDocument();
+    fireEvent.click(getByRole('button', { name: 'Select dates' }));
+    fireEvent.click(getByRole('button', { name: 'Ver detalle' }));
+
+    const gallery = getByTestId('room-detail-gallery');
+    expect(gallery).toHaveAttribute('data-checkin', '2026-08-10');
+    expect(gallery).toHaveAttribute('data-checkout', '2026-08-13');
   });
 
   it('renders the gallery for detail state', () => {
-    const { getByTestId, getByText } = render(
+    const { getByTestId, getAllByText } = render(
       <RoomDetailClient output={makeOutput({ state: 'detail' })} />
     );
     expect(getByTestId('room-detail-gallery')).toBeInTheDocument();
-    expect(getByText('Suite Mirador')).toBeInTheDocument();
+    expect(getAllByText('Suite Mirador').length).toBeGreaterThan(0);
   });
 
   it('renders the sold-out state for sold_out', () => {

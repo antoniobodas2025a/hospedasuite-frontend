@@ -99,6 +99,11 @@ interface RoomDetailClientProps {
 export function RoomDetailClient({ output }: RoomDetailClientProps) {
   const [state, dispatch] = useReducer(roomDetailReducer, getInitialState(output));
 
+  const sharedDateProps = {
+    selectedCheckIn: state.checkIn,
+    selectedCheckOut: state.checkOut,
+  };
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
@@ -110,13 +115,13 @@ export function RoomDetailClient({ output }: RoomDetailClientProps) {
       >
         {state.state === 'loading' && <RoomDetailSkeleton />}
         {(state.state === 'calendar_first' || state.state === 'calendar_active') && (
-          <RoomDetailCalendar output={output} state={state.state} dispatch={dispatch} />
+          <RoomDetailCalendar output={output} state={state.state} dispatch={dispatch} {...sharedDateProps} />
         )}
         {state.state === 'detail' && (
-          <RoomDetailGallery output={output} state={state.state} dispatch={dispatch} />
+          <RoomDetailGallery output={output} state={state.state} dispatch={dispatch} {...sharedDateProps} />
         )}
         {state.state === 'sold_out' && (
-          <RoomDetailSoldOut output={output} state={state.state} dispatch={dispatch} />
+          <RoomDetailSoldOut output={output} state={state.state} dispatch={dispatch} {...sharedDateProps} />
         )}
         {state.state === 'error' && <RoomDetailError output={output} />}
       </motion.div>
