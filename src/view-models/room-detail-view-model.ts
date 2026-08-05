@@ -7,8 +7,8 @@ import type {
   RoomDetailState,
   DayPrice,
 } from '@/domain/room-availability';
-import { isWeekend, calculateNights } from '@/domain/room-availability';
-import { calculateTaxAmount } from '@/lib/pricing';
+import { calculateNights } from '@/domain/room-availability';
+import { buildRoomPricingBreakdown } from '@/lib/pricing';
 
 // ============================================================================
 // AMENITY LABEL MAP — Lightweight, server-safe labels for room amenity IDs
@@ -79,6 +79,9 @@ export interface RoomDetailViewModelOutput {
   hotelName: string;
   hotelSlug: string;
   totalHotelRooms: number;
+  pricePerNight: number;
+  weekendPrice: number;
+  taxRate: number;
   pricing: PriceBreakdown | null;
   gallery: GalleryItem[];
   coverImage: string;
@@ -140,53 +143,13 @@ function buildPricing(
   hotel: HotelContext,
   dates: ValidatedDates
 ): PriceBreakdown {
-  const weekdayPrice = room.pricePerNight;
-  const weekendPrice = room.weekendPrice > 0 ? room.weekendPrice : weekdayPrice * 1.2;
-  const taxRate = hotel.taxRate;
-
-  const nights = calculateNights(dates.checkIn, dates.checkOut);
-  const current = new Date(dates.checkIn.getTime());
-
-  const breakdown: DayPrice[] = [];
-  let weekdayNights = 0;
-  let weekendNights = 0;
-  let subtotal = 0;
-
-  for (let i = 0; i < nights; i++) {
-    const weekend = isWeekend(current);
-    const price = weekend ? weekendPrice : weekdayPrice;
-
-    breakdown.push({
-      date: toISODate(current),
-      dayOfWeek: current.getUTCDay(),
-      price,
-      isWeekend: weekend,
-    });
-
-    subtotal += price;
-    if (weekend) {
-      weekendNights++;
-    } else {
-      weekdayNights++;
-    }
-
-    current.setUTCDate(current.getUTCDate() + 1);
-  }
-
-  const tax = calculateTaxAmount(subtotal, taxRate);
-  const total = subtotal + tax;
-
-  return {
-    weekdayPrice,
-    weekendPrice,
-    weekdayNights,
-    weekendNights,
-    subtotal,
-    tax,
-    total,
-    taxRate,
-    breakdown,
-  };
+  return buildRoomPricingBreakdown({
+    pricePerNight: room.pricePerNight,
+    weekendPrice: room.weekendPrice,
+    taxRate: hotel.taxRate,
+    checkIn: dates.checkIn,
+    checkOut: dates.checkOut,
+  });
 }
 
 function buildGallery(rawGallery: string[]): GalleryItem[] {
@@ -221,6 +184,9 @@ function errorOutput(): RoomDetailViewModelOutput {
     hotelName: '',
     hotelSlug: '',
     totalHotelRooms: 0,
+    pricePerNight: 0,
+    weekendPrice: 0,
+    taxRate: 0,
     pricing: null,
     gallery: [],
     coverImage: '/logo.png',
@@ -265,6 +231,9 @@ export function roomDetailViewModel(
     hotelName: hotel.name,
     hotelSlug: hotel.slug,
     totalHotelRooms: hotel.totalRooms,
+    pricePerNight: room.pricePerNight,
+    weekendPrice: room.weekendPrice > 0 ? room.weekendPrice : room.pricePerNight * 1.2,
+    taxRate: hotel.taxRate,
     gallery,
     coverImage: gallery[0].url,
     description: room.description ?? '',

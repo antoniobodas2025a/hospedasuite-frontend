@@ -97,8 +97,24 @@ describe('roomDetailViewModel', () => {
 
     expect(result.state).toBe('calendar_first');
     expect(result.pricing).toBeNull();
+    expect(result.pricePerNight).toBe(100000);
+    expect(result.weekendPrice).toBe(150000);
+    expect(result.taxRate).toBe(0.19);
     expect(result.canBook).toBe(true);
     expect(result.error).toBeNull();
+  });
+
+  it('falls back weekend price to 1.2x weekday when room weekendPrice is zero', () => {
+    const input: RoomDetailViewModelInput = {
+      room: makeRoom({ weekendPrice: 0 }),
+      hotel: makeHotel(),
+      dates: null,
+    };
+
+    const result = roomDetailViewModel(input);
+
+    expect(result.pricePerNight).toBe(100000);
+    expect(result.weekendPrice).toBe(120000);
   });
 
   it('returns detail state with correct pricing when dates are available', () => {

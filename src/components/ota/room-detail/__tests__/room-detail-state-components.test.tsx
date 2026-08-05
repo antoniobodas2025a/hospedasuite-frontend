@@ -173,6 +173,9 @@ function makeOutput(overrides: Partial<RoomDetailViewModelOutput> = {}): RoomDet
     hotelName: 'Hotel Mirador',
     hotelSlug: 'hotel-mirador',
     totalHotelRooms: 1,
+    pricePerNight: 300000,
+    weekendPrice: 350000,
+    taxRate: 0.19,
     pricing: null,
     gallery: [{ url: '/hero.jpg' }, { url: '/detail1.jpg' }],
     coverImage: '/hero.jpg',
@@ -268,20 +271,12 @@ describe('T-09: RoomDetailCalendar', () => {
     expect(getByLabelText('Seleccionar fechas')).toBeInTheDocument();
   });
 
-  it('shows teaser price when no dates are selected', () => {
+  it('shows teaser price from room price when no dates are selected', () => {
     const output = makeOutput({
       state: 'calendar_first',
-      pricing: {
-        weekdayPrice: 300000,
-        weekendPrice: 350000,
-        weekdayNights: 0,
-        weekendNights: 0,
-        subtotal: 0,
-        tax: 0,
-        total: 0,
-        taxRate: 0.19,
-        breakdown: [],
-      },
+      pricePerNight: 300000,
+      weekendPrice: 350000,
+      pricing: null,
     });
     const dispatch = makeDispatch();
 
@@ -289,6 +284,24 @@ describe('T-09: RoomDetailCalendar', () => {
 
     expect(getByText('Desde')).toBeInTheDocument();
     expect(getByText('$300.000')).toBeInTheDocument();
+    expect(getByText('Fin de semana: $350.000')).toBeInTheDocument();
+  });
+
+  it('hides weekend teaser when weekend price equals weekday price', () => {
+    const output = makeOutput({
+      state: 'calendar_first',
+      pricePerNight: 300000,
+      weekendPrice: 300000,
+      pricing: null,
+    });
+    const dispatch = makeDispatch();
+
+    const { getByText, queryByText } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    expect(getByText('$300.000')).toBeInTheDocument();
+    expect(queryByText('Fin de semana:')).not.toBeInTheDocument();
   });
 
   it('dispatches SELECT_DATES when InlineDatePicker changes', () => {

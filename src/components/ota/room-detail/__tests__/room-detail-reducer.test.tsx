@@ -137,6 +137,9 @@ function makeOutput(overrides: Partial<RoomDetailViewModelOutput> = {}): RoomDet
     hotelName: 'Hotel Mirador',
     hotelSlug: 'hotel-mirador',
     totalHotelRooms: 1,
+    pricePerNight: 300000,
+    weekendPrice: 350000,
+    taxRate: 0.19,
     pricing: null,
     gallery: [],
     coverImage: '/logo.png',
@@ -391,6 +394,17 @@ describe('RoomDetailClient', () => {
     );
     fireEvent.click(getByRole('button', { name: 'Select dates' }));
     expect(getByTestId('room-detail-calendar')).toHaveAttribute('data-state', 'calendar_active');
+  });
+
+  it('recomputes and shows pricing summary when selecting dates from calendar_first', () => {
+    const { getByRole, getByTestId, getByText } = render(
+      <RoomDetailClient output={makeOutput({ state: 'calendar_first', pricing: null })} />
+    );
+    fireEvent.click(getByRole('button', { name: 'Select dates' }));
+
+    expect(getByTestId('summary-bar')).toBeInTheDocument();
+    expect(getByText('Ver detalle')).toBeInTheDocument();
+    expect(getByText('$1.071.000')).toBeInTheDocument();
   });
 
   it('transitions from calendar_active to detail when confirming availability', () => {

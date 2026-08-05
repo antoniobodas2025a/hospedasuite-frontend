@@ -58,8 +58,8 @@ export function RoomDetailGallery({
       bed_type: output.bedType,
       gallery: output.gallery,
       amenities: output.amenities.map((a) => a.id),
-      price_per_night: output.pricing?.weekdayPrice ?? 0,
-      price: output.pricing?.weekdayPrice ?? 0,
+      price_per_night: output.pricing?.weekdayPrice ?? output.pricePerNight,
+      price: output.pricing?.weekdayPrice ?? output.pricePerNight,
     }),
     [output]
   );

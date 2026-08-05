@@ -140,14 +140,14 @@ export function RoomDetailCalendar({
                 </p>
                 <div className="flex items-baseline gap-2">
                   <span className="text-3xl font-black text-foreground">
-                    ${formatPrice(output.pricing?.weekdayPrice ?? 0)}
+                    ${formatPrice(output.pricePerNight)}
                   </span>
                   <span className="text-sm text-muted-foreground">{t('ota.roomDetail.perNight')}</span>
                 </div>
-                {output.pricing && output.pricing.weekendPrice !== output.pricing.weekdayPrice && (
+                {output.weekendPrice > 0 && output.weekendPrice !== output.pricePerNight && (
                   <p className="text-xs text-muted-foreground">
                     {t('ota.roomDetail.weekendPrice', {
-                      price: formatPrice(output.pricing.weekendPrice),
+                      price: formatPrice(output.weekendPrice),
                     })}
                   </p>
                 )}

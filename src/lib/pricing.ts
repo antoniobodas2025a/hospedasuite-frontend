@@ -67,6 +67,100 @@ export function getTaxLabel(taxRate: number = DEFAULT_TAX_RATE): string {
   return taxRate > 0 ? `IVA (${Math.round(taxRate * 100)}%)` : '';
 }
 
+export interface RoomPricingBreakdown {
+  weekdayPrice: number;
+  weekendPrice: number;
+  weekdayNights: number;
+  weekendNights: number;
+  subtotal: number;
+  tax: number;
+  total: number;
+  taxRate: number;
+  breakdown: Array<{
+    date: string;
+    dayOfWeek: number;
+    price: number;
+    isWeekend: boolean;
+  }>;
+}
+
+function isWeekendNight(date: Date): boolean {
+  const day = date.getUTCDay();
+  return day === 5 || day === 6;
+}
+
+function toISODate(date: Date): string {
+  return date.toISOString().split('T')[0];
+}
+
+/**
+ * Builds a per-night pricing breakdown for a room stay.
+ *
+ * Uses the room's weekday price and an optional override weekend price.
+ * When no explicit weekend price is provided, it falls back to weekday * 1.2.
+ * Tax is applied once on the subtotal using the configured tax rate.
+ */
+export function buildRoomPricingBreakdown({
+  pricePerNight,
+  weekendPrice,
+  taxRate,
+  checkIn,
+  checkOut,
+}: {
+  pricePerNight: number;
+  weekendPrice: number;
+  taxRate: number;
+  checkIn: Date;
+  checkOut: Date;
+}): RoomPricingBreakdown {
+  const weekdayPrice = pricePerNight;
+  const effectiveWeekendPrice = weekendPrice > 0 ? weekendPrice : weekdayPrice * 1.2;
+  const msPerDay = 24 * 60 * 60 * 1000;
+  const nights = Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / msPerDay));
+
+  const breakdown: RoomPricingBreakdown['breakdown'] = [];
+  let weekdayNights = 0;
+  let weekendNights = 0;
+  let subtotal = 0;
+  const current = new Date(checkIn.getTime());
+
+  for (let i = 0; i < nights; i++) {
+    const weekend = isWeekendNight(current);
+    const price = weekend ? effectiveWeekendPrice : weekdayPrice;
+
+    breakdown.push({
+      date: toISODate(current),
+      dayOfWeek: current.getUTCDay(),
+      price,
+      isWeekend: weekend,
+    });
+
+    subtotal += price;
+    if (weekend) {
+      weekendNights++;
+    } else {
+      weekdayNights++;
+    }
+
+    current.setUTCDate(current.getUTCDate() + 1);
+  }
+
+  const tax = calculateTaxAmount(subtotal, taxRate);
+  const total = subtotal + tax;
+
+  return {
+    weekdayPrice,
+    weekendPrice: effectiveWeekendPrice,
+    weekdayNights,
+    weekendNights,
+    subtotal,
+    tax,
+    total,
+    taxRate,
+    breakdown,
+  };
+}
+
 /**
  * Formats price with tax breakdown.
  * Returns formatted strings for subtotal, tax, total, and tax metadata.

@@ -1,9 +1,10 @@
 'use client';
 
-import React, { useReducer } from 'react';
+import React, { useReducer, useMemo } from 'react';
 import { AnimatePresence, motion } from 'framer-motion';
 import type { RoomDetailViewModelOutput } from '@/view-models/room-detail-view-model';
 import type { RoomDetailState as DomainRoomDetailState } from '@/domain/room-availability';
+import { buildRoomPricingBreakdown } from '@/lib/pricing';
 import { RoomDetailCalendar } from './room-detail-calendar';
 import { RoomDetailError } from './room-detail-error';
 import { RoomDetailGallery } from './room-detail-gallery';
@@ -99,6 +100,28 @@ interface RoomDetailClientProps {
 export function RoomDetailClient({ output }: RoomDetailClientProps) {
   const [state, dispatch] = useReducer(roomDetailReducer, getInitialState(output));
 
+  const effectiveOutput = useMemo<RoomDetailViewModelOutput>(() => {
+    if (!state.checkIn || !state.checkOut) {
+      return output;
+    }
+
+    const pricing = buildRoomPricingBreakdown({
+      pricePerNight: output.pricePerNight,
+      weekendPrice: output.weekendPrice,
+      taxRate: output.taxRate,
+      checkIn: state.checkIn,
+      checkOut: state.checkOut,
+    });
+
+    return {
+      ...output,
+      state: state.state,
+      pricing,
+      initialCheckIn: state.checkIn,
+      initialCheckOut: state.checkOut,
+    };
+  }, [output, state.checkIn, state.checkOut, state.state]);
+
   const sharedDateProps = {
     selectedCheckIn: state.checkIn,
     selectedCheckOut: state.checkOut,
@@ -115,13 +138,13 @@ export function RoomDetailClient({ output }: RoomDetailClientProps) {
       >
         {state.state === 'loading' && <RoomDetailSkeleton />}
         {(state.state === 'calendar_first' || state.state === 'calendar_active') && (
-          <RoomDetailCalendar output={output} state={state.state} dispatch={dispatch} {...sharedDateProps} />
+          <RoomDetailCalendar output={effectiveOutput} state={state.state} dispatch={dispatch} {...sharedDateProps} />
         )}
         {state.state === 'detail' && (
-          <RoomDetailGallery output={output} state={state.state} dispatch={dispatch} {...sharedDateProps} />
+          <RoomDetailGallery output={effectiveOutput} state={state.state} dispatch={dispatch} {...sharedDateProps} />
         )}
         {state.state === 'sold_out' && (
-          <RoomDetailSoldOut output={output} state={state.state} dispatch={dispatch} {...sharedDateProps} />
+          <RoomDetailSoldOut output={effectiveOutput} state={state.state} dispatch={dispatch} {...sharedDateProps} />
         )}
         {state.state === 'error' && <RoomDetailError output={output} />}
       </motion.div>
