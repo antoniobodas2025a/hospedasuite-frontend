@@ -43,6 +43,7 @@ vi.mock('next-intl', () => ({
       'ota.roomDetail.changeDates': 'Cambiar fechas',
       'ota.roomDetail.notAvailableForDates': 'No disponible para {checkIn} - {checkOut}',
       'ota.roomDetail.viewDetail': 'Ver detalle',
+      'ota.roomDetail.perNight': '/noche',
       'ota.roomDetail.pricePerNight': '{nights} noches · ${price} por noche',
       'ota.roomDetail.taxIncluded': 'Impuestos incluidos',
       'ota.roomDetail.errorTitle': 'Algo salió mal',
@@ -87,7 +88,7 @@ vi.mock('next/image', () => ({
   __esModule: true,
   default: (props: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
     const { alt, fill, priority, ...rest } = props;
-    // eslint-disable-next-line @next/next/no-img-element
+     
     return React.createElement('img', { alt, 'data-fill': fill ? 'true' : undefined, 'data-priority': priority ? 'true' : undefined, ...rest });
   },
 }));

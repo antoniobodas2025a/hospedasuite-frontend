@@ -405,6 +405,7 @@
       "namePlaceholder": "Nombre de la habitación",
       "priceLabel": "Precio",
       "currencyLabel": "COP/noche",
+      "perNight": "/noche",
       "descriptionPlaceholder": "Descripción...",
       "capacityLabel": "Capacidad",
       "bedsLabel": "Camas",
