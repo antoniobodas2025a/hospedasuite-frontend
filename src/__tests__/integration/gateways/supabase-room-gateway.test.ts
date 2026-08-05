@@ -1,6 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { SupabaseClient } from '@supabase/supabase-js';
 import { SupabaseRoomGateway } from '@/gateways/supabase-room-gateway';
+import { isTemporalCollision } from '@/lib/booking-helpers';
 
 function createMockSupabase() {
   const queue: Array<{ data: any; error: any }> = [];
@@ -170,6 +171,17 @@ describe('SupabaseRoomGateway', () => {
       expect(bookings).toHaveLength(1);
       expect(bookings[0].checkIn.toISOString()).toBe('2026-09-10T00:00:00.000Z');
       expect(bookings[0].checkOut.toISOString()).toBe('2026-09-13T00:00:00.000Z');
+    });
+  });
+
+  describe('race condition at checkout (S10)', () => {
+    it('detects the no_overlapping_bookings DB constraint as a temporal collision', () => {
+      const error = {
+        message: 'violates exclusion constraint "no_overlapping_bookings"',
+        code: '23P01',
+      };
+
+      expect(isTemporalCollision(error)).toBe(true);
     });
   });
 });
