@@ -226,6 +226,33 @@ describe('room detail page', () => {
 
       expect(notFoundMock).toHaveBeenCalled();
     });
+
+    it('escapes closing HTML tags in JSON-LD to prevent XSS', async () => {
+      (getHotelDetailsBySlugAction as any).mockResolvedValue({
+        success: true,
+        hotel: makeHotel(),
+      });
+      (getRoomDetailAction as any).mockResolvedValue({
+        success: true,
+        data: makeRoom({
+          description: '</script><script>alert("xss")</script>',
+        }),
+      });
+
+      const { default: Page } = await import('./page');
+      const element = await Page({
+        params: Promise.resolve({ slug: 'hotel-mirador', id: 'room-1' }),
+        searchParams: Promise.resolve({}),
+      });
+
+      const jsonLd = findJsonLdScript(element);
+      expect(jsonLd).toBeTruthy();
+      expect(jsonLd).not.toContain('</script>');
+      expect(jsonLd).toContain('<\\/script>');
+
+      const structured = JSON.parse(jsonLd!);
+      expect(structured.description).toContain('</script>');
+    });
   });
 });
 

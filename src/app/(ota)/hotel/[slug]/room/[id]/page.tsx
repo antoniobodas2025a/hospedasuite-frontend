@@ -125,12 +125,13 @@ export default async function RoomDetailPage({
   const output = roomDetailViewModel({ room, hotel: hotelContext, dates, availability });
 
   const jsonLd = buildRoomJsonLd(slug, id, room, hotelData);
+  const safeJsonLd = JSON.stringify(jsonLd).replace(/<\//g, '<\\/');
 
   return (
     <main className="min-h-screen bg-background text-foreground">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        dangerouslySetInnerHTML={{ __html: safeJsonLd }}
       />
       <RoomDetailClient output={output} />
     </main>
