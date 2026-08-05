@@ -37,6 +37,7 @@ export type RoomDetail = {
   pricePerNight: number;
   weekendPrice: number;
   status: 'active' | 'inactive' | 'maintenance';
+  restricted?: boolean;
 };
 
 export type HotelContext = {

@@ -1,0 +1,175 @@
+import { describe, it, expect, vi } from 'vitest';
+import type { SupabaseClient } from '@supabase/supabase-js';
+import { SupabaseRoomGateway } from '@/gateways/supabase-room-gateway';
+
+function createMockSupabase() {
+  const queue: Array<{ data: any; error: any }> = [];
+  const next = () => queue.shift() ?? { data: null, error: null };
+  const builder: any = {
+    select: vi.fn(() => builder),
+    eq: vi.fn(() => builder),
+    neq: vi.fn(() => builder),
+    or: vi.fn(() => builder),
+    gte: vi.fn(() => builder),
+    lte: vi.fn(() => builder),
+    lt: vi.fn(() => builder),
+    gt: vi.fn(() => builder),
+    maybeSingle: vi.fn(() => builder),
+    single: vi.fn(() => builder),
+    then: (onFulfilled: any, onRejected: any) =>
+      Promise.resolve(next()).then(onFulfilled, onRejected),
+  };
+  return {
+    queue,
+    from: vi.fn(() => builder),
+    rpc: vi.fn(() => Promise.resolve({ data: null, error: null })),
+    builder,
+  };
+}
+
+function mockRoom(overrides: any = {}) {
+  return {
+    id: 'room-1',
+    hotel_id: 'hotel-1',
+    name: 'Suite',
+    description: 'A nice suite',
+    capacity: 2,
+    beds: 1,
+    bed_type: 'Queen',
+    price: 100,
+    base_price: 100,
+    price_base: 100,
+    weekend_price: 150,
+    status: 'active',
+    gallery: ['https://example.com/img1.jpg'],
+    amenities: ['WiFi', 'AC'],
+    ...overrides,
+  };
+}
+
+function mockHotel(overrides: any = {}) {
+  return {
+    id: 'hotel-1',
+    name: 'Mirador',
+    slug: 'mirador',
+    status: 'active',
+    subscription_status: 'active',
+    go_live: true,
+    ...overrides,
+  };
+}
+
+describe('SupabaseRoomGateway', () => {
+  describe('getRoomDetail', () => {
+    it('returns a room when the hotel is active and subscription is active', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({ data: mockHotel(), error: null });
+      mock.queue.push({ data: mockRoom(), error: null });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const room = await gateway.getRoomDetail('mirador', 'room-1');
+
+      expect(room).not.toBeNull();
+      expect(room?.id).toBe('room-1');
+      expect(room?.name).toBe('Suite');
+      expect(room?.restricted).toBe(false);
+      expect(room?.pricePerNight).toBe(100);
+      expect(room?.weekendPrice).toBe(150);
+      expect(room?.gallery).toEqual(['https://example.com/img1.jpg']);
+      expect(room?.amenities).toEqual(['WiFi', 'AC']);
+    });
+
+    it('returns null when the hotel subscription is cancelled', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({ data: mockHotel({ subscription_status: 'cancelled' }), error: null });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const room = await gateway.getRoomDetail('mirador', 'room-1');
+
+      expect(room).toBeNull();
+    });
+
+    it('returns the room with restricted flag when the subscription is past_due', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({ data: mockHotel({ subscription_status: 'past_due' }), error: null });
+      mock.queue.push({ data: mockRoom(), error: null });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const room = await gateway.getRoomDetail('mirador', 'room-1');
+
+      expect(room).not.toBeNull();
+      expect(room?.restricted).toBe(true);
+    });
+
+    it('uses the stored weekend_price when present', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({ data: mockHotel(), error: null });
+      mock.queue.push({ data: mockRoom({ weekend_price: 175 }), error: null });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const room = await gateway.getRoomDetail('mirador', 'room-1');
+
+      expect(room?.weekendPrice).toBe(175);
+    });
+
+    it('falls back to price * 1.2 when weekend_price is not set', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({ data: mockHotel(), error: null });
+      mock.queue.push({ data: mockRoom({ weekend_price: null }), error: null });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const room = await gateway.getRoomDetail('mirador', 'room-1');
+
+      expect(room?.weekendPrice).toBe(120);
+    });
+  });
+
+  describe('getAvailability', () => {
+    it('returns per-day availability with blocked nights from bookings', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({ data: { price: 100, weekend_price: 150 }, error: null });
+      mock.queue.push({
+        data: [{ check_in: '2026-09-10', check_out: '2026-09-11' }],
+        error: null,
+      });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const availability = await gateway.getAvailability('room-1', {
+        from: new Date('2026-09-10T12:00:00Z'),
+        to: new Date('2026-09-13T12:00:00Z'),
+      });
+
+      expect(availability).toHaveLength(3);
+      expect(availability[0].date).toBe('2026-09-10');
+      expect(availability[0].available).toBe(false);
+      expect(availability[0].price).toBe(100);
+      expect(availability[1].date).toBe('2026-09-11');
+      expect(availability[1].available).toBe(true);
+      expect(availability[1].price).toBe(150);
+      expect(availability[2].date).toBe('2026-09-12');
+      expect(availability[2].available).toBe(true);
+      expect(availability[2].price).toBe(150);
+    });
+  });
+
+  describe('getBookingsInWindow', () => {
+    it('returns bookings overlapping the requested window', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({
+        data: [{ check_in: '2026-09-10', check_out: '2026-09-13' }],
+        error: null,
+      });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const bookings = await gateway.getBookingsInWindow(
+        'room-1',
+        new Date('2026-09-01T12:00:00Z'),
+        new Date('2026-09-30T12:00:00Z'),
+      );
+
+      expect(bookings).toHaveLength(1);
+      expect(bookings[0].checkIn.toISOString()).toBe('2026-09-10T00:00:00.000Z');
+      expect(bookings[0].checkOut.toISOString()).toBe('2026-09-13T00:00:00.000Z');
+    });
+  });
+});
