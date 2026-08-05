@@ -296,4 +296,31 @@ describe('roomDetailViewModel', () => {
     expect(result.breadcrumb.label).toContain('Hotel Mirador');
     expect(result.breadcrumb.label).toContain('Suite Mirador');
   });
+
+  it('includes initial dates in output when dates are provided', () => {
+    const dates = makeDates('2026-08-10', '2026-08-13');
+    const input: RoomDetailViewModelInput = {
+      room: makeRoom(),
+      hotel: makeHotel(),
+      dates,
+    };
+
+    const result = roomDetailViewModel(input);
+
+    expect(result.initialCheckIn).toEqual(dates.checkIn);
+    expect(result.initialCheckOut).toEqual(dates.checkOut);
+  });
+
+  it('initial dates are undefined when dates are missing', () => {
+    const input: RoomDetailViewModelInput = {
+      room: makeRoom(),
+      hotel: makeHotel(),
+      dates: null,
+    };
+
+    const result = roomDetailViewModel(input);
+
+    expect(result.initialCheckIn).toBeUndefined();
+    expect(result.initialCheckOut).toBeUndefined();
+  });
 });

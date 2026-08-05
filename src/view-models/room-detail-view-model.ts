@@ -91,6 +91,8 @@ export interface RoomDetailViewModelOutput {
   breadcrumb: { label: string; href: string };
   canBook: boolean;
   error: string | null;
+  initialCheckIn?: Date;
+  initialCheckOut?: Date;
 }
 
 // ============================================================================
@@ -272,6 +274,8 @@ export function roomDetailViewModel(
     },
     canBook,
     error: null,
+    initialCheckIn: dates?.checkIn,
+    initialCheckOut: dates?.checkOut,
   };
 
   if (!dates) {
