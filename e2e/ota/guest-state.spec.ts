@@ -2,11 +2,11 @@
  * E2E: Guest State Propagation — OTA Booking Flow
  *
  * Verifies that the guest count selection persists through the entire
- * booking chain: AvailabilitySearchBar → RoomCard → RoomShowcaseModal → Checkout.
+ * booking chain: AvailabilitySearchBar → RoomCard → Room Detail Page → Checkout.
  *
  * Tests:
  *   - Guest param propagates from URL to RoomCard destinationUrl
- *   - RoomShowcaseModal displays correct guest count
+ *   - Room detail page displays correct guest count
  *   - Checkout URL contains correct guest param
  *
  * Environment:
@@ -50,14 +50,14 @@ test.describe('Guest State Propagation', () => {
     expect(href).toContain('guests=3');
   });
 
-  test('👤 RoomShowcaseModal shows guest count when opened', async ({ page }) => {
+  test('👤 Room detail page shows guest count when opened', async ({ page }) => {
     await goToOTA(page, { guests: '1', checkin: '2026-06-01', checkout: '2026-06-03' });
 
-    // Click "Explorar" or "Reservar" on first room
+    // Click "Reservar" on first room card
     await page.locator('[data-testid="room-card"]').first().click();
 
-    // Wait for modal to open (URL has showRoom param)
-    await page.waitForURL(/\?showRoom=/, { timeout: 10000 });
+    // Wait for navigation to the room detail page
+    await page.waitForURL(/\/hotel\/[^/]+\/room\/[^/]+/, { timeout: 10000 });
 
     // Verify guests=1 is still in URL
     const url = page.url();
