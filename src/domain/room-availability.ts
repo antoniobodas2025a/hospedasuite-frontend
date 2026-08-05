@@ -46,7 +46,7 @@ export type HotelContext = {
   slug: string;
   city: string;
   totalRooms: number;
-  subscriptionStatus: 'active' | 'inactive' | 'past_due';
+  subscriptionStatus: 'active' | 'inactive' | 'past_due' | 'cancelled';
   status: 'active' | 'inactive' | 'pending';
   taxRate: number;
   cancellationPolicy: string | null;
