@@ -1062,7 +1062,7 @@ export default function OTADashboard({
 						</AnimatePresence>
 					</div>
 
-					{/* Mobile: Direct input — no modal (Heurística #3: user freedom) */}
+					{/* Mobile: Direct input + calendar button to open full search sheet */}
 					<div className="sm:hidden flex items-center gap-2 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm p-2">
 						<div className="flex-1 flex items-center gap-3 px-3">
 							<MapPin size={18} className="text-brand-600 shrink-0" />
@@ -1095,6 +1095,13 @@ export default function OTADashboard({
 								</button>
 							)}
 						</div>
+						<button
+							onClick={() => setIsMobileSheetOpen(true)}
+							className="flex items-center gap-1.5 px-3 py-2 bg-muted hover:bg-muted/80 text-foreground text-sm font-semibold rounded-[var(--radius-squircle-lg)] transition-colors active:scale-[0.97]"
+							aria-label="Abrir búsqueda con fechas"
+						>
+							<Calendar size={16} />
+						</button>
 						<button
 							onClick={handleCommitLocation}
 							className="flex items-center gap-1.5 px-4 py-2 bg-brand-600 text-primary-foreground text-sm font-semibold rounded-[var(--radius-squircle-xl)] transition-colors active:scale-[0.97] active:bg-brand-700"

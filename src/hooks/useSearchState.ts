@@ -69,7 +69,7 @@ export function useSearchState({
 
   // Search state
   const [searchTerm, setSearchTerm] = useState(urlLocation);
-  const [searchStep, setSearchStep] = useState<"location" | "full">("location");
+  const [searchStep, setSearchStep] = useState<"location" | "full">(urlLocation ? "full" : "location");
   const [activeCategory, setActiveCategory] = useState(urlCategory);
   const [isCategoryOpen, setIsCategoryOpen] = useState(false);
 
