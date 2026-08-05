@@ -16,11 +16,6 @@ vi.mock('next-intl/server', () => ({
   getTranslations: vi.fn(() => async (key: string) => key),
 }));
 
-vi.mock('@/app/actions/ota', () => ({
-  getHotelDetailsBySlugAction: vi.fn(),
-  getReviewStatsAction: vi.fn(() => Promise.resolve({ success: false })),
-}));
-
 vi.mock('@/app/actions/room-detail', () => ({
   getRoomDetailAction: vi.fn(),
 }));
@@ -35,7 +30,6 @@ vi.mock('@/components/ota/room-detail/room-detail-client', () => ({
   RoomDetailClient: roomDetailClientMock,
 }));
 
-import { getHotelDetailsBySlugAction } from '@/app/actions/ota';
 import { getRoomDetailAction } from '@/app/actions/room-detail';
 
 describe('room detail page', () => {
@@ -43,19 +37,18 @@ describe('room detail page', () => {
     vi.clearAllMocks();
   });
 
-  function makeHotel(overrides: Record<string, unknown> = {}) {
+  function makeHotelContext(overrides: Record<string, unknown> = {}) {
     return {
       id: 'hotel-1',
       name: 'Hotel Mirador',
       slug: 'hotel-mirador',
       city: 'Bogotá',
-      location: 'Bogotá',
+      totalRooms: 2,
+      subscriptionStatus: 'active',
       status: 'active',
-      subscription_status: 'active',
-      tax_rate: 0.19,
-      cancellation_policy: 'Cancel up to 24h before',
-      primary_color: '#3b82f6',
-      rooms: [{ id: 'room-1' }, { id: 'room-2' }],
+      taxRate: 0.19,
+      cancellationPolicy: 'Cancel up to 24h before',
+      primaryColor: '#3b82f6',
       ...overrides,
     };
   }
@@ -80,13 +73,9 @@ describe('room detail page', () => {
 
   describe('generateMetadata', () => {
     it('returns unique SEO metadata for the room', async () => {
-      (getHotelDetailsBySlugAction as any).mockResolvedValue({
-        success: true,
-        hotel: makeHotel(),
-      });
       (getRoomDetailAction as any).mockResolvedValue({
         success: true,
-        data: makeRoom(),
+        data: { room: makeRoom(), hotel: makeHotelContext() },
       });
 
       const { generateMetadata } = await import('./page');
@@ -104,10 +93,6 @@ describe('room detail page', () => {
     });
 
     it('returns fallback metadata when the room is missing', async () => {
-      (getHotelDetailsBySlugAction as any).mockResolvedValue({
-        success: true,
-        hotel: makeHotel(),
-      });
       (getRoomDetailAction as any).mockResolvedValue({
         success: false,
       });
@@ -124,13 +109,9 @@ describe('room detail page', () => {
 
   describe('default page', () => {
     it('builds the view model and renders RoomDetailClient with output', async () => {
-      (getHotelDetailsBySlugAction as any).mockResolvedValue({
-        success: true,
-        hotel: makeHotel(),
-      });
       (getRoomDetailAction as any).mockResolvedValue({
         success: true,
-        data: makeRoom(),
+        data: { room: makeRoom(), hotel: makeHotelContext() },
       });
       gatewayGetAvailabilityMock.mockResolvedValue([]);
 
@@ -156,13 +137,9 @@ describe('room detail page', () => {
     });
 
     it('passes availability into the view model when dates are valid', async () => {
-      (getHotelDetailsBySlugAction as any).mockResolvedValue({
-        success: true,
-        hotel: makeHotel(),
-      });
       (getRoomDetailAction as any).mockResolvedValue({
         success: true,
-        data: makeRoom(),
+        data: { room: makeRoom(), hotel: makeHotelContext() },
       });
       gatewayGetAvailabilityMock.mockResolvedValue([
         { date: '2026-08-10', available: true, price: 100000 },
@@ -190,10 +167,9 @@ describe('room detail page', () => {
       });
     });
 
-    it('calls notFound when the hotel is missing', async () => {
-      (getHotelDetailsBySlugAction as any).mockResolvedValue({
+    it('calls notFound when the gateway cannot find the hotel or room', async () => {
+      (getRoomDetailAction as any).mockResolvedValue({
         success: false,
-        hotel: null,
       });
 
       const { default: Page } = await import('./page');
@@ -208,10 +184,6 @@ describe('room detail page', () => {
     });
 
     it('calls notFound when the room is missing', async () => {
-      (getHotelDetailsBySlugAction as any).mockResolvedValue({
-        success: true,
-        hotel: makeHotel(),
-      });
       (getRoomDetailAction as any).mockResolvedValue({
         success: false,
       });
@@ -228,15 +200,14 @@ describe('room detail page', () => {
     });
 
     it('escapes closing HTML tags in JSON-LD to prevent XSS', async () => {
-      (getHotelDetailsBySlugAction as any).mockResolvedValue({
-        success: true,
-        hotel: makeHotel(),
-      });
       (getRoomDetailAction as any).mockResolvedValue({
         success: true,
-        data: makeRoom({
-          description: '</script><script>alert("xss")</script>',
-        }),
+        data: {
+          room: makeRoom({
+            description: '</script><script>alert("xss")</script>',
+          }),
+          hotel: makeHotelContext(),
+        },
       });
 
       const { default: Page } = await import('./page');

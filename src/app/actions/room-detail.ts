@@ -1,6 +1,7 @@
 "use server";
 
-import type { RoomDetail } from "@/domain/room-availability";
+import type { RoomDetail, HotelContext } from "@/domain/room-availability";
+import type { RoomDetailResult } from "@/use-cases/room-detail/gateway.interface";
 import { createRoomDetailGateway } from "@/gateways/supabase-room-gateway";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 
@@ -10,21 +11,26 @@ export interface RoomSitemapEntry {
   updatedAt: string | null;
 }
 
+export type RoomDetailActionData = {
+  room: RoomDetail;
+  hotel: HotelContext;
+};
+
 export async function getRoomDetailAction(
   hotelSlug: string,
   roomId: string,
   _checkin?: string,
   _checkout?: string,
-): Promise<{ success: boolean; data?: RoomDetail; error?: string }> {
+): Promise<{ success: boolean; data?: RoomDetailActionData; error?: string }> {
   try {
     const gateway = createRoomDetailGateway(supabaseAdmin);
-    const room = await gateway.getRoomDetail(hotelSlug, roomId);
+    const result = await gateway.getRoomDetail(hotelSlug, roomId);
 
-    if (!room) {
+    if (!result) {
       return { success: false, error: "Hotel or room not available" };
     }
 
-    return { success: true, data: room };
+    return { success: true, data: result };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
     console.error("[ROOM DETAIL] Error fetching room detail:", message);

@@ -1,8 +1,8 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
-import type { RoomDetail, DateRange, Availability } from '@/domain/room-availability';
-import type { RoomDetailGateway } from '@/use-cases/room-detail/gateway.interface';
+import type { RoomDetail, DateRange, Availability, HotelContext } from '@/domain/room-availability';
+import type { RoomDetailGateway, RoomDetailResult } from '@/use-cases/room-detail/gateway.interface';
 
-const HOTEL_SELECT = 'id, name, slug, status, subscription_status, go_live';
+const HOTEL_SELECT = 'id, name, slug, status, subscription_status, go_live, tax_rate, cancellation_policy, primary_color, city, location';
 const ROOM_SELECT = 'id, name, description, capacity, beds, bed_type, price, base_price, price_base, weekend_price, status, gallery, amenities';
 
 function parseGallery(raw: unknown): string[] {
@@ -35,7 +35,7 @@ function addDay(date: Date): Date {
 export class SupabaseRoomGateway implements RoomDetailGateway {
   constructor(private supabase: SupabaseClient) {}
 
-  async getRoomDetail(hotelSlug: string, roomId: string): Promise<RoomDetail | null> {
+  async getRoomDetail(hotelSlug: string, roomId: string): Promise<RoomDetailResult | null> {
     const { data: hotel, error: hotelError } = await this.supabase
       .from('hotels')
       .select(HOTEL_SELECT)
@@ -67,10 +67,29 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       return null;
     }
 
+    const { count: totalRooms } = await this.supabase
+      .from('rooms')
+      .select('id', { count: 'exact', head: true })
+      .eq('hotel_id', hotel.id)
+      .neq('status', 'maintenance');
+
     const basePrice = room.price ?? room.base_price ?? room.price_base ?? 0;
     const weekendPrice = room.weekend_price ?? basePrice * 1.2;
 
-    return {
+    const hotelContext: HotelContext = {
+      id: hotel.id,
+      name: hotel.name,
+      slug: hotel.slug,
+      city: String(hotel.city || hotel.location || '').trim(),
+      totalRooms: totalRooms ?? 1,
+      subscriptionStatus: hotel.subscription_status,
+      status: hotel.status,
+      taxRate: hotel.tax_rate ?? 0,
+      cancellationPolicy: hotel.cancellation_policy ?? null,
+      primaryColor: hotel.primary_color ?? '#000000',
+    };
+
+    const roomDetail: RoomDetail = {
       id: room.id,
       name: room.name,
       description: room.description ?? null,
@@ -84,6 +103,8 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       status: room.status === 'maintenance' || room.status === 'inactive' ? room.status : 'active',
       restricted,
     };
+
+    return { room: roomDetail, hotel: hotelContext };
   }
 
   async getAvailability(roomId: string, dateRange: DateRange): Promise<Availability[]> {

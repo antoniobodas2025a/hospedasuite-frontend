@@ -1,19 +1,13 @@
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import { getTranslations } from "next-intl/server";
-import { getHotelDetailsBySlugAction } from "@/app/actions/ota";
 import { getRoomDetailAction } from "@/app/actions/room-detail";
 import { createRoomDetailGateway } from "@/gateways/supabase-room-gateway";
 import { supabaseAdmin } from "@/lib/supabase-admin";
 import { validateAndParseDates } from "@/domain/room-availability";
-import type { HotelContext, RoomDetail } from "@/domain/room-availability";
+import type { RoomDetail } from "@/domain/room-availability";
 import { roomDetailViewModel } from "@/view-models/room-detail-view-model";
 import { RoomDetailClient } from "@/components/ota/room-detail/room-detail-client";
-import type { Hotel } from "@/types";
-
-interface HotelPageData extends Hotel {
-  rooms?: Array<Record<string, unknown>>;
-}
 
 export const dynamic = "force-dynamic";
 
@@ -38,24 +32,17 @@ export async function generateMetadata({
     return { title: await t("roomNotFound") };
   }
 
-  const { success, hotel } = await getHotelDetailsBySlugAction(slug, checkin, checkout);
-  if (!success || !hotel) {
-    return { title: await t("roomNotFound") };
-  }
-
   const roomResult = await getRoomDetailAction(slug, id, checkin, checkout);
   if (!roomResult.success || !roomResult.data) {
     return { title: await t("roomNotFound") };
   }
 
-  const hotelData = hotel as unknown as HotelPageData;
-  const room = roomResult.data as RoomDetail;
-  const city = String(hotelData.city || hotelData.location || "").trim();
-  const title = `${room.name} — ${hotelData.name}${city ? `, ${city}` : ""} | HospedaSuite`;
+  const { room, hotel } = roomResult.data;
+  const title = `${room.name} — ${hotel.name}${hotel.city ? `, ${hotel.city}` : ""} | HospedaSuite`;
   const description =
     room.description ||
-    (await t("metaDescription", { roomName: room.name, hotelName: hotelData.name }));
-  const coverImage = room.gallery?.[0] || hotelData.main_image_url || "";
+    (await t("metaDescription", { roomName: room.name, hotelName: hotel.name }));
+  const coverImage = room.gallery?.[0] || "";
 
   return {
     title,
@@ -84,32 +71,12 @@ export default async function RoomDetailPage({
     notFound();
   }
 
-  const { success, hotel } = await getHotelDetailsBySlugAction(slug);
-  if (!success || !hotel) {
-    notFound();
-  }
-
-  const hotelData = hotel as unknown as HotelPageData;
-
   const roomResult = await getRoomDetailAction(slug, id, checkin, checkout);
   if (!roomResult.success || !roomResult.data) {
     notFound();
   }
 
-  const room = roomResult.data as RoomDetail;
-
-  const hotelContext: HotelContext = {
-    id: hotelData.id,
-    name: hotelData.name,
-    slug: hotelData.slug || slug,
-    city: String(hotelData.city || hotelData.location || "").trim(),
-    totalRooms: Array.isArray(hotelData.rooms) ? hotelData.rooms.length : 1,
-    subscriptionStatus: hotelData.subscription_status as HotelContext["subscriptionStatus"],
-    status: hotelData.status as HotelContext["status"],
-    taxRate: hotelData.tax_rate ?? 0,
-    cancellationPolicy: hotelData.cancellation_policy ?? null,
-    primaryColor: hotelData.primary_color ?? "#000000",
-  };
+  const { room, hotel } = roomResult.data;
 
   const dates = validateAndParseDates(checkin, checkout);
 
@@ -122,9 +89,10 @@ export default async function RoomDetailPage({
     });
   }
 
-  const output = roomDetailViewModel({ room, hotel: hotelContext, dates, availability });
+  const output = roomDetailViewModel({ room, hotel, dates, availability });
 
-  const jsonLd = buildRoomJsonLd(slug, id, room, hotelData);
+  const jsonLd = buildRoomJsonLd(slug, id, room, hotel);
+
   const safeJsonLd = JSON.stringify(jsonLd).replace(/<\//g, '<\\/');
 
   return (
@@ -142,7 +110,7 @@ function buildRoomJsonLd(
   slug: string,
   id: string,
   room: { name: string; description: string | null; gallery: string[]; pricePerNight: number },
-  hotel: Hotel,
+  hotel: { name: string; main_image_url?: string | null },
 ) {
   const url = `${BASE_URL}/hotel/${slug}/room/${id}`;
   const image = room.gallery?.[0] || hotel.main_image_url || "";

@@ -56,6 +56,11 @@ function mockHotel(overrides: any = {}) {
     status: 'active',
     subscription_status: 'active',
     go_live: true,
+    tax_rate: 0.19,
+    cancellation_policy: 'Flexible',
+    primary_color: '#3b82f6',
+    city: 'Bogotá',
+    location: 'Bogotá',
     ...overrides,
   };
 }
@@ -66,18 +71,20 @@ describe('SupabaseRoomGateway', () => {
       const mock = createMockSupabase();
       mock.queue.push({ data: mockHotel(), error: null });
       mock.queue.push({ data: mockRoom(), error: null });
+      mock.queue.push({ data: null, error: null, count: 2 });
 
       const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
-      const room = await gateway.getRoomDetail('mirador', 'room-1');
+      const result = await gateway.getRoomDetail('mirador', 'room-1');
 
-      expect(room).not.toBeNull();
-      expect(room?.id).toBe('room-1');
-      expect(room?.name).toBe('Suite');
-      expect(room?.restricted).toBe(false);
-      expect(room?.pricePerNight).toBe(100);
-      expect(room?.weekendPrice).toBe(150);
-      expect(room?.gallery).toEqual(['https://example.com/img1.jpg']);
-      expect(room?.amenities).toEqual(['WiFi', 'AC']);
+      expect(result).not.toBeNull();
+      expect(result?.room.id).toBe('room-1');
+      expect(result?.room.name).toBe('Suite');
+      expect(result?.room.restricted).toBe(false);
+      expect(result?.room.pricePerNight).toBe(100);
+      expect(result?.room.weekendPrice).toBe(150);
+      expect(result?.room.gallery).toEqual(['https://example.com/img1.jpg']);
+      expect(result?.room.amenities).toEqual(['WiFi', 'AC']);
+      expect(result?.hotel.slug).toBe('mirador');
     });
 
     it('returns null when the hotel subscription is cancelled', async () => {
@@ -94,34 +101,37 @@ describe('SupabaseRoomGateway', () => {
       const mock = createMockSupabase();
       mock.queue.push({ data: mockHotel({ subscription_status: 'past_due' }), error: null });
       mock.queue.push({ data: mockRoom(), error: null });
+      mock.queue.push({ data: null, error: null, count: 2 });
 
       const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
-      const room = await gateway.getRoomDetail('mirador', 'room-1');
+      const result = await gateway.getRoomDetail('mirador', 'room-1');
 
-      expect(room).not.toBeNull();
-      expect(room?.restricted).toBe(true);
+      expect(result).not.toBeNull();
+      expect(result?.room.restricted).toBe(true);
     });
 
     it('uses the stored weekend_price when present', async () => {
       const mock = createMockSupabase();
       mock.queue.push({ data: mockHotel(), error: null });
       mock.queue.push({ data: mockRoom({ weekend_price: 175 }), error: null });
+      mock.queue.push({ data: null, error: null, count: 2 });
 
       const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
-      const room = await gateway.getRoomDetail('mirador', 'room-1');
+      const result = await gateway.getRoomDetail('mirador', 'room-1');
 
-      expect(room?.weekendPrice).toBe(175);
+      expect(result?.room.weekendPrice).toBe(175);
     });
 
     it('falls back to price * 1.2 when weekend_price is not set', async () => {
       const mock = createMockSupabase();
       mock.queue.push({ data: mockHotel(), error: null });
       mock.queue.push({ data: mockRoom({ weekend_price: null }), error: null });
+      mock.queue.push({ data: null, error: null, count: 2 });
 
       const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
-      const room = await gateway.getRoomDetail('mirador', 'room-1');
+      const result = await gateway.getRoomDetail('mirador', 'room-1');
 
-      expect(room?.weekendPrice).toBe(120);
+      expect(result?.room.weekendPrice).toBe(120);
     });
   });
 
