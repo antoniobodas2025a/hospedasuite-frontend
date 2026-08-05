@@ -3,7 +3,7 @@ import type { RoomDetail, DateRange, Availability, HotelContext } from '@/domain
 import type { RoomDetailGateway, RoomDetailResult } from '@/use-cases/room-detail/gateway.interface';
 
 const HOTEL_SELECT = 'id, name, slug, status, subscription_status, go_live, tax_rate, cancellation_policy, primary_color, city, location';
-const ROOM_SELECT = 'id, name, description, capacity, beds, bed_type, price, base_price, price_base, weekend_price, status, gallery, amenities';
+const ROOM_SELECT = 'id, name, description, capacity, beds, bed_type, price, weekend_price, status, gallery, amenities';
 
 function parseGallery(raw: unknown): string[] {
   if (!Array.isArray(raw)) return [];
@@ -46,10 +46,6 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       return null;
     }
 
-    if (hotel.status !== 'active' || hotel.go_live !== true) {
-      return null;
-    }
-
     if (hotel.subscription_status === 'cancelled') {
       return null;
     }
@@ -73,7 +69,7 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       .eq('hotel_id', hotel.id)
       .neq('status', 'maintenance');
 
-    const basePrice = room.price ?? room.base_price ?? room.price_base ?? 0;
+    const basePrice = room.price ?? 0;
     const weekendPrice = room.weekend_price ?? basePrice * 1.2;
 
     const hotelContext: HotelContext = {
@@ -110,11 +106,11 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
   async getAvailability(roomId: string, dateRange: DateRange): Promise<Availability[]> {
     const { data: room } = await this.supabase
       .from('rooms')
-      .select('price, base_price, price_base, weekend_price')
+      .select('price, weekend_price')
       .eq('id', roomId)
       .maybeSingle();
 
-    const basePrice = room?.price ?? room?.base_price ?? room?.price_base ?? 0;
+    const basePrice = room?.price ?? 0;
     const weekendPrice = room?.weekend_price ?? basePrice * 1.2;
 
     const { data: bookings } = await this.supabase
