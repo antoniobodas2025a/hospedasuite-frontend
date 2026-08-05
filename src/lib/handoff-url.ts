@@ -4,7 +4,7 @@
  *
  * Preserved params: location, checkin, checkout, guests, category,
  *                    search, max_price, min_beds, amenities
- * Stripped params: scroll, showRoom, and internal tracking params.
+ * Stripped params: scroll and internal tracking params.
  */
 
 export const RELEVANT_PARAMS = [

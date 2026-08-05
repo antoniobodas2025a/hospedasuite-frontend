@@ -28,13 +28,13 @@ vi.mock('next-intl', () => ({
 
 // Mock next/navigation
 vi.mock('next/navigation', () => ({
-  useSearchParams: () => new URLSearchParams('showRoom=room-1'),
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 // Mock next/image
 vi.mock('next/image', () => ({
-  default: (props: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; preload?: boolean; blurDataURL?: string; placeholder?: string }) => {
-    const { onLoad, onError, alt, fill, preload, blurDataURL, placeholder, ...rest } = props;
+  default: (props: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; preload?: boolean; blurDataURL?: string; placeholder?: string; priority?: boolean }) => {
+    const { onLoad, onError, alt, fill, preload, blurDataURL, placeholder, priority, ...rest } = props;
     return (
       // eslint-disable-next-line @next/next/no-img-element
       <img
@@ -43,6 +43,7 @@ vi.mock('next/image', () => ({
         onLoad={onLoad}
         onError={onError}
         data-testid="gallery-image"
+        data-priority={priority ? 'true' : undefined}
       />
     );
   },

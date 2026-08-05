@@ -16,7 +16,7 @@ const files = [
   'src/components/ota/RoomCard.tsx',
   'src/components/ota/BookingWidget.tsx',
   'src/components/ota/RoomsListWithFilters.tsx',
-  'src/components/ota/RoomShowcaseModal.tsx',
+  'src/components/ota/room-detail/room-detail-gallery.tsx',
   'src/components/ota/InlineDatePicker.tsx',
   'src/components/ota/RoomInfoPanel.tsx',
   'src/components/ui/ProgressIndicator.tsx',

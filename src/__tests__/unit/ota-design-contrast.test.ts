@@ -114,16 +114,14 @@ describe("AC2 — Channel Status Foreground Tokens (T2)", () => {
 // ============================================================================
 
 describe("AC3 — Zero text-background on glass surfaces (T4)", () => {
-	const roomShowcase = readOtaComponent("RoomShowcaseModal.tsx");
+	const roomInfoPanel = readOtaComponent("RoomInfoPanel.tsx");
 
-	it("has NO text-background class in RoomShowcaseModal.tsx", () => {
-		// All three occurrences should be replaced with text-foreground
-		expect(roomShowcase).not.toMatch(/\btext-background\b/);
+	it("has NO text-background class in RoomInfoPanel.tsx", () => {
+		expect(roomInfoPanel).not.toMatch(/\btext-background\b/);
 	});
 
 	it("has text-foreground on CTA buttons", () => {
-		// The three buttons that previously had text-background should now have text-foreground
-		const buttonWithForeground = roomShowcase.match(/text-foreground/g);
+		const buttonWithForeground = roomInfoPanel.match(/text-foreground/g);
 		expect(buttonWithForeground).not.toBeNull();
 		expect(buttonWithForeground!.length).toBeGreaterThanOrEqual(3);
 	});
@@ -163,7 +161,6 @@ describe("AC5 — Zero text-white on status badges (T6, T7)", () => {
 
 describe("AC6 — Zero hover:bg-brand- in Channel CTA buttons (T8-T15)", () => {
 	const otaFiles = [
-		"RoomShowcaseModal.tsx",
 		"RoomCard.tsx",
 		"AvailabilitySearchBar.tsx",
 		"BookingWidget.tsx",
@@ -185,7 +182,7 @@ describe("AC7 — Zero shadow-black/ in Channel components (T17)", () => {
 		"StickySubNav.tsx",
 		"MobileStickyCta.tsx",
 		"RoomGallery.tsx",
-		"RoomShowcaseModal.tsx",
+		"RoomGalleryGrid.tsx",
 	];
 
 	for (const filename of filesWithShadowChanges) {
@@ -208,16 +205,14 @@ describe("AC8 — Zero bg-white/90 in HeroGallery non-overlay (T16)", () => {
 	});
 });
 
-describe("AC9 — RoomShowcaseModal uses imported GlassCard (T3)", () => {
-	const roomShowcase = readOtaComponent("RoomShowcaseModal.tsx");
+describe("AC9 — RoomInfoPanel uses imported GlassCard (T3)", () => {
+	const roomInfoPanel = readOtaComponent("RoomInfoPanel.tsx");
 
 	it("has NO local GlassCard function definition", () => {
-		expect(roomShowcase).not.toMatch(/function GlassCard/);
+		expect(roomInfoPanel).not.toMatch(/function GlassCard/);
 	});
 
 	it("uses GlassCard as JSX element (imported)", () => {
-		// RoomInfoPanel (used by RoomShowcaseModal) should use imported GlassCard
-		const roomInfoPanel = readOtaComponent("RoomInfoPanel.tsx");
 		expect(roomInfoPanel).toMatch(/<GlassCard/);
 		expect(roomInfoPanel).not.toMatch(/function GlassCard/);
 	});
@@ -243,9 +238,9 @@ describe("Semantic hover tokens in Channel components", () => {
 		expect(content).toMatch(/hover:bg-card/);
 	});
 
-	it("RoomShowcaseModal uses hover:bg-accent/25 on close button", () => {
-		const content = readOtaComponent("RoomShowcaseModal.tsx");
-		expect(content).toMatch(/hover:bg-accent\/25/);
+	it("RoomInfoPanel uses hover:bg-brand-500/10 on help button", () => {
+		const content = readOtaComponent("RoomInfoPanel.tsx");
+		expect(content).toMatch(/hover:bg-brand-500\/10/);
 	});
 });
 
@@ -265,15 +260,6 @@ describe("Semantic shadow tokens in Channel components", () => {
 		expect(content).toMatch(/shadow-elev-2/);
 	});
 
-	it("RoomShowcaseModal uses shadow-elev-2", () => {
-		const content = readOtaComponent("RoomShowcaseModal.tsx");
-		expect(content).toMatch(/shadow-elev-2/);
-	});
-
-	it("RoomShowcaseModal uses shadow-elev-1 on close button", () => {
-		const content = readOtaComponent("RoomShowcaseModal.tsx");
-		expect(content).toMatch(/shadow-elev-1/);
-	});
 });
 
 describe("Status foreground tokens in RoomCard (T7)", () => {

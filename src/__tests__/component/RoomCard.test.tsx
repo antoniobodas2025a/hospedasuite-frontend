@@ -37,12 +37,14 @@ vi.mock("framer-motion", () => ({
       whileHover,
       whileTap,
       transition,
+      layoutId,
       ...props
     }: {
       children?: React.ReactNode;
       whileHover?: Record<string, unknown>;
       whileTap?: Record<string, unknown>;
       transition?: Record<string, unknown>;
+      layoutId?: string;
       [key: string]: unknown;
     }) =>
       React.createElement("div", {
@@ -50,6 +52,7 @@ vi.mock("framer-motion", () => ({
         "data-whilehover": whileHover ? JSON.stringify(whileHover) : undefined,
         "data-whiletap": whileTap ? JSON.stringify(whileTap) : undefined,
         "data-transition": transition ? JSON.stringify(transition) : undefined,
+        "data-layoutid": layoutId,
       }, children),
   },
   useInView: () => true,
@@ -68,7 +71,7 @@ vi.mock("next-intl", () => ({
       'ota.roomCard.baseRate': 'Tarifa Base',
       'ota.roomCard.freeCancellation': 'Cancelación Gratuita Disponible',
       'ota.roomCard.fallbackDescription': 'Un refugio acogedor',
-      'ota.roomCard.reserve': 'Reservar',
+      'ota.roomCard.viewPhotos': 'Reservar',
     };
     return messages[key] ?? key;
   },
@@ -321,7 +324,7 @@ describe("RoomCard", () => {
     });
   });
 
-  it("fires click_reserve and navigates after the processing delay", async () => {
+  it("fires click_reserve and navigates to room detail page after the processing delay", async () => {
     vi.useFakeTimers({ shouldAdvanceTime: true });
     const { getByRole } = render(
       <RoomCard
@@ -358,7 +361,7 @@ describe("RoomCard", () => {
       tax_rate: 0.19,
     });
     expect(mockRouter.push).toHaveBeenCalledWith(
-      expect.stringContaining('showRoom=room-1')
+      expect.stringContaining('/hotel/hotel-test/room/room-1')
     );
     expect(mockRouter.push).toHaveBeenCalledWith(
       expect.stringContaining('checkin=2026-08-10')
@@ -490,7 +493,7 @@ describe("RoomCard", () => {
       expect.stringContaining('guests=2')
     );
     expect(mockRouter.push).toHaveBeenCalledWith(
-      expect.stringContaining('showRoom=room-1')
+      expect.stringContaining('/hotel/hotel-test/room/room-1')
     );
   });
 

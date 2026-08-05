@@ -7,7 +7,6 @@ import Image from "next/image";
 import { MapPin, Star } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
-import { RoomShowcaseModalWrapper } from "@/components/ota/RoomShowcaseModalWrapper";
 import AvailabilitySearchBar from "@/components/ota/AvailabilitySearchBar";
 import HeroGallery from "@/components/ota/HeroGallery";
 import CategorizedHeroGallery from "@/components/ota/CategorizedHeroGallery";
@@ -100,7 +99,6 @@ export default async function ChannelHotelDetailPage({
 	const checkin = resolvedSearchParams?.checkin as string | undefined;
 	const checkout = resolvedSearchParams?.checkout as string | undefined;
 	const guests = resolvedSearchParams?.guests as string | undefined;
-	const showRoom = resolvedSearchParams?.showRoom as string | undefined;
 
 	const { success, hotel } = await getHotelDetailsBySlugAction(
 		slug,
@@ -172,8 +170,7 @@ export default async function ChannelHotelDetailPage({
 		{ id: "info-section", label: t("navLocation") },
 	];
 
-	// Modal data optimization: pass minimal data when closed
-	const modalHotelData = showRoom ? hotel : { id: hotel.id, slug: hotel.slug, rooms: [] };
+
 
 	// Build search context for banner
 	const searchContext = {
@@ -195,13 +192,6 @@ export default async function ChannelHotelDetailPage({
 		<main className="min-h-screen bg-background text-foreground pb-24 font-sans selection:bg-brand-500/30">
 			{/* SEO Structured Data */}
 			<HotelJsonLd hotel={hotel} reviewStats={reviewStats ?? undefined} />
-
-			{/* Room Showcase Modal — lazy data when closed */}
-			<Suspense fallback={null}>
-				<ErrorBoundary name="RoomShowcaseModal">
-					<RoomShowcaseModalWrapper hotel={modalHotelData} />
-				</ErrorBoundary>
-			</Suspense>
 
 			{/* Hero Gallery — Strangler Fig: categorized vs legacy */}
 			<ErrorBoundary name="HeroGallery">

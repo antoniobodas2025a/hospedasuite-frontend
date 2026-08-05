@@ -32,6 +32,7 @@ vi.mock("next-intl", () => ({
       'ota.booking.onlyXLeft': 'Solo quedan {count} disponibles',
       'ota.booking.noAvailability': 'Sin disponibilidad',
       'ota.booking.reserve': 'Reservar',
+      'ota.booking.viewPhotos': 'Reservar',
       'ota.booking.bestPriceGuaranteed': 'Mejor precio garantizado',
       'ota.booking.bestPriceDesc': 'Reserva directo sin comisiones',
       'ota.booking.instantConfirmation': 'Confirmacion inmediata',
@@ -195,7 +196,10 @@ describe("BookingWidget", () => {
     expect(queryByTestId('inline-date-picker')).not.toBeInTheDocument();
   });
 
-  it("shows processing state and navigates after the 300ms delay", async () => {
+  it("shows processing state and scrolls to rooms section after the 300ms delay", async () => {
+    const scrollIntoView = vi.fn();
+    document.querySelector = vi.fn().mockReturnValue({ scrollIntoView });
+
     vi.useFakeTimers({ shouldAdvanceTime: true });
     mockSearchParams.set('guests', '2');
     const { getByRole } = render(
@@ -217,14 +221,8 @@ describe("BookingWidget", () => {
       vi.advanceTimersByTime(300);
     });
 
-    expect(mockRouter.push).toHaveBeenCalledWith(
-      expect.stringContaining('showRoom=room-1'),
-      { scroll: false }
-    );
-    expect(mockRouter.push).toHaveBeenCalledWith(
-      expect.stringContaining('guests=2'),
-      { scroll: false }
-    );
+    expect(document.querySelector).toHaveBeenCalledWith('[id="rooms-section"]');
+    expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
   });
 
   it("does not trigger processing when dates are missing", () => {

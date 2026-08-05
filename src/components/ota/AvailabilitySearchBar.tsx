@@ -78,7 +78,6 @@ function buildUrl(
 		p.delete("min_capacity");
 	}
 
-	p.delete("showRoom");
 	return `?${p.toString()}`;
 }
 

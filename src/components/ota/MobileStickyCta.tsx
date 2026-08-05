@@ -35,7 +35,6 @@ export default function MobileStickyCta({
   const router = useRouter();
   const searchParams = useSearchParams();
   const guests = searchParams.get('guests');
-  const showRoom = searchParams.get('showRoom');
   const [isVisible, setIsVisible] = useState(false);
   const visibleRef = useRef(false);
 
@@ -60,9 +59,6 @@ export default function MobileStickyCta({
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
-
-  // Hide sticky CTA when RoomShowcaseModal is open
-  if (showRoom) return null;
 
   const handleReserve = () => {
     if (checkIn && checkOut) {

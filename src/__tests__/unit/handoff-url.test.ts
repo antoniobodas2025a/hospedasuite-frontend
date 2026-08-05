@@ -7,12 +7,11 @@ describe('handoff-url', () => {
     expect(result).toBe('/hotel/test?checkin=2026-06-01&checkout=2026-06-03&guests=2');
   });
 
-  it('strips non-relevant params like scroll and showRoom', () => {
-    const params = new URLSearchParams('checkin=2026-06-01&scroll=123&showRoom=abc');
+  it('strips non-relevant params like scroll', () => {
+    const params = new URLSearchParams('checkin=2026-06-01&scroll=123');
     const result = preserveSearchParams(params, '/hotel/test');
     expect(result).toContain('checkin=2026-06-01');
     expect(result).not.toContain('scroll=123');
-    expect(result).not.toContain('showRoom=abc');
   });
 
   it('returns clean path when no relevant params', () => {
@@ -39,6 +38,5 @@ describe('handoff-url', () => {
     expect(result).toContain('location=Medell'); // URL-encoded: Medellín → Medell%C3%ADn
     // These are NOT relevant and should be stripped
     expect(result).not.toContain('scroll=');
-    expect(result).not.toContain('showRoom=');
   });
 });

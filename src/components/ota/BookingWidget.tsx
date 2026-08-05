@@ -1,11 +1,10 @@
 'use client';
 
-import React, { useState, useMemo, useCallback } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info, Users } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { extendSearchParams } from '@/lib/handoff-url';
 import { calculateTotalWithTax, DEFAULT_TAX_RATE, formatPrice } from '@/lib/pricing';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
@@ -63,10 +62,6 @@ export default function BookingWidget({
   const minPrice = useMemo(() => activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price_per_night || r.price)) : 0, [activeRooms]);
   const availableCount = activeRooms.length;
 
-  // Detect selected room from URL
-  const selectedRoomId = searchParams.get('showRoom');
-  const selectedRoom = selectedRoomId ? activeRooms.find(r => r.id === selectedRoomId) : null;
-
   // Guest count from guests filter
   const guestsParam = searchParams.get('guests');
   const guestCount = guestsParam ? Number(guestsParam) : null;
@@ -78,18 +73,12 @@ export default function BookingWidget({
     return Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
   }, [checkIn, checkOut]);
 
-  const roomPrice = useMemo(() => selectedRoom ? (selectedRoom.price_per_night || selectedRoom.price) : minPrice, [selectedRoom, minPrice]);
+  const roomPrice = useMemo(() => minPrice, [minPrice]);
   const subtotal = useMemo(() => (nights > 0 ? roomPrice * nights : roomPrice), [nights, roomPrice]);
   const effectiveRate = useMemo(() => taxRate ?? DEFAULT_TAX_RATE, [taxRate]);
   const { total: totalPrice, hasTax } = useMemo(() => calculateTotalWithTax(subtotal, effectiveRate), [subtotal, effectiveRate]);
 
   const { isProcessing, handleReserve } = useBookingFlow();
-
-  const handleSelectRoom = useCallback(() => {
-    // Preserve existing params (location, category, filters) and add room selection
-    const params = extendSearchParams(searchParams, 'showRoom', selectedRoom?.id || activeRooms[0]?.id || '');
-    router.push(`?${params.toString()}`, { scroll: false });
-  }, [searchParams, selectedRoom, activeRooms, router]);
 
   const handleReserveClick = () => {
     if (!checkIn || !checkOut) {
@@ -98,7 +87,9 @@ export default function BookingWidget({
       return;
     }
     setShowDateError(false);
-    handleReserve(handleSelectRoom);
+    handleReserve(() => {
+      document.querySelector('[id="rooms-section"]')?.scrollIntoView({ behavior: 'smooth' });
+    });
   };
 
   // Loading skeleton — keep the same card shape so layout doesn't jump
@@ -120,14 +111,10 @@ export default function BookingWidget({
     );
   }
 
-  // Hide widget when RoomShowcaseModal is open
-  if (selectedRoomId) return null;
-
   const handleDateChange = (range: { from: Date; to: Date }) => {
     const params = new URLSearchParams(searchParams.toString());
     params.set('checkin', range.from.toISOString().split('T')[0]);
     params.set('checkout', range.to.toISOString().split('T')[0]);
-    params.delete('showRoom');
     router.push(`?${params.toString()}`, { scroll: false });
   };
 
@@ -137,37 +124,24 @@ export default function BookingWidget({
         {/* Header con precio — Smart Summary */}
         <div className={cn(
           "p-6 text-primary-foreground transition-colors duration-300",
-          selectedRoom ? "bg-gradient-to-br from-brand-500 to-brand-600" : "bg-gradient-to-br from-primary to-primary/90"
+          "bg-gradient-to-br from-primary to-primary/90"
         )}>
-          {selectedRoom ? (
-            <>
-              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">{selectedRoom.name}</p>
-              <div className="flex items-baseline gap-2">
-                <p className="text-4xl font-black tracking-tight">${formatPrice(totalPrice)}</p>
-                <span className="text-primary-foreground/70 text-sm font-medium">{t('ota.booking.totalCOP')}</span>
-              </div>
-              <p className="text-xs text-primary-foreground/70 mt-1">
-                ${formatPrice(roomPrice)} x {nights > 0 ? nights : 1} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
-              </p>
-            </>
-          ) : (
-            <>
-              <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">
+          <>
+            <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">
+              {nights > 0 ? t('ota.booking.totalCOP') : t('ota.booking.copPerNight')}
+            </p>
+            <div className="flex items-baseline gap-2">
+              <p className="text-4xl font-black tracking-tight">${nights > 0 ? formatPrice(totalPrice) : formatPrice(minPrice)}</p>
+              <span className="text-primary-foreground/70 text-sm font-medium">
                 {nights > 0 ? t('ota.booking.totalCOP') : t('ota.booking.copPerNight')}
+              </span>
+            </div>
+            {nights > 0 && (
+              <p className="text-xs text-primary-foreground/70 mt-1">
+                ${formatPrice(minPrice)} x {nights} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
               </p>
-              <div className="flex items-baseline gap-2">
-                <p className="text-4xl font-black tracking-tight">${nights > 0 ? formatPrice(totalPrice) : formatPrice(minPrice)}</p>
-                <span className="text-primary-foreground/70 text-sm font-medium">
-                  {nights > 0 ? t('ota.booking.totalCOP') : t('ota.booking.copPerNight')}
-                </span>
-              </div>
-              {nights > 0 && (
-                <p className="text-xs text-primary-foreground/70 mt-1">
-                  ${formatPrice(minPrice)} x {nights} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
-                </p>
-              )}
-            </>
-          )}
+            )}
+          </>
         </div>
 
         {/* Cuerpo del widget */}

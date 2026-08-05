@@ -9,7 +9,6 @@ import { cn } from "@/lib/utils";
 import GalleryImage from "@/components/ota/shared/GalleryImage";
 import { DynamicGalleryLightbox as GalleryLightbox } from "@/components/ota/shared/DynamicGalleryLightbox";
 import { SkeletonImage } from "@/components/ota/SkeletonImage";
-import { useSearchParams } from "next/navigation";
 
 // ============================================================================
 // ROOM GALLERY GRID — Airbnb-style asymmetric layout
@@ -21,7 +20,7 @@ interface RoomGalleryGridProps {
 	images: GalleryItem[];
 	roomName: string;
 	blurDataURL?: string;
-	/** Override roomId for layoutId (falls back to ?showRoom param) */
+	/** roomId drives the shared element layoutId from RoomCard */
 	roomId?: string;
 }
 
@@ -32,8 +31,7 @@ export default function RoomGalleryGrid({
 	roomId,
 }: RoomGalleryGridProps) {
 	const t = useTranslations();
-	const searchParams = useSearchParams();
-	const activeRoomId = roomId ?? searchParams.get("showRoom");
+	const activeRoomId = roomId;
 	const [open, setOpen] = useState(false);
 	const [index, setIndex] = useState(0);
 	const [loadedSet, setLoadedSet] = useState<Set<number>>(new Set());

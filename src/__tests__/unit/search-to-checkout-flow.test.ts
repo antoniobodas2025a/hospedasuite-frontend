@@ -33,10 +33,13 @@ function buildHotelUrl(slug: string, params: Record<string, string>): string {
   return query ? `/hotel/${slug}?${query}` : `/hotel/${slug}`;
 }
 
-function buildRoomModalUrl(base: string, roomId: string): string {
-  const urlObj = new URL(base, 'http://localhost');
-  urlObj.searchParams.set('showRoom', roomId);
-  return urlObj.pathname + urlObj.search;
+function buildRoomDetailUrl(slug: string, roomId: string, params: Record<string, string>): string {
+  const qs = new URLSearchParams();
+  for (const [key, value] of Object.entries(params)) {
+    if (value) qs.set(key, value);
+  }
+  const query = qs.toString();
+  return query ? `/hotel/${slug}/room/${roomId}?${query}` : `/hotel/${slug}/room/${roomId}`;
 }
 
 function buildCheckoutUrl(slug: string, params: Record<string, string>): string {
@@ -59,6 +62,11 @@ function extractParams(url: string): Record<string, string> {
   } catch {
     return {};
   }
+}
+
+function extractRoomId(url: string): string | null {
+  const match = url.match(/\/hotel\/[^/]+\/room\/([^/?]+)/);
+  return match ? match[1] : null;
 }
 
 // ── TDD: Complete Search-to-Checkout Flow ────────────────────────────────────
@@ -86,43 +94,42 @@ describe('Search-to-Checkout Flow', () => {
     expect(hotelParams.category).toBe('glamping');
   });
 
-  it('preserves all params when opening room modal', () => {
-    const hotelUrl = buildHotelUrl('hostal-la-candelaria', {
+  it('preserves all params when navigating to room detail page', () => {
+    const hotelParams = {
       location: 'Medellín',
       checkin: '2026-07-01',
       checkout: '2026-07-05',
       guests: '2',
-    });
+    };
 
-    // Step 3: User clicks room → showRoom param added
-    const modalUrl = buildRoomModalUrl(hotelUrl, 'room-123');
+    // Step 3: User clicks room → navigate to room detail page
+    const roomDetailUrl = buildRoomDetailUrl('hostal-la-candelaria', 'room-123', hotelParams);
 
-    const modalParams = extractParams(modalUrl);
-
-    expect(modalParams.showRoom).toBe('room-123');
-    expect(modalParams.location).toBe('Medellín');
-    expect(modalParams.checkin).toBe('2026-07-01');
-    expect(modalParams.checkout).toBe('2026-07-05');
-    expect(modalParams.guests).toBe('2');
+    expect(extractRoomId(roomDetailUrl)).toBe('room-123');
+    const roomDetailParams = extractParams(roomDetailUrl);
+    expect(roomDetailParams.location).toBe('Medellín');
+    expect(roomDetailParams.checkin).toBe('2026-07-01');
+    expect(roomDetailParams.checkout).toBe('2026-07-05');
+    expect(roomDetailParams.guests).toBe('2');
   });
 
   it('preserves all params when navigating to checkout', () => {
-    const modalUrl = buildRoomModalUrl(
-      buildHotelUrl('hostal-la-candelaria', {
+    const roomDetailUrl = buildRoomDetailUrl(
+      'hostal-la-candelaria',
+      'room-123',
+      {
         location: 'Medellín',
         checkin: '2026-07-01',
         checkout: '2026-07-05',
         guests: '2',
-      }),
-      'room-123',
+      },
     );
 
     // Step 4: User clicks "Reservar" → navigate to checkout
-    const modalParams = extractParams(modalUrl);
-    const checkoutParams: Record<string, string> = { ...modalParams };
-    checkoutParams.room = modalParams.showRoom; // RoomShowcaseModalWrapper maps showRoom → room
+    const roomDetailParams = extractParams(roomDetailUrl);
+    const checkoutParams: Record<string, string> = { ...roomDetailParams };
+    checkoutParams.room = extractRoomId(roomDetailUrl) || '';
     checkoutParams.ref = 'ota';
-    delete checkoutParams.showRoom;
 
     const checkoutUrl = buildCheckoutUrl('hostal-la-candelaria', checkoutParams);
 
@@ -146,13 +153,12 @@ describe('Search-to-Checkout Flow', () => {
     });
 
     const hotelUrl = buildHotelUrl('hotel-caribe', extractParams(searchUrl));
-    const modalUrl = buildRoomModalUrl(hotelUrl, 'room-456');
-    const modalParams = extractParams(modalUrl);
+    const roomDetailUrl = buildRoomDetailUrl('hotel-caribe', 'room-456', extractParams(hotelUrl));
+    const roomDetailParams = extractParams(roomDetailUrl);
 
-    const checkoutParams: Record<string, string> = { ...modalParams };
-    checkoutParams.room = modalParams.showRoom;
+    const checkoutParams: Record<string, string> = { ...roomDetailParams };
+    checkoutParams.room = extractRoomId(roomDetailUrl) || '';
     checkoutParams.ref = 'ota';
-    delete checkoutParams.showRoom;
 
     const checkoutUrl = buildCheckoutUrl('hotel-caribe', checkoutParams);
     const finalParams = extractParams(checkoutUrl);
@@ -170,13 +176,12 @@ describe('Search-to-Checkout Flow', () => {
     });
 
     const hotelUrl = buildHotelUrl('hotel-andino', extractParams(searchUrl));
-    const modalUrl = buildRoomModalUrl(hotelUrl, 'room-789');
-    const modalParams = extractParams(modalUrl);
+    const roomDetailUrl = buildRoomDetailUrl('hotel-andino', 'room-789', extractParams(hotelUrl));
+    const roomDetailParams = extractParams(roomDetailUrl);
 
-    const checkoutParams: Record<string, string> = { ...modalParams };
-    checkoutParams.room = modalParams.showRoom;
+    const checkoutParams: Record<string, string> = { ...roomDetailParams };
+    checkoutParams.room = extractRoomId(roomDetailUrl) || '';
     checkoutParams.ref = 'ota';
-    delete checkoutParams.showRoom;
 
     const checkoutUrl = buildCheckoutUrl('hotel-andino', checkoutParams);
     const finalParams = extractParams(checkoutUrl);
@@ -209,51 +214,42 @@ describe('Back Navigation (Heurística #3)', () => {
     expect(backParams.guests).toBe('3');
   });
 
-  it('preserves search params when closing room modal', () => {
-    const modalUrl = buildRoomModalUrl(
-      buildHotelUrl('hotel-xyz', {
-        location: 'Eje Cafetero',
-        checkin: '2026-11-01',
-        checkout: '2026-11-03',
-        guests: '2',
-      }),
-      'room-100',
-    );
+  it('preserves search params when going back from room detail to hotel', () => {
+    const hotelUrl = buildHotelUrl('hotel-xyz', {
+      location: 'Eje Cafetero',
+      checkin: '2026-11-01',
+      checkout: '2026-11-03',
+      guests: '2',
+    });
 
-    // Closing modal removes showRoom but preserves other params
-    const urlObj = new URL(modalUrl, 'http://localhost');
-    urlObj.searchParams.delete('showRoom');
-    const closedUrl = urlObj.pathname + urlObj.search;
+    const roomDetailUrl = buildRoomDetailUrl('hotel-xyz', 'room-100', extractParams(hotelUrl));
 
-    const closedParams = extractParams(closedUrl);
+    // Going back should restore the hotel URL with all params
+    const backUrl = hotelUrl;
+    const backParams = extractParams(backUrl);
 
-    expect(closedParams.showRoom).toBeUndefined();
-    expect(closedParams.location).toBe('Eje Cafetero');
-    expect(closedParams.checkin).toBe('2026-11-01');
-    expect(closedParams.checkout).toBe('2026-11-03');
-    expect(closedParams.guests).toBe('2');
+    expect(backParams.location).toBe('Eje Cafetero');
+    expect(backParams.checkin).toBe('2026-11-01');
+    expect(backParams.checkout).toBe('2026-11-03');
+    expect(backParams.guests).toBe('2');
   });
 
-  // MUTATION: If closing modal wipes all params, this fails
-  it('MUTATION: detects param wipe when closing modal', () => {
-    const modalUrl = buildRoomModalUrl(
-      buildHotelUrl('hotel-abc', {
-        location: 'San Andrés',
-        checkin: '2026-12-01',
-        checkout: '2026-12-07',
-        guests: '2',
-      }),
-      'room-200',
-    );
+  // MUTATION: If back navigation wipes all params, this fails
+  it('MUTATION: detects param wipe when going back from room detail', () => {
+    const hotelUrl = buildHotelUrl('hotel-abc', {
+      location: 'San Andrés',
+      checkin: '2026-12-01',
+      checkout: '2026-12-07',
+      guests: '2',
+    });
 
-    const urlObj = new URL(modalUrl, 'http://localhost');
-    urlObj.searchParams.delete('showRoom');
-    const closedUrl = urlObj.pathname + urlObj.search;
+    const roomDetailUrl = buildRoomDetailUrl('hotel-abc', 'room-200', extractParams(hotelUrl));
 
-    const closedParams = extractParams(closedUrl);
+    const backUrl = hotelUrl;
+    const backParams = extractParams(backUrl);
 
-    expect(closedParams.location).toBe('San Andrés');
-    expect(closedParams.checkin).toBe('2026-12-01');
+    expect(backParams.location).toBe('San Andrés');
+    expect(backParams.checkin).toBe('2026-12-01');
   });
 });
 
@@ -299,13 +295,12 @@ describe('Data Coherence', () => {
       });
 
       const hotelUrl = buildHotelUrl('test-hotel', extractParams(searchUrl));
-      const modalUrl = buildRoomModalUrl(hotelUrl, 'room-1');
-      const modalParams = extractParams(modalUrl);
+      const roomDetailUrl = buildRoomDetailUrl('test-hotel', 'room-1', extractParams(hotelUrl));
+      const roomDetailParams = extractParams(roomDetailUrl);
 
-      const checkoutParams: Record<string, string> = { ...modalParams };
-      checkoutParams.room = modalParams.showRoom;
+      const checkoutParams: Record<string, string> = { ...roomDetailParams };
+      checkoutParams.room = extractRoomId(roomDetailUrl) || '';
       checkoutParams.ref = 'ota';
-      delete checkoutParams.showRoom;
 
       const checkoutUrl = buildCheckoutUrl('test-hotel', checkoutParams);
       const finalParams = extractParams(checkoutUrl);
@@ -458,14 +453,14 @@ describe('Search Context Banner Coherence', () => {
 
 describe('Doherty Threshold (Performance)', () => {
   it('URL param extraction completes in < 10ms', () => {
-    const url = '/hotel/test?location=Medellín&checkin=2026-07-01&checkout=2026-07-05&guests=2&category=glamping&showRoom=room-123&ref=ota';
+    const url = '/hotel/test?location=Medellín&checkin=2026-07-01&checkout=2026-07-05&guests=2&category=glamping&ref=ota';
 
     const start = performance.now();
     const params = extractParams(url);
     const elapsed = performance.now() - start;
 
     expect(elapsed).toBeLessThan(10);
-    expect(Object.keys(params).length).toBe(7);
+    expect(Object.keys(params).length).toBe(6);
   });
 
   it('URL building completes in < 10ms', () => {
@@ -492,15 +487,14 @@ describe('Doherty Threshold (Performance)', () => {
     const searchUrl = buildSearchUrl({ location: 'Test', checkin: '2026-07-01', checkout: '2026-07-05', guests: '2' });
     const hotelUrl = buildHotelUrl('test', extractParams(searchUrl));
 
-    // Transition 2: Hotel → Modal
-    const modalUrl = buildRoomModalUrl(hotelUrl, 'room-1');
+    // Transition 2: Hotel → Room Detail
+    const roomDetailUrl = buildRoomDetailUrl('test', 'room-1', extractParams(hotelUrl));
 
-    // Transition 3: Modal → Checkout
-    const modalParams = extractParams(modalUrl);
-    const checkoutParams: Record<string, string> = { ...modalParams };
-    checkoutParams.room = modalParams.showRoom!;
+    // Transition 3: Room Detail → Checkout
+    const roomDetailParams = extractParams(roomDetailUrl);
+    const checkoutParams: Record<string, string> = { ...roomDetailParams };
+    checkoutParams.room = extractRoomId(roomDetailUrl) || '';
     checkoutParams.ref = 'ota';
-    delete checkoutParams.showRoom;
     const checkoutUrl = buildCheckoutUrl('test', checkoutParams);
 
     // Transition 4: Extract final params

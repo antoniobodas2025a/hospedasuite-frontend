@@ -7,7 +7,7 @@ import { motion, useInView } from 'framer-motion';
 import { GlassCard } from '@/components/ui/glass';
 import { Users, ArrowRight, ShieldCheck, Star, TrendingUp, Award, Flame, Bed } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { extendSearchParams } from '@/lib/handoff-url';
+
 import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
@@ -83,14 +83,15 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
     taxRate,
   });
 
-  // Preserve existing params (location, category, filters) and add room selection
+  // Preserve existing params (location, category, filters) and navigate to room detail
   const destinationUrl = useMemo(() => {
-    const queryParams = extendSearchParams(searchParams, 'showRoom', room.id);
+    const queryParams = new URLSearchParams(searchParams.toString());
     if (checkIn) queryParams.set('checkin', checkIn);
     if (checkOut) queryParams.set('checkout', checkOut);
     if (guests) queryParams.set('guests', guests);
-    return `?${queryParams.toString()}`;
-  }, [searchParams, room.id, checkIn, checkOut, guests]);
+    const queryString = queryParams.toString();
+    return `/hotel/${hotelSlug}/room/${room.id}${queryString ? `?${queryString}` : ''}`;
+  }, [searchParams, hotelSlug, room.id, checkIn, checkOut, guests]);
 
   const router = useRouter();
   const { isProcessing, handleReserve } = useBookingFlow();
