@@ -27,7 +27,8 @@ export async function getRoomDetailAction(
     return { success: true, data: room };
   } catch (error: unknown) {
     const message = error instanceof Error ? error.message : "Unknown error";
-    return { success: false, error: message };
+    console.error("[ROOM DETAIL] Error fetching room detail:", message);
+    return { success: false, error: "No se pudo cargar la información de la habitación" };
   }
 }
 

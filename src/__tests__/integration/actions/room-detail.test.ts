@@ -61,13 +61,16 @@ describe('getRoomDetailAction', () => {
     expect(result.data?.restricted).toBe(true);
   });
 
-  it('returns an error when the gateway throws', async () => {
+  it('returns a generic error and logs when the gateway throws', async () => {
+    const consoleErrorSpy = vi.spyOn(console, 'error').mockImplementation(() => {});
     const gateway = { getRoomDetail: vi.fn().mockRejectedValue(new Error('Supabase timeout')) };
     (createRoomDetailGateway as any).mockReturnValue(gateway);
 
     const result = await getRoomDetailAction('mirador', 'room-1');
 
     expect(result.success).toBe(false);
-    expect(result.error).toBe('Supabase timeout');
+    expect(result.error).toBe('No se pudo cargar la información de la habitación');
+    expect(consoleErrorSpy).toHaveBeenCalled();
+    consoleErrorSpy.mockRestore();
   });
 });
