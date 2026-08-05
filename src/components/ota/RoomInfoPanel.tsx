@@ -18,7 +18,7 @@ import { useTranslations } from "next-intl";
 import { getDateFnsLocale } from "@/lib/date-locale";
 import { useLocale } from "next-intl";
 import { cn } from "@/lib/utils";
-import { AmenityGlass } from "./RoomShowcaseModal";
+import { AmenityGlass } from "./AmenityGlass";
 import PriceBreakdown from "./PriceBreakdown";
 
 interface RoomInfoPanelProps {
