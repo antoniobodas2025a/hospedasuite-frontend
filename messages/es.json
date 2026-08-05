@@ -406,6 +406,7 @@
       "priceLabel": "Precio",
       "currencyLabel": "COP/noche",
       "perNight": "/noche",
+      "selectDates": "Seleccionar fechas",
       "descriptionPlaceholder": "Descripción...",
       "capacityLabel": "Capacidad",
       "bedsLabel": "Camas",

@@ -39,6 +39,7 @@ vi.mock('next-intl', () => ({
       'ota.roomDetail.changeDates': 'Cambiar fechas',
       'ota.roomDetail.notAvailableForDates': 'No disponible para {checkIn} - {checkOut}',
       'ota.roomDetail.perNight': '/noche',
+      'ota.roomDetail.selectDates': 'Seleccionar fechas',
       'ota.roomDetail.viewDetail': 'Ver detalle',
       'ota.roomDetail.errorTitle': 'Algo salió mal',
       'ota.roomDetail.genericError': 'No pudimos cargar la habitación',

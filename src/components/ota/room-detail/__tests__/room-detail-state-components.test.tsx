@@ -44,6 +44,7 @@ vi.mock('next-intl', () => ({
       'ota.roomDetail.notAvailableForDates': 'No disponible para {checkIn} - {checkOut}',
       'ota.roomDetail.viewDetail': 'Ver detalle',
       'ota.roomDetail.perNight': '/noche',
+      'ota.roomDetail.selectDates': 'Seleccionar fechas',
       'ota.roomDetail.pricePerNight': '{nights} noches · ${price} por noche',
       'ota.roomDetail.taxIncluded': 'Impuestos incluidos',
       'ota.roomDetail.errorTitle': 'Algo salió mal',
@@ -254,6 +255,17 @@ describe('T-09: RoomDetailCalendar', () => {
     const call = InlineDatePickerMock.mock.calls[0][0];
     expect(call.primaryColor).toBe('#c25a2a');
     expect(call.className).toBeDefined();
+  });
+
+  it('adds an aria-label to the InlineDatePicker wrapper', () => {
+    const output = makeOutput({ state: 'calendar_first' });
+    const dispatch = makeDispatch();
+
+    const { getByLabelText } = render(
+      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    );
+
+    expect(getByLabelText('Seleccionar fechas')).toBeInTheDocument();
   });
 
   it('shows teaser price when no dates are selected', () => {

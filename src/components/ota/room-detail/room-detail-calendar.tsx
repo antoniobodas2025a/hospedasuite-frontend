@@ -114,7 +114,11 @@ export function RoomDetailCalendar({
 
       {/* Calendar protagonist */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-        <div className="order-2 lg:order-1">
+        <div
+          className="order-2 lg:order-1"
+          role="region"
+          aria-label={t('ota.roomDetail.selectDates')}
+        >
           <InlineDatePicker
             checkIn={checkInStr}
             checkOut={checkOutStr}
