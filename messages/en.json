@@ -433,7 +433,7 @@
       "previewAdmin": "Admin view",
       "previewGuest": "Guest view",
       "selectDatesToContinue": "Select dates to continue",
-      "viewDetail": "View room",
+      "chooseDates": "Choose dates",
       "changeDates": "Change dates",
       "weekendPrice": "Weekend: ${price}/night",
       "weekdayNights": "{count, plural, one {# weekday night} other {# weekday nights}}",

@@ -21,10 +21,8 @@ export interface RoomDetailClientState {
 
 export type RoomDetailClientAction =
   | { type: 'SELECT_DATES'; checkIn: Date; checkOut: Date }
-  | { type: 'CONFIRM_DATES' }
   | { type: 'CLEAR_DATES' }
   | { type: 'SELECT_SUGGESTION'; checkIn: Date; checkOut: Date }
-  | { type: 'CHANGE_DATES' }
   | { type: 'FETCH_ERROR' };
 
 export function roomDetailReducer(
@@ -33,27 +31,19 @@ export function roomDetailReducer(
 ): RoomDetailClientState {
   switch (action.type) {
     case 'SELECT_DATES':
-      if (state.state !== 'calendar_first' && state.state !== 'calendar_active') {
+      if (state.state !== 'gallery' && state.state !== 'dates_selected') {
         return state;
       }
       return {
         ...state,
-        state: 'calendar_active',
+        state: 'dates_selected',
         checkIn: action.checkIn,
         checkOut: action.checkOut,
-      };
-    case 'CONFIRM_DATES':
-      if (state.state !== 'calendar_active') {
-        return state;
-      }
-      return {
-        ...state,
-        state: 'detail',
       };
     case 'CLEAR_DATES':
       return {
         ...state,
-        state: 'calendar_first',
+        state: 'gallery',
         checkIn: null,
         checkOut: null,
       };
@@ -63,17 +53,9 @@ export function roomDetailReducer(
       }
       return {
         ...state,
-        state: 'calendar_active',
+        state: 'dates_selected',
         checkIn: action.checkIn,
         checkOut: action.checkOut,
-      };
-    case 'CHANGE_DATES':
-      if (state.state !== 'detail') {
-        return state;
-      }
-      return {
-        ...state,
-        state: 'calendar_active',
       };
     case 'FETCH_ERROR':
       return {
@@ -127,21 +109,36 @@ export function RoomDetailClient({ output }: RoomDetailClientProps) {
     selectedCheckOut: state.checkOut,
   };
 
+  const isMainState = state.state === 'gallery' || state.state === 'dates_selected';
+  const motionKey = isMainState ? 'main' : state.state;
+
   return (
     <AnimatePresence mode="wait">
       <motion.div
-        key={state.state}
+        key={motionKey}
         initial={{ opacity: 0, y: 8 }}
         animate={{ opacity: 1, y: 0 }}
         exit={{ opacity: 0, y: -8 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
       >
         {state.state === 'loading' && <RoomDetailSkeleton />}
-        {(state.state === 'calendar_first' || state.state === 'calendar_active') && (
-          <RoomDetailCalendar output={effectiveOutput} state={state.state} dispatch={dispatch} {...sharedDateProps} />
-        )}
-        {state.state === 'detail' && (
-          <RoomDetailGallery output={effectiveOutput} state={state.state} dispatch={dispatch} {...sharedDateProps} />
+        {isMainState && (
+          <div className="p-4 lg:p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(320px,380px)] gap-6 lg:gap-8 items-start">
+              <RoomDetailGallery
+                output={effectiveOutput}
+                state={state.state}
+                dispatch={dispatch}
+                {...sharedDateProps}
+              />
+              <RoomDetailCalendar
+                output={effectiveOutput}
+                state={state.state}
+                dispatch={dispatch}
+                {...sharedDateProps}
+              />
+            </div>
+          </div>
         )}
         {state.state === 'sold_out' && (
           <RoomDetailSoldOut output={effectiveOutput} state={state.state} dispatch={dispatch} {...sharedDateProps} />

@@ -433,7 +433,7 @@
       "previewAdmin": "Vista administrador",
       "previewGuest": "Vista huésped",
       "selectDatesToContinue": "Seleccioná las fechas para continuar",
-      "viewDetail": "Ver habitación",
+      "chooseDates": "Elegir fechas",
       "changeDates": "Cambiar fechas",
       "weekendPrice": "Fin de semana: ${price}/noche",
       "weekdayNights": "{count, plural, one {# noche entre semana} other {# noches entre semana}}",

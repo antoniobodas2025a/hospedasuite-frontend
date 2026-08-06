@@ -37,10 +37,10 @@ vi.mock('next-intl', () => ({
       'ota.showcase.seeOtherRooms': 'Ver otras habitaciones',
       'ota.roomDetail.backToHotel': 'Volver al hotel',
       'ota.roomDetail.changeDates': 'Cambiar fechas',
+      'ota.roomDetail.chooseDates': 'Elegir fechas',
       'ota.roomDetail.notAvailableForDates': 'No disponible para {checkIn} - {checkOut}',
       'ota.roomDetail.perNight': '/noche',
       'ota.roomDetail.selectDates': 'Seleccionar fechas',
-      'ota.roomDetail.viewDetail': 'Ver detalle',
       'ota.roomDetail.errorTitle': 'Algo salió mal',
       'ota.roomDetail.genericError': 'No pudimos cargar la habitación',
       'ota.roomDetail.selectDatesToContinue': 'Selecciona tus fechas para continuar',
@@ -132,7 +132,7 @@ vi.mock('@/lib/amenity-registry', () => ({
 
 function makeOutput(overrides: Partial<RoomDetailViewModelOutput> = {}): RoomDetailViewModelOutput {
   return {
-    state: 'calendar_first',
+    state: 'gallery',
     roomName: 'Suite Mirador',
     hotelName: 'Hotel Mirador',
     hotelSlug: 'hotel-mirador',
@@ -166,9 +166,9 @@ const dates = {
 };
 
 describe('roomDetailReducer', () => {
-  it('SELECT_DATES from calendar_first → calendar_active', () => {
+  it('SELECT_DATES from gallery → dates_selected', () => {
     const initial: RoomDetailClientState = {
-      state: 'calendar_first',
+      state: 'gallery',
       checkIn: null,
       checkOut: null,
     };
@@ -176,14 +176,14 @@ describe('roomDetailReducer', () => {
 
     const next = roomDetailReducer(initial, action);
 
-    expect(next.state).toBe('calendar_active');
+    expect(next.state).toBe('dates_selected');
     expect(next.checkIn).toEqual(dates.checkIn);
     expect(next.checkOut).toEqual(dates.checkOut);
   });
 
-  it('SELECT_DATES from calendar_active replaces the selected dates', () => {
+  it('SELECT_DATES from dates_selected replaces the selected dates', () => {
     const initial: RoomDetailClientState = {
-      state: 'calendar_active',
+      state: 'dates_selected',
       checkIn: new Date('2026-08-01T12:00:00Z'),
       checkOut: new Date('2026-08-02T12:00:00Z'),
     };
@@ -191,100 +191,46 @@ describe('roomDetailReducer', () => {
 
     const next = roomDetailReducer(initial, action);
 
-    expect(next.state).toBe('calendar_active');
+    expect(next.state).toBe('dates_selected');
     expect(next.checkIn).toEqual(dates.checkIn);
     expect(next.checkOut).toEqual(dates.checkOut);
   });
 
-  it('SELECT_DATES from non-calendar states is ignored', () => {
-    const initial: RoomDetailClientState = {
-      state: 'detail',
-      checkIn: new Date('2026-08-01T12:00:00Z'),
-      checkOut: new Date('2026-08-02T12:00:00Z'),
-    };
-    const action: RoomDetailClientAction = { type: 'SELECT_DATES', ...dates };
-
-    const next = roomDetailReducer(initial, action);
-
-    expect(next.state).toBe('detail');
-    expect(next.checkIn).toEqual(initial.checkIn);
-    expect(next.checkOut).toEqual(initial.checkOut);
-  });
-
-  it('CONFIRM_DATES from calendar_active → detail', () => {
-    const initial: RoomDetailClientState = {
-      state: 'calendar_active',
-      checkIn: dates.checkIn,
-      checkOut: dates.checkOut,
-    };
-    const action: RoomDetailClientAction = { type: 'CONFIRM_DATES' };
-
-    const next = roomDetailReducer(initial, action);
-
-    expect(next.state).toBe('detail');
-    expect(next.checkIn).toEqual(dates.checkIn);
-    expect(next.checkOut).toEqual(dates.checkOut);
-  });
-
-  it('CONFIRM_DATES from non-calendar-active states is ignored', () => {
-    const initial: RoomDetailClientState = {
-      state: 'calendar_first',
-      checkIn: null,
-      checkOut: null,
-    };
-    const action: RoomDetailClientAction = { type: 'CONFIRM_DATES' };
-
-    const next = roomDetailReducer(initial, action);
-
-    expect(next.state).toBe('calendar_first');
-  });
-
-  it('CLEAR_DATES from calendar_active → calendar_first', () => {
-    const initial: RoomDetailClientState = {
-      state: 'calendar_active',
-      checkIn: dates.checkIn,
-      checkOut: dates.checkOut,
-    };
-    const action: RoomDetailClientAction = { type: 'CLEAR_DATES' };
-
-    const next = roomDetailReducer(initial, action);
-
-    expect(next.state).toBe('calendar_first');
-    expect(next.checkIn).toBeNull();
-    expect(next.checkOut).toBeNull();
-  });
-
-  it('CLEAR_DATES from detail → calendar_first', () => {
-    const initial: RoomDetailClientState = {
-      state: 'detail',
-      checkIn: dates.checkIn,
-      checkOut: dates.checkOut,
-    };
-    const action: RoomDetailClientAction = { type: 'CLEAR_DATES' };
-
-    const next = roomDetailReducer(initial, action);
-
-    expect(next.state).toBe('calendar_first');
-    expect(next.checkIn).toBeNull();
-    expect(next.checkOut).toBeNull();
-  });
-
-  it('CLEAR_DATES from sold_out → calendar_first', () => {
+  it('SELECT_DATES from sold_out is ignored', () => {
     const initial: RoomDetailClientState = {
       state: 'sold_out',
       checkIn: dates.checkIn,
       checkOut: dates.checkOut,
     };
-    const action: RoomDetailClientAction = { type: 'CLEAR_DATES' };
+    const action: RoomDetailClientAction = { type: 'SELECT_DATES', ...dates };
 
     const next = roomDetailReducer(initial, action);
 
-    expect(next.state).toBe('calendar_first');
-    expect(next.checkIn).toBeNull();
-    expect(next.checkOut).toBeNull();
+    expect(next.state).toBe('sold_out');
+    expect(next.checkIn).toEqual(dates.checkIn);
+    expect(next.checkOut).toEqual(dates.checkOut);
   });
 
-  it('SELECT_SUGGESTION from sold_out → calendar_active', () => {
+  it('CLEAR_DATES from any state → gallery with null dates', () => {
+    const states: RoomDetailClientState['state'][] = ['dates_selected', 'sold_out'];
+
+    for (const state of states) {
+      const initial: RoomDetailClientState = {
+        state,
+        checkIn: dates.checkIn,
+        checkOut: dates.checkOut,
+      };
+      const action: RoomDetailClientAction = { type: 'CLEAR_DATES' };
+
+      const next = roomDetailReducer(initial, action);
+
+      expect(next.state).toBe('gallery');
+      expect(next.checkIn).toBeNull();
+      expect(next.checkOut).toBeNull();
+    }
+  });
+
+  it('SELECT_SUGGESTION from sold_out → dates_selected', () => {
     const initial: RoomDetailClientState = {
       state: 'sold_out',
       checkIn: null,
@@ -298,14 +244,14 @@ describe('roomDetailReducer', () => {
 
     const next = roomDetailReducer(initial, action);
 
-    expect(next.state).toBe('calendar_active');
+    expect(next.state).toBe('dates_selected');
     expect(next.checkIn).toEqual(dates.checkIn);
     expect(next.checkOut).toEqual(dates.checkOut);
   });
 
   it('SELECT_SUGGESTION from non-sold_out states is ignored', () => {
     const initial: RoomDetailClientState = {
-      state: 'calendar_first',
+      state: 'gallery',
       checkIn: null,
       checkOut: null,
     };
@@ -317,53 +263,24 @@ describe('roomDetailReducer', () => {
 
     const next = roomDetailReducer(initial, action);
 
-    expect(next.state).toBe('calendar_first');
+    expect(next.state).toBe('gallery');
     expect(next.checkIn).toBeNull();
     expect(next.checkOut).toBeNull();
-  });
-
-  it('CHANGE_DATES from detail → calendar_active', () => {
-    const initial: RoomDetailClientState = {
-      state: 'detail',
-      checkIn: dates.checkIn,
-      checkOut: dates.checkOut,
-    };
-    const action: RoomDetailClientAction = { type: 'CHANGE_DATES' };
-
-    const next = roomDetailReducer(initial, action);
-
-    expect(next.state).toBe('calendar_active');
-    expect(next.checkIn).toEqual(dates.checkIn);
-    expect(next.checkOut).toEqual(dates.checkOut);
-  });
-
-  it('CHANGE_DATES from non-detail states is ignored', () => {
-    const initial: RoomDetailClientState = {
-      state: 'calendar_active',
-      checkIn: dates.checkIn,
-      checkOut: dates.checkOut,
-    };
-    const action: RoomDetailClientAction = { type: 'CHANGE_DATES' };
-
-    const next = roomDetailReducer(initial, action);
-
-    expect(next.state).toBe('calendar_active');
   });
 
   it('FETCH_ERROR from any state → error', () => {
     const states: RoomDetailClientState['state'][] = [
       'loading',
-      'calendar_first',
-      'calendar_active',
-      'detail',
+      'gallery',
+      'dates_selected',
       'sold_out',
     ];
 
     for (const state of states) {
       const initial: RoomDetailClientState = {
         state,
-        checkIn: state === 'calendar_first' ? null : dates.checkIn,
-        checkOut: state === 'calendar_first' ? null : dates.checkOut,
+        checkIn: state === 'gallery' ? null : dates.checkIn,
+        checkOut: state === 'gallery' ? null : dates.checkOut,
       };
       const action: RoomDetailClientAction = { type: 'FETCH_ERROR' };
 
@@ -380,91 +297,88 @@ describe('RoomDetailClient', () => {
     expect(getByTestId('room-detail-skeleton')).toBeInTheDocument();
   });
 
-  it('renders the calendar for calendar_first state', () => {
+  it('renders the gallery and calendar for the gallery state', () => {
     const { getByTestId, getByRole } = render(
-      <RoomDetailClient output={makeOutput({ state: 'calendar_first' })} />
+      <RoomDetailClient output={makeOutput({ state: 'gallery' })} />
     );
+    expect(getByTestId('room-detail-gallery')).toBeInTheDocument();
     expect(getByTestId('room-detail-calendar')).toBeInTheDocument();
     expect(getByRole('button', { name: 'Select dates' })).toBeInTheDocument();
   });
 
-  it('transitions from calendar_first to calendar_active when selecting dates', () => {
-    const { getByRole, getByTestId } = render(
-      <RoomDetailClient output={makeOutput({ state: 'calendar_first' })} />
+  it('renders the gallery and calendar for the dates_selected state', () => {
+    const { getByTestId } = render(
+      <RoomDetailClient
+        output={makeOutput({
+          state: 'dates_selected',
+          pricing: {
+            weekdayPrice: 300000,
+            weekendPrice: 350000,
+            weekdayNights: 2,
+            weekendNights: 1,
+            subtotal: 950000,
+            tax: 180500,
+            total: 1130500,
+            taxRate: 0.19,
+            breakdown: [],
+          },
+          initialCheckIn: dates.checkIn,
+          initialCheckOut: dates.checkOut,
+        })}
+      />
     );
-    fireEvent.click(getByRole('button', { name: 'Select dates' }));
-    expect(getByTestId('room-detail-calendar')).toHaveAttribute('data-state', 'calendar_active');
+    expect(getByTestId('room-detail-gallery')).toBeInTheDocument();
+    expect(getByTestId('room-detail-calendar')).toBeInTheDocument();
   });
 
-  it('recomputes and shows pricing summary when selecting dates from calendar_first', () => {
+  it('transitions from gallery to dates_selected when selecting dates', () => {
+    const { getByRole, getByTestId } = render(
+      <RoomDetailClient output={makeOutput({ state: 'gallery' })} />
+    );
+    fireEvent.click(getByRole('button', { name: 'Select dates' }));
+    expect(getByTestId('room-detail-calendar')).toHaveAttribute('data-state', 'dates_selected');
+  });
+
+  it('shows the price summary in the calendar sidebar after selecting dates', () => {
     const { getByRole, getByTestId, getByText } = render(
-      <RoomDetailClient output={makeOutput({ state: 'calendar_first', pricing: null })} />
+      <RoomDetailClient output={makeOutput({ state: 'gallery', pricing: null })} />
     );
     fireEvent.click(getByRole('button', { name: 'Select dates' }));
 
     expect(getByTestId('summary-bar')).toBeInTheDocument();
-    expect(getByText('Ver detalle')).toBeInTheDocument();
-    expect(getByText('$1.071.000')).toBeInTheDocument();
+    expect(getByTestId('calendar-reserve-button')).toHaveTextContent('Reservar');
+    expect(getByTestId('summary-bar')).toHaveTextContent('$1.071.000');
   });
 
-  it('transitions from calendar_active to detail when confirming availability', () => {
+  it('disables Reservar without dates and enables it after selecting dates', () => {
     const { getByRole, getByTestId } = render(
-      <RoomDetailClient
-        output={makeOutput({
-          state: 'calendar_active',
-          pricing: {
-            weekdayPrice: 300000,
-            weekendPrice: 350000,
-            weekdayNights: 2,
-            weekendNights: 1,
-            subtotal: 950000,
-            tax: 180500,
-            total: 1130500,
-            taxRate: 0.19,
-            breakdown: [],
-          },
-          initialCheckIn: new Date('2026-08-10T12:00:00Z'),
-          initialCheckOut: new Date('2026-08-13T12:00:00Z'),
-        })}
-      />
+      <RoomDetailClient output={makeOutput({ state: 'gallery', pricing: null })} />
     );
-    fireEvent.click(getByRole('button', { name: 'Ver detalle' }));
-    expect(getByTestId('room-detail-gallery')).toBeInTheDocument();
+    const reserveButton = getByTestId('calendar-reserve-button');
+    expect(reserveButton).toBeDisabled();
+
+    fireEvent.click(getByRole('button', { name: 'Select dates' }));
+
+    expect(getByTestId('calendar-reserve-button')).toBeEnabled();
   });
 
-  it('passes user-selected dates from reducer into the detail gallery', () => {
+  it('does not render a Ver habitación / Ver detalle button', () => {
+    const { queryByText } = render(
+      <RoomDetailClient output={makeOutput({ state: 'gallery' })} />
+    );
+    expect(queryByText('Ver habitación')).not.toBeInTheDocument();
+    expect(queryByText('Ver detalle')).not.toBeInTheDocument();
+  });
+
+  it('passes user-selected dates into the gallery component', () => {
     const { getByRole, getByTestId } = render(
-      <RoomDetailClient
-        output={makeOutput({
-          state: 'calendar_first',
-          pricing: {
-            weekdayPrice: 300000,
-            weekendPrice: 350000,
-            weekdayNights: 2,
-            weekendNights: 1,
-            subtotal: 950000,
-            tax: 180500,
-            total: 1130500,
-            taxRate: 0.19,
-            breakdown: [],
-          },
-        })}
-      />
+      <RoomDetailClient output={makeOutput({ state: 'gallery', pricing: null })} />
     );
     fireEvent.click(getByRole('button', { name: 'Select dates' }));
-    fireEvent.click(getByRole('button', { name: 'Ver detalle' }));
 
     const gallery = getByTestId('room-detail-gallery');
     expect(gallery).toHaveAttribute('data-checkin', '2026-08-10');
     expect(gallery).toHaveAttribute('data-checkout', '2026-08-13');
-  });
-
-  it('renders the gallery for detail state', () => {
-    const { getByTestId, getAllByText } = render(
-      <RoomDetailClient output={makeOutput({ state: 'detail' })} />
-    );
-    expect(getByTestId('room-detail-gallery')).toBeInTheDocument();
-    expect(getAllByText('Suite Mirador').length).toBeGreaterThan(0);
   });
 
   it('renders the sold-out state for sold_out', () => {

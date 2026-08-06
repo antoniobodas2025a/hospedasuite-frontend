@@ -55,17 +55,15 @@ export type HotelContext = {
 
 export type RoomDetailState =
   | 'loading'
-  | 'calendar_first'
-  | 'calendar_active'
-  | 'detail'
+  | 'gallery'
+  | 'dates_selected'
   | 'sold_out'
   | 'error';
 
 export enum UIState {
   LOADING = 'LOADING',
-  CALENDAR_FIRST = 'CALENDAR_FIRST',
-  CALENDAR_ACTIVE = 'CALENDAR_ACTIVE',
-  DETAIL = 'DETAIL',
+  GALLERY = 'GALLERY',
+  DATES_SELECTED = 'DATES_SELECTED',
   SOLD_OUT = 'SOLD_OUT',
   ERROR = 'ERROR',
 }

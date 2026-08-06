@@ -1,14 +1,15 @@
 'use client';
 
 import React, { useMemo } from 'react';
+import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ChevronRight, ArrowRight } from 'lucide-react';
+import { ChevronRight, ArrowRight, Users, Bed } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import RoomGalleryGrid from '@/components/ota/RoomGalleryGrid';
 import { RoomInfoPanel } from '@/components/ota/RoomInfoPanel';
-import { GlassCard, GlassPill } from '@/components/ui/glass';
+import { GlassPill } from '@/components/ui/glass';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/pricing';
 import { MOTION_DURATION, MOTION_EASING } from '@/lib/motion-tokens';
@@ -35,6 +36,7 @@ function calculateNights(checkIn: Date, checkOut: Date): number {
 
 export function RoomDetailGallery({
   output,
+  state,
   dispatch,
   selectedCheckIn,
   selectedCheckOut,
@@ -46,7 +48,8 @@ export function RoomDetailGallery({
   const checkOut = selectedCheckOut ?? output.initialCheckOut;
   const checkInStr = toISODate(checkIn);
   const checkOutStr = toISODate(checkOut);
-  const nights = checkIn && checkOut ? calculateNights(checkIn, checkOut) : 1;
+  const hasDates = Boolean(checkIn && checkOut);
+  const nights = hasDates && checkIn && checkOut ? calculateNights(checkIn, checkOut) : 1;
 
   const roomForInfoPanel = useMemo(
     () => ({
@@ -64,67 +67,102 @@ export function RoomDetailGallery({
     [output, nights]
   );
 
-  const handleChangeDates = React.useCallback(() => {
-    dispatch({ type: 'CHANGE_DATES' });
-  }, [dispatch]);
-
   const handleReserve = React.useCallback(() => {
     if (!output.canBook || !checkInStr || !checkOutStr) return;
     const url = `/book/${output.hotelSlug}/checkout?room=${output.roomId}&checkin=${checkInStr}&checkout=${checkOutStr}`;
     router.push(url);
   }, [output.canBook, output.hotelSlug, output.roomId, checkInStr, checkOutStr, router]);
 
+  const heroImage = output.gallery[0]?.url || output.coverImage || undefined;
+
   return (
-    <div data-testid="room-detail-gallery" data-checkin={checkInStr} data-checkout={checkOutStr} className="p-4 lg:p-6 space-y-6">
-      {/* Sticky header — mobile only */}
-      <div className="lg:hidden sticky top-0 z-10 bg-background/80 backdrop-blur-xl border-b border-border/40 -mx-4 px-4 py-3">
-        <div className="flex items-center justify-between gap-4">
-          <div className="min-w-0">
-            <nav aria-label="breadcrumb" className="mb-1">
-              <ol className="flex items-center text-[10px] text-muted-foreground">
-                <li>
-                  <Link href={output.breadcrumb.href} className="hover:text-foreground transition-colors">
-                    {output.hotelName}
-                  </Link>
-                </li>
-                <li aria-hidden="true">
-                  <ChevronRight size={10} className="mx-1" />
-                </li>
-                <li className="truncate font-medium text-foreground">{output.roomName}</li>
-              </ol>
-            </nav>
-            <h1 className="text-lg font-bold text-foreground truncate">{output.roomName}</h1>
-          </div>
-          {output.pricing && (
-            <div className="text-right shrink-0">
-              <p className="text-[10px] text-muted-foreground">{nights} {t('ota.showcase.nights', { count: nights })}</p>
-              <p className="text-base font-black text-brand-600">${formatPrice(output.pricing.total)}</p>
+    <div data-testid="room-detail-gallery" data-checkin={checkInStr} data-checkout={checkOutStr} className="space-y-6">
+      {/* Breadcrumb + room name + hero image */}
+      {heroImage ? (
+        <>
+          <motion.div
+            data-testid="room-hero"
+            initial={{ scale: 1.05, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{
+              duration: MOTION_DURATION.slow / 1000,
+              ease: MOTION_EASING.easeOut,
+            }}
+          >
+            <div className="relative aspect-[16/9] lg:aspect-[21/9] overflow-hidden rounded-[var(--radius-squircle-2xl)]">
+              <Image
+                src={heroImage}
+                alt={output.roomName}
+                fill
+                className="object-cover"
+                priority
+              />
+              <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
+              <div className="absolute inset-x-0 bottom-0 p-4 lg:p-6 space-y-1">
+                <nav aria-label="breadcrumb">
+                  <ol className="flex items-center text-xs text-white/70">
+                    <li>
+                      <Link
+                        href={output.breadcrumb.href}
+                        className="text-white underline-offset-2 hover:underline transition-colors"
+                      >
+                        {output.hotelName}
+                      </Link>
+                    </li>
+                    <li aria-hidden="true">
+                      <ChevronRight size={12} className="mx-1.5" />
+                    </li>
+                    <li className="font-medium text-white">{output.roomName}</li>
+                  </ol>
+                </nav>
+                <h1 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
+                  {output.roomName}
+                </h1>
+              </div>
             </div>
-          )}
+          </motion.div>
+        </>
+      ) : (
+        <div className="space-y-2">
+          <nav aria-label="breadcrumb">
+            <ol className="flex items-center text-xs text-muted-foreground">
+              <li>
+                <Link href={output.breadcrumb.href} className="hover:text-foreground transition-colors">
+                  {output.hotelName}
+                </Link>
+              </li>
+              <li aria-hidden="true">
+                <ChevronRight size={12} className="mx-1.5" />
+              </li>
+              <li className="font-medium text-foreground">{output.roomName}</li>
+            </ol>
+          </nav>
+          <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
+            {output.roomName}
+          </h1>
         </div>
-      </div>
+      )}
 
-      {/* Desktop header */}
-      <div className="hidden lg:block space-y-2">
-        <nav aria-label="breadcrumb">
-          <ol className="flex items-center text-xs text-muted-foreground">
-            <li>
-              <Link href={output.breadcrumb.href} className="hover:text-foreground transition-colors">
-                {output.hotelName}
-              </Link>
-            </li>
-            <li aria-hidden="true">
-              <ChevronRight size={12} className="mx-1.5" />
-            </li>
-            <li className="font-medium text-foreground">{output.roomName}</li>
-          </ol>
-        </nav>
-        <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">{output.roomName}</h1>
-      </div>
+      {/* Compact info strip */}
+      {output.capacity > 0 && (
+        <div
+          data-testid="room-info-strip"
+          className="flex items-center gap-2 text-sm text-muted-foreground"
+        >
+          <Users size={16} />
+          <span>
+            {output.capacity} {t('ota.roomDetail.guests')}
+          </span>
+          <span>·</span>
+          <Bed size={16} />
+          <span>
+            {output.beds} {output.bedType}
+          </span>
+        </div>
+      )}
 
-      {/* Two-column layout: gallery + info */}
+      {/* Main content: gallery + info panel */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-        {/* Left — gallery */}
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}
@@ -141,7 +179,6 @@ export function RoomDetailGallery({
           />
         </motion.div>
 
-        {/* Right — info panel + sticky CTA */}
         <div className="space-y-6">
           <RoomInfoPanel
             room={roomForInfoPanel}
@@ -170,112 +207,58 @@ export function RoomDetailGallery({
       </div>
 
       {/* Sticky CTA dock — desktop */}
-      {output.pricing && (
-        <motion.div
-          data-testid="cta-dock"
-          initial={{ y: 20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          exit={{ y: 20, opacity: 0 }}
-          transition={{
-            duration: MOTION_DURATION.normal / 1000,
-            ease: MOTION_EASING.easeOut,
-          }}
-          className="hidden lg:block fixed bottom-6 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-4"
-        >
-          <GlassPill className="flex items-center justify-between gap-4 p-2 pl-6 shadow-2xl">
-            <div className="flex items-center gap-4">
-              <div>
-                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                  {nights} {t('ota.showcase.nights', { count: nights })}
-                </p>
-                <p className="text-xl font-black text-foreground">${formatPrice(output.pricing.total)}</p>
-              </div>
-              {output.pricing.tax > 0 && (
-                <div className="hidden sm:block text-xs text-muted-foreground">
-                  <p>
-                    {t('ota.showcase.total')}: ${formatPrice(output.pricing.subtotal)}
-                  </p>
-                  <p>
-                    IVA ({Math.round(output.pricing.taxRate * 100)}%): ${formatPrice(output.pricing.tax)}
-                  </p>
-                </div>
-              )}
-            </div>
-            <div className="flex items-center gap-2">
-              <motion.button
-                type="button"
-                onClick={handleChangeDates}
-                whileTap={{ scale: 0.96 }}
-                transition={{
-                  duration: MOTION_DURATION.normal / 1000,
-                  ease: MOTION_EASING.easeOut,
-                }}
-                className={cn(
-                  'px-4 py-3 rounded-[var(--radius-squircle-md)]',
-                  'text-sm font-bold text-foreground',
-                  'bg-muted hover:bg-muted/80 transition-colors'
-                )}
-              >
-                {t('ota.roomDetail.changeDates')}
-              </motion.button>
-              <motion.button
-                type="button"
-                onClick={handleReserve}
-                disabled={!output.canBook}
-                whileTap={{ scale: 0.96 }}
-                transition={{
-                  duration: MOTION_DURATION.normal / 1000,
-                  ease: MOTION_EASING.easeOut,
-                }}
-                className={cn(
-                  'px-6 py-3 rounded-[var(--radius-squircle-md)]',
-                  'bg-primary text-primary-foreground font-bold text-sm',
-                  'hover:bg-primary/90 transition-colors',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
-                )}
-              >
-                {t('ota.booking.reserve')}
-              </motion.button>
-            </div>
-          </GlassPill>
-        </motion.div>
-      )}
-
-      {/* Mobile stacked CTA */}
-      {output.pricing && (
-        <div className="lg:hidden fixed bottom-0 left-0 right-0 z-30 p-4 bg-background/95 backdrop-blur-xl border-t border-border/40">
-          <GlassCard className="flex items-center justify-between gap-3 p-3">
+      <motion.div
+        data-testid="cta-dock"
+        initial={{ y: 20, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        exit={{ y: 20, opacity: 0 }}
+        transition={{
+          duration: MOTION_DURATION.normal / 1000,
+          ease: MOTION_EASING.easeOut,
+        }}
+        className="hidden lg:block fixed bottom-6 left-1/2 -translate-x-1/2 z-30 w-full max-w-2xl px-4"
+      >
+        <GlassPill className="flex items-center justify-between gap-4 p-2 pl-6 shadow-2xl">
+          <div className="flex items-center gap-4">
             <div>
               <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
                 {nights} {t('ota.showcase.nights', { count: nights })}
               </p>
-              <p className="text-lg font-black text-brand-600">${formatPrice(output.pricing.total)}</p>
+              <p className="text-xl font-black text-foreground">
+                ${formatPrice(output.pricing?.total ?? output.pricePerNight * nights)}
+              </p>
             </div>
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleChangeDates}
-                className="px-3 py-2.5 rounded-[var(--radius-squircle-md)] text-xs font-bold bg-muted text-foreground hover:bg-muted/80 transition-colors"
-              >
-                {t('ota.roomDetail.changeDates')}
-              </button>
-              <button
-                type="button"
-                onClick={handleReserve}
-                disabled={!output.canBook}
-                className={cn(
-                  'px-4 py-2.5 rounded-[var(--radius-squircle-md)]',
-                  'bg-primary text-primary-foreground font-bold text-xs',
-                  'hover:bg-primary/90 transition-colors',
-                  'disabled:opacity-50 disabled:cursor-not-allowed'
-                )}
-              >
-                {t('ota.booking.reserve')}
-              </button>
-            </div>
-          </GlassCard>
-        </div>
-      )}
+            {output.pricing && output.pricing.tax > 0 && (
+              <div className="hidden sm:block text-xs text-muted-foreground">
+                <p>
+                  {t('ota.showcase.total')}: ${formatPrice(output.pricing.subtotal)}
+                </p>
+                <p>
+                  IVA ({Math.round(output.pricing.taxRate * 100)}%): ${formatPrice(output.pricing.tax)}
+                </p>
+              </div>
+            )}
+          </div>
+          <motion.button
+            type="button"
+            onClick={handleReserve}
+            disabled={!hasDates || !output.canBook}
+            whileTap={hasDates ? { scale: 0.96 } : undefined}
+            transition={{
+              duration: MOTION_DURATION.normal / 1000,
+              ease: MOTION_EASING.easeOut,
+            }}
+            className={cn(
+              'px-6 py-3 rounded-[var(--radius-squircle-md)]',
+              'bg-primary text-primary-foreground font-bold text-sm',
+              'hover:bg-primary/90 transition-colors',
+              'disabled:opacity-50 disabled:cursor-not-allowed'
+            )}
+          >
+            {t('ota.booking.reserve')}
+          </motion.button>
+        </GlassPill>
+      </motion.div>
 
       {/* Mobile Ver otras habitaciones */}
       {output.showOtherRooms && (
@@ -291,4 +274,3 @@ export function RoomDetailGallery({
     </div>
   );
 }
-

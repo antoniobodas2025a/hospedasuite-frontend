@@ -224,7 +224,7 @@ export function roomDetailViewModel(
   const showOtherRooms = hotel.totalRooms > 1;
   const pastDue = hotel.subscriptionStatus === 'past_due';
   const cancelled = hotel.subscriptionStatus === 'cancelled';
-  const canBook = !pastDue && !cancelled;
+  const canBook = !pastDue && !cancelled && !room.restricted;
 
   const base = {
     roomName: room.name,
@@ -260,7 +260,7 @@ export function roomDetailViewModel(
   if (!dates) {
     return {
       ...base,
-      state: 'calendar_first',
+      state: 'gallery',
       pricing: null,
     };
   }
@@ -278,7 +278,7 @@ export function roomDetailViewModel(
 
   return {
     ...base,
-    state: 'detail',
+    state: 'dates_selected',
     pricing,
   };
 }

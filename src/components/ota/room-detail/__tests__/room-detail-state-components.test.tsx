@@ -3,7 +3,7 @@ import '../../../../__tests__/bun-test-dom-setup';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom';
 import React from 'react';
-import { render, cleanup, fireEvent } from '@testing-library/react';
+import { render, cleanup, fireEvent, within } from '@testing-library/react';
 import type { RoomDetailViewModelOutput } from '@/view-models/room-detail-view-model';
 import { RoomDetailSkeleton } from '../room-detail-skeleton';
 import { RoomDetailError } from '../room-detail-error';
@@ -53,6 +53,7 @@ vi.mock('next-intl', () => ({
       'ota.showcase.seeOtherRooms': 'Ver otras habitaciones',
       'ota.roomDetail.backToHotel': 'Volver al hotel',
       'ota.roomDetail.changeDates': 'Cambiar fechas',
+      'ota.roomDetail.chooseDates': 'Elegir fechas',
       'ota.roomDetail.notAvailableForDates': 'No disponible para {checkIn} - {checkOut}',
       'ota.roomDetail.viewDetail': 'Ver detalle',
       'ota.roomDetail.perNight': '/noche',
@@ -62,14 +63,14 @@ vi.mock('next-intl', () => ({
       'ota.roomDetail.guests': 'Huéspedes',
       'ota.roomDetail.errorTitle': 'Algo salió mal',
       'ota.roomDetail.genericError': 'No pudimos cargar la habitación',
-      'ota.roomDetail.selectDatesToContinue': 'Selecciona tus fechas para continuar',
+      'ota.roomDetail.selectDatesToContinue': 'Seleccioná tus fechas para continuar',
       'ota.roomDetail.weekendPrice': 'Fin de semana: ${price}',
       'ota.roomDetail.weekdayNights_one': '{count} noche entre semana',
       'ota.roomDetail.weekdayNights_other': '{count} noches entre semana',
       'ota.roomDetail.weekendNights_one': '{count} noche fin de semana',
       'ota.roomDetail.weekendNights_other': '{count} noches fin de semana',
       'ota.roomDetail.tax': 'IVA ({rate}%)',
-      'ota.roomDetail.tryOtherDates': 'Prueba con otras fechas o habitaciones',
+      'ota.roomDetail.tryOtherDates': 'Probá con otras fechas o habitaciones',
       'ota.roomDetail.alternativeOptions': 'Otras opciones para estas fechas',
     };
     let text = messages[key] ?? key;
@@ -102,7 +103,6 @@ vi.mock('next/image', () => ({
   __esModule: true,
   default: (props: React.ImgHTMLAttributes<HTMLImageElement> & { fill?: boolean; priority?: boolean }) => {
     const { alt, fill, priority, ...rest } = props;
-     
     return React.createElement('img', { alt, 'data-fill': fill ? 'true' : undefined, 'data-priority': priority ? 'true' : undefined, ...rest });
   },
 }));
@@ -181,7 +181,7 @@ vi.mock('@/components/ui/glass', () => ({
 
 function makeOutput(overrides: Partial<RoomDetailViewModelOutput> = {}): RoomDetailViewModelOutput {
   return {
-    state: 'calendar_first',
+    state: 'gallery',
     roomName: 'Suite Mirador',
     hotelName: 'Hotel Mirador',
     hotelSlug: 'hotel-mirador',
@@ -251,21 +251,24 @@ describe('T-09: RoomDetailCalendar', () => {
     cleanup();
   });
 
-  it('renders room name, hotel name and breadcrumb', () => {
-    const output = makeOutput({ state: 'calendar_first' });
+  it('renders as a sticky sidebar, not a full page', () => {
+    const output = makeOutput({ state: 'gallery' });
     const dispatch = makeDispatch();
 
-    const { getByText, getByRole } = render(<RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />);
+    const { getByTestId, queryByTestId } = render(
+      <RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />
+    );
 
-    expect(getByText('Hotel Mirador')).toBeInTheDocument();
-    expect(getByRole('heading', { level: 1, name: 'Suite Mirador' })).toBeInTheDocument();
+    expect(getByTestId('room-detail-calendar')).toBeInTheDocument();
+    expect(getByTestId('room-detail-calendar-sidebar')).toBeInTheDocument();
+    expect(queryByTestId('room-hero')).not.toBeInTheDocument();
   });
 
-  it('reuses InlineDatePicker with the correct props in calendar_first', () => {
-    const output = makeOutput({ state: 'calendar_first' });
+  it('reuses InlineDatePicker with the correct props', () => {
+    const output = makeOutput({ state: 'gallery' });
     const dispatch = makeDispatch();
 
-    render(<RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />);
+    render(<RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />);
 
     expect(InlineDatePickerMock).toHaveBeenCalled();
     const call = InlineDatePickerMock.mock.calls[0][0];
@@ -273,36 +276,23 @@ describe('T-09: RoomDetailCalendar', () => {
     expect(call.className).toBeDefined();
   });
 
-  it('adds an aria-label to the InlineDatePicker wrapper', () => {
-    const output = makeOutput({ state: 'calendar_first' });
+  it('shows the price teaser when no dates are selected', () => {
+    const output = makeOutput({ state: 'gallery', pricing: null });
     const dispatch = makeDispatch();
 
-    const { getByLabelText } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    const { getByTestId, getByText } = render(
+      <RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />
     );
 
-    expect(getByLabelText('Seleccionar fechas')).toBeInTheDocument();
-  });
-
-  it('shows teaser price from room price when no dates are selected', () => {
-    const output = makeOutput({
-      state: 'calendar_first',
-      pricePerNight: 300000,
-      weekendPrice: 350000,
-      pricing: null,
-    });
-    const dispatch = makeDispatch();
-
-    const { getByText } = render(<RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />);
-
+    expect(getByTestId('price-teaser')).toBeInTheDocument();
     expect(getByText('Desde')).toBeInTheDocument();
     expect(getByText('$300.000')).toBeInTheDocument();
     expect(getByText('Fin de semana: $350.000')).toBeInTheDocument();
   });
 
-  it('hides weekend teaser when weekend price equals weekday price', () => {
+  it('hides the weekend teaser when weekend price equals weekday price', () => {
     const output = makeOutput({
-      state: 'calendar_first',
+      state: 'gallery',
       pricePerNight: 300000,
       weekendPrice: 300000,
       pricing: null,
@@ -310,18 +300,48 @@ describe('T-09: RoomDetailCalendar', () => {
     const dispatch = makeDispatch();
 
     const { getByText, queryByText } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+      <RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />
     );
 
     expect(getByText('$300.000')).toBeInTheDocument();
     expect(queryByText('Fin de semana:')).not.toBeInTheDocument();
   });
 
-  it('dispatches SELECT_DATES when InlineDatePicker changes', () => {
-    const output = makeOutput({ state: 'calendar_first' });
+  it('shows the summary bar with price breakdown when dates are selected', () => {
+    const output = makeOutput({
+      state: 'dates_selected',
+      pricing: {
+        weekdayPrice: 300000,
+        weekendPrice: 350000,
+        weekdayNights: 3,
+        weekendNights: 0,
+        subtotal: 900000,
+        tax: 171000,
+        total: 1071000,
+        taxRate: 0.19,
+        breakdown: [],
+      },
+      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
+      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
+    });
     const dispatch = makeDispatch();
 
-    const { getByTestId } = render(<RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />);
+    const { getByTestId } = render(
+      <RoomDetailCalendar output={output} state="dates_selected" dispatch={dispatch} />
+    );
+
+    expect(getByTestId('summary-bar')).toBeInTheDocument();
+    expect(getByTestId('summary-bar')).toHaveTextContent('Total');
+    expect(getByTestId('summary-bar')).toHaveTextContent('$1.071.000');
+  });
+
+  it('dispatches SELECT_DATES when InlineDatePicker changes', () => {
+    const output = makeOutput({ state: 'gallery' });
+    const dispatch = makeDispatch();
+
+    const { getByTestId } = render(
+      <RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />
+    );
 
     fireEvent.click(getByTestId('inline-date-picker-select'));
 
@@ -332,176 +352,87 @@ describe('T-09: RoomDetailCalendar', () => {
     });
   });
 
-  it('shows animated summary bar with price breakdown in calendar_active', () => {
+  it('disables Reservar without dates and enables it after selecting dates', () => {
+    const output = makeOutput({ state: 'gallery', pricing: null });
+    const dispatch = makeDispatch();
+
+    const { getByTestId, rerender } = render(
+      <RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />
+    );
+
+    expect(getByTestId('calendar-reserve-button')).toBeDisabled();
+
+    rerender(
+      <RoomDetailCalendar
+        output={makeOutput({
+          state: 'dates_selected',
+          pricing: {
+            weekdayPrice: 300000,
+            weekendPrice: 350000,
+            weekdayNights: 3,
+            weekendNights: 0,
+            subtotal: 900000,
+            tax: 171000,
+            total: 1071000,
+            taxRate: 0.19,
+            breakdown: [],
+          },
+          initialCheckIn: new Date('2026-08-10T12:00:00Z'),
+          initialCheckOut: new Date('2026-08-13T12:00:00Z'),
+        })}
+        state="dates_selected"
+        dispatch={dispatch}
+      />
+    );
+
+    expect(getByTestId('calendar-reserve-button')).toBeEnabled();
+  });
+
+  it('renders a mobile floating bottom bar with collapsed calendar', () => {
+    const output = makeOutput({ state: 'gallery', pricing: null });
+    const dispatch = makeDispatch();
+
+    const { getByTestId } = render(
+      <RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />
+    );
+
+    const mobileBar = getByTestId('room-detail-calendar-mobile-bar');
+    expect(mobileBar).toBeInTheDocument();
+    expect(within(mobileBar).queryByTestId('inline-date-picker')).not.toBeInTheDocument();
+
+    fireEvent.click(mobileBar.querySelector('button')!);
+
+    expect(within(mobileBar).getByTestId('inline-date-picker')).toBeInTheDocument();
+  });
+
+  it('navigates to checkout when Reservar is clicked with dates', () => {
     const output = makeOutput({
-      state: 'calendar_active',
+      state: 'dates_selected',
       pricing: {
         weekdayPrice: 300000,
         weekendPrice: 350000,
-        weekdayNights: 2,
-        weekendNights: 1,
-        subtotal: 950000,
-        tax: 180500,
-        total: 1130500,
+        weekdayNights: 3,
+        weekendNights: 0,
+        subtotal: 900000,
+        tax: 171000,
+        total: 1071000,
         taxRate: 0.19,
-        breakdown: [
-          { date: '2026-08-10', dayOfWeek: 1, price: 300000, isWeekend: false },
-          { date: '2026-08-11', dayOfWeek: 2, price: 300000, isWeekend: false },
-          { date: '2026-08-12', dayOfWeek: 3, price: 350000, isWeekend: true },
-        ],
+        breakdown: [],
       },
       initialCheckIn: new Date('2026-08-10T12:00:00Z'),
       initialCheckOut: new Date('2026-08-13T12:00:00Z'),
     });
     const dispatch = makeDispatch();
 
-    const { getByTestId, getByText } = render(
-      <RoomDetailCalendar output={output} state="calendar_active" dispatch={dispatch} />
-    );
-
-    expect(getByTestId('summary-bar')).toBeInTheDocument();
-    expect(getByText('Ver detalle')).toBeInTheDocument();
-    expect(getByText(/3 noches/)).toBeInTheDocument();
-    expect(getByText('$1.130.500')).toBeInTheDocument();
-  });
-
-  it('renders hero image when gallery has images', () => {
-    const output = makeOutput({
-      state: 'calendar_first',
-      gallery: [{ url: '/hero.jpg' }],
-      coverImage: '/hero.jpg',
-    });
-    const dispatch = makeDispatch();
-
-    const { getByRole } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
-    );
-
-    const img = getByRole('img');
-    expect(img).toHaveAttribute('src', '/hero.jpg');
-    expect(img).toHaveAttribute('data-fill', 'true');
-    expect(img).toHaveAttribute('data-priority', 'true');
-  });
-
-  it('hides hero image when gallery is empty and no cover image', () => {
-    const output = makeOutput({
-      state: 'calendar_first',
-      gallery: [],
-      coverImage: '',
-    });
-    const dispatch = makeDispatch();
-
-    const { queryByRole } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
-    );
-
-    expect(queryByRole('img')).not.toBeInTheDocument();
-  });
-
-  it('hero has entrance animation', () => {
-    const output = makeOutput({ state: 'calendar_first' });
-    const dispatch = makeDispatch();
-
     const { getByTestId } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+      <RoomDetailCalendar output={output} state="dates_selected" dispatch={dispatch} />
     );
 
-    const hero = getByTestId('room-hero');
-    expect(hero).toHaveAttribute('data-initial', expect.stringContaining('"scale":1.05'));
-    expect(hero).toHaveAttribute('data-initial', expect.stringContaining('"opacity":0'));
-    expect(hero).toHaveAttribute('data-animate', expect.stringContaining('"scale":1'));
-    expect(hero).toHaveAttribute('data-animate', expect.stringContaining('"opacity":1'));
-  });
+    fireEvent.click(getByTestId('calendar-reserve-button'));
 
-  it('info strip shows capacity and beds', () => {
-    const output = makeOutput({
-      state: 'calendar_first',
-      capacity: 2,
-      beds: 1,
-      bedType: 'Queen',
-    });
-    const dispatch = makeDispatch();
-
-    const { getByTestId } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      '/book/hotel-mirador/checkout?room=room-1&checkin=2026-08-10&checkout=2026-08-13'
     );
-
-    const strip = getByTestId('room-info-strip');
-    expect(strip).toHaveTextContent('2 Huéspedes');
-    expect(strip).toHaveTextContent('1 Queen');
-  });
-
-  it('hides info strip when capacity is 0', () => {
-    const output = makeOutput({
-      state: 'calendar_first',
-      capacity: 0,
-      beds: 0,
-      bedType: '',
-    });
-    const dispatch = makeDispatch();
-
-    const { queryByTestId } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
-    );
-
-    expect(queryByTestId('room-info-strip')).not.toBeInTheDocument();
-  });
-
-  it('renders room name overlaid on hero', () => {
-    const output = makeOutput({ state: 'calendar_first' });
-    const dispatch = makeDispatch();
-
-    const { getByTestId, getByRole } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
-    );
-
-    const hero = getByTestId('room-hero');
-    const heading = getByRole('heading', { level: 1, name: 'Suite Mirador' });
-    expect(hero).toContainElement(heading);
-  });
-
-  it('breadcrumb hotel link is overlaid on hero with correct href', () => {
-    const output = makeOutput({ state: 'calendar_first' });
-    const dispatch = makeDispatch();
-
-    const { getByTestId, getByText } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
-    );
-
-    const hero = getByTestId('room-hero');
-    const link = getByText('Hotel Mirador').closest('a');
-    expect(link).toHaveAttribute('href', '/hotel/hotel-mirador');
-    expect(hero).toContainElement(link);
-  });
-
-  it('price teaser glass card overlaps hero with negative margin', () => {
-    const output = makeOutput({ state: 'calendar_first' });
-    const dispatch = makeDispatch();
-
-    const { getByTestId } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
-    );
-
-    const teaser = getByTestId('price-teaser');
-    expect(teaser.className).toMatch(/-mt-6/);
-  });
-
-  it('price teaser still renders correctly', () => {
-    const output = makeOutput({
-      state: 'calendar_first',
-      pricePerNight: 300000,
-      weekendPrice: 350000,
-    });
-    const dispatch = makeDispatch();
-
-    const { getByTestId, getByText } = render(
-      <RoomDetailCalendar output={output} state="calendar_first" dispatch={dispatch} />
-    );
-
-    expect(getByTestId('price-teaser')).toBeInTheDocument();
-    expect(getByText('Desde')).toBeInTheDocument();
-    expect(getByText('$300.000')).toBeInTheDocument();
-    expect(getByText('Fin de semana: $350.000')).toBeInTheDocument();
   });
 });
 
@@ -515,9 +446,39 @@ describe('T-10: RoomDetailGallery', () => {
     cleanup();
   });
 
+  it('renders breadcrumb, room name and hero image immediately', () => {
+    const output = makeOutput({ state: 'gallery' });
+    const dispatch = makeDispatch();
+
+    const { getByTestId, getByText, getByRole } = render(
+      <RoomDetailGallery output={output} state="gallery" dispatch={dispatch} />
+    );
+
+    expect(getByTestId('room-hero')).toBeInTheDocument();
+    expect(getByText('Hotel Mirador')).toBeInTheDocument();
+    expect(getByRole('heading', { level: 1, name: 'Suite Mirador' })).toBeInTheDocument();
+    const img = getByRole('img');
+    expect(img).toHaveAttribute('src', '/hero.jpg');
+    expect(img).toHaveAttribute('data-fill', 'true');
+    expect(img).toHaveAttribute('data-priority', 'true');
+  });
+
+  it('renders the info strip with capacity and bed type', () => {
+    const output = makeOutput({ state: 'gallery', capacity: 2, beds: 1, bedType: 'Queen' });
+    const dispatch = makeDispatch();
+
+    const { getByTestId } = render(
+      <RoomDetailGallery output={output} state="gallery" dispatch={dispatch} />
+    );
+
+    const strip = getByTestId('room-info-strip');
+    expect(strip).toHaveTextContent('2 Huéspedes');
+    expect(strip).toHaveTextContent('1 Queen');
+  });
+
   it('reuses RoomGalleryGrid and RoomInfoPanel', () => {
     const output = makeOutput({
-      state: 'detail',
+      state: 'dates_selected',
       pricing: {
         weekdayPrice: 300000,
         weekendPrice: 350000,
@@ -534,8 +495,8 @@ describe('T-10: RoomDetailGallery', () => {
     });
     const dispatch = makeDispatch();
 
-    const { getByTestId, getAllByRole } = render(
-      <RoomDetailGallery output={output} state="detail" dispatch={dispatch} />
+    const { getByTestId } = render(
+      <RoomDetailGallery output={output} state="dates_selected" dispatch={dispatch} />
     );
 
     expect(getByTestId('room-gallery-grid')).toBeInTheDocument();
@@ -547,41 +508,26 @@ describe('T-10: RoomDetailGallery', () => {
         roomId: output.roomId,
       })
     );
-    expect(getAllByRole('heading', { level: 1, name: 'Suite Mirador' }).length).toBeGreaterThan(0);
   });
 
-  it('renders sticky CTA dock with total price, tax breakdown and Reservar button', () => {
-    const output = makeOutput({
-      state: 'detail',
-      pricing: {
-        weekdayPrice: 300000,
-        weekendPrice: 350000,
-        weekdayNights: 2,
-        weekendNights: 1,
-        subtotal: 950000,
-        tax: 180500,
-        total: 1130500,
-        taxRate: 0.19,
-        breakdown: [],
-      },
-      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
-      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
-    });
+  it('renders sticky CTA dock with disabled Reservar without dates', () => {
+    const output = makeOutput({ state: 'gallery', pricing: null });
     const dispatch = makeDispatch();
 
-    const { getByTestId, getByText } = render(
-      <RoomDetailGallery output={output} state="detail" dispatch={dispatch} />
+    const { getByTestId } = render(
+      <RoomDetailGallery output={output} state="gallery" dispatch={dispatch} />
     );
 
     const ctaDock = getByTestId('cta-dock');
     expect(ctaDock).toBeInTheDocument();
-    expect(ctaDock.textContent).toContain('$1.130.500');
-    expect(ctaDock.textContent).toContain('Reservar');
+    expect(ctaDock).toHaveTextContent('Reservar');
+    const reserveButton = ctaDock.querySelector('button');
+    expect(reserveButton).toBeDisabled();
   });
 
-  it('dispatches CHANGE_DATES when Cambiar fechas is clicked', () => {
+  it('enables the CTA dock Reservar button when dates are selected', () => {
     const output = makeOutput({
-      state: 'detail',
+      state: 'dates_selected',
       pricing: {
         weekdayPrice: 300000,
         weekendPrice: 350000,
@@ -598,34 +544,82 @@ describe('T-10: RoomDetailGallery', () => {
     });
     const dispatch = makeDispatch();
 
-    const { getAllByRole } = render(<RoomDetailGallery output={output} state="detail" dispatch={dispatch} />);
+    const { getByTestId } = render(
+      <RoomDetailGallery output={output} state="dates_selected" dispatch={dispatch} />
+    );
 
-    fireEvent.click(getAllByRole('button', { name: 'Cambiar fechas' })[0]);
+    const ctaDock = getByTestId('cta-dock');
+    const reserveButton = ctaDock.querySelector('button');
+    expect(reserveButton).toBeEnabled();
+  });
 
-    expect(dispatch).toHaveBeenCalledWith({ type: 'CHANGE_DATES' });
+  it('navigates to checkout when the CTA dock Reservar is clicked with dates', () => {
+    const output = makeOutput({
+      state: 'dates_selected',
+      pricing: {
+        weekdayPrice: 300000,
+        weekendPrice: 350000,
+        weekdayNights: 2,
+        weekendNights: 1,
+        subtotal: 950000,
+        tax: 180500,
+        total: 1130500,
+        taxRate: 0.19,
+        breakdown: [],
+      },
+      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
+      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
+    });
+    const dispatch = makeDispatch();
+
+    const { getByTestId } = render(
+      <RoomDetailGallery output={output} state="dates_selected" dispatch={dispatch} />
+    );
+
+    const ctaDock = getByTestId('cta-dock');
+    fireEvent.click(ctaDock.querySelector('button')!);
+
+    expect(mockRouter.push).toHaveBeenCalledWith(
+      '/book/hotel-mirador/checkout?room=room-1&checkin=2026-08-10&checkout=2026-08-13'
+    );
+  });
+
+  it('does not render a Cambiar fechas button in the CTA dock', () => {
+    const output = makeOutput({
+      state: 'dates_selected',
+      pricing: {
+        weekdayPrice: 300000,
+        weekendPrice: 350000,
+        weekdayNights: 2,
+        weekendNights: 1,
+        subtotal: 950000,
+        tax: 180500,
+        total: 1130500,
+        taxRate: 0.19,
+        breakdown: [],
+      },
+      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
+      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
+    });
+    const dispatch = makeDispatch();
+
+    const { queryByText } = render(
+      <RoomDetailGallery output={output} state="dates_selected" dispatch={dispatch} />
+    );
+
+    expect(queryByText('Cambiar fechas')).not.toBeInTheDocument();
   });
 
   it('shows Ver otras habitaciones link when showOtherRooms is true', () => {
     const output = makeOutput({
-      state: 'detail',
+      state: 'gallery',
       showOtherRooms: true,
-      pricing: {
-        weekdayPrice: 300000,
-        weekendPrice: 350000,
-        weekdayNights: 2,
-        weekendNights: 1,
-        subtotal: 950000,
-        tax: 180500,
-        total: 1130500,
-        taxRate: 0.19,
-        breakdown: [],
-      },
-      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
-      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
     });
     const dispatch = makeDispatch();
 
-    const { getAllByText } = render(<RoomDetailGallery output={output} state="detail" dispatch={dispatch} />);
+    const { getAllByText } = render(
+      <RoomDetailGallery output={output} state="gallery" dispatch={dispatch} />
+    );
 
     const link = getAllByText('Ver otras habitaciones')[0];
     expect(link).toBeInTheDocument();
@@ -634,25 +628,14 @@ describe('T-10: RoomDetailGallery', () => {
 
   it('hides Ver otras habitaciones when showOtherRooms is false', () => {
     const output = makeOutput({
-      state: 'detail',
+      state: 'gallery',
       showOtherRooms: false,
-      pricing: {
-        weekdayPrice: 300000,
-        weekendPrice: 350000,
-        weekdayNights: 2,
-        weekendNights: 1,
-        subtotal: 950000,
-        tax: 180500,
-        total: 1130500,
-        taxRate: 0.19,
-        breakdown: [],
-      },
-      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
-      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
     });
     const dispatch = makeDispatch();
 
-    const { queryByText } = render(<RoomDetailGallery output={output} state="detail" dispatch={dispatch} />);
+    const { queryByText } = render(
+      <RoomDetailGallery output={output} state="gallery" dispatch={dispatch} />
+    );
 
     expect(queryByText('Ver otras habitaciones')).not.toBeInTheDocument();
   });
@@ -675,7 +658,9 @@ describe('T-11: RoomDetailSoldOut', () => {
     });
     const dispatch = makeDispatch();
 
-    const { getByTestId } = render(<RoomDetailSoldOut output={output} state="sold_out" dispatch={dispatch} />);
+    const { getByTestId } = render(
+      <RoomDetailSoldOut output={output} state="sold_out" dispatch={dispatch} />
+    );
 
     expect(getByTestId('room-detail-sold-out')).toBeInTheDocument();
     expect(getByTestId('sold-out-message')).toBeInTheDocument();
@@ -705,7 +690,9 @@ describe('T-11: RoomDetailSoldOut', () => {
     });
     const dispatch = makeDispatch();
 
-    const { getByRole } = render(<RoomDetailSoldOut output={output} state="sold_out" dispatch={dispatch} />);
+    const { getByRole } = render(
+      <RoomDetailSoldOut output={output} state="sold_out" dispatch={dispatch} />
+    );
 
     fireEvent.click(getByRole('button', { name: 'Cambiar fechas' }));
 
@@ -754,7 +741,9 @@ describe('T-11: RoomDetailSoldOut', () => {
     });
     const dispatch = makeDispatch();
 
-    const { getAllByText } = render(<RoomDetailSoldOut output={output} state="sold_out" dispatch={dispatch} />);
+    const { getAllByText } = render(
+      <RoomDetailSoldOut output={output} state="sold_out" dispatch={dispatch} />
+    );
 
     const link = getAllByText('Ver otras habitaciones')[0];
     expect(link).toBeInTheDocument();

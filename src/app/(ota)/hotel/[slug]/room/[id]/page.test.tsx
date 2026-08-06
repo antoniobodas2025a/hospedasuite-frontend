@@ -158,7 +158,7 @@ describe('room detail page', () => {
 
       const children = element.props.children;
       const output = children[1].props.output;
-      expect(output.state).toBe('detail');
+      expect(output.state).toBe('dates_selected');
       expect(output.pricing).not.toBeNull();
       expect(output.pricing.total).toBeGreaterThan(0);
       expect(gatewayGetAvailabilityMock).toHaveBeenCalledWith('room-1', {

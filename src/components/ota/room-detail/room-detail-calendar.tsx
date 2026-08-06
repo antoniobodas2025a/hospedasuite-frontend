@@ -1,11 +1,9 @@
 'use client';
 
-import React, { useMemo } from 'react';
-import Image from 'next/image';
-import Link from 'next/link';
+import React, { useMemo, useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { ChevronRight, Calendar, Moon, Users, Bed } from 'lucide-react';
+import { ChevronDown, Calendar, Moon } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { format } from 'date-fns';
 import InlineDatePicker from '@/components/ota/InlineDatePicker';
@@ -47,33 +45,32 @@ export function RoomDetailCalendar({
   const locale = useLocale();
   const router = useRouter();
   const dateLocale = getDateFnsLocale(locale);
-  const isActive = state === 'calendar_active';
+  const [mobileExpanded, setMobileExpanded] = useState(false);
+  const isActive = state === 'dates_selected';
 
   const checkIn = selectedCheckIn ?? output.initialCheckIn;
   const checkOut = selectedCheckOut ?? output.initialCheckOut;
   const checkInStr = toISODate(checkIn);
   const checkOutStr = toISODate(checkOut);
+  const hasDates = Boolean(checkIn && checkOut);
 
-  const handleDateChange = React.useCallback(
+  const handleDateChange = useCallback(
     (range: { from: Date; to: Date }) => {
       dispatch({
         type: 'SELECT_DATES',
         checkIn: range.from,
         checkOut: range.to,
       });
+      setMobileExpanded(false);
     },
     [dispatch]
   );
 
-  const handleConfirm = React.useCallback(() => {
-    dispatch({ type: 'CONFIRM_DATES' });
-    if (checkInStr && checkOutStr) {
-      const params = new URLSearchParams(window.location.search);
-      params.set('checkin', checkInStr);
-      params.set('checkout', checkOutStr);
-      router.push(`?${params.toString()}`, { scroll: false });
-    }
-  }, [dispatch, checkInStr, checkOutStr, router]);
+  const handleReserve = useCallback(() => {
+    if (!output.canBook || !checkInStr || !checkOutStr) return;
+    const url = `/book/${output.hotelSlug}/checkout?room=${output.roomId}&checkin=${checkInStr}&checkout=${checkOutStr}`;
+    router.push(url);
+  }, [output.canBook, output.hotelSlug, output.roomId, checkInStr, checkOutStr, router]);
 
   const summary = useMemo(() => {
     if (!checkIn || !checkOut || !output.pricing) return null;
@@ -96,231 +93,185 @@ export function RoomDetailCalendar({
     };
   }, [checkIn, checkOut, output.pricing, dateLocale]);
 
-  const heroImage = output.gallery[0]?.url || output.coverImage || undefined;
+  const calendarContent = (
+    <div className="space-y-4">
+      <div role="region" aria-label={t('ota.roomDetail.selectDates')}>
+        <InlineDatePicker
+          checkIn={checkInStr}
+          checkOut={checkOutStr}
+          onChange={handleDateChange}
+          primaryColor={output.primaryColor}
+          bookedDates={output.bookedDates}
+          defaultExpanded={true}
+          className="w-full"
+        />
+      </div>
 
-  return (
-    <div data-testid="room-detail-calendar" data-state={state} className="p-4 lg:p-6 space-y-6">
-      {/* Hero image with overlaid breadcrumb + room name */}
-      {heroImage ? (
-        <>
-          <motion.div
-            data-testid="room-hero"
-            initial={{ scale: 1.05, opacity: 0 }}
-            animate={{ scale: 1, opacity: 1 }}
-            transition={{
-              duration: MOTION_DURATION.slow / 1000,
-              ease: MOTION_EASING.easeOut,
-            }}
-          >
-            <div className="relative aspect-[16/9] lg:aspect-[21/9] overflow-hidden rounded-[var(--radius-squircle-2xl)]">
-              <Image
-                src={heroImage}
-                alt={output.roomName}
-                fill
-                className="object-cover"
-                priority
-              />
-              <div className="absolute inset-x-0 bottom-0 h-[40%] bg-gradient-to-t from-black/60 via-black/30 to-transparent" />
-              <div className="absolute inset-x-0 bottom-0 p-4 lg:p-6 space-y-1">
-                <nav aria-label="breadcrumb">
-                  <ol className="flex items-center text-xs text-white/70">
-                    <li>
-                      <Link
-                        href={output.breadcrumb.href}
-                        className="text-white underline-offset-2 hover:underline transition-colors"
-                      >
-                        {output.hotelName}
-                      </Link>
-                    </li>
-                    <li aria-hidden="true">
-                      <ChevronRight size={12} className="mx-1.5" />
-                    </li>
-                    <li className="font-medium text-white">{output.roomName}</li>
-                  </ol>
-                </nav>
-                <h1 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
-                  {output.roomName}
-                </h1>
+      {/* Price teaser — shown when no dates are selected */}
+      {!hasDates && (
+        <div data-testid="price-teaser">
+          <GlassCard className="p-5">
+            <div className="space-y-1">
+              <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                {t('ota.booking.from')}
+              </p>
+              <div className="flex items-baseline gap-2">
+                <span className="text-3xl font-black text-foreground">
+                  ${formatPrice(output.pricePerNight)}
+                </span>
+                <span className="text-sm text-muted-foreground">{t('ota.roomDetail.perNight')}</span>
+              </div>
+              {output.weekendPrice > 0 && output.weekendPrice !== output.pricePerNight && (
+                <p className="text-xs text-muted-foreground">
+                  {t('ota.roomDetail.weekendPrice', {
+                    price: formatPrice(output.weekendPrice),
+                  })}
+                </p>
+              )}
+            </div>
+          </GlassCard>
+        </div>
+      )}
+
+      {/* Animated summary bar — shown when dates are selected */}
+      {isActive && summary && (
+        <motion.div
+          data-testid="summary-bar"
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: 20 }}
+          transition={springSnappy()}
+        >
+          <GlassCard className="p-5 space-y-4">
+            <div className="flex items-center gap-2 text-sm font-bold text-foreground">
+              <Calendar size={16} className="text-brand-600" />
+              <span>
+                {summary.fromLabel} — {summary.toLabel}
+              </span>
+              <span className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 text-xs">
+                <Moon size={12} />
+                {summary.nights} {t('ota.showcase.nights', { count: summary.nights })}
+              </span>
+            </div>
+
+            {/* Weekday / weekend breakdown */}
+            <div className="space-y-2 text-sm">
+              {summary.weekdayNights > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {summary.weekdayNights} {t('ota.roomDetail.weekdayNights', { count: summary.weekdayNights })}
+                  </span>
+                  <span className="font-medium text-foreground">
+                    ${formatPrice(summary.weekdayPrice)}
+                  </span>
+                </div>
+              )}
+              {summary.weekendNights > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {summary.weekendNights} {t('ota.roomDetail.weekendNights', { count: summary.weekendNights })}
+                  </span>
+                  <span className="font-medium text-foreground">
+                    ${formatPrice(summary.weekendPrice)}
+                  </span>
+                </div>
+              )}
+              {summary.tax > 0 && (
+                <div className="flex justify-between">
+                  <span className="text-muted-foreground">
+                    {t('ota.roomDetail.tax', { rate: Math.round(summary.taxRate * 100) })}
+                  </span>
+                  <span className="font-medium text-foreground">${formatPrice(summary.tax)}</span>
+                </div>
+              )}
+            </div>
+
+            <div className="pt-3 border-t border-border flex items-center justify-between">
+              <div>
+                <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                  {t('ota.showcase.total')}
+                </p>
+                <p className="text-2xl font-black text-brand-600">${formatPrice(summary.total)}</p>
               </div>
             </div>
-          </motion.div>
-          <p className="text-sm text-muted-foreground">
-            {t('ota.roomDetail.selectDatesToContinue')}
-          </p>
-        </>
-      ) : (
-        <div className="space-y-2">
-          <nav aria-label="breadcrumb">
-            <ol className="flex items-center text-xs text-muted-foreground">
-              <li>
-                <Link href={output.breadcrumb.href} className="hover:text-foreground transition-colors">
-                  {output.hotelName}
-                </Link>
-              </li>
-              <li aria-hidden="true">
-                <ChevronRight size={12} className="mx-1.5" />
-              </li>
-              <li className="font-medium text-foreground">{output.roomName}</li>
-            </ol>
-          </nav>
-          <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
-            {output.roomName}
-          </h1>
-          <p className="text-sm text-muted-foreground">
-            {t('ota.roomDetail.selectDatesToContinue')}
-          </p>
-        </div>
+          </GlassCard>
+        </motion.div>
       )}
 
-      {/* Compact info strip */}
-      {output.capacity > 0 && (
-        <div
-          data-testid="room-info-strip"
-          className="flex items-center gap-2 text-sm text-muted-foreground"
-        >
-          <Users size={16} />
-          <span>
-            {output.capacity} {t('ota.roomDetail.guests')}
-          </span>
-          <span>·</span>
-          <Bed size={16} />
-          <span>
-            {output.beds} {output.bedType}
-          </span>
-        </div>
-      )}
+      <motion.button
+        type="button"
+        data-testid="calendar-reserve-button"
+        onClick={handleReserve}
+        disabled={!hasDates || !output.canBook}
+        whileTap={hasDates ? { scale: 0.96 } : undefined}
+        transition={{
+          duration: MOTION_DURATION.normal / 1000,
+          ease: MOTION_EASING.easeOut,
+        }}
+        className={cn(
+          'w-full px-5 py-3 rounded-[var(--radius-squircle-md)]',
+          'bg-primary text-primary-foreground font-bold text-sm',
+          'hover:bg-primary/90 transition-colors',
+          'disabled:opacity-50 disabled:cursor-not-allowed'
+        )}
+      >
+        {t('ota.booking.reserve')}
+      </motion.button>
+    </div>
+  );
 
-      {/* Calendar protagonist */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
-        <div
-          className="order-2 lg:order-1"
-          role="region"
-          aria-label={t('ota.roomDetail.selectDates')}
-        >
-          <InlineDatePicker
-            checkIn={checkInStr}
-            checkOut={checkOutStr}
-            onChange={handleDateChange}
-            primaryColor={output.primaryColor}
-            bookedDates={output.bookedDates}
-            defaultExpanded={true}
-            className="w-full"
-          />
-        </div>
+  return (
+    <div data-testid="room-detail-calendar" data-state={state}>
+      {/* Desktop sticky sidebar */}
+      <div
+        data-testid="room-detail-calendar-sidebar"
+        className="hidden lg:block sticky top-6 self-start"
+      >
+        <GlassCard className="p-5">{calendarContent}</GlassCard>
+      </div>
 
-        <div className="order-1 lg:order-2">
-          {/* Price teaser — shown when no dates selected */}
-          {!isActive && (
-            <div
-              data-testid="price-teaser"
-              className={cn(heroImage && '-mt-6 relative z-10')}
-            >
-              <GlassCard className="p-5">
-                <div className="space-y-1">
-                  <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                    {t('ota.booking.from')}
-                  </p>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-foreground">
-                      ${formatPrice(output.pricePerNight)}
-                    </span>
-                    <span className="text-sm text-muted-foreground">{t('ota.roomDetail.perNight')}</span>
-                  </div>
-                  {output.weekendPrice > 0 && output.weekendPrice !== output.pricePerNight && (
-                    <p className="text-xs text-muted-foreground">
-                      {t('ota.roomDetail.weekendPrice', {
-                        price: formatPrice(output.weekendPrice),
-                      })}
-                    </p>
-                  )}
-                </div>
-              </GlassCard>
+      {/* Mobile floating bottom bar */}
+      <div
+        data-testid="room-detail-calendar-mobile-bar"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 p-4 bg-background/95 backdrop-blur-xl border-t border-border/40"
+      >
+        {!mobileExpanded ? (
+          <button
+            type="button"
+            onClick={() => setMobileExpanded(true)}
+            className="w-full text-left"
+            aria-expanded="false"
+            aria-controls="mobile-calendar-panel"
+          >
+            <GlassCard className="flex items-center justify-between p-3">
+              <div className="flex items-center gap-2">
+                <Calendar size={18} className="text-brand-600" />
+                <span className="font-bold text-sm">{t('ota.roomDetail.chooseDates')}</span>
+                <span className="text-sm text-muted-foreground">
+                  · {t('ota.booking.from')} ${formatPrice(output.pricePerNight)}
+                  {t('ota.roomDetail.perNight')}
+                </span>
+              </div>
+              <ChevronDown size={18} className="text-muted-foreground" />
+            </GlassCard>
+          </button>
+        ) : (
+          <GlassCard id="mobile-calendar-panel" className="p-4 space-y-4">
+            <div className="flex items-center justify-between">
+              <span className="font-bold text-sm">{t('ota.roomDetail.chooseDates')}</span>
+              <button
+                type="button"
+                onClick={() => setMobileExpanded(false)}
+                aria-expanded="true"
+                aria-controls="mobile-calendar-panel"
+              >
+                <ChevronDown size={18} className="text-muted-foreground rotate-180" />
+              </button>
             </div>
-          )}
-
-          {/* Animated summary bar — shown when dates are selected */}
-          {isActive && summary && (
-            <motion.div
-              data-testid="summary-bar"
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 20 }}
-              transition={springSnappy()}
-            >
-              <GlassCard className="p-5 space-y-4">
-                <div className="flex items-center gap-2 text-sm font-bold text-foreground">
-                  <Calendar size={16} className="text-brand-600" />
-                  <span>
-                    {summary.fromLabel} — {summary.toLabel}
-                  </span>
-                  <span className="ml-auto inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-50 text-brand-700 text-xs">
-                    <Moon size={12} />
-                    {summary.nights} {t('ota.showcase.nights', { count: summary.nights })}
-                  </span>
-                </div>
-
-                {/* Weekday / weekend breakdown */}
-                <div className="space-y-2 text-sm">
-                  {summary.weekdayNights > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {summary.weekdayNights} {t('ota.roomDetail.weekdayNights', { count: summary.weekdayNights })}
-                      </span>
-                      <span className="font-medium text-foreground">
-                        ${formatPrice(summary.weekdayPrice)}
-                      </span>
-                    </div>
-                  )}
-                  {summary.weekendNights > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {summary.weekendNights} {t('ota.roomDetail.weekendNights', { count: summary.weekendNights })}
-                      </span>
-                      <span className="font-medium text-foreground">
-                        ${formatPrice(summary.weekendPrice)}
-                      </span>
-                    </div>
-                  )}
-                  {summary.tax > 0 && (
-                    <div className="flex justify-between">
-                      <span className="text-muted-foreground">
-                        {t('ota.roomDetail.tax', { rate: Math.round(summary.taxRate * 100) })}
-                      </span>
-                      <span className="font-medium text-foreground">${formatPrice(summary.tax)}</span>
-                    </div>
-                  )}
-                </div>
-
-                <div className="pt-3 border-t border-border flex items-center justify-between">
-                  <div>
-                    <p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
-                      {t('ota.showcase.total')}
-                    </p>
-                    <p className="text-2xl font-black text-brand-600">${formatPrice(summary.total)}</p>
-                  </div>
-                  <motion.button
-                    type="button"
-                    onClick={handleConfirm}
-                    whileTap={{ scale: 0.96 }}
-                    transition={{
-                      duration: MOTION_DURATION.normal / 1000,
-                      ease: MOTION_EASING.easeOut,
-                    }}
-                    className={cn(
-                      'px-5 py-3 rounded-[var(--radius-squircle-md)]',
-                      'bg-primary text-primary-foreground font-bold text-sm',
-                      'hover:bg-primary/90 transition-colors'
-                    )}
-                  >
-                    {t('ota.roomDetail.viewDetail')}
-                  </motion.button>
-                </div>
-              </GlassCard>
-            </motion.div>
-          )}
-        </div>
+            {calendarContent}
+          </GlassCard>
+        )}
       </div>
     </div>
   );
 }
-

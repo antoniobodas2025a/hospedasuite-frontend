@@ -86,7 +86,7 @@ describe('roomDetailViewModel', () => {
     expect(result.canBook).toBe(false);
   });
 
-  it('returns calendar_first state when dates are missing', () => {
+  it('returns gallery state when dates are missing', () => {
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
@@ -95,7 +95,7 @@ describe('roomDetailViewModel', () => {
 
     const result = roomDetailViewModel(input);
 
-    expect(result.state).toBe('calendar_first');
+    expect(result.state).toBe('gallery');
     expect(result.pricing).toBeNull();
     expect(result.pricePerNight).toBe(100000);
     expect(result.weekendPrice).toBe(150000);
@@ -117,7 +117,7 @@ describe('roomDetailViewModel', () => {
     expect(result.weekendPrice).toBe(120000);
   });
 
-  it('returns detail state with correct pricing when dates are available', () => {
+  it('returns dates_selected state with correct pricing when dates are available', () => {
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
@@ -127,7 +127,7 @@ describe('roomDetailViewModel', () => {
 
     const result = roomDetailViewModel(input);
 
-    expect(result.state).toBe('detail');
+    expect(result.state).toBe('dates_selected');
     expect(result.pricing).not.toBeNull();
     expect(result.pricing?.weekdayNights).toBe(3);
     expect(result.pricing?.weekendNights).toBe(0);
@@ -162,7 +162,7 @@ describe('roomDetailViewModel', () => {
 
     const result = roomDetailViewModel(input);
 
-    expect(result.state).toBe('detail');
+    expect(result.state).toBe('dates_selected');
     expect(result.pricing?.weekdayNights).toBe(3);
     expect(result.pricing?.weekendNights).toBe(0);
     expect(result.pricing?.weekdayPrice).toBe(100000);
@@ -181,7 +181,7 @@ describe('roomDetailViewModel', () => {
 
     const result = roomDetailViewModel(input);
 
-    expect(result.state).toBe('detail');
+    expect(result.state).toBe('dates_selected');
     expect(result.pricing?.weekdayNights).toBe(1);
     expect(result.pricing?.weekendNights).toBe(2);
     expect(result.pricing?.subtotal).toBe(400000);
@@ -199,7 +199,7 @@ describe('roomDetailViewModel', () => {
 
     const result = roomDetailViewModel(input);
 
-    expect(result.state).toBe('detail');
+    expect(result.state).toBe('dates_selected');
     expect(result.pricing?.weekdayNights).toBe(0);
     expect(result.pricing?.weekendNights).toBe(2);
     expect(result.pricing?.subtotal).toBe(300000);
