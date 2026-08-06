@@ -171,22 +171,6 @@ export default async function ChannelHotelDetailPage({
 
 
 
-	// Build search context for banner
-	const searchContext = {
-		location: (resolvedSearchParams?.location as string) || null,
-		checkin: checkin || null,
-		checkout: checkout || null,
-		guests: guests ? Number(guests) : null,
-		category: (resolvedSearchParams?.category as string) || null,
-		search: (resolvedSearchParams?.search as string) || null,
-	};
-	const hasSearchContext = !!(
-		searchContext.location ||
-		searchContext.checkin ||
-		searchContext.category ||
-		searchContext.search
-	);
-
 	return (
 		<main className="min-h-screen bg-background text-foreground pb-24 font-sans selection:bg-brand-500/30">
 			{/* SEO Structured Data */}
