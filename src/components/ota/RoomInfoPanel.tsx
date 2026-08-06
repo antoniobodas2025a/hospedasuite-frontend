@@ -64,10 +64,6 @@ export function RoomInfoPanel({
 		<div className={cn("space-y", isDesktop ? "space-y-6" : "space-y-5")}>
 			{/* Nombre + Descripcion */}
 			<div className={cn("space-y", isDesktop ? "space-y-4" : "space-y-3")}>
-				<span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-warm-500/10 backdrop-blur-xl border border-warm-500/20 text-warm-700 text-[10px] font-bold uppercase tracking-widest">
-					<Star size={11} className="fill-warm-500" />{" "}
-					{t("ota.showcase.authorsPick")}
-				</span>
 				<h2
 					id="room-modal-title"
 					className={cn(
@@ -78,29 +74,6 @@ export function RoomInfoPanel({
 					{room.name}
 				</h2>
 			</div>
-
-			{/* Precio destacado */}
-			<GlassCard data-testid="modal-price" className={cn(isDesktop ? "p-5" : "p-4")}>
-				<div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-2">
-					<div>
-						<p className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-1">
-							{t("ota.showcase.total")}
-						</p>
-						<p className="text-2xl sm:text-3xl font-black text-foreground">
-							${((room.price_per_night ?? room.price ?? 0) * nights).toLocaleString()}{" "}
-							<span className="text-sm font-medium text-muted-foreground">
-								{t("ota.showcase.cop")}
-							</span>
-						</p>
-					</div>
-					<PriceBreakdown
-						pricePerNight={room.price_per_night ?? room.price ?? 0}
-						nights={nights}
-						taxRate={taxRate}
-						showDetails={false}
-					/>
-				</div>
-			</GlassCard>
 
 			{/* Amenidades */}
 			{room.amenities && room.amenities.length > 0 && (

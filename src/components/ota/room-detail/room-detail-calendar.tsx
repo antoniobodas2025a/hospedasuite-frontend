@@ -1,7 +1,6 @@
 'use client';
 
 import React, { useMemo, useState, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ChevronDown, Calendar, Moon } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -43,7 +42,6 @@ export function RoomDetailCalendar({
 }: RoomDetailCalendarProps) {
   const t = useTranslations();
   const locale = useLocale();
-  const router = useRouter();
   const dateLocale = getDateFnsLocale(locale);
   const [mobileExpanded, setMobileExpanded] = useState(false);
   const isActive = state === 'dates_selected';
@@ -65,12 +63,6 @@ export function RoomDetailCalendar({
     },
     [dispatch]
   );
-
-  const handleReserve = useCallback(() => {
-    if (!output.canBook || !checkInStr || !checkOutStr) return;
-    const url = `/book/${output.hotelSlug}/checkout?room=${output.roomId}&checkin=${checkInStr}&checkout=${checkOutStr}`;
-    router.push(url);
-  }, [output.canBook, output.hotelSlug, output.roomId, checkInStr, checkOutStr, router]);
 
   const summary = useMemo(() => {
     if (!checkIn || !checkOut || !output.pricing) return null;
@@ -197,26 +189,6 @@ export function RoomDetailCalendar({
           </GlassCard>
         </motion.div>
       )}
-
-      <motion.button
-        type="button"
-        data-testid="calendar-reserve-button"
-        onClick={handleReserve}
-        disabled={!hasDates || !output.canBook}
-        whileTap={hasDates ? { scale: 0.96 } : undefined}
-        transition={{
-          duration: MOTION_DURATION.normal / 1000,
-          ease: MOTION_EASING.easeOut,
-        }}
-        className={cn(
-          'w-full px-5 py-3 rounded-[var(--radius-squircle-md)]',
-          'bg-primary text-primary-foreground font-bold text-sm',
-          'hover:bg-primary/90 transition-colors',
-          'disabled:opacity-50 disabled:cursor-not-allowed'
-        )}
-      >
-        {t('ota.booking.reserve')}
-      </motion.button>
     </div>
   );
 
