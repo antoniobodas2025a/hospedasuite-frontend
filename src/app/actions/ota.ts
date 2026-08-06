@@ -282,7 +282,8 @@ export async function fetchChannelHotelsAction(
 			otaHotels = otaHotels
 				.filter((h: any) => {
 					const avail = availMap.get(h.id);
-					return avail && Number(avail.available_rooms) > 0;
+					if (!avail) return true; // No bookings = fully available
+					return Number(avail.available_rooms) > 0;
 				})
 				.map((h: any) => {
 					const avail = availMap.get(h.id);
