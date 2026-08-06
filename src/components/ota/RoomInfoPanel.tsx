@@ -68,7 +68,7 @@ export function RoomInfoPanel({
 					id="room-modal-title"
 					className={cn(
 						"font-black text-foreground tracking-tight",
-						isDesktop ? "text-3xl xl:text-4xl leading-tight" : "text-2xl"
+						isDesktop ? "text-2xl xl:text-3xl leading-tight" : "text-2xl"
 					)}
 				>
 					{room.name}

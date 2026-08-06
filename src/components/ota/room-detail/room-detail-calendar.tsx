@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useState, useCallback } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { ChevronDown, Calendar, Moon } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
@@ -41,6 +42,7 @@ export function RoomDetailCalendar({
   selectedCheckOut,
 }: RoomDetailCalendarProps) {
   const t = useTranslations();
+  const router = useRouter();
   const locale = useLocale();
   const dateLocale = getDateFnsLocale(locale);
   const [mobileExpanded, setMobileExpanded] = useState(false);
@@ -51,6 +53,12 @@ export function RoomDetailCalendar({
   const checkInStr = toISODate(checkIn);
   const checkOutStr = toISODate(checkOut);
   const hasDates = Boolean(checkIn && checkOut);
+
+  const handleReserve = useCallback(() => {
+    if (!output.canBook || !checkInStr || !checkOutStr) return;
+    const url = `/book/${output.hotelSlug}/checkout?room=${output.roomId}&checkin=${checkInStr}&checkout=${checkOutStr}`;
+    router.push(url);
+  }, [output.canBook, output.hotelSlug, output.roomId, checkInStr, checkOutStr, router]);
 
   const handleDateChange = useCallback(
     (range: { from: Date; to: Date }) => {
@@ -92,7 +100,13 @@ export function RoomDetailCalendar({
           checkIn={checkInStr}
           checkOut={checkOutStr}
           onChange={handleDateChange}
-          primaryColor={output.primaryColor}
+          primaryColor={
+            output.primaryColor &&
+            output.primaryColor !== '#ffffff' &&
+            output.primaryColor !== '#fff'
+              ? output.primaryColor
+              : undefined
+          }
           bookedDates={output.bookedDates}
           defaultExpanded={true}
           className="w-full"
@@ -186,6 +200,26 @@ export function RoomDetailCalendar({
                 <p className="text-2xl font-black text-brand-600">${formatPrice(summary.total)}</p>
               </div>
             </div>
+
+            {hasDates && output.canBook && (
+              <motion.button
+                type="button"
+                onClick={handleReserve}
+                data-testid="calendar-reserve-button"
+                whileTap={{ scale: 0.96 }}
+                transition={{
+                  duration: MOTION_DURATION.normal / 1000,
+                  ease: MOTION_EASING.easeOut,
+                }}
+                className={cn(
+                  'w-full px-6 py-3 rounded-[var(--radius-squircle-md)]',
+                  'bg-primary text-primary-foreground font-bold text-sm',
+                  'hover:bg-primary/90 transition-colors'
+                )}
+              >
+                {t('ota.booking.reserve')}
+              </motion.button>
+            )}
           </GlassCard>
         </motion.div>
       )}

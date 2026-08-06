@@ -2,7 +2,7 @@
 import '../../../../__tests__/bun-test-dom-setup';
 import { describe, it, expect, vi } from 'vitest';
 import '@testing-library/jest-dom';
-import { render, fireEvent } from '@testing-library/react';
+import { render, fireEvent, within } from '@testing-library/react';
 import type { RoomDetailViewModelOutput } from '@/view-models/room-detail-view-model';
 import {
   RoomDetailClient,
@@ -350,16 +350,45 @@ describe('RoomDetailClient', () => {
     expect(getByTestId('summary-bar')).toHaveTextContent('$1.071.000');
   });
 
-  it('disables Reservar without dates and enables it after selecting dates', () => {
-    const { getByRole, getByTestId } = render(
+  it('hides calendar Reservar without dates and enables it after selecting dates', () => {
+    const { getByRole, getByTestId, queryByTestId } = render(
       <RoomDetailClient output={makeOutput({ state: 'gallery', pricing: null })} />
     );
-    const reserveButton = getByTestId('calendar-reserve-button');
-    expect(reserveButton).toBeDisabled();
+    expect(queryByTestId('calendar-reserve-button')).not.toBeInTheDocument();
 
     fireEvent.click(getByRole('button', { name: 'Select dates' }));
 
     expect(getByTestId('calendar-reserve-button')).toBeEnabled();
+  });
+
+  it('shows the calendar Reservar button inside the expanded mobile bar', () => {
+    const { getByTestId } = render(
+      <RoomDetailClient
+        output={makeOutput({
+          state: 'dates_selected',
+          pricing: {
+            weekdayPrice: 300000,
+            weekendPrice: 350000,
+            weekdayNights: 3,
+            weekendNights: 0,
+            subtotal: 900000,
+            tax: 171000,
+            total: 1071000,
+            taxRate: 0.19,
+            breakdown: [],
+          },
+          initialCheckIn: dates.checkIn,
+          initialCheckOut: dates.checkOut,
+        })}
+      />
+    );
+
+    const mobileBar = getByTestId('room-detail-calendar-mobile-bar');
+    fireEvent.click(mobileBar.querySelector('button')!);
+
+    const reserveButton = within(mobileBar).getByTestId('calendar-reserve-button');
+    expect(reserveButton).toBeEnabled();
+    expect(reserveButton).toHaveTextContent('Reservar');
   });
 
   it('does not render a Ver habitación / Ver detalle button', () => {

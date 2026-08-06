@@ -118,7 +118,7 @@ export function RoomDetailGallery({
                     <li className="font-medium text-white">{output.roomName}</li>
                   </ol>
                 </nav>
-                <h1 className="text-2xl lg:text-3xl font-black text-white tracking-tight">
+                <h1 className="text-2xl lg:text-3xl font-black text-white tracking-tight truncate">
                   {output.roomName}
                 </h1>
               </div>
@@ -140,7 +140,7 @@ export function RoomDetailGallery({
               <li className="font-medium text-foreground">{output.roomName}</li>
             </ol>
           </nav>
-          <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight">
+          <h1 className="text-2xl lg:text-3xl font-black text-foreground tracking-tight truncate">
             {output.roomName}
           </h1>
         </div>
@@ -164,8 +164,8 @@ export function RoomDetailGallery({
         </div>
       )}
 
-      {/* Main content: gallery + info panel */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:gap-8">
+      {/* Main content: gallery + info panel (BELOW pattern on all breakpoints) */}
+      <div className="grid grid-cols-1 gap-6 lg:gap-8">
         <motion.div
           initial={{ opacity: 0, y: 24 }}
           animate={{ opacity: 1, y: 0 }}

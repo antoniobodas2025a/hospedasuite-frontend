@@ -276,6 +276,26 @@ describe('T-09: RoomDetailCalendar', () => {
     expect(call.className).toBeDefined();
   });
 
+  it('falls back to undefined when primaryColor is white', () => {
+    const output = makeOutput({ state: 'gallery', primaryColor: '#ffffff' });
+    const dispatch = makeDispatch();
+
+    render(<RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />);
+
+    const call = InlineDatePickerMock.mock.calls[0][0];
+    expect(call.primaryColor).toBeUndefined();
+  });
+
+  it('falls back to undefined for short white primaryColor', () => {
+    const output = makeOutput({ state: 'gallery', primaryColor: '#fff' });
+    const dispatch = makeDispatch();
+
+    render(<RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />);
+
+    const call = InlineDatePickerMock.mock.calls[0][0];
+    expect(call.primaryColor).toBeUndefined();
+  });
+
   it('shows the price teaser when no dates are selected', () => {
     const output = makeOutput({ state: 'gallery', pricing: null });
     const dispatch = makeDispatch();
@@ -352,15 +372,15 @@ describe('T-09: RoomDetailCalendar', () => {
     });
   });
 
-  it('disables Reservar without dates and enables it after selecting dates', () => {
+  it('hides the Reservar button without dates and shows it after selecting dates', () => {
     const output = makeOutput({ state: 'gallery', pricing: null });
     const dispatch = makeDispatch();
 
-    const { getByTestId, rerender } = render(
+    const { getByTestId, queryByTestId, rerender } = render(
       <RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />
     );
 
-    expect(getByTestId('calendar-reserve-button')).toBeDisabled();
+    expect(queryByTestId('calendar-reserve-button')).not.toBeInTheDocument();
 
     rerender(
       <RoomDetailCalendar
@@ -386,6 +406,33 @@ describe('T-09: RoomDetailCalendar', () => {
     );
 
     expect(getByTestId('calendar-reserve-button')).toBeEnabled();
+  });
+
+  it('hides the calendar Reservar button when booking is not allowed', () => {
+    const output = makeOutput({
+      state: 'dates_selected',
+      canBook: false,
+      pricing: {
+        weekdayPrice: 300000,
+        weekendPrice: 350000,
+        weekdayNights: 3,
+        weekendNights: 0,
+        subtotal: 900000,
+        tax: 171000,
+        total: 1071000,
+        taxRate: 0.19,
+        breakdown: [],
+      },
+      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
+      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
+    });
+    const dispatch = makeDispatch();
+
+    const { queryByTestId } = render(
+      <RoomDetailCalendar output={output} state="dates_selected" dispatch={dispatch} />
+    );
+
+    expect(queryByTestId('calendar-reserve-button')).not.toBeInTheDocument();
   });
 
   it('renders a mobile floating bottom bar with collapsed calendar', () => {
@@ -476,7 +523,7 @@ describe('T-10: RoomDetailGallery', () => {
     expect(strip).toHaveTextContent('1 Queen');
   });
 
-  it('reuses RoomGalleryGrid and RoomInfoPanel', () => {
+  it('reuses RoomGalleryGrid and RoomInfoPanel in BELOW layout order', () => {
     const output = makeOutput({
       state: 'dates_selected',
       pricing: {
@@ -501,6 +548,11 @@ describe('T-10: RoomDetailGallery', () => {
 
     expect(getByTestId('room-gallery-grid')).toBeInTheDocument();
     expect(getByTestId('room-info-panel')).toBeInTheDocument();
+    expect(
+      getByTestId('room-detail-gallery').innerHTML.indexOf('data-testid="room-gallery-grid"')
+    ).toBeLessThan(
+      getByTestId('room-detail-gallery').innerHTML.indexOf('data-testid="room-info-panel"')
+    );
     expect(RoomGalleryGridMock).toHaveBeenCalledWith(
       expect.objectContaining({
         images: output.gallery.slice(1),
