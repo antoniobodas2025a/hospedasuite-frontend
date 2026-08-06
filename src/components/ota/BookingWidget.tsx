@@ -144,62 +144,8 @@ export default function BookingWidget({
           </>
         </div>
 
-        {/* Cuerpo del widget */}
+        {/* Cuerpo del widget — simplificado: sin calendario duplicado */}
         <div className="p-6 space-y-5">
-          {/* Inline date picker */}
-          <InlineDatePicker
-            checkIn={checkIn}
-            checkOut={checkOut}
-            hotelId={hotelId}
-            onChange={handleDateChange}
-            defaultExpanded={activeRooms.length <= 2}
-            className="w-full"
-            primaryColor={primaryColor}
-          />
-
-          {/* Fechas seleccionadas */}
-          {checkIn && checkOut ? (
-            <div className="flex items-start gap-3 p-4 bg-secondary/10 rounded-[var(--radius-squircle-2xl)] border border-secondary/30">
-              <CheckCircle2 size={18} className="text-secondary shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-bold text-foreground">{t('ota.booking.datesConfirmed')}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {new Date(checkIn).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })} — {new Date(checkOut).toLocaleDateString('es-ES', { day: 'numeric', month: 'short' })}
-                </p>
-                {guestCount && (
-                  <p className="text-xs text-muted-foreground mt-1 flex items-center gap-1">
-                    <Users size={12} /> {guestCount} {t('ota.booking.guest', { count: guestCount })}
-                  </p>
-                )}
-              </div>
-            </div>
-          ) : (
-            <div className="flex items-start gap-3 p-4 bg-warm-100/50 rounded-[var(--radius-squircle-2xl)] border border-warm-200/60">
-              <Clock size={18} className="text-warm-600 shrink-0 mt-0.5" />
-              <div>
-                <p className="text-sm font-bold text-foreground">{t('ota.booking.selectDates')}</p>
-                <p className="text-xs text-muted-foreground mt-0.5">{t('ota.booking.selectDatesHint')}</p>
-              </div>
-            </div>
-          )}
-
-          {/* Error feedback — CTA clicked without dates */}
-          <AnimatePresence>
-            {showDateError && (
-              <motion.div
-                initial={{ opacity: 0, height: 0 }}
-                animate={{ opacity: 1, height: 'auto' }}
-                exit={{ opacity: 0, height: 0 }}
-                className="flex items-start gap-3 p-4 bg-destructive/10 rounded-[var(--radius-squircle-2xl)] border border-destructive/20"
-              >
-                <Info size={18} className="text-destructive shrink-0 mt-0.5" />
-                <div>
-                <p className="text-sm font-bold text-destructive">{t('ota.booking.selectDatesFirst')}</p>
-                <p className="text-xs text-destructive/80 mt-0.5">{t('ota.booking.selectDatesFirstHint')}</p>
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
 
           {/* Disponibilidad */}
           {availableCount > 0 && (
@@ -239,7 +185,7 @@ export default function BookingWidget({
             </div>
           )}
 
-          {/* CTA principal — "Ver habitación" */}
+          {/* CTA principal — "Reservar" */}
           <motion.button
             onClick={handleReserveClick}
             disabled={availableCount === 0 || isProcessing}
@@ -252,7 +198,7 @@ export default function BookingWidget({
                 : 'bg-primary hover:bg-primary/90 text-primary-foreground shadow-cta',
             )}
           >
-            {isProcessing ? 'Procesando...' : t('ota.booking.viewPhotos')}
+            {isProcessing ? 'Procesando...' : t('ota.booking.reserve')}
             <ArrowRight size={16} strokeWidth={2.5} />
           </motion.button>
 
@@ -307,17 +253,6 @@ export default function BookingWidget({
               </motion.div>
             )}
           </AnimatePresence>
-
-          {/* Toggle politica (siempre visible si hay politica) */}
-          {cancellationPolicy && (
-            <button
-              onClick={() => setShowPolicy(!showPolicy)}
-              className="flex items-center justify-between w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <span className="font-bold">{t('ota.booking.cancellationPolicy')}</span>
-              {showPolicy ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
-            </button>
-          )}
         </div>
       </GlassCard>
     </div>
