@@ -3,7 +3,7 @@ import '../../../../__tests__/bun-test-dom-setup';
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import '@testing-library/jest-dom';
 import React from 'react';
-import { render, cleanup, fireEvent, within } from '@testing-library/react';
+import { render, cleanup, fireEvent } from '@testing-library/react';
 import type { RoomDetailViewModelOutput } from '@/view-models/room-detail-view-model';
 import { RoomDetailSkeleton } from '../room-detail-skeleton';
 import { RoomDetailError } from '../room-detail-error';
@@ -435,21 +435,17 @@ describe('T-09: RoomDetailCalendar', () => {
     expect(queryByTestId('calendar-reserve-button')).not.toBeInTheDocument();
   });
 
-  it('renders a mobile floating bottom bar with collapsed calendar', () => {
+  it('renders the calendar inline on mobile without a fixed bottom bar', () => {
     const output = makeOutput({ state: 'gallery', pricing: null });
     const dispatch = makeDispatch();
 
-    const { getByTestId } = render(
+    const { getByTestId, queryByTestId } = render(
       <RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />
     );
 
-    const mobileBar = getByTestId('room-detail-calendar-mobile-bar');
-    expect(mobileBar).toBeInTheDocument();
-    expect(within(mobileBar).queryByTestId('inline-date-picker')).not.toBeInTheDocument();
-
-    fireEvent.click(mobileBar.querySelector('button')!);
-
-    expect(within(mobileBar).getByTestId('inline-date-picker')).toBeInTheDocument();
+    expect(getByTestId('room-detail-calendar-sidebar')).toBeInTheDocument();
+    expect(queryByTestId('room-detail-calendar-mobile-bar')).not.toBeInTheDocument();
+    expect(getByTestId('inline-date-picker')).toBeInTheDocument();
   });
 
   it('navigates to checkout when Reservar is clicked with dates', () => {
@@ -523,7 +519,7 @@ describe('T-10: RoomDetailGallery', () => {
     expect(strip).toHaveTextContent('1 Queen');
   });
 
-  it('reuses RoomGalleryGrid and RoomInfoPanel in BELOW layout order', () => {
+  it('reuses RoomGalleryGrid without RoomInfoPanel', () => {
     const output = makeOutput({
       state: 'dates_selected',
       pricing: {
@@ -542,17 +538,12 @@ describe('T-10: RoomDetailGallery', () => {
     });
     const dispatch = makeDispatch();
 
-    const { getByTestId } = render(
+    const { getByTestId, queryByTestId } = render(
       <RoomDetailGallery output={output} state="dates_selected" dispatch={dispatch} />
     );
 
     expect(getByTestId('room-gallery-grid')).toBeInTheDocument();
-    expect(getByTestId('room-info-panel')).toBeInTheDocument();
-    expect(
-      getByTestId('room-detail-gallery').innerHTML.indexOf('data-testid="room-gallery-grid"')
-    ).toBeLessThan(
-      getByTestId('room-detail-gallery').innerHTML.indexOf('data-testid="room-info-panel"')
-    );
+    expect(queryByTestId('room-info-panel')).not.toBeInTheDocument();
     expect(RoomGalleryGridMock).toHaveBeenCalledWith(
       expect.objectContaining({
         images: output.gallery.slice(1),
@@ -562,104 +553,29 @@ describe('T-10: RoomDetailGallery', () => {
     );
   });
 
-  it('renders sticky CTA dock with disabled Reservar without dates', () => {
-    const output = makeOutput({ state: 'gallery', pricing: null });
+  it('applies font-lora to the hero heading', () => {
+    const output = makeOutput({ state: 'gallery' });
     const dispatch = makeDispatch();
 
-    const { getByTestId } = render(
+    const { getByRole } = render(
       <RoomDetailGallery output={output} state="gallery" dispatch={dispatch} />
     );
 
-    const ctaDock = getByTestId('cta-dock');
-    expect(ctaDock).toBeInTheDocument();
-    expect(ctaDock).toHaveTextContent('Seleccionar fechas');
-    const reserveButton = ctaDock.querySelector('button');
-    expect(reserveButton).toBeDisabled();
+    const heading = getByRole('heading', { level: 1, name: 'Suite Mirador' });
+    expect(heading).toHaveClass('font-lora');
+    expect(heading).toHaveClass('font-black');
+    expect(heading).toHaveClass('tracking-tight');
   });
 
-  it('enables the CTA dock Reservar button when dates are selected', () => {
-    const output = makeOutput({
-      state: 'dates_selected',
-      pricing: {
-        weekdayPrice: 300000,
-        weekendPrice: 350000,
-        weekdayNights: 2,
-        weekendNights: 1,
-        subtotal: 950000,
-        tax: 180500,
-        total: 1130500,
-        taxRate: 0.19,
-        breakdown: [],
-      },
-      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
-      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
-    });
+  it('does not render a CTA dock', () => {
+    const output = makeOutput({ state: 'gallery', pricing: null });
     const dispatch = makeDispatch();
 
-    const { getByTestId } = render(
-      <RoomDetailGallery output={output} state="dates_selected" dispatch={dispatch} />
+    const { queryByTestId } = render(
+      <RoomDetailGallery output={output} state="gallery" dispatch={dispatch} />
     );
 
-    const ctaDock = getByTestId('cta-dock');
-    const reserveButton = ctaDock.querySelector('button');
-    expect(reserveButton).toBeEnabled();
-  });
-
-  it('navigates to checkout when the CTA dock Reservar is clicked with dates', () => {
-    const output = makeOutput({
-      state: 'dates_selected',
-      pricing: {
-        weekdayPrice: 300000,
-        weekendPrice: 350000,
-        weekdayNights: 2,
-        weekendNights: 1,
-        subtotal: 950000,
-        tax: 180500,
-        total: 1130500,
-        taxRate: 0.19,
-        breakdown: [],
-      },
-      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
-      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
-    });
-    const dispatch = makeDispatch();
-
-    const { getByTestId } = render(
-      <RoomDetailGallery output={output} state="dates_selected" dispatch={dispatch} />
-    );
-
-    const ctaDock = getByTestId('cta-dock');
-    fireEvent.click(ctaDock.querySelector('button')!);
-
-    expect(mockRouter.push).toHaveBeenCalledWith(
-      '/book/hotel-mirador/checkout?room=room-1&checkin=2026-08-10&checkout=2026-08-13'
-    );
-  });
-
-  it('does not render a Cambiar fechas button in the CTA dock', () => {
-    const output = makeOutput({
-      state: 'dates_selected',
-      pricing: {
-        weekdayPrice: 300000,
-        weekendPrice: 350000,
-        weekdayNights: 2,
-        weekendNights: 1,
-        subtotal: 950000,
-        tax: 180500,
-        total: 1130500,
-        taxRate: 0.19,
-        breakdown: [],
-      },
-      initialCheckIn: new Date('2026-08-10T12:00:00Z'),
-      initialCheckOut: new Date('2026-08-13T12:00:00Z'),
-    });
-    const dispatch = makeDispatch();
-
-    const { queryByText } = render(
-      <RoomDetailGallery output={output} state="dates_selected" dispatch={dispatch} />
-    );
-
-    expect(queryByText('Cambiar fechas')).not.toBeInTheDocument();
+    expect(queryByTestId('cta-dock')).not.toBeInTheDocument();
   });
 
   it('shows Ver otras habitaciones link when showOtherRooms is true', () => {

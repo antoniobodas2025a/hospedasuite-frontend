@@ -2,7 +2,7 @@
 import '../../../../__tests__/bun-test-dom-setup';
 import { describe, it, expect, vi } from 'vitest';
 import '@testing-library/jest-dom';
-import { render, fireEvent, within } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import type { RoomDetailViewModelOutput } from '@/view-models/room-detail-view-model';
 import {
   RoomDetailClient,
@@ -19,6 +19,9 @@ vi.mock('framer-motion', () => ({
     ),
     button: ({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, whileTap: _whileTap, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
       <button {...props}>{children}</button>
+    ),
+    span: ({ children, initial: _initial, animate: _animate, exit: _exit, transition: _transition, whileTap: _whileTap, ...props }: { children: React.ReactNode; [key: string]: unknown }) => (
+      <span {...props}>{children}</span>
     ),
   },
 }));
@@ -340,7 +343,7 @@ describe('RoomDetailClient', () => {
   });
 
   it('shows the price summary in the calendar sidebar after selecting dates', () => {
-    const { getByRole, getByTestId, getByText } = render(
+    const { getByRole, getByTestId } = render(
       <RoomDetailClient output={makeOutput({ state: 'gallery', pricing: null })} />
     );
     fireEvent.click(getByRole('button', { name: 'Select dates' }));
@@ -361,7 +364,7 @@ describe('RoomDetailClient', () => {
     expect(getByTestId('calendar-reserve-button')).toBeEnabled();
   });
 
-  it('shows the calendar Reservar button inside the expanded mobile bar', () => {
+  it('shows the calendar Reservar button in the inline booking card', () => {
     const { getByTestId } = render(
       <RoomDetailClient
         output={makeOutput({
@@ -383,10 +386,7 @@ describe('RoomDetailClient', () => {
       />
     );
 
-    const mobileBar = getByTestId('room-detail-calendar-mobile-bar');
-    fireEvent.click(mobileBar.querySelector('button')!);
-
-    const reserveButton = within(mobileBar).getByTestId('calendar-reserve-button');
+    const reserveButton = getByTestId('calendar-reserve-button');
     expect(reserveButton).toBeEnabled();
     expect(reserveButton).toHaveTextContent('Reservar');
   });
@@ -421,5 +421,51 @@ describe('RoomDetailClient', () => {
     );
     expect(getByTestId('room-detail-error')).toBeInTheDocument();
     expect(getByText('Not found')).toBeInTheDocument();
+  });
+
+  it('renders the unified layout: gallery full-width above info panel + calendar sidebar', () => {
+    const { getByTestId } = render(<RoomDetailClient output={makeOutput({ state: 'gallery' })} />);
+
+    const gallery = getByTestId('room-detail-gallery');
+    const infoPanel = getByTestId('room-info-panel');
+    const calendar = getByTestId('room-detail-calendar');
+
+    expect(gallery).toBeInTheDocument();
+    expect(infoPanel).toBeInTheDocument();
+    expect(calendar).toBeInTheDocument();
+
+    const galleryHtml = document.body.innerHTML;
+    expect(galleryHtml.indexOf('data-testid="room-detail-gallery"')).toBeLessThan(
+      galleryHtml.indexOf('data-testid="room-info-panel"')
+    );
+    expect(galleryHtml.indexOf('data-testid="room-info-panel"')).toBeLessThan(
+      galleryHtml.indexOf('data-testid="room-detail-calendar"')
+    );
+  });
+
+  it('does not render a CTA dock and exposes a single reserve CTA in the calendar', () => {
+    const { getByTestId, queryByTestId } = render(
+      <RoomDetailClient
+        output={makeOutput({
+          state: 'dates_selected',
+          pricing: {
+            weekdayPrice: 300000,
+            weekendPrice: 350000,
+            weekdayNights: 3,
+            weekendNights: 0,
+            subtotal: 900000,
+            tax: 171000,
+            total: 1071000,
+            taxRate: 0.19,
+            breakdown: [],
+          },
+          initialCheckIn: dates.checkIn,
+          initialCheckOut: dates.checkOut,
+        })}
+      />
+    );
+
+    expect(queryByTestId('cta-dock')).not.toBeInTheDocument();
+    expect(getByTestId('calendar-reserve-button')).toBeEnabled();
   });
 });

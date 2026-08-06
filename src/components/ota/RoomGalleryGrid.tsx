@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import GalleryImage from "@/components/ota/shared/GalleryImage";
 import { DynamicGalleryLightbox as GalleryLightbox } from "@/components/ota/shared/DynamicGalleryLightbox";
 import { SkeletonImage } from "@/components/ota/SkeletonImage";
+import { springGentle } from "@/lib/mac2026/spring";
 
 // ============================================================================
 // ROOM GALLERY GRID — Airbnb-style asymmetric layout
@@ -74,11 +75,11 @@ export default function RoomGalleryGrid({
 	// Staggered fade-in animation for desktop grid items
 	const containerVariants = {
 		hidden: {},
-		visible: { transition: { staggerChildren: 0.05 } },
+		visible: { transition: { staggerChildren: 0.06 } },
 	};
 	const itemVariants = {
 		hidden: { opacity: 0, y: 12 },
-		visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+		visible: { opacity: 1, y: 0, transition: springGentle() },
 	};
 
 	// 0–1 images: show a "View photos" placeholder instead of an empty grid
@@ -106,9 +107,12 @@ export default function RoomGalleryGrid({
 					setIndex={setIndex}
 					onOpen={handleOpen}
 				/>
-				<div
+				<motion.div
 					className="hidden lg:block relative w-full aspect-[4/3] rounded-[1.5rem] overflow-hidden group cursor-pointer"
 					onClick={() => handleOpen(0)}
+					variants={itemVariants}
+					initial="hidden"
+					animate="visible"
 				>
 					{!loadedSet.has(0) && <SkeletonImage className="absolute inset-0 z-10" />}
 					<motion.div
@@ -137,7 +141,7 @@ export default function RoomGalleryGrid({
 							{images.length}
 						</span>
 					</div>
-				</div>
+				</motion.div>
 			</div>
 		);
 	}
@@ -155,13 +159,19 @@ export default function RoomGalleryGrid({
 					onOpen={handleOpen}
 				/>
 				<div className="hidden lg:block">
-				<div className="grid grid-cols-2 gap-2 rounded-[1.5rem] overflow-hidden">
+				<motion.div
+					className="grid grid-cols-2 gap-2 rounded-[1.5rem] overflow-hidden"
+					variants={containerVariants}
+					initial="hidden"
+					animate="visible"
+				>
 					{/* Hero image */}
-					<button
+					<motion.button
 						type="button"
 						onClick={() => handleOpen(0)}
 						className="relative aspect-[4/3] col-span-2 group cursor-pointer"
 						aria-label={t("ota.roomGallery.viewImage", { index: 1 })}
+						variants={itemVariants}
 					>
 						{!loadedSet.has(0) && <SkeletonImage className="absolute inset-0 z-10" />}
 						<motion.div
@@ -183,16 +193,17 @@ export default function RoomGalleryGrid({
 						/>
 						</motion.div>
 						<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
-					</button>
+					</motion.button>
 
 					{/* Remaining images */}
 					{images.slice(1).map((img, i) => (
-						<button
+						<motion.button
 							key={i + 1}
 							type="button"
 							onClick={() => handleOpen(i + 1)}
 							className="relative aspect-[4/3] group cursor-pointer"
 							aria-label={t("ota.roomGallery.viewImage", { index: i + 2 })}
+							variants={itemVariants}
 						>
 							{!loadedSet.has(i + 1) && <SkeletonImage className="absolute inset-0 z-10" />}
 							<GalleryImage
@@ -209,9 +220,9 @@ export default function RoomGalleryGrid({
 								onLoad={() => markLoaded(i + 1)}
 							/>
 							<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-						</button>
+						</motion.button>
 					))}
-				</div>
+				</motion.div>
 
 				{images.length > 4 && (
 					<button
@@ -257,13 +268,19 @@ export default function RoomGalleryGrid({
 				onOpen={handleOpen}
 			/>
 			<div className="hidden lg:block">
-			<div className="grid grid-cols-4 grid-rows-2 gap-2 rounded-[1.5rem] overflow-hidden h-[400px]">
+			<motion.div
+				className="grid grid-cols-4 grid-rows-2 gap-2 rounded-[1.5rem] overflow-hidden h-[400px]"
+				variants={containerVariants}
+				initial="hidden"
+				animate="visible"
+			>
 				{/* Hero — left half, full height */}
-				<button
+				<motion.button
 					type="button"
 					onClick={() => handleOpen(0)}
 					className="relative col-span-2 row-span-2 group cursor-pointer"
 					aria-label={t("ota.roomGallery.viewImage", { index: 1 })}
+					variants={itemVariants}
 				>
 					{!loadedSet.has(0) && <SkeletonImage className="absolute inset-0 z-10" />}
 					<motion.div
@@ -285,16 +302,17 @@ export default function RoomGalleryGrid({
 					/>
 					</motion.div>
 					<div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/10 to-transparent pointer-events-none" />
-				</button>
+				</motion.button>
 
 				{/* 4 small images (2×2) */}
 				{images.slice(1, 5).map((img, i) => (
-					<button
+					<motion.button
 						key={i + 1}
 						type="button"
 						onClick={() => handleOpen(i + 1)}
 						className="relative group cursor-pointer"
 						aria-label={t("ota.roomGallery.viewImage", { index: i + 2 })}
+						variants={itemVariants}
 					>
 						{!loadedSet.has(i + 1) && <SkeletonImage className="absolute inset-0 z-10" />}
 						<GalleryImage
@@ -311,9 +329,9 @@ export default function RoomGalleryGrid({
 							onLoad={() => markLoaded(i + 1)}
 						/>
 						<div className="absolute inset-0 bg-gradient-to-t from-black/40 via-transparent to-transparent pointer-events-none" />
-					</button>
+					</motion.button>
 				))}
-			</div>
+			</motion.div>
 
 			<button
 				type="button"
