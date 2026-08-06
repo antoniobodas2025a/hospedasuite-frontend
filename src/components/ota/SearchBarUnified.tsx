@@ -147,10 +147,12 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 				else p.set("guests", g.toString());
 			}
 
-			// Location: only modify when explicitly passed
+			// Location: preserve from state if not explicitly passed (handles debounce race)
 			if (loc !== undefined) {
 				if (loc === null || loc === "") p.delete("location");
 				else p.set("location", loc);
+			} else if (locationRef.current && !p.has("location")) {
+				p.set("location", locationRef.current);
 			}
 
 			const query = p.toString();
@@ -166,6 +168,12 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 	useEffect(() => {
 		pushUrlRef.current = pushUrl;
 	}, [pushUrl]);
+
+	// Ref for latest location — used by pushUrl to preserve location state
+	// even when the debounce hasn't synced it to URL yet
+	const locationRef = useRef(location);
+	// eslint-disable-next-line react-hooks/immutability -- refs are mutable by design, this is a latest-value pattern
+	locationRef.current = location;
 
 	// Handlers: Dates — auto-confirm on complete range selection
 	const handleSelectDates = (newDate: DateRange | undefined) => {
