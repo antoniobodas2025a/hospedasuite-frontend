@@ -26,7 +26,6 @@ import { SectionHeader } from "@/components/ui/glass";
 import { ErrorBoundary } from "@/components/ota/ErrorBoundary";
 import LanguageSwitcher from "@/components/ota/LanguageSwitcher";
 import { getTranslations } from "next-intl/server";
-import { SearchContextBanner } from "@/components/ota/SearchContextBanner";
 
 // Incremental Static Regeneration — 60s cache for inventory balance
 export const revalidate = 60;
@@ -288,13 +287,6 @@ export default async function ChannelHotelDetailPage({
 					<AvailabilitySearchBar sticky navSections={navSections} primaryColor={hotel.primary_color} />
 				</div>
 			</div>
-
-			{/* Search Context Banner — shows when user arrives from homepage with search filters */}
-			{hasSearchContext && (
-				<Suspense fallback={null}>
-					<SearchContextBanner context={searchContext} />
-				</Suspense>
-			)}
 
 			{/* Main Content */}
 			<div className="max-w-6xl mx-auto px-6 pt-8">
