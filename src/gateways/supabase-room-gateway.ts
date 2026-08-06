@@ -50,7 +50,7 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       return null;
     }
 
-    const restricted = hotel.subscription_status !== 'active';
+    const restricted = hotel.subscription_status === 'cancelled' || hotel.subscription_status === 'past_due';
 
     const { data: room, error: roomError } = await this.supabase
       .from('rooms')
