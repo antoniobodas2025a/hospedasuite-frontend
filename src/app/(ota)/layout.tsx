@@ -1,7 +1,13 @@
 import React from 'react';
 import type { Metadata } from 'next';
 import AttributionTracker from '@/components/public/AttributionTracker';
-import { Calistoga } from 'next/font/google';
+import { Calistoga, Lora } from 'next/font/google';
+
+const lora = Lora({
+  subsets: ['latin'],
+  variable: '--font-lora',
+  display: 'swap',
+});
 import { getTranslations } from 'next-intl/server';
 import '../globals.css';
 
@@ -25,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function ChannelLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div data-theme="ota" className={`${calistoga.variable} font-sans bg-background text-foreground min-h-screen`}>
+    <div data-theme="ota" className={`${calistoga.variable} ${lora.variable} font-sans bg-background text-foreground min-h-screen`}>
       <AttributionTracker />
       {children}
     </div>
