@@ -1,24 +1,19 @@
 'use client';
 
 import React, { useState, useMemo } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { ShieldCheck, CheckCircle2, Clock, ArrowRight, ChevronDown, ChevronUp, Info, Users } from 'lucide-react';
+import { ShieldCheck, CheckCircle2, ArrowRight, ChevronDown, ChevronUp } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { cn } from '@/lib/utils';
-import { calculateTotalWithTax, DEFAULT_TAX_RATE, formatPrice } from '@/lib/pricing';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { GlassCard } from '@/components/ui/glass';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
-import InlineDatePicker from './InlineDatePicker';
 import { useTranslations } from 'next-intl';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
 
 // ============================================================================
-// BOOKING WIDGET — Smart Summary Sidebar
+// BOOKING WIDGET — Trust & Availability Sidebar
 //
-// Progressive Disclosure:
-// - Sin room seleccionada: muestra "Desde $X/noche" + CTA compacto
-// - Con room seleccionada: muestra detalle de precio + CTA de reserva
+// Shows availability, trust signals, and CTA. Prices live in RoomCards.
 // ============================================================================
 
 interface BookingWidgetProps {
@@ -42,51 +37,20 @@ interface BookingWidgetProps {
 
 export default function BookingWidget({
   rooms,
-  checkIn,
-  checkOut,
   cancellationPolicy,
   totalRooms,
-  taxRate,
   isLoading,
-  hotelId,
-  primaryColor,
 }: BookingWidgetProps) {
-  const router = useRouter();
-  const searchParams = useSearchParams();
   const t = useTranslations();
 
   const [showPolicy, setShowPolicy] = useState(false);
-  const [showDateError, setShowDateError] = useState(false);
 
   const activeRooms = useMemo(() => rooms.filter((r) => r.status === 'active'), [rooms]);
-  const minPrice = useMemo(() => activeRooms.length > 0 ? Math.min(...activeRooms.map((r) => r.price_per_night || r.price)) : 0, [activeRooms]);
   const availableCount = activeRooms.length;
-
-  // Guest count from guests filter
-  const guestsParam = searchParams.get('guests');
-  const guestCount = guestsParam ? Number(guestsParam) : null;
-
-  const nights = useMemo(() => {
-    if (!checkIn || !checkOut) return 0;
-    const d1 = new Date(checkIn);
-    const d2 = new Date(checkOut);
-    return Math.max(1, Math.ceil((d2.getTime() - d1.getTime()) / (1000 * 3600 * 24)));
-  }, [checkIn, checkOut]);
-
-  const roomPrice = useMemo(() => minPrice, [minPrice]);
-  const subtotal = useMemo(() => (nights > 0 ? roomPrice * nights : roomPrice), [nights, roomPrice]);
-  const effectiveRate = useMemo(() => taxRate ?? DEFAULT_TAX_RATE, [taxRate]);
-  const { total: totalPrice, hasTax } = useMemo(() => calculateTotalWithTax(subtotal, effectiveRate), [subtotal, effectiveRate]);
 
   const { isProcessing, handleReserve } = useBookingFlow();
 
   const handleReserveClick = () => {
-    if (!checkIn || !checkOut) {
-      setShowDateError(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
-      return;
-    }
-    setShowDateError(false);
     handleReserve(() => {
       document.querySelector('[id="rooms-section"]')?.scrollIntoView({ behavior: 'smooth' });
     });
@@ -111,37 +75,25 @@ export default function BookingWidget({
     );
   }
 
-  const handleDateChange = (range: { from: Date; to: Date }) => {
-    const params = new URLSearchParams(searchParams.toString());
-    params.set('checkin', range.from.toISOString().split('T')[0]);
-    params.set('checkout', range.to.toISOString().split('T')[0]);
-    router.push(`?${params.toString()}`, { scroll: false });
-  };
-
   return (
     <div className="sticky top-8">
       <GlassCard className="overflow-hidden">
-        {/* Header con precio — Smart Summary */}
+        {/* Header — disponibilidad */}
         <div className={cn(
-          "p-6 text-primary-foreground transition-colors duration-300",
-          "bg-gradient-to-br from-primary to-primary/90"
+          "p-6 text-primary-foreground",
+          availableCount > 0
+            ? "bg-gradient-to-br from-secondary to-secondary/90"
+            : "bg-gradient-to-br from-destructive to-destructive/90"
         )}>
-          <>
-            <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">
-              {nights > 0 ? t('ota.booking.totalCOP') : t('ota.booking.copPerNight')}
-            </p>
-            <div className="flex items-baseline gap-2">
-              <p className="text-4xl font-black tracking-tight">${nights > 0 ? formatPrice(totalPrice) : formatPrice(minPrice)}</p>
-              <span className="text-primary-foreground/70 text-sm font-medium">
-                {nights > 0 ? t('ota.booking.totalCOP') : t('ota.booking.copPerNight')}
-              </span>
-            </div>
-            {nights > 0 && (
-              <p className="text-xs text-primary-foreground/70 mt-1">
-                ${formatPrice(minPrice)} x {nights} {t('ota.booking.nights')}{hasTax ? ' + IVA' : ''}
-              </p>
-            )}
-          </>
+          <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">
+            {t('ota.booking.availability')}
+          </p>
+          <div className="flex items-baseline gap-2">
+            <p className="text-4xl font-black tracking-tight">{availableCount}</p>
+            <span className="text-primary-foreground/70 text-sm font-medium">
+              {t('ota.booking.unitsAvailable', { count: availableCount })}
+            </span>
+          </div>
         </div>
 
         {/* Cuerpo del widget — simplificado: sin calendario duplicado */}
