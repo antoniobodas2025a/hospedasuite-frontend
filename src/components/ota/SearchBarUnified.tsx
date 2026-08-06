@@ -75,12 +75,9 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 		null,
 	);
 
-	// State: location — sync from URL params on mount and on param change
+	// State: location — independent state, only synced FROM URL on mount
+	// Do NOT sync from URL on every searchParams change (causes stale closure bugs)
 	const [location, setLocation] = useState(searchParams.get("location") || "");
-	useEffect(() => {
-		const urlLoc = searchParams.get("location") || "";
-		if (urlLoc && urlLoc !== location) setLocation(urlLoc);
-	}, [searchParams]); // eslint-disable-line react-hooks/exhaustive-deps
 
 	// State: dates
 	const [date, setDate] = useState<DateRange | undefined>(() => {
@@ -124,33 +121,35 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 		return () => document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
 
-	// URL sync
+	// URL sync — merge-only: never deletes params that aren't explicitly overridden
 	const pushUrl = useCallback(
 		(overrides?: {
-			checkin?: Date;
-			checkout?: Date;
-			guests?: number;
-			location?: string;
+			checkin?: Date | null;
+			checkout?: Date | null;
+			guests?: number | null;
+			location?: string | null;
 		}) => {
 			const p = new URLSearchParams(searchParams.toString());
 			const { checkin, checkout, guests: g, location: loc } = overrides || {};
 
-			if (checkin && checkout) {
-				p.set("checkin", format(checkin, "yyyy-MM-dd"));
-				p.set("checkout", format(checkout, "yyyy-MM-dd"));
-			} else {
-				p.delete("checkin");
-				p.delete("checkout");
+			// Dates: only modify when explicitly passed (null = clear, Date = set)
+			if (checkin !== undefined) {
+				if (checkin === null) { p.delete("checkin"); p.delete("checkout"); }
+				else if (checkout) {
+					p.set("checkin", format(checkin, "yyyy-MM-dd"));
+					p.set("checkout", format(checkout, "yyyy-MM-dd"));
+				}
 			}
 
-			if (g !== undefined && g > 0) {
-				p.set("guests", g.toString());
-			} else {
-				p.delete("guests");
+			// Guests: only modify when explicitly passed
+			if (g !== undefined) {
+				if (g === null || g <= 0) p.delete("guests");
+				else p.set("guests", g.toString());
 			}
 
+			// Location: only modify when explicitly passed
 			if (loc !== undefined) {
-				if (loc === "") p.delete("location");
+				if (loc === null || loc === "") p.delete("location");
 				else p.set("location", loc);
 			}
 
@@ -160,6 +159,13 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 		},
 		[searchParams, pathname, router],
 	);
+
+	// Ref to always access the latest pushUrl inside debounced callbacks
+	// (prevents stale closure race when location debounce + date selection overlap)
+	const pushUrlRef = useRef(pushUrl);
+	useEffect(() => {
+		pushUrlRef.current = pushUrl;
+	}, [pushUrl]);
 
 	// Handlers: Dates — auto-confirm on complete range selection
 	const handleSelectDates = (newDate: DateRange | undefined) => {
@@ -201,7 +207,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 	const handleClearDates = () => {
 		setPendingDate(undefined);
 		setDate(undefined);
-		pushUrl({ checkin: undefined, checkout: undefined });
+		pushUrl({ checkin: null, checkout: null });
 		onSearch?.({ location, checkin: null, checkout: null, guests });
 	};
 
@@ -224,7 +230,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 
 		if (locationDebounceRef.current) clearTimeout(locationDebounceRef.current);
 		locationDebounceRef.current = setTimeout(() => {
-			pushUrl({ location: val });
+			pushUrlRef.current({ location: val });
 			onSearch?.({
 				location: val,
 				checkin: date?.from ? format(date.from, "yyyy-MM-dd") : null,
