@@ -186,7 +186,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 			setDate({ from: newDate.from, to: newDate.to });
 			setPendingDate({ from: newDate.from, to: newDate.to });
 			setActiveModal(null);
-			pushUrl({ checkin: newDate.from, checkout: newDate.to });
+			pushUrl({ checkin: newDate.from, checkout: newDate.to, location: location || undefined });
 			onSearch?.({
 				location,
 				checkin: format(newDate.from, "yyyy-MM-dd"),
@@ -202,7 +202,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 		if (pendingDate?.from && pendingDate?.to) {
 			setDate(pendingDate);
 			setActiveModal(null);
-			pushUrl({ checkin: pendingDate.from, checkout: pendingDate.to });
+			pushUrl({ checkin: pendingDate.from, checkout: pendingDate.to, location: location || undefined });
 			onSearch?.({
 				location,
 				checkin: format(pendingDate.from, "yyyy-MM-dd"),
@@ -215,7 +215,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 	const handleClearDates = () => {
 		setPendingDate(undefined);
 		setDate(undefined);
-		pushUrl({ checkin: null, checkout: null });
+		pushUrl({ checkin: null, checkout: null, location: location || undefined });
 		onSearch?.({ location, checkin: null, checkout: null, guests });
 	};
 
@@ -223,7 +223,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 	const handleConfirmGuests = () => {
 		setGuests(pendingGuests);
 		setActiveModal(null);
-		pushUrl({ guests: pendingGuests });
+		pushUrl({ guests: pendingGuests, location: location || undefined });
 		onSearch?.({
 			location,
 			checkin: date?.from ? format(date.from, "yyyy-MM-dd") : null,
