@@ -398,7 +398,7 @@ function RoomCardInner({
                 "disabled:opacity-70 disabled:cursor-not-allowed"
               )}
             >
-              {isProcessing ? 'Procesando...' : t('ota.roomCard.viewRoom', { defaultValue: 'Ver habitación' })} <ArrowRight size={16} strokeWidth={2.5} />
+              {isProcessing ? 'Procesando...' : t('ota.roomCard.viewPhotos')} <ArrowRight size={16} strokeWidth={2.5} />
             </button>
           </div>
         </div>

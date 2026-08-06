@@ -72,7 +72,7 @@
       "onlyXLeft": "Solo quedan {count} disponibles",
       "noAvailability": "Sin disponibilidad",
       "reserve": "Reservar",
-      "viewPhotos": "Ver fotos",
+      "viewPhotos": "Ver habitación",
       "bestPriceGuaranteed": "Mejor precio garantizado",
       "bestPriceDesc": "Reserva directo sin comisiones de intermediarios.",
       "instantConfirmation": "Confirmacion inmediata",
@@ -187,7 +187,7 @@
       "copPerNight": "COP/noche",
       "freeCancellation": "Cancelacion Gratuita Disponible",
       "reserve": "Reservar",
-      "viewPhotos": "Ver fotos",
+      "viewPhotos": "Ver habitación",
       "onlyXAvailable": "{count, plural, one {Solo 1 disponible} other {Solo {count} disponibles}}",
       "beds": "{count, plural, one {cama} other {camas}}",
       "nights": "{count, plural, one {noche} other {noches}}"

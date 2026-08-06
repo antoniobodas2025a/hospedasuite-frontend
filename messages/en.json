@@ -72,7 +72,7 @@
       "onlyXLeft": "Only {count} left",
       "noAvailability": "No availability",
       "reserve": "Book",
-      "viewPhotos": "View photos",
+      "viewPhotos": "View room",
       "bestPriceGuaranteed": "Best price guaranteed",
       "bestPriceDesc": "Book direct with no intermediary commissions.",
       "instantConfirmation": "Instant confirmation",
@@ -187,7 +187,7 @@
       "copPerNight": "COP/night",
       "freeCancellation": "Free Cancellation Available",
       "reserve": "Book",
-      "viewPhotos": "View photos",
+      "viewPhotos": "View room",
       "onlyXAvailable": "{count, plural, one {Only 1 available} other {Only {count} available}}",
       "beds": "{count, plural, one {bed} other {beds}}",
       "nights": "{count, plural, one {night} other {nights}}"
