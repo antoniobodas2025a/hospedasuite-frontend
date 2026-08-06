@@ -28,7 +28,6 @@ const ICON_MAP: Record<string, React.ElementType> = {
 
 const DEFAULT_MESSAGES: ActivityMessage[] = [
   { icon: 'TrendingUp', text: '3 reservas en las ultimas 24 horas', color: 'text-success' },
-  { icon: 'Clock', text: '2 personas estan viendo esta propiedad ahora', color: 'text-warning' },
 ]
 
 // Derives container bg + border from the semantic text color token
@@ -47,7 +46,6 @@ export default function RecentActivity({ messages }: RecentActivityProps) {
   const t = useTranslations()
   const DEFAULT_MESSAGES: ActivityMessage[] = [
     { icon: 'TrendingUp', text: t('ota.recentActivity.bookings24h'), color: 'text-success' },
-    { icon: 'Clock', text: t('ota.recentActivity.viewingNow'), color: 'text-warning' },
   ]
   const activityMessages = messages && messages.length > 0 ? messages : DEFAULT_MESSAGES
 
