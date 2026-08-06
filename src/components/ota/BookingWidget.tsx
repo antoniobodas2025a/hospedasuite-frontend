@@ -79,12 +79,7 @@ export default function BookingWidget({
     <div className="sticky top-8">
       <GlassCard className="overflow-hidden">
         {/* Header — disponibilidad */}
-        <div className={cn(
-          "p-6 text-primary-foreground",
-          availableCount > 0
-            ? "bg-gradient-to-br from-secondary to-secondary/90"
-            : "bg-gradient-to-br from-destructive to-destructive/90"
-        )}>
+        <div className="p-6 text-primary-foreground bg-gradient-to-br from-primary to-primary/90">
           <p className="text-primary-foreground/70 text-xs font-bold uppercase tracking-widest mb-1">
             {t('ota.booking.availability')}
           </p>

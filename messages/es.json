@@ -71,6 +71,7 @@
       "onlyOneLeft": "Solo queda 1 disponible",
       "onlyXLeft": "Solo quedan {count} disponibles",
       "noAvailability": "Sin disponibilidad",
+      "availability": "Disponibilidad",
       "reserve": "Reservar",
       "viewPhotos": "Ver habitación",
       "bestPriceGuaranteed": "Mejor precio garantizado",

@@ -71,6 +71,7 @@
       "onlyOneLeft": "Only 1 left",
       "onlyXLeft": "Only {count} left",
       "noAvailability": "No availability",
+      "availability": "Availability",
       "reserve": "Book",
       "viewPhotos": "View room",
       "bestPriceGuaranteed": "Best price guaranteed",
