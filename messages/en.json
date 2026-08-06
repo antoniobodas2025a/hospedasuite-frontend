@@ -414,6 +414,7 @@
       "currencyLabel": "COP/night",
       "perNight": "/night",
       "selectDates": "Select dates",
+      "guests": "{count, plural, one {# guest} other {# guests}}",
       "descriptionPlaceholder": "Description...",
       "capacityLabel": "Capacity",
       "bedsLabel": "Beds",

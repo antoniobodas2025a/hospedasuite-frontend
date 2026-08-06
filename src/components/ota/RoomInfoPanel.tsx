@@ -54,8 +54,9 @@ export function RoomInfoPanel({
 	const appLocale = useLocale();
 	const dateLocale = getDateFnsLocale(appLocale);
 
-	const dateFrom = new Date(checkIn);
-	const dateTo = new Date(checkOut);
+	const dateFrom = checkIn ? new Date(checkIn) : null;
+	const dateTo = checkOut ? new Date(checkOut) : null;
+	const hasValidDates = dateFrom && dateTo && !isNaN(dateFrom.getTime()) && !isNaN(dateTo.getTime());
 
 	const isDesktop = variant === "desktop";
 
@@ -174,10 +175,14 @@ export function RoomInfoPanel({
 							<p className="text-[10px] text-muted-foreground font-bold uppercase tracking-widest mb-1 flex items-center gap-1">
 								<Clock size={10} /> {t("ota.showcase.stay")}
 							</p>
-							<p className="text-sm font-bold text-foreground">
-								{format(dateFrom, "dd MMM", { locale: dateLocale })} —{" "}
-								{format(dateTo, "dd MMM", { locale: dateLocale })}
-							</p>
+							{hasValidDates ? (
+								<p className="text-sm font-bold text-foreground">
+									{format(dateFrom!, "dd MMM", { locale: dateLocale })} —{" "}
+									{format(dateTo!, "dd MMM", { locale: dateLocale })}
+								</p>
+							) : (
+								<p className="text-sm text-muted-foreground">{t("ota.roomDetail.selectDates")}</p>
+							)}
 						</div>
 						<div className="px-3 py-1.5 glass-card !rounded-[var(--radius-squircle-lg)]">
 							<span className="text-xs font-bold text-foreground/80">
