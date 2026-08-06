@@ -20,7 +20,14 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { DayPicker, DateRange } from "react-day-picker";
-import { format, parseISO, isValid, startOfDay } from "date-fns";
+import {
+	format,
+	parseISO,
+	isValid,
+	startOfDay,
+	getDay,
+	addDays,
+} from "date-fns";
 import { cn } from "@/lib/utils";
 import {
 	springSnappy,
@@ -162,6 +169,16 @@ export default function AvailabilitySearchBar({
 
 	const today = startOfDay(new Date());
 
+	// Next weekend suggestion used as a ghost hint when no dates are selected
+	const nextWeekend = React.useMemo(() => {
+		const day = getDay(today); // 0 = Sunday, 6 = Saturday
+		const daysToSaturday = (6 - day + 7) % 7;
+		return {
+			from: addDays(today, daysToSaturday),
+			to: addDays(today, daysToSaturday + 1),
+		};
+	}, [today]);
+
 	// Sync pending state when modal opens
 	useEffect(() => {
 		if (activeModal === "dates") setPendingDate(date);
@@ -250,6 +267,10 @@ export default function AvailabilitySearchBar({
 				);
 			return `${format(date.from, "dd MMM", { locale: dateLocale })} — ${format(date.to, "dd MMM", { locale: dateLocale })}`;
 		}
+		// Ghost suggestion: next weekend when no dates are selected
+		if (!searchParams.get("checkin")) {
+			return `Próximo finde: ${format(nextWeekend.from, "dd MMM", { locale: dateLocale })} — ${format(nextWeekend.to, "dd MMM", { locale: dateLocale })}`;
+		}
 		return `${t("ota.search.arrival")} — ${t("ota.search.departure")}`;
 	};
 	const guestLabel = `${guests} ${t("ota.search.guest", { count: guests })}`;
@@ -276,7 +297,7 @@ export default function AvailabilitySearchBar({
 			sticky ? "text-sm" : "text-base",
 			active
 				? "text-foreground font-bold"
-				: "text-muted-foreground font-medium",
+				: "text-muted-foreground/50 font-medium",
 		);
 	const ios = sticky ? 14 : 18;
 

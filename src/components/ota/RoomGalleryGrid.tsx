@@ -71,7 +71,17 @@ export default function RoomGalleryGrid({
 	const heroLayoutId = activeRoomId ? `room-image-${activeRoomId}` : undefined;
 	const heroTransition = { type: "spring" as const, stiffness: 300, damping: 30 };
 
-	// Empty state — skeleton grid while data loads
+	// Staggered fade-in animation for desktop grid items
+	const containerVariants = {
+		hidden: {},
+		visible: { transition: { staggerChildren: 0.05 } },
+	};
+	const itemVariants = {
+		hidden: { opacity: 0, y: 12 },
+		visible: { opacity: 1, y: 0, transition: { duration: 0.35, ease: "easeOut" } },
+	};
+
+	// 0–1 images: show a "View photos" placeholder instead of an empty grid
 	if (images.length === 0) {
 		return (
 			<div className="relative w-full">

@@ -572,7 +572,7 @@ describe('T-10: RoomDetailGallery', () => {
 
     const ctaDock = getByTestId('cta-dock');
     expect(ctaDock).toBeInTheDocument();
-    expect(ctaDock).toHaveTextContent('Reservar');
+    expect(ctaDock).toHaveTextContent('Seleccionar fechas');
     const reserveButton = ctaDock.querySelector('button');
     expect(reserveButton).toBeDisabled();
   });

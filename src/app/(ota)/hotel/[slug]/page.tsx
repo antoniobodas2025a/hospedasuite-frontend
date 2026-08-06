@@ -4,6 +4,7 @@ import {
 } from "@/app/actions/ota";
 import { notFound } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import { MapPin, Star } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
@@ -262,7 +263,12 @@ export default async function ChannelHotelDetailPage({
 				<div className="max-w-7xl mx-auto px-4 lg:px-6 pt-2 pb-0">
 					<div className="flex items-center gap-1.5 text-xs text-muted-foreground">
 						<MapPin size={12} className="text-brand-500 shrink-0" />
-						<span className="truncate">{hotel.location}</span>
+						<Link
+							href={`/?location=${encodeURIComponent(hotel.location)}`}
+							className="truncate hover:text-foreground hover:underline underline-offset-2 transition-colors"
+						>
+							{hotel.location}
+						</Link>
 						<span className="text-muted-foreground/40">·</span>
 						<span className="font-medium text-foreground truncate">{hotel.name}</span>
 					</div>

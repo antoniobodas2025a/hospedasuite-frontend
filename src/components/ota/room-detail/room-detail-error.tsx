@@ -22,9 +22,9 @@ export function RoomDetailError({ output }: RoomDetailErrorProps) {
         <div className="mx-auto mb-4 size-14 rounded-full bg-destructive/10 flex items-center justify-center">
           <AlertTriangle size={28} className="text-destructive" />
         </div>
-        <h2 className="text-lg font-bold text-foreground mb-2">
+        <h1 className="text-lg font-bold text-foreground mb-2">
           {t('ota.roomDetail.errorTitle')}
-        </h2>
+        </h1>
         <p className="text-sm text-muted-foreground mb-6">{message}</p>
         <Link
           href={output.breadcrumb.href}

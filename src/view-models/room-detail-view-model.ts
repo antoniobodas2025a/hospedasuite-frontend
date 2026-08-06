@@ -171,10 +171,22 @@ function buildAmenities(rawAmenities: string[]): Amenity[] {
   }));
 }
 
-function buildSuggestions(): Suggestion[] {
-  // SuggestAlternatives is a future use-case; the ViewModel returns an empty
-  // array until the suggestor is wired in a later work unit.
-  return [];
+function buildSuggestions(
+  room: RoomDetail,
+  hotel: HotelContext,
+  dates: ValidatedDates
+): Suggestion[] {
+  // SuggestAlternatives is a future use-case; for now we return a single
+  // placeholder suggestion that drives the sold-out state to a useful action.
+  return [
+    {
+      id: 'other-rooms',
+      name: 'Ver otras opciones',
+      price: room.pricePerNight,
+      checkIn: dates.checkIn,
+      checkOut: dates.checkOut,
+    },
+  ];
 }
 
 function errorOutput(): RoomDetailViewModelOutput {
@@ -272,7 +284,7 @@ export function roomDetailViewModel(
       ...base,
       state: 'sold_out',
       pricing,
-      suggestions: buildSuggestions(),
+      suggestions: buildSuggestions(room, hotel, dates),
     };
   }
 

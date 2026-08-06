@@ -148,7 +148,8 @@ describe('roomDetailViewModel', () => {
     const result = roomDetailViewModel(input);
 
     expect(result.state).toBe('sold_out');
-    expect(result.suggestions).toEqual([]);
+    expect(result.suggestions).toHaveLength(1);
+    expect(result.suggestions[0].id).toBe('other-rooms');
     expect(result.error).toBeNull();
   });
 

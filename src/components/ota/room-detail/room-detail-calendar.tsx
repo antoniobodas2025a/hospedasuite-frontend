@@ -239,7 +239,7 @@ export function RoomDetailCalendar({
       {/* Mobile floating bottom bar */}
       <div
         data-testid="room-detail-calendar-mobile-bar"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-background/95 backdrop-blur-xl border-t border-border/40"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 p-4 pb-[max(1rem,env(safe-area-inset-bottom))]"
       >
         {!mobileExpanded ? (
           <button
@@ -252,7 +252,11 @@ export function RoomDetailCalendar({
             <GlassCard className="flex items-center justify-between p-3">
               <div className="flex items-center gap-2">
                 <Calendar size={18} className="text-brand-600" />
-                <span className="font-bold text-sm">{t('ota.roomDetail.chooseDates')}</span>
+                <span className="font-bold text-sm">
+                  {hasDates && summary
+                    ? `${summary.fromLabel} — ${summary.toLabel}`
+                    : t('ota.roomDetail.chooseDates')}
+                </span>
                 <span className="text-sm text-muted-foreground">
                   · {t('ota.booking.from')} ${formatPrice(output.pricePerNight)}
                   {t('ota.roomDetail.perNight')}

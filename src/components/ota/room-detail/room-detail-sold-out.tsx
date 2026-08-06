@@ -171,16 +171,29 @@ export function RoomDetailSoldOut({
                     delay: index * 0.05,
                   }}
                 >
-                  <RoomCard
-                    room={mapSuggestionToRoomCardProps(suggestion)}
-                    hotelSlug={output.hotelSlug}
-                    checkIn={suggestion.checkIn ? toISODate(suggestion.checkIn) : checkInStr}
-                    checkOut={suggestion.checkOut ? toISODate(suggestion.checkOut) : checkOutStr}
-                    isSearchingDates={true}
-                    hotel={{ tax_rate: output.pricing?.taxRate }}
-                    totalRooms={output.totalHotelRooms}
-                    availableCount={visibleSuggestions.length}
-                  />
+                  {suggestion.id === 'other-rooms' ? (
+                    <Link
+                      href={output.breadcrumb.href}
+                      className={cn(
+                        'block w-full px-5 py-4 rounded-[var(--radius-squircle-md)]',
+                        'bg-primary text-primary-foreground font-bold text-sm text-center',
+                        'hover:bg-primary/90 transition-colors'
+                      )}
+                    >
+                      {suggestion.name}
+                    </Link>
+                  ) : (
+                    <RoomCard
+                      room={mapSuggestionToRoomCardProps(suggestion)}
+                      hotelSlug={output.hotelSlug}
+                      checkIn={suggestion.checkIn ? toISODate(suggestion.checkIn) : checkInStr}
+                      checkOut={suggestion.checkOut ? toISODate(suggestion.checkOut) : checkOutStr}
+                      isSearchingDates={true}
+                      hotel={{ tax_rate: output.pricing?.taxRate }}
+                      totalRooms={output.totalHotelRooms}
+                      availableCount={visibleSuggestions.length}
+                    />
+                  )}
                 </motion.div>
               ))}
             </div>

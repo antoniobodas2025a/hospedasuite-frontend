@@ -260,7 +260,11 @@ export function RoomDetailGallery({
               'disabled:opacity-50 disabled:cursor-not-allowed'
             )}
           >
-            {t('ota.booking.reserve')}
+            {!hasDates
+              ? t('ota.roomDetail.selectDates')
+              : output.canBook
+                ? `${t('ota.booking.reserve')} — ${formatPrice(output.pricing?.total ?? 0)}`
+                : t('ota.booking.noAvailability')}
           </motion.button>
         </GlassPill>
       </motion.div>
