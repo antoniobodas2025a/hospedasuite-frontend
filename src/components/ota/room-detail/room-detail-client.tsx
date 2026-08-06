@@ -116,14 +116,14 @@ export function RoomDetailClient({ output }: RoomDetailClientProps) {
     <AnimatePresence mode="wait">
       <motion.div
         key={motionKey}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        exit={{ opacity: 0, y: -8 }}
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        exit={{ opacity: 0 }}
         transition={{ duration: 0.2, ease: 'easeOut' }}
       >
         {state.state === 'loading' && <RoomDetailSkeleton />}
         {isMainState && (
-          <div className="p-4 lg:p-6">
+          <div className="p-4 lg:p-6 pb-28 lg:pb-8">
             <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(320px,380px)] gap-6 lg:gap-8 items-start">
               <RoomDetailGallery
                 output={effectiveOutput}

@@ -74,6 +74,9 @@ export function RoomDetailGallery({
   }, [output.canBook, output.hotelSlug, output.roomId, checkInStr, checkOutStr, router]);
 
   const heroImage = output.gallery[0]?.url || output.coverImage || undefined;
+  // Hero already renders gallery[0], so the grid starts from gallery[1]
+  // to avoid showing the same image twice (especially in the mobile carousel).
+  const galleryForGrid = heroImage ? output.gallery.slice(1) : output.gallery;
 
   return (
     <div data-testid="room-detail-gallery" data-checkin={checkInStr} data-checkout={checkOutStr} className="space-y-6">
@@ -171,12 +174,14 @@ export function RoomDetailGallery({
             ease: MOTION_EASING.easeOut,
           }}
         >
-          <RoomGalleryGrid
-            images={output.gallery}
-            roomName={output.roomName}
-            roomId={output.roomId}
-            layout="detail-page"
-          />
+          {galleryForGrid.length > 0 ? (
+            <RoomGalleryGrid
+              images={galleryForGrid}
+              roomName={output.roomName}
+              roomId={output.roomId}
+              layout="detail-page"
+            />
+          ) : null}
         </motion.div>
 
         <div className="space-y-6">
@@ -262,7 +267,7 @@ export function RoomDetailGallery({
 
       {/* Mobile Ver otras habitaciones */}
       {output.showOtherRooms && (
-        <div className="lg:hidden pb-24">
+        <div className="lg:hidden">
           <Link
             href={output.breadcrumb.href}
             className="inline-flex items-center gap-1 text-sm font-bold text-brand-600 hover:text-brand-500 transition-colors"

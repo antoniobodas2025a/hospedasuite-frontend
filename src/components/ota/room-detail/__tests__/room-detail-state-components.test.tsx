@@ -503,7 +503,7 @@ describe('T-10: RoomDetailGallery', () => {
     expect(getByTestId('room-info-panel')).toBeInTheDocument();
     expect(RoomGalleryGridMock).toHaveBeenCalledWith(
       expect.objectContaining({
-        images: output.gallery,
+        images: output.gallery.slice(1),
         roomName: output.roomName,
         roomId: output.roomId,
       })

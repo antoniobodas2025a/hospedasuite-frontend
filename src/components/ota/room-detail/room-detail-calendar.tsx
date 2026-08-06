@@ -205,7 +205,7 @@ export function RoomDetailCalendar({
       {/* Mobile floating bottom bar */}
       <div
         data-testid="room-detail-calendar-mobile-bar"
-        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 p-4 bg-background/95 backdrop-blur-xl border-t border-border/40"
+        className="lg:hidden fixed bottom-0 left-0 right-0 z-30 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] bg-background/95 backdrop-blur-xl border-t border-border/40"
       >
         {!mobileExpanded ? (
           <button
