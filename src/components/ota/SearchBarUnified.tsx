@@ -10,7 +10,6 @@ import {
 import { createPortal } from "react-dom";
 import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import dynamic from "next/dynamic";
-import { useScrollLock } from "@/hooks/useScrollLock";
 import {
 	Calendar as CalendarIcon,
 	X,
@@ -23,10 +22,9 @@ import { format, parseISO, isValid, startOfDay, addDays, addWeeks, addMonths, ne
 import { cn } from "@/lib/utils";
 import {
 	springSnappy,
-	springModal,
 	springBounce,
+	springGentle,
 } from "@/lib/mac2026/spring";
-import { GlassPanel } from "@/components/ui/glass";
 import "react-day-picker/dist/style.css";
 
 import { useTranslations, useLocale } from "next-intl";
@@ -67,6 +65,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 	const appLocale = useLocale();
 	const dateLocale = getDateFnsLocale(appLocale);
 	const containerRef = useRef<HTMLDivElement>(null);
+	const datesZoneRef = useRef<HTMLDivElement>(null);
 	const locationDebounceRef = useRef<ReturnType<typeof setTimeout> | null>(
 		null,
 	);
@@ -111,9 +110,6 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 		if (activeModal === "guests") setPendingGuests(guests);
 	}, [activeModal, date, guests]);
 
-	// Lock body scroll when modal is open
-	useScrollLock(!!activeModal);
-
 	// Close modal on outside click
 	useEffect(() => {
 		const handleClickOutside = (e: MouseEvent) => {
@@ -127,16 +123,6 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 		document.addEventListener("mousedown", handleClickOutside);
 		return () => document.removeEventListener("mousedown", handleClickOutside);
 	}, []);
-
-	// Lock body scroll when modal is open
-	useEffect(() => {
-		if (activeModal) {
-			document.body.style.overflow = "hidden";
-			return () => {
-				document.body.style.overflow = "";
-			};
-		}
-	}, [activeModal]);
 
 	// URL sync
 	const pushUrl = useCallback(
@@ -306,13 +292,17 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 
 				{/* ZONE 2: DATES */}
 				<div
+					ref={datesZoneRef}
 					onClick={() =>
 						setActiveModal(activeModal === "dates" ? null : "dates")
 					}
 					role="button"
 					aria-expanded={activeModal === "dates"}
 					aria-label={t("ota.search.selectDates")}
-					className="flex-1 flex items-center gap-2 px-3 py-2 sm:py-3 bg-card border border-border/50 sm:border-x-0 hover:border-border transition-colors cursor-pointer"
+					className={cn(
+						"flex-1 flex items-center gap-2 px-3 py-2 sm:py-3 bg-card border border-border/50 sm:border-x-0 hover:border-border transition-colors cursor-pointer",
+						activeModal === "dates" && "ring-2 ring-brand-500/30",
+					)}
 				>
 					<CalendarIcon
 						size={18}
@@ -378,188 +368,200 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 				</div>
 			</div>
 
+			{/* ── DATES POPOVER ────────────────────────────────────────── */}
+			<AnimatePresence>
+				{activeModal === "dates" && (
+					<motion.div
+						initial={{ opacity: 0, scaleY: 0.92, y: -6 }}
+						animate={{ opacity: 1, scaleY: 1, y: 0 }}
+						exit={{ opacity: 0, scaleY: 0.92, y: -6 }}
+						transition={springGentle()}
+						style={{ originY: 0 }}
+						className="absolute top-full left-0 right-0 mt-2 z-50 max-w-md bg-background/95 backdrop-blur-xl ring-1 ring-foreground/10 rounded-[var(--radius-squircle-2xl)] shadow-[0_8px_24px_-4px_rgba(0,0,0,0.12),0_24px_48px_-12px_rgba(0,0,0,0.18)] overflow-hidden"
+					>
+						{/* Header */}
+						<div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-3 shrink-0">
+							<h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
+								{t("ota.search.stay")}
+							</h2>
+							<p className="text-[11px] text-muted-foreground/60 mt-1 tracking-tight">
+								{pendingDate?.from && pendingDate?.to
+									? `${format(pendingDate.from, "dd MMM", { locale: dateLocale })} — ${format(pendingDate.to, "dd MMM", { locale: dateLocale })}`
+									: pendingDate?.from
+										? `${format(pendingDate.from, "dd MMM", { locale: dateLocale })} → ${t("ota.search.departure")}`
+										: t("ota.search.selectDates")}
+							</p>
+							<motion.button
+								onClick={() => setActiveModal(null)}
+								whileHover={{ scale: 1.08 }}
+								whileTap={{ scale: 0.9 }}
+								transition={springSnappy()}
+								className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
+								aria-label={t("common.close")}
+							>
+								<X size={16} strokeWidth={2.5} />
+							</motion.button>
+						</div>
+
+						{/* Quick date presets */}
+						<div className="flex flex-wrap gap-2 px-3 sm:px-4 pt-3">
+							{[
+								{ label: t("ota.search.thisWeekend"), getDates: () => ({ from: nextSaturday(today), to: nextSunday(nextSaturday(today)) }) },
+								{ label: t("ota.search.nextWeek"), getDates: () => ({ from: addWeeks(today, 1), to: addDays(addWeeks(today, 1), 3) }) },
+								{ label: t("ota.search.nextMonth"), getDates: () => ({ from: addMonths(today, 1), to: addDays(addMonths(today, 1), 3) }) },
+							].map((preset) => (
+								<button
+									key={preset.label}
+									type="button"
+									onClick={() => {
+										const dates = preset.getDates();
+										handleSelectDates(dates);
+									}}
+									className="px-3 py-1.5 text-xs font-semibold rounded-full border border-border bg-card hover:bg-muted transition-colors"
+								>
+									{preset.label}
+								</button>
+							))}
+						</div>
+
+						{/* Calendar */}
+						<div className="px-3 sm:px-4 pb-3">
+							<div className="modal-calendar">
+								<DayPicker
+									mode="range"
+									selected={pendingDate}
+									onSelect={handleSelectDates}
+									locale={dateLocale}
+									numberOfMonths={1}
+									disabled={{ before: today }}
+									className="text-foreground font-sans"
+									modifiersClassNames={{
+										selected:
+											"bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]",
+										range_middle:
+											"bg-brand-50 text-brand-900 rounded-none",
+										range_start: "bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none",
+										range_end: "bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none",
+									}}
+								/>
+							</div>
+						</div>
+
+						{/* Footer */}
+						<div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 flex items-center gap-3 shrink-0">
+							<motion.button
+								onClick={handleClearDates}
+								whileTap={{ scale: 0.95 }}
+								transition={springSnappy()}
+								className="px-4 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted transition-colors ring-1 ring-foreground/5"
+							>
+								{t("ota.search.clearDates")}
+							</motion.button>
+							<motion.button
+								onClick={handleConfirmDates}
+								disabled={!pendingDate?.from || !pendingDate?.to}
+								whileHover={
+									pendingDate?.from && pendingDate?.to
+										? { scale: 1.015 }
+										: {}
+								}
+								whileTap={
+									pendingDate?.from && pendingDate?.to
+										? { scale: 0.97 }
+										: {}
+								}
+								transition={springBounce()}
+								className={cn(
+									"flex-1 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight transition-all ring-1",
+									pendingDate?.from && pendingDate?.to
+										? "bg-primary text-primary-foreground shadow-lg ring-primary/20 hover:shadow-xl"
+										: "bg-muted/40 text-muted-foreground/50 ring-foreground/5 cursor-not-allowed",
+								)}
+							>
+								{pendingDate?.from && pendingDate?.to
+									? t("ota.search.confirmDates")
+									: t("ota.search.selectDates")}
+							</motion.button>
+						</div>
+					</motion.div>
+				)}
+			</AnimatePresence>
+
 			{/* ═══════════════════════════════════════════════════════════ */}
-			{/* UNIFIED MODAL SYSTEM — rendered via portal to avoid parent transform breaking fixed positioning */}
+			{/* GUESTS MODAL — rendered via portal to avoid parent transform breaking fixed positioning */}
 			{/* ═══════════════════════════════════════════════════════════ */}
 			{typeof document !== "undefined" &&
+				activeModal === "guests" &&
 				createPortal(
 					<AnimatePresence>
-						{activeModal && (
+						<motion.div
+							initial={{ opacity: 0 }}
+							animate={{ opacity: 1 }}
+							exit={{ opacity: 0 }}
+							transition={{ duration: 0.15 }}
+							className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4"
+						>
+							{/* Backdrop overlay */}
+							<div
+								className="absolute inset-0 bg-black/20 backdrop-blur-sm"
+								onClick={() => setActiveModal(null)}
+								aria-hidden="true"
+							/>
+
+							{/* Modal container */}
 							<motion.div
-								initial={{ opacity: 0 }}
-								animate={{ opacity: 1 }}
-								exit={{ opacity: 0 }}
-								transition={{ duration: 0.15 }}
-								className="fixed inset-0 z-[var(--z-modal)] flex items-center justify-center p-4"
+								initial={{ opacity: 0, scale: 0.95 }}
+								animate={{ opacity: 1, scale: 1 }}
+								exit={{ opacity: 0, scale: 0.95 }}
+								transition={{
+									type: "spring",
+									stiffness: 180,
+									damping: 22,
+									mass: 1.4,
+									restDelta: 0.001,
+									restSpeed: 0.01,
+								}}
+								className="relative z-10 w-full max-w-md h-[85dvh] md:h-[80vh]"
 							>
-								{/* Backdrop overlay */}
-								<div
-									className="absolute inset-0 bg-black/20 backdrop-blur-sm"
-									onClick={() => setActiveModal(null)}
-									aria-hidden="true"
-								/>
-
-								{/* Modal container */}
-								<motion.div
-									initial={{ opacity: 0, scale: 0.95 }}
-									animate={{ opacity: 1, scale: 1 }}
-									exit={{ opacity: 0, scale: 0.95 }}
-									transition={springModal()}
-									className="relative z-10 w-full max-w-md h-[85dvh] md:h-[80vh]"
-								>
-									<GlassPanel
-										intensity="heavy"
-										className="rounded-[var(--radius-squircle-2xl)] bg-background/95 backdrop-blur-3xl ring-1 ring-foreground/10 shadow-2xl h-full flex flex-col overflow-hidden"
-									>
-										{/* ── DATES MODAL ──────────────────────────── */}
-										{activeModal === "dates" && (
-											<div className="flex flex-col h-full overflow-hidden">
-												{/* Header */}
-												<div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-3 shrink-0">
-													<h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
-														{t("ota.search.stay")}
-													</h2>
-													<p className="text-[11px] text-muted-foreground/60 mt-1 tracking-tight">
-														{pendingDate?.from && pendingDate?.to
-															? `${format(pendingDate.from, "dd MMM", { locale: dateLocale })} — ${format(pendingDate.to, "dd MMM", { locale: dateLocale })}`
-															: pendingDate?.from
-																? `${format(pendingDate.from, "dd MMM", { locale: dateLocale })} → ${t("ota.search.departure")}`
-																: t("ota.search.selectDates")}
-													</p>
-													<motion.button
-														onClick={() => setActiveModal(null)}
-														whileHover={{ scale: 1.08 }}
-														whileTap={{ scale: 0.9 }}
-														transition={springSnappy()}
-														className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
-														aria-label={t("common.close")}
-													>
-														<X size={16} strokeWidth={2.5} />
-													</motion.button>
-												</div>
-
-												{/* Quick date presets */}
-												<div className="flex flex-wrap gap-2 px-3 sm:px-4 pt-3">
-													{[
-														{ label: t("ota.search.thisWeekend"), getDates: () => ({ from: nextSaturday(today), to: nextSunday(nextSaturday(today)) }) },
-														{ label: t("ota.search.nextWeek"), getDates: () => ({ from: addWeeks(today, 1), to: addDays(addWeeks(today, 1), 3) }) },
-														{ label: t("ota.search.nextMonth"), getDates: () => ({ from: addMonths(today, 1), to: addDays(addMonths(today, 1), 3) }) },
-													].map((preset) => (
-														<button
-															key={preset.label}
-															type="button"
-															onClick={() => {
-																const dates = preset.getDates();
-																handleSelectDates(dates);
-															}}
-															className="px-3 py-1.5 text-xs font-semibold rounded-full border border-border bg-card hover:bg-muted transition-colors"
-														>
-															{preset.label}
-														</button>
-													))}
-												</div>
-
-												{/* Calendar */}
-												<div className="flex-1 overflow-y-auto px-3 sm:px-4 pb-3 min-h-0">
-													<div className="modal-calendar">
-														<DayPicker
-															mode="range"
-															selected={pendingDate}
-															onSelect={handleSelectDates}
-															locale={dateLocale}
-															numberOfMonths={1}
-															disabled={{ before: today }}
-															className="text-foreground font-sans"
-															modifiersClassNames={{
-																selected:
-																	"bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]",
-																range_middle:
-																	"bg-brand-50 text-brand-900 rounded-none",
-																range_start: "bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none",
-																range_end: "bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none",
-															}}
-														/>
-													</div>
-												</div>
-
-												{/* Footer */}
-												<div className="px-5 sm:px-6 pb-5 sm:pb-6 pt-3 border-t border-foreground/5 flex items-center gap-3 shrink-0">
-													<motion.button
-														onClick={handleClearDates}
-														whileTap={{ scale: 0.95 }}
-														transition={springSnappy()}
-														className="px-4 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-semibold text-muted-foreground hover:text-foreground bg-muted/50 hover:bg-muted transition-colors ring-1 ring-foreground/5"
-													>
-														{t("ota.search.clearDates")}
-													</motion.button>
-													<motion.button
-														onClick={handleConfirmDates}
-														disabled={!pendingDate?.from || !pendingDate?.to}
-														whileHover={
-															pendingDate?.from && pendingDate?.to
-																? { scale: 1.015 }
-																: {}
-														}
-														whileTap={
-															pendingDate?.from && pendingDate?.to
-																? { scale: 0.97 }
-																: {}
-														}
-														transition={springBounce()}
-														className={cn(
-															"flex-1 py-3 rounded-[var(--radius-squircle-xl)] text-sm font-bold tracking-tight transition-all ring-1",
-															pendingDate?.from && pendingDate?.to
-																? "bg-primary text-primary-foreground shadow-lg ring-primary/20 hover:shadow-xl"
-																: "bg-muted/40 text-muted-foreground/50 ring-foreground/5 cursor-not-allowed",
-														)}
-													>
-														{pendingDate?.from && pendingDate?.to
-															? t("ota.search.confirmDates")
-															: t("ota.search.selectDates")}
-													</motion.button>
-												</div>
+								<div className="glass-panel rounded-[var(--radius-squircle-2xl)] bg-background/95 backdrop-blur-3xl ring-1 ring-foreground/10 shadow-2xl h-full flex flex-col overflow-hidden">
+									{/* ── GUESTS MODAL ─────────────────────────── */}
+									{activeModal === "guests" && (
+										<div className="flex flex-col h-full overflow-hidden">
+											{/* Header */}
+											<div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-2 shrink-0">
+												<h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
+													{t("ota.search.guests")}
+												</h2>
+												<p className="text-xs text-muted-foreground/70 mt-0.5 tracking-tight">
+													{pendingGuests}{" "}
+													{t("ota.search.guest", { count: pendingGuests })}
+												</p>
+												<motion.button
+													onClick={handleConfirmGuests}
+													whileHover={{ scale: 1.08 }}
+													whileTap={{ scale: 0.9 }}
+													transition={springSnappy()}
+													className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
+													aria-label={t("common.close")}
+												>
+													<X size={16} strokeWidth={2.5} />
+												</motion.button>
 											</div>
-										)}
 
-										{/* ── GUESTS MODAL ─────────────────────────── */}
-										{activeModal === "guests" && (
-											<div className="flex flex-col h-full overflow-hidden">
-												{/* Header */}
-												<div className="relative px-5 pt-5 sm:px-6 sm:pt-6 pb-2 shrink-0">
-													<h2 className="font-black text-foreground tracking-tight text-lg sm:text-xl pr-10">
-														{t("ota.search.guests")}
-													</h2>
-													<p className="text-xs text-muted-foreground/70 mt-0.5 tracking-tight">
-														{pendingGuests}{" "}
-														{t("ota.search.guest", { count: pendingGuests })}
-													</p>
-													<motion.button
-														onClick={handleConfirmGuests}
-														whileHover={{ scale: 1.08 }}
-														whileTap={{ scale: 0.9 }}
-														transition={springSnappy()}
-														className="absolute top-4 right-4 sm:top-5 sm:right-5 size-9 rounded-[var(--radius-squircle-lg)] flex items-center justify-center bg-muted/60 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground ring-1 ring-foreground/5"
-														aria-label={t("common.close")}
-													>
-														<X size={16} strokeWidth={2.5} />
-													</motion.button>
-												</div>
-
-												{/* Guest Selector */}
-												<div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 min-h-0">
-													<GuestSelector
-														value={pendingGuests}
-														onChange={setPendingGuests}
-														min={1}
-														max={20}
-													/>
-												</div>
+											{/* Guest Selector */}
+											<div className="flex-1 overflow-y-auto px-5 sm:px-6 py-4 min-h-0">
+												<GuestSelector
+													value={pendingGuests}
+													onChange={setPendingGuests}
+													min={1}
+													max={20}
+												/>
 											</div>
-										)}
-									</GlassPanel>
-								</motion.div>
+										</div>
+									)}
+								</div>
 							</motion.div>
-						)}
+						</motion.div>
 					</AnimatePresence>,
 					document.body,
 				)}
