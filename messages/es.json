@@ -145,6 +145,8 @@
     "roomsList": {
       "inventoryExhausted": "Inventario Agotado",
       "inventoryExhaustedDesc": "No encontramos unidades disponibles para estas fechas. Prueba modificando tu estancia.",
+      "tryOtherDates": "Cambiar fechas",
+      "searchOtherLocation": "Buscar en otra ubicación",
       "tipLabel": "Tip",
       "tipText": "Las fechas entre semana suelen tener mayor disponibilidad. También puedes contactar al hotel directamente para consultar opciones.",
       "noResults": "Sin resultados",

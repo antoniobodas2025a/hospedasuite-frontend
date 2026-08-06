@@ -145,6 +145,8 @@
     "roomsList": {
       "inventoryExhausted": "Inventory Exhausted",
       "inventoryExhaustedDesc": "We couldn't find available units for these dates. Try modifying your stay.",
+      "tryOtherDates": "Change dates",
+      "searchOtherLocation": "Search other location",
       "tipLabel": "Tip",
       "tipText": "Weekday dates typically have higher availability. You can also contact the hotel directly to check options.",
       "noResults": "No Results",

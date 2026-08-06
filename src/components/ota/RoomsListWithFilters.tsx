@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useMemo, useRef } from 'react';
+import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { SlidersHorizontal, Users, CalendarX2 } from 'lucide-react';
@@ -216,9 +217,26 @@ export default function RoomsListWithFilters({
             <p className="text-muted-foreground max-w-sm mx-auto text-sm mb-6">
               {t('ota.roomsList.inventoryExhaustedDesc')}
             </p>
+            {/* Recovery actions */}
+            <div className="flex flex-col sm:flex-row gap-3">
+              {isSearchingDates && (
+                <button
+                  onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
+                  className="px-5 py-3 rounded-[var(--radius-squircle-lg)] bg-primary text-primary-foreground text-sm font-bold hover:bg-primary/90 transition-colors"
+                >
+                  {t('ota.roomsList.tryOtherDates')}
+                </button>
+              )}
+              <Link
+                href="/"
+                className="px-5 py-3 rounded-[var(--radius-squircle-lg)] bg-muted text-foreground text-sm font-bold hover:bg-muted/80 transition-colors text-center"
+              >
+                {t('ota.roomsList.searchOtherLocation')}
+              </Link>
+            </div>
             {/* Contextual suggestion */}
             {isSearchingDates && (
-              <div className="glass-card p-4 max-w-sm">
+              <div className="glass-card p-4 max-w-sm mt-4">
                 <p className="text-xs text-muted-foreground">
                   <span className="font-bold text-foreground">{t('ota.roomsList.tipLabel')}:</span> {t('ota.roomsList.tipText')}
                 </p>
