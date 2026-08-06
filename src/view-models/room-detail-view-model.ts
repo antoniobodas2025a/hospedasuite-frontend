@@ -112,7 +112,7 @@ function toISODate(date: Date): string {
 }
 
 function isHotelActive(hotel: HotelContext): boolean {
-  return hotel.status === 'active' && hotel.subscriptionStatus !== 'cancelled';
+  return hotel.subscriptionStatus !== 'cancelled';
 }
 
 function isAvailabilityForDates(
