@@ -258,7 +258,7 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 				);
 			return `${format(date.from, "dd MMM", { locale: dateLocale })} — ${format(date.to, "dd MMM", { locale: dateLocale })}`;
 		}
-		return `${t("ota.search.checkin")} — ${t("ota.search.checkout")}`;
+		return t("ota.search.suggestedWeekend");
 	};
 	const guestLabel = `${guests} ${t("ota.search.guest", { count: guests })}`;
 
