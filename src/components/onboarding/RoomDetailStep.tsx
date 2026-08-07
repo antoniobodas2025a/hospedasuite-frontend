@@ -275,7 +275,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
               type="number"
               value={room.capacity || ''}
               onChange={(e) => onUpdate({ capacity: Number(e.target.value) })}
-              disabled={isTemplate}
+              disabled={false}
               className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-md)] p-2 text-white text-sm outline-none focus:border-indigo-500/50 disabled:cursor-not-allowed"
             />
           </div>
@@ -285,7 +285,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
               type="number"
               value={room.beds || ''}
               onChange={(e) => onUpdate({ beds: Number(e.target.value) })}
-              disabled={isTemplate}
+              disabled={false}
               className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-md)] p-2 text-white text-sm outline-none focus:border-indigo-500/50 disabled:cursor-not-allowed"
             />
           </div>
@@ -297,7 +297,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           value={room.bedType}
           onChange={(v) => onUpdate({ bedType: v as RoomDraft['bedType'] })}
           label={t('bedTypeLabel')}
-          disabled={isTemplate}
+          disabled={false}
         />
       </div>
 
@@ -313,7 +313,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           value={room.bathroomType}
           onChange={(v) => onUpdate({ bathroomType: v as RoomDraft['bathroomType'] })}
           label={t('bathroomLabel')}
-          disabled={isTemplate}
+          disabled={false}
         />
 
         <OptionPicker
@@ -321,7 +321,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           value={room.showerType}
           onChange={(v) => onUpdate({ showerType: v as RoomDraft['showerType'] })}
           label={t('showerLabel')}
-          disabled={isTemplate}
+          disabled={false}
         />
 
         {/* Hot water toggle — defaults to true */}
@@ -330,7 +330,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           <motion.button
             onClick={() => onUpdate({ hotWater: !room.hotWater })}
             whileTap={{ scale: 0.9 }}
-            disabled={isTemplate}
+            disabled={false}
             className={`relative w-10 h-5 rounded-full transition-colors ${room.hotWater ? 'bg-indigo-500/50' : 'bg-zinc-700'} disabled:cursor-not-allowed`}
           >
             <motion.div
@@ -346,7 +346,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           value={room.roomView}
           onChange={(v) => onUpdate({ roomView: v as RoomDraft['roomView'] })}
           label={t('roomViewLabel')}
-          disabled={isTemplate}
+          disabled={false}
         />
 
         {/* Bathroom amenities — detalles adicionales (Jacuzzi, etc.) */}
@@ -361,7 +361,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
                   key={amenity.id}
                   onClick={() => toggleAmenity(amenity.id)}
                   whileTap={{ scale: 0.93 }}
-                  disabled={isTemplate}
+                  disabled={false}
                   className={`flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-medium transition-all border ${
                     isActive
                       ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
@@ -387,7 +387,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
                   key={amenity.id}
                   onClick={() => toggleAmenity(amenity.id)}
                   whileTap={{ scale: 0.93 }}
-                  disabled={isTemplate}
+                  disabled={false}
                   className={`flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-medium transition-all border ${
                     isActive
                       ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
@@ -416,7 +416,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
             value={room.description || ''}
             onChange={(e) => onUpdate({ description: e.target.value })}
             placeholder={t('descriptionPlaceholder')}
-            disabled={isTemplate}
+            disabled={false}
             className="w-full bg-black/40 border border-white/5 rounded-[var(--radius-squircle-lg)] p-3 text-sm text-zinc-300 outline-none focus:border-indigo-500/50 resize-none h-20 placeholder:text-zinc-700 disabled:cursor-not-allowed"
           />
           <AIPolicyAssistant
@@ -435,8 +435,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
                 type="button"
                 onClick={() => setIsGalleryPickerOpen(true)}
                 whileTap={{ scale: 0.95 }}
-                disabled={isTemplate}
-                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-md transition-all disabled:cursor-not-allowed"
+                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-md transition-all"
               >
                 <Copy size={10} />
                 Copiar de galería
@@ -492,7 +491,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
         </div>
 
         {/* Amenities — Comodidades generales */}
-        <div className={isTemplate ? 'opacity-50' : ''}>
+        <div>
           <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest mb-2">{t('amenitiesLabel')}</p>
           <div className="flex flex-wrap gap-1.5">
             {Object.values(ROOM_AMENITY_REGISTRY).map(amenity => {
@@ -503,7 +502,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
                   key={amenity.id}
                   onClick={() => toggleAmenity(amenity.id)}
                   whileTap={{ scale: 0.93 }}
-                  disabled={isTemplate}
+                  disabled={false}
                   className={`flex items-center gap-1 px-2 py-1 rounded-[var(--radius-squircle-md)] text-[10px] font-medium transition-all border ${
                     isActive
                       ? 'bg-indigo-500/20 border-indigo-500/50 text-indigo-300'
