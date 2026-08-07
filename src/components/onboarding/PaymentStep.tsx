@@ -1,7 +1,7 @@
 'use client';
 
 import { motion } from 'framer-motion';
-import { CreditCard, CheckCircle2, Wallet, Gift } from 'lucide-react';
+import { CreditCard, CheckCircle2, Wallet, Gift, Building2, BedDouble, Image as ImageIcon } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import type { PaymentMethod } from '@/lib/onboarding-schemas';
@@ -15,6 +15,9 @@ export default function PaymentStep() {
   const t = useTranslations('onboarding.payment');
   const locale = useLocale();
   const {
+    hotelIdentity,
+    rooms,
+    galleryFiles,
     paymentMethod,
     setPaymentMethod,
     paymentPrice,
@@ -23,6 +26,7 @@ export default function PaymentStep() {
     manualReceiptUrl,
     termsAccepted,
     setTermsAccepted,
+    startProvisioning,
   } = useOnboardingStore();
 
   const isMethodSelected = paymentMethod !== null;
@@ -32,6 +36,7 @@ export default function PaymentStep() {
       : paymentMethod === 'wompi'
         ? !!paymentTransactionId
         : !!manualReceiptUrl;
+  const canActivate = isPaymentDone && termsAccepted;
 
   const handleMethodSelect = (method: PaymentMethod) => {
     if (paymentMethod !== method) {
@@ -39,6 +44,12 @@ export default function PaymentStep() {
       if (method === 'free') {
         setPaymentTransactionId(`FREE-${Date.now()}`);
       }
+    }
+  };
+
+  const handleActivate = () => {
+    if (canActivate) {
+      startProvisioning();
     }
   };
 
@@ -57,6 +68,38 @@ export default function PaymentStep() {
         {locale === 'en' && (
           <p className="text-zinc-600 text-xs italic">{t('englishLocaleNote')}</p>
         )}
+      </div>
+
+      {/* Review summary — merged from PaymentEditStep */}
+      <div className="bg-black/40 p-4 rounded-[var(--radius-squircle-xl)] border border-white/5 space-y-3">
+        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest">
+          Resumen de tu propiedad
+        </p>
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-[var(--radius-squircle-lg)] bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center shrink-0">
+            <Building2 size={18} className="text-indigo-400" />
+          </div>
+          <div className="min-w-0">
+            <p className="text-white font-bold text-sm truncate">{hotelIdentity.name || t('noName')}</p>
+            <p className="text-zinc-500 text-xs">{hotelIdentity.city}{hotelIdentity.location ? `, ${hotelIdentity.location}` : ''}</p>
+          </div>
+        </div>
+        <div className="flex gap-3">
+          <div className="flex-1 bg-white/5 rounded-[var(--radius-squircle-lg)] p-3 flex items-center gap-2">
+            <BedDouble size={16} className="text-zinc-500" />
+            <div>
+              <p className="text-white font-bold text-sm">{rooms.length}</p>
+              <p className="text-zinc-600 text-[10px] uppercase tracking-wider">{locale === 'en' ? (rooms.length === 1 ? 'unit' : 'units') : (rooms.length === 1 ? 'unidad' : 'unidades')}</p>
+            </div>
+          </div>
+          <div className="flex-1 bg-white/5 rounded-[var(--radius-squircle-lg)] p-3 flex items-center gap-2">
+            <ImageIcon size={16} className="text-zinc-500" />
+            <div>
+              <p className="text-white font-bold text-sm">{galleryFiles.length}</p>
+              <p className="text-zinc-600 text-[10px] uppercase tracking-wider">{locale === 'en' ? (galleryFiles.length === 1 ? 'photo' : 'photos') : (galleryFiles.length === 1 ? 'foto' : 'fotos')}</p>
+            </div>
+          </div>
+        </div>
       </div>
 
       {/* Method selector (tab/radio) */}
@@ -125,12 +168,12 @@ export default function PaymentStep() {
       {/* Terms acceptance — required before activation */}
       <TermsAcceptance accepted={termsAccepted} onAcceptanceChange={setTermsAccepted} />
 
-      {/* Conditional payment UI */}
+      {/* Conditional payment UI + activation */}
       {isMethodSelected && (
         <motion.div
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          className="max-w-sm mx-auto"
+          className="max-w-sm mx-auto space-y-4"
         >
           {isPaymentDone ? (
             <div className="text-center space-y-4">
@@ -164,6 +207,28 @@ export default function PaymentStep() {
             </div>
           ) : (
             <ManualPaymentCard />
+          )}
+
+          {/* Activate property — merged from PaymentReviewStep */}
+          <motion.button
+            whileTap={{ scale: 0.98 }}
+            onClick={handleActivate}
+            disabled={!canActivate}
+            className={`w-full py-4 font-bold rounded-[var(--radius-squircle-xl)] uppercase tracking-widest text-[10px] shadow-lg transition-all ${
+              paymentMethod === 'free'
+                ? 'bg-emerald-600 text-white shadow-emerald-600/20 hover:bg-emerald-500 disabled:opacity-30'
+                : paymentMethod === 'manual'
+                  ? 'bg-amber-500/20 border border-amber-500/30 text-amber-400 hover:bg-amber-500/30 disabled:opacity-30'
+                  : 'bg-indigo-600 text-white shadow-indigo-600/20 hover:bg-indigo-500 disabled:opacity-30'
+            }`}
+          >
+            {paymentMethod === 'free' ? 'Activar propiedad (prueba gratis)' : paymentMethod === 'manual' ? 'Activar propiedad (pendiente de pago)' : 'Activar propiedad'}
+          </motion.button>
+
+          {!termsAccepted && isPaymentDone && (
+            <p className="text-zinc-600 text-xs text-center">
+              Aceptá los términos para activar tu propiedad
+            </p>
           )}
         </motion.div>
       )}

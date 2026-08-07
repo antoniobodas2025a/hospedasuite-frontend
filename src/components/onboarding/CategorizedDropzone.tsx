@@ -38,6 +38,8 @@ export interface CategorizedDropzoneProps {
 	images?: CategorizedPreview[];
 	/** Called when user removes an image preview */
 	onRemoveImage?: (category: ImageCategory, index: number) => void;
+	/** Categories to render (defaults to all UI categories) */
+	categories?: ImageCategory[];
 }
 
 const ACCEPT = {
@@ -58,10 +60,11 @@ export default function CategorizedDropzone({
 	onDropRejected,
 	images = [],
 	onRemoveImage,
+	categories = UI_CATEGORIES,
 }: CategorizedDropzoneProps) {
 	return (
 		<div className="space-y-4">
-			{UI_CATEGORIES.map((category) => (
+			{categories.map((category) => (
 				<CategoryZone
 					key={category}
 					category={category}

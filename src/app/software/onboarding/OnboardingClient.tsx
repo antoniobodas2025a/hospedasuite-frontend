@@ -11,10 +11,7 @@ import StepIndicator from "@/components/onboarding/StepIndicator";
 import HotelIdentityStep from "@/components/onboarding/HotelIdentityStep";
 import PropertyGalleryStep from "@/components/onboarding/PropertyGalleryStep";
 import RoomTemplatesStep from "@/components/onboarding/RoomTemplatesStep";
-import SettingsStep from "@/components/onboarding/SettingsStep";
-import PaymentEditStep from "@/components/onboarding/PaymentEditStep";
 import PaymentStep from "@/components/onboarding/PaymentStep";
-import PaymentReviewStep from "@/components/onboarding/PaymentReviewStep";
 import ProvisioningStep from "@/components/onboarding/ProvisioningStep";
 import AuthStep from "@/components/onboarding/AuthStep";
 export default function OnboardingWizard() {
@@ -38,13 +35,16 @@ export default function OnboardingWizard() {
 		startProvisioning,
 		restoreFromStorage,
 		persistToStorage,
-		clearStorage,
 	} = useOnboardingStore();
 
-	// Migration: Step 3 (PropertyType) was removed — bump completed step if stuck
+	// Migration: wizard restructured from 7 steps to 5 steps.
+	// Users stored on old steps 5-7 (review/payment/activate) land on step 4 (payment).
 	useEffect(() => {
-		if (maxCompletedStep >= 3 && currentStep >= 3) {
-			setMaxCompletedStep(Math.max(maxCompletedStep, 3));
+		if (maxCompletedStep > 4) {
+			setMaxCompletedStep(4);
+		}
+		if (currentStep > 4) {
+			setCurrentStep(4);
 		}
 	}, []);
 
@@ -63,7 +63,7 @@ export default function OnboardingWizard() {
 	// Warn before leaving mid-onboarding (prevents accidental data loss)
 	useEffect(() => {
 		const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-			if (currentStep > 1 && currentStep < 7) {
+			if (currentStep > 1 && currentStep < 5) {
 				e.preventDefault();
 				e.returnValue =
 					'Tienes cambios sin guardar en tu configuración. ¿Seguro que quieres salir?';
@@ -82,10 +82,8 @@ export default function OnboardingWizard() {
 		{ number: 1, label: t("onboarding.steps.identity") },
 		{ number: 2, label: t("onboarding.steps.gallery") },
 		{ number: 3, label: t("onboarding.steps.units") },
-		{ number: 4, label: t("onboarding.steps.config") },
-		{ number: 5, label: t("onboarding.steps.review") || "Revisar" },
-		{ number: 6, label: t("onboarding.steps.pay") || "Pago" },
-		{ number: 7, label: t("onboarding.steps.activate") },
+		{ number: 4, label: t("onboarding.steps.pay") || "Pago" },
+		{ number: 5, label: t("onboarding.steps.done") || "Listo" },
 	];
 
 	// Resolve context on mount
@@ -181,7 +179,7 @@ export default function OnboardingWizard() {
 	};
 
 	const canProceed = currentStep <= maxCompletedStep + 1;
-	const isLastStep = currentStep === 7;
+	const isLastStep = currentStep === 4;
 
 	const handleNext = () => {
 		// Validate current step before advancing
@@ -201,11 +199,11 @@ export default function OnboardingWizard() {
 			return next;
 		});
 
-		if (currentStep < 7) {
+		if (currentStep < 4) {
 			setMaxCompletedStep(Math.max(maxCompletedStep, currentStep));
 			setCurrentStep(currentStep + 1);
-		} else if (currentStep === 7) {
-			setMaxCompletedStep(Math.max(maxCompletedStep, 7));
+		} else if (currentStep === 4) {
+			setMaxCompletedStep(Math.max(maxCompletedStep, 4));
 			startProvisioning();
 		}
 	};
@@ -274,7 +272,7 @@ export default function OnboardingWizard() {
 		);
 	}
 
-	// Provisioning — triggered by PaymentReviewStep (step 8) via startProvisioning()
+	// Provisioning — triggered by PaymentStep (step 4) via startProvisioning()
 	if (isProvisioning && (paymentTransactionId || manualReceiptUrl)) {
 		return (
 			<div className="min-h-screen bg-[#0a0a0a] text-zinc-100 flex flex-col justify-center py-12 px-4 relative overflow-hidden">
@@ -300,7 +298,7 @@ export default function OnboardingWizard() {
 						HospedaSuite
 					</h2>
 					<p className="text-zinc-500 text-sm mt-2">
-						Configurá tu propiedad en 7 pasos simples
+						Configurá tu propiedad en 5 pasos simples
 					</p>
 				</div>
 
@@ -317,16 +315,13 @@ export default function OnboardingWizard() {
 					<AnimatePresence mode="wait">
 						{currentStep === 1 && <HotelIdentityStep key="step1" />}
 						{currentStep === 2 && <PropertyGalleryStep key="step2" />}
-						{currentStep === 3 && <RoomTemplatesStep key="step4" />}
-						{currentStep === 4 && <SettingsStep key="step5" />}
-						{currentStep === 5 && <PaymentEditStep key="step6" />}
-						{currentStep === 6 && <PaymentStep key="step7" />}
-						{currentStep === 7 && <PaymentReviewStep key="step8" />}
+						{currentStep === 3 && <RoomTemplatesStep key="step3" />}
+						{currentStep === 4 && <PaymentStep key="step4" />}
 					</AnimatePresence>
 				</div>
 
             {/* Navigation */}
-            {currentStep >= 1 && (
+            {currentStep >= 1 && currentStep <= 4 && (
               <div className="mt-8 space-y-3">
                 {/* Step validation errors */}
                 {stepErrors[currentStep] && stepErrors[currentStep].length > 0 && (
@@ -348,13 +343,13 @@ export default function OnboardingWizard() {
                       onClick={handleBack}
                       whileTap={{ scale: 0.97 }}
                       className={`border border-white/10 text-zinc-500 py-4 rounded-[var(--radius-squircle-xl)] font-bold uppercase tracking-widest text-[10px] hover:bg-white/5 transition-all ${
-                        currentStep === 7 ? 'w-full' : 'w-1/3'
+                        currentStep === 4 ? 'w-full' : 'w-1/3'
                       }`}
                     >
                       Atrás
                     </motion.button>
                   )}
-                  {currentStep < 7 && (
+                  {currentStep < 4 && (
                     <motion.button
                       onClick={handleNext}
                       whileTap={{ scale: 0.97 }}
@@ -367,6 +362,13 @@ export default function OnboardingWizard() {
                 </div>
               </div>
             )}
+
+				{/* Post-activation note */}
+				{currentStep === 4 && (
+					<p className="mt-6 text-center text-zinc-600 text-xs">
+						Completá la configuración de tu hotel desde el dashboard
+					</p>
+				)}
 			</div>
 		</div>
 	);

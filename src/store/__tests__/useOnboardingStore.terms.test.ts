@@ -49,7 +49,7 @@ describe('useOnboardingStore - Terms Acceptance', () => {
   });
 });
 
-describe('useOnboardingStore - Step 6 Validation', () => {
+describe('useOnboardingStore - Step 4 Validation', () => {
   beforeEach(() => {
     // Reset store state before each test
     useOnboardingStore.getState().reset();
@@ -57,8 +57,8 @@ describe('useOnboardingStore - Step 6 Validation', () => {
 
   it('should fail validation when paymentMethod is not selected', () => {
     const { validateStep } = useOnboardingStore.getState();
-    const result = validateStep(6);
-    
+    const result = validateStep(4);
+
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('Necesitas seleccionar un método de pago');
   });
@@ -66,9 +66,9 @@ describe('useOnboardingStore - Step 6 Validation', () => {
   it('should fail validation when termsAccepted is false', () => {
     const { setPaymentMethod, validateStep } = useOnboardingStore.getState();
     setPaymentMethod('free');
-    
-    const result = validateStep(6);
-    
+
+    const result = validateStep(4);
+
     expect(result.valid).toBe(false);
     expect(result.errors).toContain('Debés aceptar los Términos y Condiciones y la Política de Privacidad');
   });
@@ -77,17 +77,17 @@ describe('useOnboardingStore - Step 6 Validation', () => {
     const { setPaymentMethod, setTermsAccepted, validateStep } = useOnboardingStore.getState();
     setPaymentMethod('free');
     setTermsAccepted(true);
-    
-    const result = validateStep(6);
-    
+
+    const result = validateStep(4);
+
     expect(result.valid).toBe(true);
     expect(result.errors).toHaveLength(0);
   });
 
   it('should fail validation when both paymentMethod and termsAccepted are missing', () => {
     const { validateStep } = useOnboardingStore.getState();
-    const result = validateStep(6);
-    
+    const result = validateStep(4);
+
     expect(result.valid).toBe(false);
     expect(result.errors).toHaveLength(2);
     expect(result.errors).toContain('Necesitas seleccionar un método de pago');

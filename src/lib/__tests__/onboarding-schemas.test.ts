@@ -50,6 +50,7 @@ function makeValidState(
 			transactionId: null,
 			manualReceiptUrl: null,
 		},
+		termsAccepted: true,
 	};
 }
 
@@ -245,6 +246,7 @@ describe("fullWizardStateSchema.galleryImages", () => {
 				transactionId: "txn_123",
 				manualReceiptUrl: null,
 			},
+			termsAccepted: true,
 		};
 		const result = fullWizardStateSchema.safeParse(state);
 		expect(result.success).toBe(true);

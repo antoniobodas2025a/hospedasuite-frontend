@@ -1,13 +1,15 @@
 "use client";
 
-import React, { useCallback, useEffect } from "react";
-import { motion } from "framer-motion";
+import React, { useCallback, useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import { useTranslations } from "next-intl";
+import { ChevronDown, ChevronUp } from "lucide-react";
 import CategorizedDropzone from "./CategorizedDropzone";
 import type { CategorizedPreview } from "./CategorizedDropzone";
 import { useHotelImagesStore } from "@/store/useHotelImagesStore";
 import { useOnboardingStore } from "@/store/useOnboardingStore";
 import type { ImageCategory } from "@/types";
+import { UI_CATEGORIES } from "@/lib/image-category";
 
 export default function PropertyGalleryStep() {
 	const t = useTranslations("onboarding.gallery");
@@ -19,6 +21,7 @@ export default function PropertyGalleryStep() {
 		removeImage,
 		categorizedImages,
 	} = useHotelImagesStore();
+	const [showOptional, setShowOptional] = useState(false);
 
 	const hasErrors = validationErrors["step-2"];
 	const totalImages = getTotalImageCount();
@@ -27,11 +30,11 @@ export default function PropertyGalleryStep() {
 	// Bridge: Sync useHotelImagesStore → useOnboardingStore.galleryFiles
 	// This fixes the data loss bug where provisioning couldn't find gallery images
 	useEffect(() => {
-		const allFiles = Object.entries(categorizedImages).flatMap(
-			([_, entries]) => entries.map((entry) => entry.file),
+		const allFiles = Object.values(categorizedImages).flatMap((entries) =>
+			entries.map((entry) => entry.file),
 		);
-		const allPreviews = Object.entries(categorizedImages).flatMap(
-			([_, entries]) => entries.map((entry) => entry.preview),
+		const allPreviews = Object.values(categorizedImages).flatMap((entries) =>
+			entries.map((entry) => entry.preview),
 		);
 		setGalleryImages(allFiles, allPreviews);
 	}, [categorizedImages, setGalleryImages]);
@@ -64,6 +67,10 @@ export default function PropertyGalleryStep() {
 		})),
 	);
 
+	const exteriorImages = previewImages.filter((img) => img.category === "exterior");
+	const optionalImages = previewImages.filter((img) => img.category !== "exterior");
+	const optionalCategories = UI_CATEGORIES.filter((c) => c !== "exterior");
+
 	return (
 		<motion.div
 			initial={{ opacity: 0, y: 20 }}
@@ -94,12 +101,48 @@ export default function PropertyGalleryStep() {
 				</div>
 			)}
 
-			{/* 8 Categorized Dropzones */}
+			{/* Required exterior dropzone */}
 			<CategorizedDropzone
 				onFilesSelected={handleFilesSelected}
-				images={previewImages}
+				images={exteriorImages}
 				onRemoveImage={handleRemoveImage}
+				categories={["exterior"]}
 			/>
+
+			{/* Optional categories — collapsed by default */}
+			<div className="border border-white/5 rounded-[var(--radius-squircle-xl)] overflow-hidden">
+				<button
+					onClick={() => setShowOptional((prev) => !prev)}
+					className="w-full flex items-center justify-between p-3 hover:bg-white/[0.02] transition-colors"
+				>
+					<span className="text-xs font-bold text-zinc-400 uppercase tracking-widest">
+						Añadir más fotos (opcional)
+					</span>
+					<motion.div animate={{ rotate: showOptional ? 180 : 0 }} transition={{ type: "spring", stiffness: 300, damping: 24 }}>
+						{showOptional ? <ChevronUp size={14} className="text-zinc-500" /> : <ChevronDown size={14} className="text-zinc-500" />}
+					</motion.div>
+				</button>
+				<AnimatePresence>
+					{showOptional && (
+						<motion.div
+							initial={{ height: 0, opacity: 0 }}
+							animate={{ height: "auto", opacity: 1 }}
+							exit={{ height: 0, opacity: 0 }}
+							transition={{ type: "spring", stiffness: 300, damping: 24 }}
+							className="border-t border-white/5"
+						>
+							<div className="p-3 pt-4 space-y-4">
+								<CategorizedDropzone
+									onFilesSelected={handleFilesSelected}
+									images={optionalImages}
+									onRemoveImage={handleRemoveImage}
+									categories={optionalCategories}
+								/>
+							</div>
+						</motion.div>
+					)}
+				</AnimatePresence>
+			</div>
 
 			{/* Total count */}
 			<div className="text-xs text-zinc-600 text-center">

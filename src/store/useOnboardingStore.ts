@@ -19,6 +19,7 @@ export interface RoomDraft extends RoomDraftData {
 	imageFiles: File[];
 	imagePreviews: string[];
 	imageBlurData: string[];
+	fromTemplate?: boolean;
 }
 
 export interface OnboardingState {
@@ -237,6 +238,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 				imageBlurData: [],
 				imagePreviews: [],
 				availabilityRange: null,
+				fromTemplate: true,
 			};
 
 			return { rooms: [...state.rooms, newRoom] };
@@ -263,6 +265,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 				imageBlurData: [],
 					imagePreviews: [],
 					availabilityRange: null,
+					fromTemplate: false,
 				},
 			],
 		})),
@@ -417,7 +420,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 			}
 		}
 
-		if (step === 4) {
+		if (step === 3) {
 			const state = useOnboardingStore.getState();
 			if (state.rooms.length === 0) {
 				errors.push("Necesitas al menos 1 habitación");
@@ -448,7 +451,7 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 			}
 		}
 
-		if (step === 6) {
+		if (step === 4) {
 			const state = useOnboardingStore.getState();
 			if (!state.paymentMethod) {
 				errors.push("Necesitas seleccionar un método de pago");
