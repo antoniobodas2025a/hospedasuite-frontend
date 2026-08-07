@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { springGentle } from '@/lib/mac2026/spring';
 import { cn } from '@/lib/utils';
-import { calculateTaxAmount, getTaxLabel } from '@/lib/pricing';
+import { getTaxLabel, getEffectiveTaxRate, extractTaxFromGross } from '@/lib/pricing';
 
 export interface PriceBreakdownProps {
   pricePerNight: number;
@@ -26,19 +26,12 @@ export default function PriceBreakdown({
   className,
 }: PriceBreakdownProps) {
   const effectiveRate = React.useMemo(() => {
-    if (typeof taxRegime === 'string') {
-      console.warn(
-        '[PriceBreakdown] `taxRegime` is deprecated. Use `taxRate: number` instead. This prop will be removed in 30 days.'
-      );
-      return taxRegime === 'responsible' ? 0.19 : 0;
-    }
-    return taxRate ?? 0.19;
+    return getEffectiveTaxRate(taxRate, taxRegime);
   }, [taxRate, taxRegime]);
 
   const taxLabel = getTaxLabel(effectiveRate);
   const subtotal = pricePerNight * nights;
-  const iva = calculateTaxAmount(subtotal, effectiveRate);
-  const total = subtotal + iva;
+  const { net, tax: iva, gross: total } = extractTaxFromGross(subtotal, effectiveRate);
   const nightLabel = nights === 1 ? 'noche' : 'noches';
 
   return (

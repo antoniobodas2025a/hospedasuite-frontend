@@ -162,10 +162,10 @@ export default function PriceCalculator({
 
 				{/* Desglose */}
 				<div className="space-y-3">
-					{/* Precio base */}
+					{/* Precio Final */}
 					<div className="flex items-center justify-between border-b border-border/50 py-2">
 						<span className="text-sm text-muted-foreground">
-							{readonly ? "Precio por Noche" : "Precio Neto"}
+							{readonly ? "Precio por Noche" : "Precio Final"}
 						</span>
 						<span className="text-sm font-bold text-foreground">
 							{formatCOP(basePrice)}
@@ -181,15 +181,15 @@ export default function PriceCalculator({
 							className="space-y-2"
 						>
 							<div className="flex items-center justify-between border-b border-border/50 py-2">
-								<span className="text-sm text-muted-foreground">IVA (19%)</span>
-								<span className="text-sm font-bold text-amber-400">
-									+{formatCOP(breakdown.iva)}
+								<span className="text-sm text-muted-foreground">Base Gravable</span>
+								<span className="text-sm font-bold text-foreground">
+									{formatCOP(breakdown.netBase)}
 								</span>
 							</div>
 							<div className="flex items-center justify-between border-b border-border/50 py-2">
-								<span className="text-sm text-muted-foreground">Huésped Ve</span>
-								<span className="text-sm font-bold text-indigo-400">
-									{formatCOP(breakdown.guestSees)}
+								<span className="text-sm text-muted-foreground">IVA incluido (19%)</span>
+								<span className="text-sm font-bold text-amber-400">
+									{formatCOP(breakdown.iva)}
 								</span>
 							</div>
 						</motion.div>
@@ -285,8 +285,8 @@ export default function PriceCalculator({
 					<div className="flex gap-2">
 						<Info size={14} className="mt-0.5 flex-shrink-0 text-blue-400" />
 						<p className="text-xs text-blue-300">
-							<strong>Importante:</strong> El precio que ingresas es el que ve el huésped.
-							Las comisiones e impuestos se descuentan automáticamente.
+							<strong>Importante:</strong> El precio que ingresas es el precio final que ve el huésped.
+							El IVA y las comisiones se calculan internamente sobre la base gravable.
 						</p>
 					</div>
 				</div>

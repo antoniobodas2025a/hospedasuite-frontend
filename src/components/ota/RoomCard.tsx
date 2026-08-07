@@ -12,10 +12,9 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
-import { DEFAULT_TAX_RATE, formatPrice, formatPriceWithTax } from '@/lib/pricing';
+import { getEffectiveTaxRate, formatPrice, extractTaxFromGross, getTaxLabel } from '@/lib/pricing';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
-import { trackTaxRateFallback } from '@/lib/analytics';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
 import { MOTION_DURATION, MOTION_EASING } from '@/lib/motion-tokens';
 
@@ -35,7 +34,7 @@ interface RoomCardProps {
   allRooms?: (Partial<Room> & { id: string; name: string; cover_image_blur?: string })[];
   totalRooms?: number;
   availableCount?: number;
-  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
+  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null; tax_regime?: string | null };
   searchParams?: URLSearchParams;
   imagePriority?: boolean;
   index?: number;
@@ -65,14 +64,15 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
   }, [parsedDates]);
 
   const basePrice = useMemo(() => room.price_per_night || room.price || 0, [room.price_per_night, room.price]);
-  const taxRate = useMemo(() => hotel?.tax_rate ?? DEFAULT_TAX_RATE, [hotel?.tax_rate]);
-  const priceBreakdown = useMemo(() => formatPriceWithTax(basePrice, taxRate, nights), [basePrice, taxRate, nights]);
+  const taxRate = useMemo(() => getEffectiveTaxRate(hotel?.tax_rate, hotel?.tax_regime), [hotel?.tax_rate, hotel?.tax_regime]);
+  const priceBreakdown = useMemo(() => {
+    const { net: subtotal, tax: iva, gross: total, hasTax } = extractTaxFromGross(basePrice * nights, taxRate);
+    return { subtotal, iva, total, hasTax, taxLabel: getTaxLabel(taxRate) };
+  }, [basePrice, taxRate, nights]);
 
   useEffect(() => {
-    if (hotelId && hotel?.tax_rate == null) {
-      trackTaxRateFallback({ hotel_id: hotelId, fallback_rate: DEFAULT_TAX_RATE });
-    }
-  }, [hotelId, hotel?.tax_rate]);
+    // No-op: getEffectiveTaxRate handles null tax_rate internally (fallback via tax_regime)
+  }, []);
 
   const { trackViewRef, trackClickReserve } = useBookingAnalytics({
     hotelId,
@@ -194,7 +194,7 @@ function RoomCardInner({
   isProcessing: boolean;
   coverImage: string;
   basePrice: number;
-  priceBreakdown: ReturnType<typeof formatPriceWithTax>;
+  priceBreakdown: { subtotal: number; iva: number; total: number; hasTax: boolean; taxLabel: string };
   nights: number;
   imagePriority?: boolean;
   index?: number;
@@ -365,15 +365,15 @@ function RoomCardInner({
                   <span>COP/noche</span>
                 )}
                 {priceBreakdown.hasTax && (
-                  <span>+ {priceBreakdown.taxLabel}: ${priceBreakdown.tax}</span>
+                  <span>(IVA incluido)</span>
                 )}
                 {!priceBreakdown.hasTax && (
-                  <span>(IVA incluido)</span>
+                  <span>(Sin IVA)</span>
                 )}
               </div>
               <div className="flex items-end gap-2 pt-1">
                 <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                  ${priceBreakdown.total}
+                  ${formatPrice(basePrice)}
                 </p>
                 <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copTotal')}</span>
               </div>

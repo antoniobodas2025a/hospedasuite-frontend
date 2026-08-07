@@ -23,7 +23,7 @@ async function runSeeder() {
       main_image_url: 'https://images.unsplash.com/photo-1510798831971-661eb04b3739?w=800',
       category: 'montaña',
       type: 'glamping',
-      tax_rate: 19
+      tax_rate: 0.19
     }).select().single();
 
     if (hotelError) {

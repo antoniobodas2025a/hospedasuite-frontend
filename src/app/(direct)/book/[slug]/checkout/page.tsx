@@ -65,7 +65,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
 
   const nights = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
 
-  const roomPrice = Number(room.price || room.base_price || 0);
+  const roomPrice = Number(room.price || 0);
   const basePrice = roomPrice * nights;
 
   return (

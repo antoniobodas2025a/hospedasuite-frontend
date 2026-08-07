@@ -5,7 +5,7 @@ import { ShieldCheck, ArrowRight, ArrowLeft, User, Mail, Phone, CreditCard, Load
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPendingBookingAction } from '@/app/actions/bookings';
 import { Hotel, Room } from '@/types';
-import { calculateTaxAmount } from '@/lib/pricing';
+import { calculateTaxAmount, getEffectiveTaxRate, extractTaxFromGross } from '@/lib/pricing';
 import { shakeHaptic, desaturateFeedback, springSnappy, springGentle } from '@/lib/mac2026/spring';
 import PriceBreakdown from '@/components/ota/PriceBreakdown';
 
@@ -67,11 +67,12 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
   });
   const [formError, setFormError] = useState<string | null>(null);
 
-  // Price coherence: use hotel's tax_rate for all displays
+  // Price coherence: entered price IS the final price (B2C Colombian model).
+  // For responsible hotels, IVA is extracted internally, not added on top.
   const subtotal = basePrice;
-  const effectiveRate = hotel.tax_rate ?? 0.19;
-  const taxes = calculateTaxAmount(subtotal, effectiveRate);
-  const grandTotal = subtotal + taxes;
+  const effectiveRate = getEffectiveTaxRate(hotel.tax_rate, hotel.tax_regime);
+  const { tax: taxes, net } = extractTaxFromGross(subtotal, effectiveRate);
+  const grandTotal = subtotal; // B2C: guest pays what hotel entered
 
   // Persist state to sessionStorage on every change (booking-scoped key)
   useEffect(() => {
