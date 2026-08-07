@@ -5,6 +5,7 @@ import { CreditCard, CheckCircle2, Wallet, Gift } from 'lucide-react';
 import { useTranslations, useLocale } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import type { PaymentMethod } from '@/lib/onboarding-schemas';
+import TermsAcceptance from './TermsAcceptance';
 import WompiButton from '@/components/payments/WompiButton';
 import ManualPaymentCard from './ManualPaymentCard';
 
@@ -20,6 +21,8 @@ export default function PaymentStep() {
     paymentTransactionId,
     setPaymentTransactionId,
     manualReceiptUrl,
+    termsAccepted,
+    setTermsAccepted,
   } = useOnboardingStore();
 
   const isMethodSelected = paymentMethod !== null;
@@ -118,6 +121,9 @@ export default function PaymentStep() {
           <p className="text-[10px] text-emerald-700 mt-1">30 días de prueba gratis</p>
         </button>
       </div>
+
+      {/* Terms acceptance — required before activation */}
+      <TermsAcceptance accepted={termsAccepted} onAcceptanceChange={setTermsAccepted} />
 
       {/* Conditional payment UI */}
       {isMethodSelected && (
