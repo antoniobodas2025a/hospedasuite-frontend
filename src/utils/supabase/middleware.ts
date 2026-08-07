@@ -1,6 +1,7 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { checkRateLimit } from '@/lib/redis-rate-limiter';
+import { verifySession, signSession, getSessionCookieOptions } from '@/lib/session-utils';
 
 // 🛡️ CONFIGURACIÓN DE RATE LIMITING
 const RATE_LIMIT_WINDOW_MS = 60000; // Ventana de 1 minuto
@@ -162,6 +163,19 @@ export async function updateSession(request: NextRequest, initialResponse?: Next
   // 🔄 Redirigir si ya está logueado e intenta ir al login
   if (path.startsWith('/login') && user) {
      return NextResponse.redirect(new URL('/dashboard', request.url));
+  }
+
+  // 🛡️ 3. SLIDING WINDOW: Re-firmar cookie de staff en cada request autenticado
+  //    Elimina el bug de expiración a las 12h que causaba SEC_VIOLATION en mutations.
+  //    No necesita DB query — re-firma datos existentes de la cookie vía HMAC.
+  if ((path.startsWith('/dashboard') || path.startsWith('/admin')) && user) {
+    const staffCookie = request.cookies.get('hospeda_staff_session');
+    if (staffCookie) {
+      const session = verifySession(staffCookie.value);
+      if (session) {
+        supabaseResponse.cookies.set('hospeda_staff_session', signSession(session), getSessionCookieOptions());
+      }
+    }
   }
 
   return supabaseResponse;
