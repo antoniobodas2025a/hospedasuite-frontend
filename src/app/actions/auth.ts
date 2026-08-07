@@ -45,6 +45,9 @@ export async function login(formData: FormData) {
         hotel_id: staffRecord.hotel_id,
       });
       cookieStore.set('hospeda_staff_session', signedSession, getSessionCookieOptions());
+    } else {
+      console.error(`🛡️ [AUTH] Usuario ${user.id} sin staff record. Redirigiendo a onboarding.`);
+      redirect('/software/onboarding');
     }
   }
 

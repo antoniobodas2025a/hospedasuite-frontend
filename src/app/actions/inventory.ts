@@ -2,8 +2,7 @@
 
 import { revalidatePath } from 'next/cache';
 import { RoomSchema } from '@/lib/validations/inventory';
-import { requireHotelAccess } from '@/lib/tenant-guard';
-import { cookies } from 'next/headers';
+import { getCurrentHotel } from '@/lib/hotel-context';
 
 // ============================================================================
 /**
@@ -12,10 +11,13 @@ import { cookies } from 'next/headers';
  */
 export async function saveRoomAction(hotelId: string, data: any, roomId?: string) {
   try {
-    // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error } = await requireHotelAccess(hotelId, (await cookies()).get('hospeda_staff_session')?.value);
-    if (!allowed) {
-      throw new Error(`SEC_VIOLATION: ${error}`);
+    // 🛡️ TENANT GUARD: Verify hotel ownership via Supabase auth (unified with delete/regenerate)
+    const hotel = await getCurrentHotel();
+    if (!hotel) {
+      throw new Error("AUTH_ERROR: Sesión administrativa no válida.");
+    }
+    if (hotel.id !== hotelId) {
+      throw new Error("SEC_VIOLATION: Intento de alteración de nodo externo o inexistente.");
     }
 
     const { supabaseAdmin } = await import('@/lib/supabase-admin');

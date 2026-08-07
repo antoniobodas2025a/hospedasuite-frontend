@@ -3,7 +3,7 @@ import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { cache } from 'react';
 import type { Hotel } from '@/types';
-import { verifySession } from '@/lib/session-utils';
+import { verifySession, signSession, getSessionCookieOptions } from '@/lib/session-utils';
 import type { StaffSession } from '@/lib/session-utils';
 
 // Memoización de la solicitud para evitar redundancia de I/O en la misma renderización (RSC)
@@ -30,7 +30,7 @@ export const getCurrentHotel = cache(async (): Promise<Hotel> => {
   // Esto funciona independientemente de owner_id
   let hotelQuery = supabase
     .from('staff')
-    .select('hotel_id, hotels(*)')
+    .select('id, name, role, hotel_id, hotels(*)')
     .eq('user_id', user.id);
 
   if (activeTenantId) {
@@ -64,6 +64,35 @@ export const getCurrentHotel = cache(async (): Promise<Hotel> => {
     console.warn(`⚠️ [HotelContext] Identidad ${user.id} validada sin propiedad vinculada.`);
     // Redirección determinista al embudo de creación (Onboarding)
     redirect('/software/onboarding'); 
+  }
+
+  // 5. 🛡️ SLIDING WINDOW: Re-firmar cookie de staff en cada page load
+  //    Elimina el bug de expiración a las 12h que causaba SEC_VIOLATION en mutations.
+  //    staffRecord is guaranteed non-null here because hotel was resolved from it above.
+  const staff = staffRecord!;
+  const staffCookie = cookieStore.get('hospeda_staff_session');
+  if (staffCookie) {
+    const existingSession = verifySession(staffCookie.value);
+    if (existingSession && existingSession.hotel_id === hotel.id) {
+      // Cookie válida — re-firmar extendiendo maxAge
+      cookieStore.set('hospeda_staff_session', signSession(existingSession), getSessionCookieOptions());
+    } else {
+      // Cookie corrupta o hotel mismatch — regenerar desde staff record
+      cookieStore.set('hospeda_staff_session', signSession({
+        id: staff.id,
+        name: staff.name || user.email || '',
+        role: staff.role || 'admin',
+        hotel_id: hotel.id,
+      }), getSessionCookieOptions());
+    }
+  } else {
+    // Cookie ausente — crear nueva desde el staff record de Supabase
+    cookieStore.set('hospeda_staff_session', signSession({
+      id: staff.id,
+      name: staff.name || user.email || '',
+      role: staff.role || 'admin',
+      hotel_id: hotel.id,
+    }), getSessionCookieOptions());
   }
 
   return hotel;

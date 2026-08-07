@@ -498,7 +498,7 @@ export async function verifyBookingAction(bookingId: string) {
     }
 
     // 🛡️ TENANT GUARD: Verify hotel ownership via staff session
-    const { allowed, error: guardError } = await requireHotelAccess(booking.hotel_id);
+    const { allowed, error: guardError } = await requireHotelAccess(booking.hotel_id, (await cookies()).get('hospeda_staff_session')?.value);
     if (!allowed) {
       return { success: false, error: guardError };
     }
