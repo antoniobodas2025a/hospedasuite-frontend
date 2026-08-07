@@ -26,6 +26,28 @@ export async function login(formData: FormData) {
     return { success: false, message: error.message };
   }
 
+  // Create staff session cookie for dashboard access
+  const { data: { user } } = await supabase.auth.getUser();
+  if (user) {
+    // Find user's hotel via staff table
+    const { data: staffRecord } = await supabase
+      .from('staff')
+      .select('id, name, role, hotel_id')
+      .eq('user_id', user.id)
+      .maybeSingle();
+    
+    if (staffRecord) {
+      const cookieStore = await cookies();
+      const signedSession = signSession({
+        id: staffRecord.id,
+        name: staffRecord.name || user.email || '',
+        role: staffRecord.role || 'admin',
+        hotel_id: staffRecord.hotel_id,
+      });
+      cookieStore.set('hospeda_staff_session', signedSession, getSessionCookieOptions());
+    }
+  }
+
   revalidatePath('/', 'layout');
   redirect('/dashboard');
 }
