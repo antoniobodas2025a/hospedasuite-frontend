@@ -469,7 +469,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
                   isDragging ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/10 hover:border-indigo-500/40'
                 }`}>
                   <Plus size={16} className="text-zinc-500" />
-                  <input type="file" multiple accept="image/*" className="hidden" onChange={handleImages} />
+                  <input type="file" multiple accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImages} />
                 </label>
               )}
             </div>
