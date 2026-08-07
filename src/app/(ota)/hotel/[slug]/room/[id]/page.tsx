@@ -96,7 +96,7 @@ export default async function RoomDetailPage({
   const safeJsonLd = JSON.stringify(jsonLd).replace(/<\//g, '<\\/');
 
   return (
-    <main className="min-h-screen bg-background text-foreground">
+    <main className="min-h-screen bg-background text-foreground overflow-x-hidden">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: safeJsonLd }}
