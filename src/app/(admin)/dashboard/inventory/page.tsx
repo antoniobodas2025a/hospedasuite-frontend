@@ -14,7 +14,7 @@ export default async function InventoryPage() {
   // 🛡️ RECOLECCIÓN DE DATOS: Extracción determinista ordenada por nomenclatura
   const { data: rooms, error } = await supabase
     .from('rooms')
-    .select('id, hotel_id, name, capacity, price, status, description, gallery, amenities, ical_import_url, size_sqm, bed_type, beds, created_at, updated_at')
+    .select('id, hotel_id, name, capacity, price, status, description, gallery, amenities, ical_import_url, size_sqm, bed_type, beds')
     .eq('hotel_id', hotel.id)
     .order('name', { ascending: true });
 
