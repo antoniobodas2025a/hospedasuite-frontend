@@ -29,7 +29,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
     if (!user) return { success: false, error: 'No autenticado' };
 
     // Get consent metadata (IP, user agent)
-    const headersList = headers();
+    const headersList = await headers();
     const consentIp = headersList.get('x-forwarded-for') || headersList.get('x-real-ip') || null;
     const consentUserAgent = headersList.get('user-agent') || null;
     const termsVersion = 'v1.0';
