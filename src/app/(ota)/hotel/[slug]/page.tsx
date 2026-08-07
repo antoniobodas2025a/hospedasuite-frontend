@@ -9,6 +9,7 @@ import { MapPin, Star } from "lucide-react";
 import type { Metadata } from "next";
 import { Suspense } from "react";
 import AvailabilitySearchBar from "@/components/ota/AvailabilitySearchBar";
+import HotelAmenitiesStrip from "@/components/ota/HotelAmenitiesStrip";
 import HeroGallery from "@/components/ota/HeroGallery";
 import CategorizedHeroGallery from "@/components/ota/CategorizedHeroGallery";
 import { categorizedGalleryFlag } from "@/lib/flags";
@@ -277,6 +278,11 @@ export default async function ChannelHotelDetailPage({
 					<AvailabilitySearchBar sticky navSections={navSections} primaryColor={hotel.primary_color} />
 				</div>
 			</div>
+
+			{/* Hotel Amenities Strip — visible before rooms */}
+			{hotel.hotel_amenities && hotel.hotel_amenities.length > 0 && (
+				<HotelAmenitiesStrip amenities={hotel.hotel_amenities} />
+			)}
 
 			{/* Main Content */}
 			<div className="max-w-6xl mx-auto px-6 pt-8">
