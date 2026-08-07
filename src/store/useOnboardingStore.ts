@@ -426,26 +426,11 @@ export const useOnboardingStore = create<OnboardingState>((set) => ({
 				errors.push("Necesitas al menos 1 habitación");
 			} else {
 				state.rooms.forEach((room, i) => {
-					// Validate structural fields only; imagePreviews are blob: URLs
-					// that will be replaced by real R2 URLs during provisioning.
-					// URL format validation happens at provisioning time (server-side).
-					const result = roomDraftSchema.safeParse({
-						id: room.id,
-						name: room.name,
-						price: room.price,
-						amenities: room.amenities || [],
-						imageUrls: [], // Real URLs don't exist yet
-					});
-					if (!result.success) {
-						result.error.issues.forEach((issue) => {
-							errors.push(`Habitación ${i + 1}: ${issue.message}`);
-						});
+					if (!room.name || room.name.trim().length < 2) {
+						errors.push(`Habitación ${i + 1}: el nombre es requerido`);
 					}
-					// Enforce at least 1 image per room
-					if (room.imageFiles.length === 0) {
-						errors.push(
-							`Habitación ${i + 1} (${room.name}): necesita al menos 1 foto`,
-						);
+					if (!room.price || room.price < 1) {
+						errors.push(`Habitación ${i + 1}: el precio debe ser mayor a 0`);
 					}
 				});
 			}

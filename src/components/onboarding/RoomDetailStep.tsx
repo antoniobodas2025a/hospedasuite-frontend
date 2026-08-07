@@ -426,68 +426,9 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           />
         </div>
 
-        {/* Photos — Drag & Drop */}
-        <div className={isTemplate ? 'opacity-50 pointer-events-none' : ''}>
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-[10px] font-bold text-zinc-500 uppercase tracking-widest">{t('photosLabel')} ({room.imagePreviews.length}/5)</p>
-            {Object.values(categorizedImages).some(arr => arr.length > 0) && room.imagePreviews.length < 5 && (
-              <motion.button
-                type="button"
-                onClick={() => setIsGalleryPickerOpen(true)}
-                whileTap={{ scale: 0.95 }}
-                className="flex items-center gap-1 px-2 py-1 text-[10px] font-medium text-indigo-400 hover:text-indigo-300 hover:bg-indigo-500/10 rounded-md transition-all"
-              >
-                <Copy size={10} />
-                Copiar de galería
-              </motion.button>
-            )}
-          </div>
-          {room.imagePreviews.length > 0 ? (
-            <div
-              className="grid grid-cols-5 gap-2"
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              {room.imagePreviews.map((src, i) => (
-                <div key={i} className="relative group aspect-[4/3]">
-                  <Image src={src} alt="" fill className="object-cover rounded-[var(--radius-squircle-md)] border border-white/10" />
-                  <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors rounded-[var(--radius-squircle-md)]" />
-                  <button
-                    type="button"
-                    onClick={() => removeRoomImage(room.id, i)}
-                    className="absolute top-1 right-1 p-1 rounded-full bg-red-500/90 text-white opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-500"
-                    aria-label="Remove image"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              ))}
-              {room.imagePreviews.length < 5 && (
-                <label className={`flex flex-col items-center justify-center aspect-[4/3] border-2 border-dashed rounded-[var(--radius-squircle-md)] cursor-pointer transition-all ${
-                  isDragging ? 'border-indigo-500 bg-indigo-500/10' : 'border-white/10 hover:border-indigo-500/40'
-                }`}>
-                  <Plus size={16} className="text-zinc-500" />
-                  <input type="file" multiple accept="image/*" className="absolute inset-0 opacity-0 cursor-pointer" onChange={handleImages} />
-                </label>
-              )}
-            </div>
-          ) : (
-            <label
-              className={`flex flex-col items-center justify-center w-full h-24 border-2 border-dashed rounded-[var(--radius-squircle-lg)] cursor-pointer transition-all ${
-                isDragging ? 'border-indigo-500 bg-indigo-500/10 scale-[1.01]' : 'border-white/10 hover:border-indigo-500/40'
-              }`}
-              onDragOver={handleDragOver}
-              onDragEnter={handleDragEnter}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <UploadCloud className={`mb-1 transition-colors ${isDragging ? 'text-indigo-400' : 'text-zinc-600'}`} size={20} />
-              <p className="text-[10px] text-zinc-500 font-medium">{isDragging ? 'Suelta las fotos acá' : 'Arrastra fotos acá o haz clic'}</p>
-              <input type="file" multiple accept="image/*" className="hidden" onChange={handleImages} />
-            </label>
-          )}
+        {/* Photos — se configuran desde el dashboard */}
+        <div className="p-3 bg-indigo-500/10 border border-indigo-500/20 rounded-[var(--radius-squircle-lg)] text-xs text-indigo-300 text-center">
+          📸 Las fotos de la habitación se agregan desde el <strong>Dashboard → Inventario</strong> después de activar tu propiedad.
         </div>
 
         {/* Amenities — Comodidades generales */}
