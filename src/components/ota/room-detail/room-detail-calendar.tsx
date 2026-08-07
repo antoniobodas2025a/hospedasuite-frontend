@@ -122,7 +122,7 @@ export function RoomDetailCalendar({
               <span className="text-3xl font-black text-foreground">
                 ${formatPrice(output.pricePerNight)}
               </span>
-              <span className="text-sm text-muted-foreground">{t('ota.roomDetail.perNight')}</span>
+              <span className="text-sm text-muted-foreground truncate">{t('ota.roomDetail.perNight')}</span>
             </div>
             {output.weekendPrice > 0 && output.weekendPrice !== output.pricePerNight && (
               <p className="text-xs text-muted-foreground">

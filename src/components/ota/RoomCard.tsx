@@ -340,12 +340,12 @@ function RoomCardInner({
             <div className="flex justify-between items-start mb-3">
               <h4 className="text-2xl font-bold text-foreground tracking-tight">{room.name}</h4>
             <div className="flex flex-col items-end gap-1">
-              <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
-                <Users size={12} /> Max {room.capacity}
+              <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1 max-w-[120px] truncate">
+                <Users size={12} className="shrink-0" /> Max {room.capacity}
               </span>
               {room.beds && room.beds > 0 && (
-                <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
-                  <Bed size={12} /> {formatBedType(room.bed_type, room.beds)}
+                <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1 max-w-[140px] truncate">
+                  <Bed size={12} className="shrink-0" /> {formatBedType(room.bed_type, room.beds)}
                 </span>
               )}
             </div>
