@@ -153,7 +153,7 @@ export function RoomDetailClient({ output }: RoomDetailClientProps) {
       >
         {state.state === 'loading' && <RoomDetailSkeleton />}
         {isMainState && (
-          <div className="p-4 lg:p-6 pb-8">
+          <div className="p-4 lg:p-6 pb-8 overflow-x-hidden max-w-full">
             <div className="space-y-6 lg:space-y-8">
               <RoomDetailGallery
                 output={effectiveOutput}

@@ -242,7 +242,7 @@ export function RoomDetailCalendar({
       {/* Desktop sticky sidebar + mobile inline card */}
       <div
         data-testid="room-detail-calendar-sidebar"
-        className="lg:sticky lg:top-6 lg:self-start"
+        className="lg:sticky lg:top-6 lg:self-start max-w-full overflow-x-hidden"
       >
         <GlassCard className={cardClasses}>{calendarContent}</GlassCard>
       </div>
