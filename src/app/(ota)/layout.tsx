@@ -31,7 +31,7 @@ export async function generateMetadata(): Promise<Metadata> {
 
 export default function ChannelLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div data-theme="ota" className={`${calistoga.variable} ${lora.variable} font-sans bg-background text-foreground min-h-screen`}>
+    <div data-theme="ota" className={`${calistoga.variable} ${lora.variable} font-sans bg-background text-foreground min-h-screen overflow-x-hidden`}>
       <AttributionTracker />
       {children}
     </div>

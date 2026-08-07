@@ -173,7 +173,7 @@ export default async function ChannelHotelDetailPage({
 
 
 	return (
-		<main className="min-h-screen bg-background text-foreground pb-24 font-sans selection:bg-brand-500/30">
+		<main className="min-h-screen bg-background text-foreground pb-24 font-sans selection:bg-brand-500/30 overflow-x-hidden">
 			{/* SEO Structured Data */}
 			<HotelJsonLd hotel={hotel} reviewStats={reviewStats ?? undefined} />
 
