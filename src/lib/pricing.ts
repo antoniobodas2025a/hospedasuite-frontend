@@ -6,25 +6,40 @@
  *
  * Colombia tax context:
  * - Régimen Simplificado: tax_rate = 0 (most glampings/boutique hotels)
- * - Régimen Ordinario: tax_rate = 0.19 (hotels with IVA registration)
+ * - Régimen Responsable de IVA: tax_rate = 0.19 (hotels with IVA registration)
+ *
+ * B2C pricing model (Colombian consumer law):
+ * - The price the hotel enters IS the final price the guest pays (IVA included).
+ * - For responsible hotels, IVA is EXTRACTED internally (gross / 1.19), not added.
+ * - For simplified hotels, no IVA applies (price stays as-is).
  */
 
-export const DEFAULT_TAX_RATE = 0.19;
+/** IVA rate for "Responsable de IVA" hotels. */
+export const RESPONSIBLE_IVA_RATE = 0.19;
+
+/** @deprecated Use RESPONSIBLE_IVA_RATE. Kept for backward compatibility. */
+export const DEFAULT_TAX_RATE = RESPONSIBLE_IVA_RATE;
+
+// ============================================================================
+// CORE TAX FUNCTIONS
+// ============================================================================
 
 /**
  * Calculates tax amount for a given subtotal and tax rate.
+ * ADDS tax to a net base — use for supplier-side (net → gross).
+ * For consumer-side (gross → net extraction), use extractTaxFromGross().
  */
-export function calculateTaxAmount(subtotal: number, taxRate: number = DEFAULT_TAX_RATE): number {
+export function calculateTaxAmount(subtotal: number, taxRate: number = RESPONSIBLE_IVA_RATE): number {
   return Math.round(subtotal * taxRate);
 }
 
 /**
- * Calculates total price with tax breakdown.
+ * Calculates total price with tax breakdown (net → gross).
  * Returns an object with subtotal, tax, total, and hasTax flag.
  */
 export function calculateTotalWithTax(
   basePrice: number,
-  taxRate: number = DEFAULT_TAX_RATE
+  taxRate: number = RESPONSIBLE_IVA_RATE
 ): {
   subtotal: number;
   tax: number;
@@ -37,13 +52,57 @@ export function calculateTotalWithTax(
 }
 
 /**
+ * Extracts IVA from a gross (final) price — the B2C Colombian model.
+ *
+ * For "Responsable de IVA" hotels, the entered price is the final price
+ * the guest pays. This function extracts the net base and IVA portion.
+ *
+ * Example: 300,000 COP at 19% → net: 252,101, tax: 47,899
+ */
+export function extractTaxFromGross(
+  grossPrice: number,
+  taxRate: number
+): {
+  gross: number;
+  net: number;
+  tax: number;
+  hasTax: boolean;
+} {
+  if (taxRate <= 0) {
+    return { gross: grossPrice, net: grossPrice, tax: 0, hasTax: false };
+  }
+  const net = Math.round(grossPrice / (1 + taxRate));
+  const tax = grossPrice - net;
+  return { gross: grossPrice, net, tax, hasTax: true };
+}
+
+/**
+ * Returns the effective tax rate for a hotel, centralizing the fallback logic.
+ *
+ * - If tax_rate is an explicit number, use it (0 for simplified, 0.19 for responsible).
+ * - If tax_rate is NULL/undefined, fall back to tax_regime:
+ *   - 'responsible' → RESPONSIBLE_IVA_RATE (0.19)
+ *   - anything else → 0 (simplified = no IVA)
+ *
+ * This replaces all `?? 0.19` / `?? DEFAULT_TAX_RATE` fallbacks across the codebase
+ * which incorrectly charged 19% IVA to simplified hotels with null tax_rate.
+ */
+export function getEffectiveTaxRate(
+  taxRate: number | null | undefined,
+  taxRegime?: string | null
+): number {
+  if (typeof taxRate === 'number') return taxRate;
+  return taxRegime === 'responsible' ? RESPONSIBLE_IVA_RATE : 0;
+}
+
+/**
  * Calculates price for multiple nights with tax breakdown.
  * Alias for calculateTotalWithTax with nights multiplier.
  */
 export function calculatePrice(
   basePrice: number,
   nights: number,
-  taxRate: number = DEFAULT_TAX_RATE
+  taxRate: number = RESPONSIBLE_IVA_RATE
 ): {
   subtotal: number;
   tax: number;
@@ -63,7 +122,7 @@ export function formatPrice(amount: number): string {
 /**
  * Returns the tax label based on rate.
  */
-export function getTaxLabel(taxRate: number = DEFAULT_TAX_RATE): string {
+export function getTaxLabel(taxRate: number = RESPONSIBLE_IVA_RATE): string {
   return taxRate > 0 ? `IVA (${Math.round(taxRate * 100)}%)` : '';
 }
 
