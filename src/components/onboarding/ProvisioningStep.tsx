@@ -245,6 +245,7 @@ export default function ProvisioningStep() {
 					manualReceiptUrl: manualReceiptUrl,
 					manualPaymentMethod: manualPaymentMethod,
 				},
+				termsAccepted,
 			};
 
 			// ─── FASE 3: VALIDAR Y PROVISIONAR ─────────────────────────
