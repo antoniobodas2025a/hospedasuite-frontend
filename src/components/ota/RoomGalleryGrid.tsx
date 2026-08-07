@@ -473,17 +473,6 @@ function MobileCarousel({
 				</>
 			)}
 
-			{/* Counter pill */}
-			<div className="absolute top-3 right-3">
-				<span
-					data-testid="photo-counter"
-					className="inline-flex items-center gap-1.5 px-3 py-1.5 glass-pill text-white text-xs font-semibold shadow-lg"
-				>
-					<CameraIcon />
-					{t("ota.roomGallery.photoCounter", { current: activeIndex + 1, total: images.length })}
-				</span>
-			</div>
-
 			{/* Dots indicator */}
 			{images.length > 1 && (
 				<div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex items-center gap-1.5">
