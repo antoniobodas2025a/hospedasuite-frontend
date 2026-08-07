@@ -224,6 +224,7 @@ export async function executeOnboardingProvisioning(state: FullWizardState): Pro
       gallery_urls: flatGalleryUrls,
       main_image_url: mainImageUrl,
       amenities: state.settings.amenities,
+      hotel_amenities: state.settings.amenities,
       check_in_time: state.settings.checkInTime || '15:00',
       check_out_time: state.settings.checkOutTime || '11:00',
       cancellation_policy: state.settings.cancellationPolicy || null,
