@@ -278,19 +278,26 @@ export default function Sidebar({
 	const pathname = usePathname();
 	const [isShiftModalOpen, setIsShiftModalOpen] = useState(false);
 
-	const handleLogout = async () => {
-		try {
-			// Si hay usuario de Supabase (admin), logout global
-			// Si no, es staff — logout solo de cookie operativa
-			if (user) {
-				await logout();
-			} else {
-				await logoutStaff();
-			}
-		} catch (error) {
-			console.error("Error durante la terminación de sesión:", error);
-		}
-	};
+  const handleLogout = async () => {
+    try {
+      // Si hay usuario de Supabase (admin), logout global
+      // Si no, es staff — logout solo de cookie operativa
+      let result;
+      if (user) {
+        result = await logout();
+      } else {
+        result = await logoutStaff();
+      }
+      if (result?.success && result?.redirectUrl) {
+        // Dynamic import to avoid issues if useRouter isn't available in this context
+        const { useRouter } = await import('next/navigation');
+        // Can't use hooks here — fall back to window.location
+        window.location.href = result.redirectUrl;
+      }
+    } catch (error) {
+      console.error("Error durante la terminación de sesión:", error);
+    }
+  };
 
 	return (
 		<>

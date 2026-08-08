@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { X, Printer, Calculator, Wallet, Building, CreditCard, LogOut } from 'lucide-react';
 import { getShiftReportAction } from '@/app/actions/payments';
 import { logout, logoutStaff } from '@/app/actions/auth';
@@ -13,6 +14,7 @@ interface ShiftReportModalProps {
 export default function ShiftReportModal({ isOpen, onClose }: ShiftReportModalProps) {
   const [reportData, setReportData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const router = useRouter();
 
   useEffect(() => {
     if (isOpen) loadReport();
@@ -39,10 +41,15 @@ export default function ShiftReportModal({ isOpen, onClose }: ShiftReportModalPr
     try {
       // Intentamos logout global primero; si falla (sin sesión Supabase),
       // fallback a logout de staff
-      try {
-        await logout();
-      } catch {
-        await logoutStaff();
+      const result = await logout();
+      if (result.success && result.redirectUrl) {
+        router.push(result.redirectUrl);
+        return;
+      }
+      // Fallback a staff logout
+      const staffResult = await logoutStaff();
+      if (staffResult.success && staffResult.redirectUrl) {
+        router.push(staffResult.redirectUrl);
       }
     } catch (error) {
       console.error('Error durante el cierre de sesión:', error);

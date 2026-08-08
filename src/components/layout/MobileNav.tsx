@@ -250,10 +250,14 @@ export default function MobileNav({ subscriptionPlan = 'starter', staffIdentity,
     try {
       // Intentamos logout global primero; si falla (sin sesión Supabase),
       // fallback a logout de staff
-      try {
-        await logout();
-      } catch {
-        await logoutStaff();
+      const result = await logout();
+      if (result?.success && result?.redirectUrl) {
+        window.location.href = result.redirectUrl;
+        return;
+      }
+      const staffResult = await logoutStaff();
+      if (staffResult?.success && staffResult?.redirectUrl) {
+        window.location.href = staffResult.redirectUrl;
       }
     } catch (error) {
       console.error('Error durante la terminación de sesión:', error);

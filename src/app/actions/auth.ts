@@ -1,7 +1,6 @@
 'use server';
 
 import { revalidatePath } from 'next/cache';
-import { redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import { cookies } from 'next/headers';
 import { getCurrentHotel } from '@/lib/hotel-context';
@@ -67,7 +66,8 @@ export async function logout() {
   const cookieStore = await cookies();
   cookieStore.delete('hospeda_staff_session');
   
-  redirect('/login');
+  // Client-side navigation: evita race condition entre Set-Cookie y redirect()
+  return { success: true, redirectUrl: '/login' };
 }
 
 // ------------------------------------------------------------------
@@ -77,7 +77,7 @@ export async function logoutStaff() {
   const cookieStore = await cookies();
   cookieStore.delete('hospeda_staff_session');
   
-  redirect('/staff-login');
+  return { success: true, redirectUrl: '/staff-login' };
 }
 
 // ------------------------------------------------------------------

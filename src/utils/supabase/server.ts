@@ -17,9 +17,13 @@ export async function createClient() {
             cookiesToSet.forEach(({ name, value, options }) =>
               cookieStore.set(name, value, options),
             );
-          } catch {
-            // El método setAll fue llamado desde un Server Component.
-            // Esto se puede ignorar si tienes un middleware refrescando la sesión.
+          } catch (e) {
+            // Token refresh can fail in Server Components (read-only cookies).
+            // In production, the middleware handles proactive token refresh.
+            // Log for debugging auth issues in Server Actions.
+            if (process.env.NODE_ENV !== 'production') {
+              console.warn('[Supabase] Token refresh skipped (non-critical):', e instanceof Error ? e.message : e);
+            }
           }
         },
       },

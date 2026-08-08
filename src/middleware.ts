@@ -69,7 +69,7 @@ function detectLocale(request: NextRequest): string {
   return DEFAULT_LOCALE;
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   // 1. Detect and set locale cookie (no redirect)
   const locale = detectLocale(request);
   const response = await updateSession(request);
