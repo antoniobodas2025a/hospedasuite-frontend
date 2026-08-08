@@ -148,6 +148,15 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                   key={room.id} layout initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} whileHover={{ y: -5 }}
                   className='glass-card rounded-[var(--radius-squircle-3xl)] p-6 border border-border shadow-2xl relative overflow-hidden group flex flex-col justify-between min-h-[340px]'
                 >
+                  {/* Delete button — top-right corner, only on hover */}
+                  <button
+                    onClick={(e) => { e.stopPropagation(); onDeleteRoom(room as Room); }}
+                    className="absolute top-3 right-3 z-30 p-2 rounded-[var(--radius-squircle-md)] text-muted-foreground/40 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
+                    title="Eliminar habitación"
+                  >
+                    <Trash2 className="size-4 stroke-[2]" />
+                  </button>
+
                   {/* BACKGROUND LAYER (Deep Glass) */}
                   {coverImage ? (
                     <>
@@ -170,15 +179,6 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                         </span>
                       </div>
                     </div>
-
-                    {/* Delete button — subtle, top-right */}
-                    <button
-                      onClick={(e) => { e.stopPropagation(); onDeleteRoom(room as Room); }}
-                      className="absolute top-1 right-1 p-2 rounded-[var(--radius-squircle-md)] text-muted-foreground/30 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20"
-                      title="Eliminar habitación"
-                    >
-                      <Trash2 className="size-4 stroke-[2]" />
-                    </button>
 
                     <div className="mt-8">
                       <h3 className='text-2xl font-bold text-white tracking-tighter mb-1 drop-shadow-md'>{room.name}</h3>
