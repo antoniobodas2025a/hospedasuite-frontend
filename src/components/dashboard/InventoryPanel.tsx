@@ -2,13 +2,14 @@
 
 import React, { useState, useMemo, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { BedDouble, Users, DollarSign, Plus, Edit, Link2, RefreshCw, Search, Filter, Image as ImageIcon, Copy, KeyRound, Check } from 'lucide-react';
+import { BedDouble, Users, DollarSign, Plus, Edit, Link2, RefreshCw, Search, Filter, Image as ImageIcon, Copy, KeyRound, Check, Trash2 } from 'lucide-react';
 import { useInventory } from '@/hooks/useInventory';
 import type { Room } from '@/types';
 import { syncChannelManagerAction } from '@/app/actions/channel-manager';
-import { regenerateIcalTokenAction } from '@/app/actions/inventory';
+import { regenerateIcalTokenAction, deleteRoomAction } from '@/app/actions/inventory';
 import EmptyState from '@/components/ui/EmptyState'; 
 import RoomEditorModal from './RoomEditorModal';
+import DeleteRoomModal from './DeleteRoomModal';
 import { cn } from '@/lib/utils';
 
 // ==========================================
@@ -34,6 +35,7 @@ interface InventoryPanelViewProps {
   regeneratingId: string | null;
   onCopyUrl: (roomId: string, url: string) => void;
   onRegenerateToken: (roomId: string) => void;
+  onDeleteRoom: (room: Room) => void;
 }
 
 const getStatusConfig = (status: string) => {
@@ -74,7 +76,7 @@ const InventorySkeleton = () => (
 
 const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
   rooms, isLoading, searchTerm, setSearchTerm, filterStatus, setFilterStatus, isSyncing, onSync, onOpenEditor,
-  copiedId, regeneratingId, onCopyUrl, onRegenerateToken
+  copiedId, regeneratingId, onCopyUrl, onRegenerateToken, onDeleteRoom
 }) => {
   return (
     <div className='space-y-8 pb-20 font-poppins text-foreground'>
@@ -168,6 +170,15 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                         </span>
                       </div>
                     </div>
+
+                    {/* Delete button — subtle, top-right */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeleteRoom(room as Room); }}
+                      className="absolute top-1 right-1 p-2 rounded-[var(--radius-squircle-md)] text-muted-foreground/30 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200 z-20"
+                      title="Eliminar habitación"
+                    >
+                      <Trash2 className="size-4 stroke-[2]" />
+                    </button>
 
                     <div className="mt-8">
                       <h3 className='text-2xl font-bold text-white tracking-tighter mb-1 drop-shadow-md'>{room.name}</h3>
@@ -270,6 +281,9 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
   const [selectedRoom, setSelectedRoom] = useState<Room | undefined>(undefined);
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [regeneratingId, setRegeneratingId] = useState<string | null>(null);
+  const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
+  const [roomToDelete, setRoomToDelete] = useState<Room | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const filteredRooms = useMemo(() => {
     const safeRooms = Array.isArray(localRooms) ? localRooms : [];
@@ -303,6 +317,27 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
     }
     setRegeneratingId(null);
   };
+
+  const handleOpenDeleteModal = (room: Room) => {
+    setRoomToDelete(room);
+    setIsDeleteModalOpen(true);
+  };
+
+  const handleConfirmDelete = async () => {
+    if (!roomToDelete) return;
+    setIsDeleting(true);
+    const result = await deleteRoomAction(roomToDelete.id);
+    if (result.success) {
+      // Optimistic removal from local state
+      setLocalRooms((prev) => prev.filter((r) => r.id !== roomToDelete.id));
+      setIsDeleteModalOpen(false);
+      setRoomToDelete(null);
+      await syncRooms(); // Sync with server
+    } else {
+      alert(`Error al eliminar: ${result.error}`);
+    }
+    setIsDeleting(false);
+  };
   
   const handleCloseEditor = async (needsRefresh?: boolean) => {
     setIsEditorOpen(false); 
@@ -318,8 +353,17 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
         rooms={filteredRooms} isLoading={showLoading} searchTerm={searchTerm} setSearchTerm={setSearchTerm}
         filterStatus={filterStatus} setFilterStatus={setFilterStatus} isSyncing={isSyncing} onSync={handleManualSync} onOpenEditor={handleOpenEditor}
         copiedId={copiedId} regeneratingId={regeneratingId} onCopyUrl={handleCopyUrl} onRegenerateToken={handleRegenerateToken}
+        onDeleteRoom={handleOpenDeleteModal}
       />
       {isEditorOpen && <RoomEditorModal hotelId={hotelId} initialData={selectedRoom} onClose={handleCloseEditor} />}
+      {isDeleteModalOpen && roomToDelete && (
+        <DeleteRoomModal
+          roomName={roomToDelete.name}
+          onConfirm={handleConfirmDelete}
+          onClose={() => { setIsDeleteModalOpen(false); setRoomToDelete(null); }}
+          isDeleting={isDeleting}
+        />
+      )}
     </>
   );
 }
