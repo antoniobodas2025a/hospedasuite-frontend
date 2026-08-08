@@ -1,7 +1,8 @@
 'use client';
 
 import { login } from '@/app/actions/auth';
-import { useState, useActionState } from 'react';
+import { useState, useActionState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { useFormStatus } from 'react-dom';
 import { Loader2, ShieldCheck, Eye, EyeOff } from 'lucide-react';
 
@@ -25,6 +26,14 @@ function SubmitButton() {
 export default function LoginPage() {
   const [state, formAction] = useActionState(loginAction, null);
   const [showPassword, setShowPassword] = useState(false);
+  const router = useRouter();
+
+  // Client-side navigation: avoids Set-Cookie / redirect() race condition
+  useEffect(() => {
+    if (state && state.success && (state as any).redirectUrl) {
+      router.push((state as any).redirectUrl);
+    }
+  }, [state, router]);
 
   const error = state && !state.success ? state.message : null;
 

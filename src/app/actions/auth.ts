@@ -46,13 +46,14 @@ export async function login(formData: FormData) {
       });
       cookieStore.set('hospeda_staff_session', signedSession, getSessionCookieOptions());
     } else {
-      console.error(`🛡️ [AUTH] Usuario ${user.id} sin staff record. Redirigiendo a onboarding.`);
-      redirect('/software/onboarding');
+      // Sin staff record → onboarding (client-side navigation, evita bug de redirect + cookies)
+      return { success: true, redirectUrl: '/software/onboarding' };
     }
   }
 
   revalidatePath('/', 'layout');
-  redirect('/dashboard');
+  // Client-side navigation: evita race condition entre Set-Cookie y redirect()
+  return { success: true, redirectUrl: '/dashboard' };
 }
 
 // ------------------------------------------------------------------
