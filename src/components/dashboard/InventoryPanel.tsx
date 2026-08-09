@@ -148,15 +148,6 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                   key={room.id} layout initial={{ opacity: 0, scale: 0.95, y: 20 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.95 }} whileHover={{ y: -5 }}
                   className='glass-card rounded-[var(--radius-squircle-3xl)] p-6 border border-border shadow-2xl relative overflow-hidden group flex flex-col justify-between min-h-[340px]'
                 >
-                  {/* Delete button — top-right corner, only on hover */}
-                  <button
-                    onClick={(e) => { e.stopPropagation(); onDeleteRoom(room as Room); }}
-                    className="absolute top-3 right-3 z-30 p-2 rounded-[var(--radius-squircle-md)] text-muted-foreground/40 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200"
-                    title="Eliminar habitación"
-                  >
-                    <Trash2 className="size-4 stroke-[2]" />
-                  </button>
-
                   {/* BACKGROUND LAYER (Deep Glass) */}
                   {coverImage ? (
                     <>
@@ -244,9 +235,18 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
                     </div>
                   </div>
 
-                  <button onClick={() => onOpenEditor(room)} className='relative z-10 w-full py-4 glass-card hover:bg-foreground hover:text-black text-foreground font-bold text-sm transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]'>
-                    <Edit className='size-4 stroke-[2]' /> Editar Habitación
-                  </button>
+                  <div className="relative z-10 flex gap-2">
+                    <button onClick={() => onOpenEditor(room)} className='flex-1 py-4 glass-card hover:bg-foreground hover:text-black text-foreground font-bold text-sm transition-all flex items-center justify-center gap-2 group-hover:shadow-[0_0_30px_rgba(255,255,255,0.2)]'>
+                      <Edit className='size-4 stroke-[2]' /> Editar
+                    </button>
+                    <button
+                      onClick={(e) => { e.stopPropagation(); onDeleteRoom(room as Room); }}
+                      className="py-4 px-4 glass-card text-muted-foreground/40 hover:text-rose-400 hover:bg-rose-500/10 opacity-0 group-hover:opacity-100 transition-all duration-200 flex items-center justify-center"
+                      title="Eliminar habitación"
+                    >
+                      <Trash2 className="size-4 stroke-[2]" />
+                    </button>
+                  </div>
                 </motion.div>
               );
             })}
