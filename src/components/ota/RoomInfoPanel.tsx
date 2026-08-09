@@ -101,26 +101,12 @@ export function RoomInfoPanel({
 								const entry = getRoomAmenityById(id);
 								if (!entry) return null;
 
-								const template = entry.storyTitle
-									? {
-											icon: entry.icon,
-											title: entry.storyTitle,
-											story: isDesktop
-												? entry.storyDescription || t("ota.showcase.premiumService")
-												: "",
-										}
-									: {
-											icon: entry.icon,
-											title: isDesktop ? entry.label.toUpperCase() : entry.label,
-											story: isDesktop ? t("ota.showcase.premiumService") : "",
-										};
-
 								return (
 									<AmenityGlass
 										key={idx}
-										icon={template.icon}
-										title={template.title}
-										story={template.story}
+										icon={entry.icon}
+										title={entry.label}
+										story=""
 										compact={!isDesktop}
 									/>
 								);
