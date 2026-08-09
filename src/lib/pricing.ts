@@ -155,9 +155,11 @@ function toISODate(date: Date): string {
 /**
  * Builds a per-night pricing breakdown for a room stay.
  *
- * Uses the room's weekday price and an optional override weekend price.
+ * B2C Colombian model: pricePerNight and weekendPrice are FINAL prices
+ * (what the guest sees). IVA is extracted internally from the subtotal,
+ * not added on top. Per-night breakdown shows the gross (final) prices.
+ *
  * When no explicit weekend price is provided, it falls back to weekday * 1.2.
- * Tax is applied once on the subtotal using the configured tax rate.
  */
 export function buildRoomPricingBreakdown({
   pricePerNight,
@@ -204,17 +206,17 @@ export function buildRoomPricingBreakdown({
     current.setUTCDate(current.getUTCDate() + 1);
   }
 
-  const tax = calculateTaxAmount(subtotal, taxRate);
-  const total = subtotal + tax;
+  // B2C: extract IVA from the final price (subtotal = gross)
+  const { net, tax } = extractTaxFromGross(subtotal, taxRate);
 
   return {
     weekdayPrice,
     weekendPrice: effectiveWeekendPrice,
     weekdayNights,
     weekendNights,
-    subtotal,
-    tax,
-    total,
+    subtotal: net,     // base gravable (net of IVA) — for accounting
+    tax,               // IVA extracted from the final price
+    total: subtotal,   // final price = what the guest pays
     taxRate,
     breakdown,
   };
