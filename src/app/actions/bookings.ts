@@ -354,7 +354,6 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
       .eq('id', room.hotel_id)
       .single();
 
-    const hotelTaxRate = getEffectiveTaxRate(hotelData?.tax_rate, hotelData?.tax_regime);
     const maxExpected = Math.round(baseRate * 1.05); // 5% buffer above entered price
     const minExpected = Math.round(baseRate * 0.95); // 5% discount tolerance
 
@@ -488,7 +487,7 @@ export async function verifyBookingAction(bookingId: string) {
 
     const { data: booking, error } = await supabaseAdmin
       .from('bookings')
-      .select('id, status, total_price, check_in, check_out, source, room_id, hotel_id, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_rate, tax_regime), payments(method, status)')
+      .select('id, status, total_price, check_in, check_out, source, room_id, hotel_id, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_rate, tax_regime, address, phone), payments(method, status)')
       .eq('id', bookingId)
       .single();
 
@@ -531,6 +530,8 @@ export async function verifyBookingAction(bookingId: string) {
         roomName: (booking.rooms as any[])?.[0]?.name,
         hotelName: (booking.hotels as any[])?.[0]?.name,
         hotelSlug: (booking.hotels as any[])?.[0]?.slug,
+        hotelAddress: (booking.hotels as any[])?.[0]?.address || null,
+        hotelPhone: (booking.hotels as any[])?.[0]?.phone || null,
       },
     };
   } catch (error: unknown) {

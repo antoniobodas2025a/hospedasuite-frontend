@@ -107,6 +107,23 @@ export default async function BookingSuccessPage({
                 <p className="text-sm text-foreground/80 font-medium">{booking.hotelName}</p>
               </div>
             )}
+            {(booking.hotelAddress || booking.hotelPhone) && (
+              <div className="bg-brand-50/50 rounded-[var(--radius-squircle-lg)] p-4 border border-brand-100 space-y-2">
+                <p className="text-[10px] font-bold text-brand-600 uppercase tracking-widest">Detalles de Llegada</p>
+                {booking.hotelAddress && (
+                  <p className="text-sm text-foreground/80 flex items-start gap-2">
+                    <span className="mt-0.5 shrink-0">📍</span>
+                    {booking.hotelAddress}
+                  </p>
+                )}
+                {booking.hotelPhone && (
+                  <p className="text-sm text-foreground/80 flex items-start gap-2">
+                    <span className="mt-0.5 shrink-0">📞</span>
+                    {booking.hotelPhone}
+                  </p>
+                )}
+              </div>
+            )}
             {booking.roomName && (
               <div>
                 <p className="text-xs font-bold text-muted-foreground uppercase tracking-wider mb-1">Habitación</p>

@@ -40,6 +40,15 @@ function normalizeForSearch(str: string): string {
 		.trim();
 }
 
+/**
+ * Strip all non-alphanumeric characters — spaces, hyphens, dots.
+ * "Villa de Leyva" → "villadeleyva", "Santa Fe de Antioquia" → "santafedeantioquia"
+ * Used for forgiving matching: "villadeleyva" matches "Villa de Leyva".
+ */
+function normalizeSpaces(str: string): string {
+	return normalizeForSearch(str).replace(/[^a-z0-9]/g, '');
+}
+
 export interface LocationSuggestion {
 	city: string;
 	hotelCount: number;
@@ -87,12 +96,14 @@ export async function searchLocationsAction(
 
 		// Filter by query match (city, location, or address) — accent-insensitive
 		const normalizedQuery = normalizeForSearch(query);
+		const spaceFreeQuery = normalizeSpaces(query);
 		const results: LocationSuggestion[] = [];
 
-		// Match cities (accent-insensitive)
+		// Match cities (accent-insensitive + space-forgiving)
 		for (const [city, count] of cityMap.entries()) {
 			const normalizedCity = normalizeForSearch(city);
-			if (normalizedCity.includes(normalizedQuery)) {
+			const spaceFreeCity = normalizeSpaces(city);
+			if (normalizedCity.includes(normalizedQuery) || spaceFreeCity.includes(spaceFreeQuery)) {
 				results.push({ city, hotelCount: count });
 			}
 		}
@@ -153,6 +164,7 @@ export async function fetchChannelHotelsAction(
 		}
 
 		if (search) {
+			// Standard ilike matching (handles accents + case via Supabase)
 			query = query.or(
 				`name.ilike.%${search}%,location.ilike.%${search}%,city.ilike.%${search}%`,
 			);
@@ -160,25 +172,64 @@ export async function fetchChannelHotelsAction(
 
 		// Execute with retry on ETIMEDOUT (exponential backoff: 1s, 2s, 4s)
 		const result = await withRetry(async () => await query);
-		const { data: allHotels, error } = result;
+		let { data: allHotels } = result;
+		const { error } = result;
 
 		if (error) {
 			console.error("🚨 ERROR CRÍTICO DE SUPABASE EN Channel:", error.message);
 			throw new Error(error.message);
 		}
 
-		// 2. Client-side location filter (accent-insensitive)
+		// Fallback: if ilike returned no results but search could be space-free
+		// (e.g. "villadeleyva" vs "Villa de Leyva"), fetch all and filter client-side
+		let usedFallback = false;
+		if (search && (!allHotels || allHotels.length === 0)) {
+			const fallbackResult = await withRetry(async () =>
+				supabaseAdmin.from("hotels")
+					.select(`id, name, location, city, slug, status, main_image_url, description, category, type, rooms(price)`)
+					.eq("status", "active")
+			);
+			if (!fallbackResult.error && fallbackResult.data) {
+				allHotels = fallbackResult.data;
+				usedFallback = true;
+			}
+		}
+
+		// 2a. Client-side search filter — only when ilike returned 0 (fallback)
 		let filteredHotels = allHotels || [];
+		if (usedFallback && search) {
+			const normalizedSearch = normalizeForSearch(search);
+			const spaceFreeSearch = normalizeSpaces(search);
+			filteredHotels = filteredHotels.filter((h: any) => {
+				const name = normalizeForSearch(h.name || "");
+				const city = normalizeForSearch(h.city || "");
+				const loc = normalizeForSearch(h.location || "");
+				const nameSF = normalizeSpaces(h.name || "");
+				const citySF = normalizeSpaces(h.city || "");
+				const locSF = normalizeSpaces(h.location || "");
+				return (
+					name.includes(normalizedSearch) || city.includes(normalizedSearch) || loc.includes(normalizedSearch) ||
+					nameSF.includes(spaceFreeSearch) || citySF.includes(spaceFreeSearch) || locSF.includes(spaceFreeSearch)
+				);
+			});
+		}
+
+		// 2b. Client-side location filter (accent-insensitive + space-forgiving)
 		if (location) {
 			const normalizedLocation = normalizeForSearch(location);
+			const spaceFreeLocation = normalizeSpaces(location);
 			filteredHotels = filteredHotels.filter((h: any) => {
 				const city = normalizeForSearch(h.city || "");
 				const loc = normalizeForSearch(h.location || "");
 				const addr = normalizeForSearch(h.address || "");
+				const citySpaceFree = normalizeSpaces(h.city || "");
+				const locSpaceFree = normalizeSpaces(h.location || "");
 				return (
 					city.includes(normalizedLocation) ||
 					loc.includes(normalizedLocation) ||
-					addr.includes(normalizedLocation)
+					addr.includes(normalizedLocation) ||
+					citySpaceFree.includes(spaceFreeLocation) ||
+					locSpaceFree.includes(spaceFreeLocation)
 				);
 			});
 		}
