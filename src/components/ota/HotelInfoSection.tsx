@@ -1,9 +1,8 @@
 "use client";
 
-import { MapPin, Clock, ShieldAlert, Navigation, Phone, ChevronDown, ChevronUp } from 'lucide-react';
+import { MapPin, Clock, ShieldAlert } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import LocationCard from './LocationCard';
-import { useState } from 'react';
 
 interface HotelInfoSectionProps {
   hotelName: string;
@@ -32,7 +31,6 @@ export default function HotelInfoSection({
   longitude,
 }: HotelInfoSectionProps) {
   const t = useTranslations();
-  const [showDetails, setShowDetails] = useState(false);
 
   return (
     <div className="glass-card overflow-hidden">
@@ -68,49 +66,7 @@ export default function HotelInfoSection({
             </div>
           )}
 
-          {/* Toggle: Ver detalles de llegada (2 clics deliberados) */}
-          {phone && (
-            <button
-              type="button"
-              onClick={() => setShowDetails(!showDetails)}
-              className="flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors font-medium"
-              aria-expanded={showDetails}
-            >
-              {showDetails ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
-              {showDetails ? 'Ocultar detalles' : 'Ver detalles de llegada'}
-            </button>
-          )}
-
-          {/* Detalles ocultos — Dirección + Teléfono */}
-          {showDetails && (
-            <div className="space-y-4 animate-in fade-in slide-in-from-top-2 duration-200">
-              {/* Direccion exacta */}
-              {address && (
-                <div className="flex items-start gap-3">
-                  <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-brand-50 flex items-center justify-center shrink-0 border border-brand-100">
-                    <Navigation size={16} className="text-brand-500" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('ota.hotelInfo.address')}</p>
-                    <p className="text-sm text-foreground/80">{address}</p>
-                  </div>
-                </div>
-              )}
-
-              {/* Telefono */}
-              {phone && (
-                <div className="flex items-start gap-3">
-                  <div className="size-9 rounded-[var(--radius-squircle-lg)] bg-secondary/10 flex items-center justify-center shrink-0 border border-secondary/20">
-                    <Phone size={16} className="text-secondary" />
-                  </div>
-                  <div>
-                    <p className="text-xs font-bold text-muted-foreground uppercase tracking-widest mb-1">{t('ota.hotelInfo.contact')}</p>
-                    <p className="text-sm text-foreground/80">{phone}</p>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
+          {/* Detalles de llegada — solo visibles después del pago (página de confirmación) */}
         </div>
 
         {/* Columna derecha: Horarios + Politicas */}

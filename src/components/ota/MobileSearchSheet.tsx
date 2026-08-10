@@ -270,7 +270,7 @@ export default function MobileSearchSheet({
 						onLayoutMeasure={(_, layout) =>
 							setSheetHeight((layout as any)?.height || 600)
 						}
-						className="absolute bottom-0 left-0 right-0 max-h-[90dvh] flex flex-col bg-background rounded-t-[var(--radius-squircle-2xl)] shadow-2xl overflow-hidden"
+						className="absolute bottom-0 left-0 right-0 max-h-[90dvh] min-h-0 flex flex-col bg-background rounded-t-[var(--radius-squircle-2xl)] shadow-2xl overflow-hidden"
 						style={{
 							y: isDragging ? dragOffset : undefined,
 						}}
@@ -468,7 +468,7 @@ export default function MobileSearchSheet({
 
 						{/* Footer: Search button */}
 						{!showDatePicker && !showGuestPicker && (
-							<div className="shrink-0 p-5 border-t border-border/30">
+							<div className="shrink-0 p-5 pb-[calc(1.25rem+env(safe-area-inset-bottom,0px))] border-t border-border/30">
 								<motion.button
 									onClick={handleSearch}
 									disabled={!isFormComplete || isLoading}

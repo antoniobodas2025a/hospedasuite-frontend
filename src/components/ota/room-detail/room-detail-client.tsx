@@ -129,11 +129,11 @@ export function RoomDetailClient({ output }: RoomDetailClientProps) {
       bed_type: output.bedType,
       gallery: output.gallery,
       amenities: output.amenities.map((a) => a.id),
-      price_per_night: effectiveOutput.pricing?.subtotal
-        ? Math.round(effectiveOutput.pricing.subtotal / nights)
+      price_per_night: effectiveOutput.pricing?.total
+        ? Math.round(effectiveOutput.pricing.total / nights)
         : output.pricePerNight,
-      price: effectiveOutput.pricing?.subtotal
-        ? Math.round(effectiveOutput.pricing.subtotal / nights)
+      price: effectiveOutput.pricing?.total
+        ? Math.round(effectiveOutput.pricing.total / nights)
         : output.pricePerNight,
     }),
     [output, effectiveOutput.pricing, nights]
