@@ -1003,8 +1003,8 @@ export default function OTADashboard({
 									exit={{ opacity: 0, scale: 0.95 }}
 									transition={springSnappy()}
 								>
-								<div className="flex items-center gap-2 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm p-2">
-									<div className="flex-1 flex items-center gap-3 px-4">
+								<div className="flex items-center gap-2 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm p-2 min-w-0">
+									<div className="flex-1 flex items-center gap-3 px-4 min-w-0">
 										<MapPin size={20} className="text-brand-600 shrink-0" />
 										<input
 											type="text"
@@ -1017,7 +1017,7 @@ export default function OTADashboard({
 													handleCommitLocation();
 												}
 											}}
-											className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none"
+											className="flex-1 min-w-0 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none truncate"
 											autoFocus
 										/>
 										{/* Clear button — Heurística #3: Control del usuario */}
@@ -1063,8 +1063,8 @@ export default function OTADashboard({
 					</div>
 
 					{/* Mobile: Direct input + calendar button to open full search sheet */}
-					<div className="sm:hidden flex items-center gap-2 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm p-2">
-						<div className="flex-1 flex items-center gap-3 px-3">
+					<div className="sm:hidden flex items-center gap-2 bg-card rounded-[var(--radius-squircle-xl)] border border-border/30 shadow-sm p-2 min-w-0">
+						<div className="flex-1 flex items-center gap-3 px-3 min-w-0">
 							<MapPin size={18} className="text-brand-600 shrink-0" />
 							<input
 								ref={inputRef}
@@ -1078,7 +1078,7 @@ export default function OTADashboard({
 										handleCommitLocation();
 									}
 								}}
-								className="flex-1 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none"
+								className="flex-1 min-w-0 bg-transparent text-sm font-medium text-foreground placeholder:text-muted-foreground outline-none truncate"
 							/>
 							{/* Clear button */}
 							{searchTerm && (
