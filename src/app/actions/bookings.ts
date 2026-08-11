@@ -39,7 +39,7 @@ interface PendingBookingPayload {
   source: 'direct' | 'ota';
   upsells: string[];
   amount: number;
-  consentAccepted?: boolean; // Ley 1581 de 2012 — optional for 48h deploy window
+  consentAccepted: boolean; // Ley 1581 de 2012
 }
 
 interface UpdateBookingPayload {
@@ -362,14 +362,9 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
       throw new Error('Monto verificado no coincide con tarifa de la unidad.');
     }
 
-    // 🛡️ Ley 1581 de 2012: consent validation
-    // Optional during 48h deploy window (missing = accepted with warning)
-    // After 48h: change to required (reject if missing or false)
-    if (payload.consentAccepted === false) {
+    // 🛡️ Ley 1581 de 2012: consent required
+    if (payload.consentAccepted !== true) {
       throw new Error('Consentimiento requerido. Debe aceptar la política de tratamiento de datos.');
-    }
-    if (payload.consentAccepted === undefined) {
-      console.warn('[CONSENT] Booking created without explicit consent (deploy window). Guest:', payload.email);
     }
 
     const verifiedTotal = payload.amount;
