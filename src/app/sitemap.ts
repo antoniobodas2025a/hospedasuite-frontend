@@ -1,6 +1,8 @@
 import type { MetadataRoute } from 'next';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 
+export const dynamic = 'force-dynamic';
+
 const BASE_URL = 'https://hospedasuite.com';
 
 // Static marketing pages — high priority
