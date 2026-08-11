@@ -151,7 +151,13 @@ const SECTIONS = [
             </div>
             <div>
               <h4 className="font-semibold text-gray-900">Cumplimiento Legal</h4>
-              <p className="text-sm text-gray-600">Cumplir con obligaciones fiscales, contables y legales aplicables.</p>
+              <p className="text-sm text-gray-600">
+                Cumplir con obligaciones fiscales, contables y legales aplicables, 
+                incluyendo el reporte automático de información de huéspedes a 
+                <strong> Migración Colombia (SIRE — Sistema de Información y Registro de Extranjería)</strong> y 
+                <strong> TRA (Tarjeta de Registro de Alojamiento)</strong>, conforme a la 
+                Resolución 6710 de 2017 y normas complementarias.
+              </p>
             </div>
           </div>
 
@@ -417,11 +423,11 @@ const SECTIONS = [
         <div className="mt-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
           <h4 className="font-bold text-blue-900 mb-2">🔒 Certificaciones y Cumplimiento</h4>
           <p className="text-sm text-blue-800">
-            HospedaSuite se compromete a obtener las siguientes certificaciones en el futuro:
+            HospedaSuite mantiene los siguientes estándares y registros de cumplimiento:
           </p>
           <ul className="list-disc list-inside text-sm text-blue-800 mt-2 space-y-1">
-            <li>ISO 27001 (Sistema de Gestión de Seguridad de la Información)</li>
-            <li>Registro en el RNBD (Registro Nacional de Bases de Datos)</li>
+            <li>ISO 27001 (Sistema de Gestión de Seguridad de la Información) — en proceso de implementación</li>
+            <li>Registro en el RNBD (Registro Nacional de Bases de Datos) — inscripción en trámite ante la SIC</li>
           </ul>
         </div>
       </>
