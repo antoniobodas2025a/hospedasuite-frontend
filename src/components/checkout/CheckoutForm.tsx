@@ -381,7 +381,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                 pricePerNight={Math.round(basePrice / nights)}
                 nights={nights}
                 taxRate={effectiveRate}
-                className="!bg-background/10 !border-background/20"
+                dark
               />
 
               {/* Error feedback — Mac 2026: organic haptic response */}
@@ -402,8 +402,8 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                 <ShieldCheck size={16} className="text-secondary" /> Transaccion 100% segura
               </div>
               {hotel.cancellation_policy && (
-                <div className="mt-4 p-4 bg-background/10 rounded-[var(--radius-squircle-xl)] text-xs text-background/60 leading-relaxed border border-background/20">
-                  <span className="font-bold text-background/80 block mb-1">Politica de Cancelacion:</span>
+                <div className="mt-4 p-4 bg-background/10 rounded-[var(--radius-squircle-xl)] text-xs text-background/75 leading-relaxed border border-background/20">
+                  <span className="font-bold text-background/90 block mb-1">Politica de Cancelacion:</span>
                   {hotel.cancellation_policy}
                 </div>
               )}
