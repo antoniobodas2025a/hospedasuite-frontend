@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { ShieldCheck, ArrowRight, ArrowLeft, User, Mail, Phone, CreditCard, Loader2, Check } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPendingBookingAction } from '@/app/actions/bookings';
@@ -66,6 +67,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     return { fullName: '', email: '', phone: '', document: '' };
   });
   const [formError, setFormError] = useState<string | null>(null);
+  const [consentGiven, setConsentGiven] = useState(false);
 
   // Price coherence: entered price IS the final price (B2C Colombian model).
   // For responsible hotels, IVA is extracted internally, not added on top.
@@ -85,6 +87,11 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
     if (step === 1) {
       if (!formData.fullName || !formData.email || !formData.document || !formData.phone) {
         setFormError("Por favor, completa todos tus datos personales.");
+        shakeHaptic();
+        return;
+      }
+      if (!consentGiven) {
+        setFormError("Debes aceptar la política de tratamiento de datos personales para continuar.");
         shakeHaptic();
         return;
       }
@@ -112,6 +119,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
       checkout: checkOut,
       source: (isOta ? 'ota' : 'direct') as 'ota' | 'direct',
       upsells: [],
+      consentAccepted: consentGiven,
     };
 
     const result = await createPendingBookingAction(payload);
@@ -255,6 +263,24 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                     </motion.div>
                   )}
                 </AnimatePresence>
+
+                {/* Consentimiento Ley 1581 de 2012 */}
+                <label className="flex items-start gap-3 mt-4 p-4 bg-muted/30 rounded-[var(--radius-squircle-xl)] border border-border cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={consentGiven}
+                    onChange={(e) => setConsentGiven(e.target.checked)}
+                    className="mt-1 size-4 accent-brand-600"
+                  />
+                  <span className="text-xs text-muted-foreground leading-relaxed">
+                    Autorizo el tratamiento de mis datos personales conforme a la{' '}
+                    <Link href="/software/privacy" target="_blank" className="underline text-brand-600 hover:text-brand-500">
+                      Política de Privacidad
+                    </Link>{' '}
+                    (Ley 1581 de 2012). Mis datos serán utilizados para: (1) gestión de esta reserva, 
+                    (2) reporte ante Migración Colombia (SIRE/TRA), y (3) emisión de factura electrónica.
+                  </span>
+                </label>
 
                 {/* Navigation */}
                 <div className="flex justify-end items-center gap-3 mt-8 pt-6 border-t border-border">

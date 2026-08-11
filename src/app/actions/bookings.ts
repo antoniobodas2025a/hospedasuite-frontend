@@ -39,6 +39,7 @@ interface PendingBookingPayload {
   source: 'direct' | 'ota';
   upsells: string[];
   amount: number;
+  consentAccepted?: boolean; // Ley 1581 de 2012 — optional for 48h deploy window
 }
 
 interface UpdateBookingPayload {
@@ -361,6 +362,16 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
       throw new Error('Monto verificado no coincide con tarifa de la unidad.');
     }
 
+    // 🛡️ Ley 1581 de 2012: consent validation
+    // Optional during 48h deploy window (missing = accepted with warning)
+    // After 48h: change to required (reject if missing or false)
+    if (payload.consentAccepted === false) {
+      throw new Error('Consentimiento requerido. Debe aceptar la política de tratamiento de datos.');
+    }
+    if (payload.consentAccepted === undefined) {
+      console.warn('[CONSENT] Booking created without explicit consent (deploy window). Guest:', payload.email);
+    }
+
     const verifiedTotal = payload.amount;
     
     let guestId = null;
@@ -420,12 +431,31 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
         status: 'PENDING',
         source: effectiveSource,
         referral_channel: referralChannel || null,
+        consent_accepted: payload.consentAccepted === true,
+        consent_timestamp: payload.consentAccepted ? new Date().toISOString() : null,
       }])
       .select('id').single();
 
     if (bErr) {
       if (isTemporalCollision(bErr)) throw new Error('prevent_double_booking');
       throw new Error(bErr.message);
+    }
+
+    // 🛡️ Consent audit trail (Ley 1581 de 2012) — non-blocking
+    if (payload.consentAccepted && guestId) {
+      try {
+        await supabaseAdmin.from('consent_audit').insert({
+          guest_id: guestId,
+          hotel_id: room.hotel_id,
+          booking_id: newB.id,
+          terms_version: 'guest-v1.0',
+          action: 'accept',
+          context: 'guest_checkout',
+          consent_timestamp: new Date().toISOString(),
+        });
+      } catch (auditErr) {
+        console.error('[CONSENT] Failed to write consent audit:', auditErr);
+      }
     }
 
     const { data: link, error: lErr } = await supabaseAdmin
