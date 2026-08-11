@@ -68,6 +68,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
   });
   const [formError, setFormError] = useState<string | null>(null);
   const [consentGiven, setConsentGiven] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   // Price coherence: entered price IS the final price (B2C Colombian model).
   // For responsible hotels, IVA is extracted internally, not added on top.
@@ -176,7 +177,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
           {/* Step 1: Datos */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className={`size-7 sm:size-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all ${
-              step === 1 ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30' : step > 1 ? 'bg-brand-100 text-brand-600' : 'bg-muted text-muted-foreground'
+              step === 1 ? 'bg-brand-600 text-brand-50 shadow-lg shadow-brand-500/30' : step > 1 ? 'bg-brand-100 text-brand-700' : 'bg-muted text-muted-foreground'
             }`}>
               {step > 1 ? <Check size={12} /> : '1'}
             </div>
@@ -190,7 +191,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
           {/* Step 2: Pago */}
           <div className="flex items-center gap-1.5 sm:gap-2">
             <div className={`size-7 sm:size-8 rounded-full flex items-center justify-center text-xs sm:text-sm font-bold transition-all ${
-              step === 2 ? 'bg-brand-600 text-white shadow-lg shadow-brand-500/30' : 'bg-muted text-muted-foreground'
+              step === 2 ? 'bg-brand-600 text-brand-50 shadow-lg shadow-brand-500/30' : 'bg-muted text-muted-foreground'
             }`}>
               2
             </div>
@@ -207,7 +208,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm font-bold">{room.name}</p>
-              <p className="text-xs text-background/60">{nights} {nights === 1 ? 'noche' : 'noches'} · {checkIn} → {checkOut}</p>
+              <p className="text-xs text-background/80">{nights} {nights === 1 ? 'noche' : 'noches'} · {checkIn} → {checkOut}</p>
             </div>
             <p className="text-lg font-black">${grandTotal.toLocaleString()}</p>
           </div>
@@ -257,7 +258,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                       initial={{ opacity: 0, y: -8 }}
                       animate={{ opacity: 1, y: 0 }}
                       exit={{ opacity: 0, y: -8 }}
-                      className="mt-4 p-4 bg-red-500/10 border border-red-500/20 rounded-[var(--radius-squircle-xl)] text-sm text-red-400 text-center"
+                      className="mt-4 p-4 bg-red-50 border border-red-200 rounded-[var(--radius-squircle-xl)] text-sm text-red-700 text-center"
                     >
                       {formError}
                     </motion.div>
@@ -265,16 +266,16 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                 </AnimatePresence>
 
                 {/* Consentimiento Ley 1581 de 2012 */}
-                <label className="flex items-start gap-3 mt-4 p-4 bg-muted/30 rounded-[var(--radius-squircle-xl)] border border-border cursor-pointer">
+                <label className="flex items-start gap-3 mt-4 p-5 bg-brand-50/50 rounded-[var(--radius-squircle-xl)] border border-brand-200 cursor-pointer">
                   <input
                     type="checkbox"
                     checked={consentGiven}
                     onChange={(e) => setConsentGiven(e.target.checked)}
-                    className="mt-1 size-4 accent-brand-600"
+                    className="mt-0.5 size-5 accent-brand-600"
                   />
-                  <span className="text-xs text-muted-foreground leading-relaxed">
+                  <span className="text-sm text-foreground/80 leading-relaxed">
                     Autorizo el tratamiento de mis datos personales conforme a la{' '}
-                    <Link href="/software/privacy" target="_blank" className="underline text-brand-600 hover:text-brand-500">
+                    <Link href="/software/privacy" target="_blank" className="underline text-brand-700 hover:text-brand-600">
                       Política de Privacidad
                     </Link>{' '}
                     (Ley 1581 de 2012). Mis datos serán utilizados para: (1) gestión de esta reserva, 
@@ -326,7 +327,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                         initial={{ opacity: 0, y: -8 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -8 }}
-                        className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-[var(--radius-squircle-xl)] text-sm text-red-400 text-center"
+                        className="mb-4 p-4 bg-red-50 border border-red-200 rounded-[var(--radius-squircle-xl)] text-sm text-red-700 text-center"
                       >
                         {formError}
                       </motion.div>
@@ -370,9 +371,9 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
               <div className="space-y-[var(--space-focus)] mb-[var(--space-breath)] border-b border-background/20 pb-[var(--space-breath)]">
                 <div className="flex justify-between items-start">
                   <div>
-                    <p className="text-background/60 text-sm">{room.name}</p>
+                    <p className="text-background/80 text-sm">{room.name}</p>
                     <p className="font-bold">{nights} {nights === 1 ? 'Noche' : 'Noches'}</p>
-                    <p className="text-xs text-background/40 mt-1">{checkIn} al {checkOut}</p>
+                    <p className="text-xs text-background/70 mt-1">{checkIn} al {checkOut}</p>
                   </div>
                 </div>
               </div>
@@ -390,7 +391,7 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     exit={{ opacity: 0, y: -8 }}
-                    className="mb-4 p-4 bg-red-500/10 border border-red-500/20 rounded-[var(--radius-squircle-xl)] text-sm text-red-400 text-center"
+                    className="mb-4 p-4 bg-red-50 border border-red-200 rounded-[var(--radius-squircle-xl)] text-sm text-red-700 text-center"
                   >
                     {formError}
                   </motion.div>
