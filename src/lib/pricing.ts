@@ -123,7 +123,7 @@ export function formatPrice(amount: number): string {
  * Returns the tax label based on rate.
  */
 export function getTaxLabel(taxRate: number = RESPONSIBLE_IVA_RATE): string {
-  return taxRate > 0 ? `IVA (${Math.round(taxRate * 100)}%)` : '';
+  return taxRate > 0 ? `IVA incluido (${Math.round(taxRate * 100)}%)` : '';
 }
 
 export interface RoomPricingBreakdown {

@@ -124,6 +124,11 @@ export function RoomDetailCalendar({
               </span>
               <span className="text-sm text-muted-foreground truncate">{t('ota.roomDetail.perNight')}</span>
             </div>
+            {output.taxRate > 0 ? (
+              <p className="text-[10px] text-muted-foreground font-medium">IVA incluido</p>
+            ) : (
+              <p className="text-[10px] text-muted-foreground/50 font-medium">Sin IVA</p>
+            )}
             {output.weekendPrice > 0 && output.weekendPrice !== output.pricePerNight && (
               <p className="text-xs text-muted-foreground">
                 {t('ota.roomDetail.weekendPrice', {
