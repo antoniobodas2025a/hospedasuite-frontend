@@ -13,6 +13,8 @@ import HotelAmenitiesStrip from "@/components/ota/HotelAmenitiesStrip";
 import HeroGallery from "@/components/ota/HeroGallery";
 import CategorizedHeroGallery from "@/components/ota/CategorizedHeroGallery";
 import { categorizedGalleryFlag } from "@/lib/flags";
+
+const BASE_URL = "https://hospedasuite.com";
 import { legacyGalleryToCategorized } from "@/lib/adapters/legacy-gallery-adapter";
 import type { ImageBlurMeta } from "@/lib/image-config";
 import type { CategorizedImage } from "@/types";
