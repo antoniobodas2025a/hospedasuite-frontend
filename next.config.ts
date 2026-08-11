@@ -60,6 +60,7 @@ const nextConfig = {
 		const googleAnalyticsDomain = "https://www.google.com";
 		const googleAnalyticsApiDomain = "https://www.google-analytics.com";
 		const nominatimDomain = "https://nominatim.openstreetmap.org";
+		const cfInsightsDomain = "https://static.cloudflareinsights.com";
 
 		return [
 			{
@@ -77,7 +78,7 @@ const nextConfig = {
 						key: "Content-Security-Policy",
 						value: [
 							`default-src 'self'`,
-							`script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com ${wompiDomain} ${sentryDomain} https://cdn.jsdelivr.net ${posthogDomain} ${posthogAssetsDomain} ${googleAnalyticsDomain}`,
+							`script-src 'self' 'unsafe-inline' 'unsafe-eval' https://www.googletagmanager.com ${wompiDomain} ${sentryDomain} https://cdn.jsdelivr.net ${posthogDomain} ${posthogAssetsDomain} ${googleAnalyticsDomain} ${cfInsightsDomain}`,
 							`style-src 'self' 'unsafe-inline' https://unpkg.com`,
 							`img-src 'self' blob: data: ${r2Origin} ${supabaseDomain} https://images.unsplash.com https://*.tile.openstreetmap.org`,
 							`font-src 'self' data:`,
