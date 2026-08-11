@@ -53,6 +53,14 @@ export async function generateMetadata({ params }: { params: Promise<{ city: str
   return {
     title: `HospedaSuite en ${data.name} — Motor de Reservas sin Comisiones`,
     description: `Solución de reservas directas para hoteles en ${data.name}, Boyacá. ${data.description}`,
+    openGraph: {
+      title: `HospedaSuite en ${data.name} — Reservas sin Comisiones`,
+      description: data.description,
+      type: 'article',
+    },
+    alternates: {
+      canonical: `https://hospedasuite.com/recursos/ciudad/${city}`,
+    },
   };
 }
 

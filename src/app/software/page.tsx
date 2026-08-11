@@ -1,9 +1,23 @@
 import { Smartphone, Globe, LayoutGrid, ArrowUpRight } from 'lucide-react';
+import type { Metadata } from 'next';
 import SoftwareJsonLd from '@/components/seo/SoftwareJsonLd';
 import DatasetJsonLd from '@/components/seo/DatasetJsonLd';
 import OrganizationJsonLd from '@/components/seo/OrganizationJsonLd';
 import SoftwareClientShell from '@/components/software/SoftwareClientShell';
 import AntiAirbnbShield from '@/components/software/AntiAirbnbShield';
+
+export const metadata: Metadata = {
+  title: 'HospedaSuite — Software Hotelero sin Comisiones | PMS Colombia',
+  description: 'Cerebro Operativo + Motor de Reservas para hoteles boutique y glampings en Colombia. 0% comisión por reserva. Integración Wompi, SIRE automático, Channel Manager. 1 mes gratis.',
+  openGraph: {
+    title: 'HospedaSuite — Software Hotelero sin Comisiones',
+    description: 'Cerebro Operativo + Motor de Reservas. 0% comisión por reserva. Wompi, SIRE, Channel Manager.',
+    type: 'website',
+  },
+  alternates: {
+    canonical: 'https://hospedasuite.com/software',
+  },
+};
 
 // ============================================================================
 // SERVER COMPONENT — Software Landing Page

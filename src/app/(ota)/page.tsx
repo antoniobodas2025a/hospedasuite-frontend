@@ -1,7 +1,18 @@
+import type { Metadata } from 'next';
 import OTADashboard from '@/components/ota/OTADashboard';
-import { fetchChannelHotelsAction } from '@/app/actions/ota'; // Importamos la nueva acción
+import { fetchChannelHotelsAction } from '@/app/actions/ota';
 
 export const dynamic = 'force-dynamic';
+
+export const metadata: Metadata = {
+  title: 'Encuentra Hoteles Boutique y Glampings en Colombia | HospedaSuite',
+  description: 'Descubre hoteles boutique, glampings y cabañas en Colombia. Reserva directa sin comisiones. Villa de Leyva, Paipa, Tunja y más.',
+  openGraph: {
+    title: 'Hoteles Boutique en Colombia | HospedaSuite',
+    description: 'Descubre y reserva hoteles boutique y glampings en Colombia.',
+    type: 'website',
+  },
+};
 
 export default async function ChannelEcosistemaPage({
   searchParams,
