@@ -76,9 +76,9 @@ export async function generateMetadata({
 					location: hotel.location,
 				}),
 		},
-		alternates: hotel.seo_canonical_url
-			? { canonical: hotel.seo_canonical_url }
-			: undefined,
+		alternates: {
+			canonical: hotel.seo_canonical_url || `${BASE_URL}/hotel/${slug}`,
+		},
 		other: {
 			link: [
 				`<${heroImageUrl}>; rel=preload; as=image; fetchpriority=high`,

@@ -53,7 +53,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
       images: [image],
     },
     alternates: {
-      canonical: `/book/${slug}`,
+      canonical: `https://hospedasuite.com/book/${slug}`,
     },
   };
 }

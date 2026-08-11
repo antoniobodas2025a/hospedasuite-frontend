@@ -36,7 +36,19 @@ export async function generateMetadata(): Promise<Metadata> {
       icon: '/favicon.ico',
       apple: '/logo.png',
     },
-    // Preconnect hints moved to <head> in RootLayout to avoid duplicates
+    openGraph: {
+      type: 'website',
+      locale: 'es_CO',
+      siteName: 'HospedaSuite',
+      title: t('title'),
+      description: t('description'),
+    },
+    twitter: {
+      card: 'summary_large_image',
+    },
+    alternates: {
+      canonical: 'https://hospedasuite.com',
+    },
   };
 }
 
