@@ -70,10 +70,6 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
     return { subtotal, iva, total, hasTax, taxLabel: getTaxLabel(taxRate) };
   }, [basePrice, taxRate, nights]);
 
-  useEffect(() => {
-    // No-op: getEffectiveTaxRate handles null tax_rate internally (fallback via tax_regime)
-  }, []);
-
   const { trackViewRef, trackClickReserve } = useBookingAnalytics({
     hotelId,
     roomId: room.id,

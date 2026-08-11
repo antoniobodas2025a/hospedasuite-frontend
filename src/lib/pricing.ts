@@ -225,6 +225,10 @@ export function buildRoomPricingBreakdown({
 /**
  * Formats price with tax breakdown.
  * Returns formatted strings for subtotal, tax, total, and tax metadata.
+ *
+ * @deprecated Uses the ADD model (net → gross). B2C Colombian model requires
+ * extractTaxFromGross() instead (gross → net extraction).
+ * Kept for backward compatibility — no known consumers as of 2026-08-09.
  */
 export function formatPriceWithTax(
   basePrice: number,
