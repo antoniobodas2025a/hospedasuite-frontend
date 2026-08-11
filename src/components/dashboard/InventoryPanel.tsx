@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils';
 
 interface InventoryPanelContainerProps {
   hotelId: string;
+  hotelTaxRegime?: string;
   initialRooms: Room[];
 }
 
@@ -261,7 +262,7 @@ const InventoryPanelView: React.FC<InventoryPanelViewProps> = ({
 // BLOQUE 3: COMPONENTE CONTENEDOR (Data Logic)
 // ==========================================
 
-export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanelContainerProps) {
+export default function InventoryPanel({ initialRooms, hotelId, hotelTaxRegime }: InventoryPanelContainerProps) {
   const [localRooms, setLocalRooms] = useState<Room[]>(initialRooms || []);
   const { rooms, isLoading, syncRooms } = useInventory(hotelId);
   
@@ -355,7 +356,7 @@ export default function InventoryPanel({ initialRooms, hotelId }: InventoryPanel
         copiedId={copiedId} regeneratingId={regeneratingId} onCopyUrl={handleCopyUrl} onRegenerateToken={handleRegenerateToken}
         onDeleteRoom={handleOpenDeleteModal}
       />
-      {isEditorOpen && <RoomEditorModal hotelId={hotelId} initialData={selectedRoom} onClose={handleCloseEditor} />}
+      {isEditorOpen && <RoomEditorModal hotelId={hotelId} hotelTaxRegime={hotelTaxRegime} initialData={selectedRoom} onClose={handleCloseEditor} />}
       {isDeleteModalOpen && roomToDelete && (
         <DeleteRoomModal
           roomName={roomToDelete.name}

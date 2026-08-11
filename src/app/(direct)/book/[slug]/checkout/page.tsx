@@ -2,6 +2,7 @@ import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import CheckoutForm from '@/components/checkout/CheckoutForm';
+import { buildRoomPricingBreakdown } from '@/lib/pricing';
 
 export const dynamic = 'force-dynamic';
 
@@ -44,7 +45,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
 
   const { data: room, error: roomError } = await supabase
     .from('rooms')
-    .select('id, hotel_id, name, price, base_price, capacity, status, description, gallery')
+    .select('id, hotel_id, name, price, weekend_price, capacity, status, description, gallery')
     .eq('id', roomId)
     .eq('hotel_id', hotel.id)
     .single();
@@ -66,7 +67,16 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   const nights = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
 
   const roomPrice = Number(room.price || 0);
-  const basePrice = roomPrice * nights;
+  const weekendPrice = Number(room.weekend_price || roomPrice * 1.2);
+  // Use per-night breakdown for weekend pricing accuracy
+  const pricing = buildRoomPricingBreakdown({
+    pricePerNight: roomPrice,
+    weekendPrice,
+    taxRate: hotel.tax_rate ?? 0,
+    checkIn: checkInDate,
+    checkOut: checkOutDate,
+  });
+  const basePrice = pricing.total; // final price (gross, includes weekend surcharge)
 
   return (
     <div className="min-h-screen bg-background selection:bg-brand-200 selection:text-brand-900 pb-24 pt-10">

@@ -67,6 +67,7 @@ function SortableThumbnail({ id, img, index, onRemove }: { id: string; img: any;
 
 interface RoomEditorModalProps {
   hotelId: string;
+  hotelTaxRegime?: string;
   initialData?: any; 
   onClose: (needsRefresh?: boolean) => void;
 }
@@ -75,7 +76,7 @@ interface RoomEditorModalProps {
 // BLOQUE 2: COMPONENTE PRINCIPAL
 // ==========================================
 
-export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomEditorModalProps) {
+export default function RoomEditorModal({ hotelId, hotelTaxRegime, initialData, onClose }: RoomEditorModalProps) {
   const [isSaving, setIsSaving] = useState(false);
   const [isUploadingMedia, setIsUploadingMedia] = useState(false);
   const [isDragging, setIsDragging] = useState(false);
@@ -280,7 +281,7 @@ export default function RoomEditorModal({ hotelId, initialData, onClose }: RoomE
                       <div className="mt-4">
                         <PriceCalculator
                           basePrice={watch('price')}
-                          taxRegime="simplified"
+                          taxRegime={(hotelTaxRegime as any) || "simplified"}
                           readonly
                         />
                       </div>

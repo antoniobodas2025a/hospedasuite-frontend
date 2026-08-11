@@ -74,7 +74,7 @@ export function RoomDetailCalendar({
     if (!checkIn || !checkOut || !output.pricing) return null;
 
     const nights = calculateNights(checkIn, checkOut);
-    const averagePrice = nights > 0 ? Math.round(output.pricing.subtotal / nights) : 0;
+    const averagePrice = nights > 0 ? Math.round(output.pricing.total / nights) : 0;
 
     return {
       nights,

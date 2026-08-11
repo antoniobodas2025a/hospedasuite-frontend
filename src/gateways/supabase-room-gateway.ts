@@ -1,8 +1,9 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RoomDetail, DateRange, Availability, HotelContext } from '@/domain/room-availability';
 import type { RoomDetailGateway, RoomDetailResult } from '@/use-cases/room-detail/gateway.interface';
+import { getEffectiveTaxRate } from '@/lib/pricing';
 
-const HOTEL_SELECT = 'id, name, slug, status, subscription_status, go_live, tax_rate, cancellation_policy, primary_color, city, location';
+const HOTEL_SELECT = 'id, name, slug, status, subscription_status, go_live, tax_rate, tax_regime, cancellation_policy, primary_color, city, location';
 const ROOM_SELECT = 'id, name, description, capacity, beds, bed_type, price, weekend_price, status, gallery, amenities';
 
 function parseGallery(raw: unknown): string[] {
@@ -80,7 +81,7 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       totalRooms: totalRooms ?? 1,
       subscriptionStatus: hotel.subscription_status,
       status: hotel.status,
-      taxRate: hotel.tax_rate ?? 0,
+      taxRate: getEffectiveTaxRate(hotel.tax_rate, hotel.tax_regime),
       cancellationPolicy: hotel.cancellation_policy ?? null,
       primaryColor: hotel.primary_color ?? '#000000',
     };
