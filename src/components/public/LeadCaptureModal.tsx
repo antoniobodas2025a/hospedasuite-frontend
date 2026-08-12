@@ -8,17 +8,14 @@ import { createPublicLeadAction } from '@/app/actions/public-lead';
 const STORAGE_KEY = 'hospedasuite:lead-capture-draft';
 
 interface LeadFormData {
-  name: string;
   email: string;
   phone: string;
-  business_name: string;
-  city: string;
 }
 
 // ============================================================================
 // LEAD CAPTURE MODAL — Formulario de baja fricción para "Mes Gratis"
 //
-// Máximo 4 campos obligatorios (Tesler's Law).
+// Máximo 2 campos obligatorios (Tesler's Law).
 // Tras capturar el lead, redirige al wizard de onboarding para configurar
 // el hotel completo (habitaciones, galería, pagos, etc.).
 // ============================================================================
@@ -40,11 +37,8 @@ export default function LeadCaptureModal({
   const searchParams = useSearchParams();
   const [isPending, startTransition] = useTransition();
   const [formData, setFormData] = useState<LeadFormData>({
-    name: '',
     email: '',
     phone: '',
-    business_name: '',
-    city: 'Boyacá',
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [submitted, setSubmitted] = useState(false);
@@ -53,7 +47,6 @@ export default function LeadCaptureModal({
   useEffect(() => {
     if (!isOpen) return;
     const restored: Partial<LeadFormData> = {};
-    const restoredFromStorage = false;
 
     // Try localStorage draft
     const draftRaw = localStorage.getItem(STORAGE_KEY);
@@ -91,12 +84,9 @@ export default function LeadCaptureModal({
 
   const validate = (): boolean => {
     const newErrors: Record<string, string> = {};
-    if (!formData.name.trim()) newErrors.name = 'Requerido';
     if (!formData.email.trim()) newErrors.email = 'Requerido';
     else if (!formData.email.includes('@')) newErrors.email = 'Email inválido';
     if (!formData.phone.trim()) newErrors.phone = 'Requerido';
-    if (!formData.business_name.trim())
-      newErrors.business_name = 'Requerido';
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -105,13 +95,15 @@ export default function LeadCaptureModal({
     e.preventDefault();
     if (!validate()) return;
 
+    const ref = searchParams.get('ref');
+
     startTransition(async () => {
-      const ref = searchParams.get('ref');
       const result = await createPublicLeadAction({
-        ...formData,
+        email: formData.email,
+        phone: formData.phone,
         plan_interest: defaultPlan,
-        room_count: roomCount, // S3: Inject room count into payload
-        referred_by: ref || undefined, // Partner attribution
+        room_count: roomCount,
+        referred_by: ref || undefined,
       });
 
       if (result.success) {
@@ -127,22 +119,17 @@ export default function LeadCaptureModal({
         if (typeof window !== 'undefined' && window.dataLayer) {
           window.dataLayer.push({
             event: 'lead_captured',
-            city: "Boyacá",
             roomCount: roomCount,
             plan: defaultPlan,
-            attackLine: (result as any).attackLine, // Viene del server action
+            attackLine: result.attackLine,
           });
         }
 
         // S1: Lead capturado → redirect al wizard con datos pre-hidratados
-        const ref = searchParams.get('ref');
         const params = new URLSearchParams({
           plan: defaultPlan,
           email: formData.email,
-          name: formData.name,
           phone: formData.phone,
-          hotelName: formData.business_name,
-          city: formData.city,
           rooms: String(roomCount),
           ...(ref ? { ref } : {}), // Pass partner ref to onboarding
         });
@@ -154,7 +141,7 @@ export default function LeadCaptureModal({
   };
 
   const handleClose = () => {
-    setFormData({ name: '', email: '', phone: '', business_name: '', city: 'Boyacá' });
+    setFormData({ email: '', phone: '' });
     setErrors({});
     onClose();
   };
@@ -197,23 +184,6 @@ export default function LeadCaptureModal({
 
         {/* Form */}
         <form onSubmit={handleSubmit} className="space-y-5">
-          {/* Nombre */}
-          <div>
-            <label className="block text-[13px] font-semibold text-[#1d1d1f]/60 mb-1.5 uppercase tracking-wide">
-              Tu nombre
-            </label>
-            <input
-              type="text"
-              value={formData.name}
-              onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-              className={`w-full px-4 py-3 rounded-[14px] bg-[#f5f5f7] border text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/25 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 transition-all ${
-                errors.name ? 'border-red-400' : 'border-black/[0.06]'
-              }`}
-              placeholder="Ej: María García"
-            />
-            {errors.name && <p className="text-[12px] text-red-500 mt-1">{errors.name}</p>}
-          </div>
-
           {/* Email */}
           <div>
             <label className="block text-[13px] font-semibold text-[#1d1d1f]/60 mb-1.5 uppercase tracking-wide">
@@ -231,44 +201,27 @@ export default function LeadCaptureModal({
             {errors.email && <p className="text-[12px] text-red-500 mt-1">{errors.email}</p>}
           </div>
 
-          {/* Teléfono + Negocio (2 cols) */}
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1d1d1f]/60 mb-1.5 uppercase tracking-wide">
-                WhatsApp
-              </label>
-              <input
-                type="tel"
-                value={formData.phone}
-                onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                className={`w-full px-4 py-3 rounded-[14px] bg-[#f5f5f7] border text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/25 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 transition-all ${
-                  errors.phone ? 'border-red-400' : 'border-black/[0.06]'
-                }`}
-                placeholder="+57 300 123 4567"
-              />
-              {errors.phone && <p className="text-[12px] text-red-500 mt-1">{errors.phone}</p>}
-            </div>
-            <div>
-              <label className="block text-[13px] font-semibold text-[#1d1d1f]/60 mb-1.5 uppercase tracking-wide">
-                Nombre de tu negocio
-              </label>
-              <input
-                type="text"
-                value={formData.business_name}
-                onChange={(e) => setFormData({ ...formData, business_name: e.target.value })}
-                className={`w-full px-4 py-3 rounded-[14px] bg-[#f5f5f7] border text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/25 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 transition-all ${
-                  errors.business_name ? 'border-red-400' : 'border-black/[0.06]'
-                }`}
-                placeholder="Ej: Glamping Sol"
-              />
-              {errors.business_name && (
-                <p className="text-[12px] text-red-500 mt-1">{errors.business_name}</p>
-              )}
-            </div>
+          {/* WhatsApp */}
+          <div>
+            <label className="block text-[13px] font-semibold text-[#1d1d1f]/60 mb-1.5 uppercase tracking-wide">
+              WhatsApp
+            </label>
+            <input
+              type="tel"
+              value={formData.phone}
+              onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
+              className={`w-full px-4 py-3 rounded-[14px] bg-[#f5f5f7] border text-[15px] text-[#1d1d1f] placeholder:text-[#1d1d1f]/25 focus:outline-none focus:ring-2 focus:ring-[#0071e3]/30 transition-all ${
+                errors.phone ? 'border-red-400' : 'border-black/[0.06]'
+              }`}
+              placeholder="+57 300 123 4567"
+            />
+            {errors.phone && <p className="text-[12px] text-red-500 mt-1">{errors.phone}</p>}
           </div>
 
-          {/* Ciudad Hidden / Immutable */}
-          <input type="hidden" name="region" value="Boyacá-Centro" />
+          {/* Form-level error */}
+          {errors.form && (
+            <p className="text-[12px] text-red-500">{errors.form}</p>
+          )}
 
           {/* Submit */}
           <button
@@ -288,7 +241,7 @@ export default function LeadCaptureModal({
               </>
             )}
           </button>
-          <p className="text-[10px] text-center text-white/50 mt-4 leading-tight">Cumplir con la Tarjeta de Registro de Alojamiento y el SIRE toma quince minutos manuales por reserva. HospedaSuite automatiza este reporte gubernamental en tiempo real, previniendo multas de veinte salarios mínimos. Su pasarela nativa Wompi elimina comisiones y bloquea estafas cibernéticas frecuentes en glampings de Colombia.</p>
+          <p className="text-[10px] text-center text-[#1d1d1f]/40 mt-4 leading-tight">Cumplir con la Tarjeta de Registro de Alojamiento y el SIRE toma quince minutos manuales por reserva. HospedaSuite automatiza este reporte gubernamental en tiempo real, previniendo multas de veinte salarios mínimos. Su pasarela nativa Wompi elimina comisiones y bloquea estafas cibernéticas frecuentes en glampings de Colombia.</p>
 
           <p className="text-[12px] text-[#1d1d1f]/30 text-center font-medium">
             Sin tarjeta de crédito · Instalación VIP incluida

@@ -275,7 +275,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
               type="number"
               value={room.capacity || ''}
               onChange={(e) => onUpdate({ capacity: Number(e.target.value) })}
-              disabled={false}
+              disabled={isTemplate}
               className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-md)] p-2 text-white text-sm outline-none focus:border-indigo-500/50 disabled:cursor-not-allowed"
             />
           </div>
@@ -285,7 +285,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
               type="number"
               value={room.beds || ''}
               onChange={(e) => onUpdate({ beds: Number(e.target.value) })}
-              disabled={false}
+              disabled={isTemplate}
               className="w-full bg-black/50 border border-white/10 rounded-[var(--radius-squircle-md)] p-2 text-white text-sm outline-none focus:border-indigo-500/50 disabled:cursor-not-allowed"
             />
           </div>
@@ -297,7 +297,7 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           value={room.bedType}
           onChange={(v) => onUpdate({ bedType: v as RoomDraft['bedType'] })}
           label={t('bedTypeLabel')}
-          disabled={false}
+          disabled={isTemplate}
         />
       </div>
 

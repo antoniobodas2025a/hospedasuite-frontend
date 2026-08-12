@@ -18,7 +18,7 @@ export interface Lead {
   city_search?: string;
 }
 
-export const useCRM = (initialLeads: Lead[]) => {
+export const useCRM = (hotelId: string, initialLeads: Lead[]) => {
   const router = useRouter();
   const [leads, setLeads] = useState<Lead[]>(initialLeads);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -38,7 +38,7 @@ export const useCRM = (initialLeads: Lead[]) => {
     );
 
     // 2. Persistencia Segura
-    const result = await updateLeadStatusAction(leadId, newStatus);
+    const result = await updateLeadStatusAction(hotelId, leadId, newStatus);
 
     if (!result.success) {
       alert('❌ Error moviendo lead: ' + result.error);
@@ -52,10 +52,10 @@ export const useCRM = (initialLeads: Lead[]) => {
   const createLead = async () => {
     if (!newLeadForm.business_name) return alert('Nombre requerido');
 
-    const result = await createLeadAction(newLeadForm);
+    const result = await createLeadAction(hotelId, newLeadForm);
 
     if (result.success) {
-      setLeads([result.data, ...leads]); // Agregamos el nuevo lead a la UI
+      setLeads([result.data as Lead, ...leads]); // Agregamos el nuevo lead a la UI
       setIsModalOpen(false);
       setNewLeadForm({
         business_name: '',

@@ -44,7 +44,7 @@ async function MarketingContent({ hotel }: { hotel: { id: string } }) {
           Dark Funnel Analytics
         </a>
       </div>
-      <CRMBoard initialLeads={leads || []} />
+      <CRMBoard initialLeads={leads || []} hotelId={hotel.id} />
     </div>
   );
 }

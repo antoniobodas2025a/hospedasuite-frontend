@@ -402,7 +402,8 @@
       "config": "Settings",
       "review": "Review",
       "pay": "Payment",
-      "activate": "Activate"
+      "activate": "Activate",
+      "done": "Done"
     },
     "identity": {
       "title": "Your Property's Identity",
@@ -445,6 +446,22 @@
       "configured": "{count} unit{plural} configured",
       "noName": "Unnamed",
       "perNight": "/ night"
+    },
+    "roomDetail": {
+      "namePlaceholder": "e.g.: Double Room",
+      "priceLabel": "Price",
+      "currencyLabel": "COP/night",
+      "capacityLabel": "Capacity (guests)",
+      "bedsLabel": "Beds",
+      "bedTypeLabel": "Bed type",
+      "bathroomSectionTitle": "Bathroom & view",
+      "bathroomLabel": "Bathroom type",
+      "showerLabel": "Shower type",
+      "hotWaterSectionTitle": "Hot water",
+      "roomViewLabel": "View",
+      "photosAmenitiesTitle": "Photos & amenities",
+      "descriptionPlaceholder": "Describe this room for your guests...",
+      "amenitiesLabel": "Amenities"
     },
     "settings": {
       "title": "Settings",

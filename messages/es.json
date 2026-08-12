@@ -402,7 +402,8 @@
       "config": "Config",
       "review": "Revisar",
       "pay": "Pago",
-      "activate": "Activar"
+      "activate": "Activar",
+      "done": "Listo"
     },
     "identity": {
       "title": "Identidad de tu Propiedad",
@@ -445,6 +446,22 @@
       "configured": "{count} unidad{plural} configurada{plural}",
       "noName": "Sin nombre",
       "perNight": "/ noche"
+    },
+    "roomDetail": {
+      "namePlaceholder": "Ej: Habitación Doble",
+      "priceLabel": "Precio",
+      "currencyLabel": "COP/noche",
+      "capacityLabel": "Capacidad (personas)",
+      "bedsLabel": "Camas",
+      "bedTypeLabel": "Tipo de cama",
+      "bathroomSectionTitle": "Baño y vista",
+      "bathroomLabel": "Tipo de baño",
+      "showerLabel": "Tipo de ducha",
+      "hotWaterSectionTitle": "Agua caliente",
+      "roomViewLabel": "Vista",
+      "photosAmenitiesTitle": "Fotos y comodidades",
+      "descriptionPlaceholder": "Describí esta habitación para tus huéspedes...",
+      "amenitiesLabel": "Comodidades"
     },
     "settings": {
       "title": "Configuración",

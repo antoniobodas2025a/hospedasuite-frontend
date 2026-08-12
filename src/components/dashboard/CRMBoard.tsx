@@ -14,6 +14,7 @@ import { cn } from '@/lib/utils';
 
 interface CRMBoardContainerProps {
   initialLeads: Lead[];
+  hotelId: string;
 }
 
 interface CRMBoardPanelViewProps {
@@ -226,11 +227,11 @@ const CRMBoardPanelView: React.FC<CRMBoardPanelViewProps> = ({
 // BLOQUE 3: COMPONENTE CONTENEDOR (Máquina de Estados)
 // ==========================================
 
-export default function CRMBoard({ initialLeads }: CRMBoardContainerProps) {
+export default function CRMBoard({ initialLeads, hotelId }: CRMBoardContainerProps) {
   const {
     leads, moveLead, isModalOpen, setIsModalOpen,
     newLeadForm, setNewLeadForm, createLead,
-  } = useCRM(initialLeads);
+  } = useCRM(hotelId, initialLeads);
 
   // 🛡️ Zero-Trust Data Parsing
   const safeLeads = useMemo(() => Array.isArray(leads) ? leads : [], [leads]);

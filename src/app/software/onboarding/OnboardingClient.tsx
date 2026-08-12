@@ -90,6 +90,25 @@ export default function OnboardingWizard() {
 	useEffect(() => {
 		async function fetchContext() {
 			try {
+				// Read plan/price from query params
+				const plan = searchParams.get("plan");
+				const price = searchParams.get("price");
+				if (price) {
+					setPaymentInfo(plan, Number(price));
+				}
+
+				// Hydrate wizard WhatsApp from LeadCaptureModal
+				const phone = searchParams.get("phone");
+				if (phone) {
+					updateSettings({ whatsappNumber: phone });
+				}
+
+				// Partner attribution: hydrate referred_by from query params
+				const refPartnerId = searchParams.get("ref");
+				if (refPartnerId) {
+					updateSettings({ referred_by: refPartnerId });
+				}
+
 				const {
 					data: { user },
 					error: authError,
@@ -115,36 +134,6 @@ export default function OnboardingWizard() {
 					// User already has a hotel, redirect to dashboard
 					router.push("/dashboard");
 					return;
-				}
-
-				// Read plan/price from query params
-				const plan = searchParams.get("plan");
-				const price = searchParams.get("price");
-				if (price) {
-					setPaymentInfo(plan, Number(price));
-				}
-
-				// Hydrate wizard with data from LeadCaptureModal (Cerebro Operativo)
-				const leadName = searchParams.get("name");
-				const leadEmail = searchParams.get("email");
-				const leadPhone = searchParams.get("phone");
-				const leadHotelName = searchParams.get("hotelName");
-				const leadCity = searchParams.get("city");
-
-				if (leadHotelName || leadCity) {
-					updateHotelIdentity({
-						name: leadHotelName || "",
-						city: leadCity || "",
-					});
-				}
-				if (leadPhone) {
-					updateSettings({ whatsappNumber: leadPhone });
-				}
-
-				// Partner attribution: hydrate referred_by from query params
-				const refPartnerId = searchParams.get("ref");
-				if (refPartnerId) {
-					updateSettings({ referred_by: refPartnerId });
 				}
 			} catch {
 				setError("Error de conexión.");
