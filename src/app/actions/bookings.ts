@@ -343,19 +343,20 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
     const checkOut = new Date(`${payload.checkout}T12:00:00Z`);
     const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
 
-    // B2C Colombian model: payload.amount is the final price the guest pays
-    // (room.price * nights, IVA already included in the entered price).
+    // ADD model: payload.amount is the final price the guest pays
+    // (room.price * nights + IVA added on top).
     // This ensures the DB total matches what the user actually pays via Wompi.
     const baseRate = room.price * nights;
 
-    // Fetch hotel tax_rate for reference
+    // Fetch hotel tax_rate to validate total including IVA
     const { data: hotelData } = await supabaseAdmin
       .from('hotels')
       .select('tax_rate, tax_regime')
       .eq('id', room.hotel_id)
       .single();
 
-    const maxExpected = Math.round(baseRate * 1.05); // 5% buffer above entered price
+    const hotelTaxRate = getEffectiveTaxRate(hotelData?.tax_rate, hotelData?.tax_regime);
+    const maxExpected = Math.round(baseRate * (1 + hotelTaxRate) * 1.05); // 5% buffer above total with IVA
     const minExpected = Math.round(baseRate * 0.95); // 5% discount tolerance
 
     if (payload.amount > maxExpected || payload.amount < minExpected) {

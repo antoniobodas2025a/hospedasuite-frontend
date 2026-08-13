@@ -39,14 +39,20 @@ function makeHotel(overrides: Partial<HotelContext> = {}): HotelContext {
   };
 }
 
-function makeDates(checkIn: string, checkOut: string) {
-  const dates = validateAndParseDates(checkIn, checkOut);
-  if (!dates) throw new Error(`Invalid date range ${checkIn} -> ${checkOut}`);
+function makeDates(daysFromNow: number, nights: number) {
+  const checkIn = new Date();
+  checkIn.setDate(checkIn.getDate() + daysFromNow);
+  const checkOut = new Date(checkIn);
+  checkOut.setDate(checkOut.getDate() + nights);
+  const checkInStr = checkIn.toISOString().split('T')[0];
+  const checkOutStr = checkOut.toISOString().split('T')[0];
+  const dates = validateAndParseDates(checkInStr, checkOutStr);
+  if (!dates) throw new Error(`Invalid date range ${checkInStr} -> ${checkOutStr}`);
   return dates;
 }
 
-function availabilityForRange(checkIn: string, checkOut: string, available: boolean): Availability[] {
-  const { checkIn: from, checkOut: to } = makeDates(checkIn, checkOut);
+function availabilityForRange(dates: { checkIn: Date; checkOut: Date }, available: boolean): Availability[] {
+  const { checkIn: from, checkOut: to } = dates;
   const result: Availability[] = [];
   const current = new Date(from.getTime());
   while (current < to) {
@@ -62,7 +68,7 @@ describe('roomDetailViewModel', () => {
     const input: RoomDetailViewModelInput = {
       room: null,
       hotel: makeHotel(),
-      dates: makeDates('2026-08-05', '2026-08-08'),
+      dates: makeDates(10, 3),
     };
 
     const result = roomDetailViewModel(input);
@@ -76,7 +82,7 @@ describe('roomDetailViewModel', () => {
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel({ subscriptionStatus: 'cancelled' }),
-      dates: makeDates('2026-08-05', '2026-08-08'),
+      dates: makeDates(10, 3),
     };
 
     const result = roomDetailViewModel(input);
@@ -118,11 +124,12 @@ describe('roomDetailViewModel', () => {
   });
 
   it('returns dates_selected state with correct pricing when dates are available', () => {
+    const dates = makeDates(4, 3);
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
-      dates: makeDates('2026-08-10', '2026-08-13'),
-      availability: availabilityForRange('2026-08-10', '2026-08-13', true),
+      dates,
+      availability: availabilityForRange(dates, true),
     };
 
     const result = roomDetailViewModel(input);
@@ -138,11 +145,12 @@ describe('roomDetailViewModel', () => {
   });
 
   it('returns sold_out state when no availability for selected dates', () => {
+    const dates = makeDates(10, 3);
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
-      dates: makeDates('2026-08-05', '2026-08-08'),
-      availability: availabilityForRange('2026-08-05', '2026-08-08', false),
+      dates,
+      availability: availabilityForRange(dates, false),
     };
 
     const result = roomDetailViewModel(input);
@@ -154,11 +162,12 @@ describe('roomDetailViewModel', () => {
   });
 
   it('calculates weekday-only stay correctly (3 nights)', () => {
+    const dates = makeDates(4, 3); // Mon -> Thu
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
-      dates: makeDates('2026-08-10', '2026-08-13'), // Mon -> Thu
-      availability: availabilityForRange('2026-08-10', '2026-08-13', true),
+      dates,
+      availability: availabilityForRange(dates, true),
     };
 
     const result = roomDetailViewModel(input);
@@ -173,11 +182,12 @@ describe('roomDetailViewModel', () => {
   });
 
   it('calculates mixed stay correctly (Thu-Sun: 1 weekday + 2 weekend)', () => {
+    const dates = makeDates(7, 3); // Thu -> Sun
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
-      dates: makeDates('2026-08-06', '2026-08-09'), // Thu -> Sun
-      availability: availabilityForRange('2026-08-06', '2026-08-09', true),
+      dates,
+      availability: availabilityForRange(dates, true),
     };
 
     const result = roomDetailViewModel(input);
@@ -191,11 +201,12 @@ describe('roomDetailViewModel', () => {
   });
 
   it('calculates weekend-only stay correctly (Fri-Sun: 2 weekend nights)', () => {
+    const dates = makeDates(8, 2); // Fri -> Sun
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
-      dates: makeDates('2026-08-07', '2026-08-09'), // Fri -> Sun
-      availability: availabilityForRange('2026-08-07', '2026-08-09', true),
+      dates,
+      availability: availabilityForRange(dates, true),
     };
 
     const result = roomDetailViewModel(input);
@@ -232,11 +243,12 @@ describe('roomDetailViewModel', () => {
   });
 
   it('sets canBook to false when hotel subscription is past_due', () => {
+    const dates = makeDates(10, 3);
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel({ subscriptionStatus: 'past_due' }),
-      dates: makeDates('2026-08-05', '2026-08-08'),
-      availability: availabilityForRange('2026-08-05', '2026-08-08', true),
+      dates,
+      availability: availabilityForRange(dates, true),
     };
 
     const result = roomDetailViewModel(input);
@@ -245,11 +257,12 @@ describe('roomDetailViewModel', () => {
   });
 
   it('sets canBook to false when room is restricted', () => {
+    const dates = makeDates(10, 3);
     const input: RoomDetailViewModelInput = {
       room: makeRoom({ restricted: true }),
       hotel: makeHotel(),
-      dates: makeDates('2026-08-05', '2026-08-08'),
-      availability: availabilityForRange('2026-08-05', '2026-08-08', true),
+      dates,
+      availability: availabilityForRange(dates, true),
     };
 
     const result = roomDetailViewModel(input);
@@ -314,7 +327,7 @@ describe('roomDetailViewModel', () => {
   });
 
   it('includes initial dates in output when dates are provided', () => {
-    const dates = makeDates('2026-08-10', '2026-08-13');
+    const dates = makeDates(10, 3);
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),

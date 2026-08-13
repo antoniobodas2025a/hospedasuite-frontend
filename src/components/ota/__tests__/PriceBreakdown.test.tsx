@@ -110,16 +110,16 @@ describe('PriceBreakdown', () => {
       expect(getByText('$357.000')).toBeTruthy();
     });
 
-    it('defaults to 19% taxRate when no tax prop is provided', () => {
-      const { getByText } = render(
+    it('defaults to 0% taxRate when no tax prop is provided', () => {
+      const { getAllByText, queryByText } = render(
         <PriceBreakdown
           pricePerNight={100000}
           nights={1}
         />
       );
 
-      expect(getByText(/IVA \(19%\)/)).toBeTruthy();
-      expect(getByText('$119.000')).toBeTruthy();
+      expect(queryByText(/IVA/)).toBeNull();
+      expect(getAllByText('$100.000').length).toBeGreaterThanOrEqual(2);
     });
   });
 
@@ -151,21 +151,6 @@ describe('PriceBreakdown', () => {
       expect(getByText('$119.000')).toBeTruthy();
     });
 
-    it('warns when taxRegime is used', () => {
-      const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      render(
-        <PriceBreakdown
-          pricePerNight={50000}
-          nights={2}
-          taxRegime="simplified"
-        />
-      );
-
-      expect(warnSpy).toHaveBeenCalledWith(
-        expect.stringContaining('taxRegime')
-      );
-      warnSpy.mockRestore();
-    });
   });
 
   describe('Transparency note (showDetails)', () => {

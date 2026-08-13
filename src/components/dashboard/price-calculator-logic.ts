@@ -7,7 +7,6 @@ export interface PriceBreakdown {
 	iva: number;
 	retencion: number;
 	hotelReceives: number;
-	netBase: number;
 }
 
 const WOMPI_FEE_RATE = 0.03;
@@ -16,24 +15,23 @@ const IVA_RATE = 0.19;
 const RETENCION_RATE = 0.11;
 
 /**
- * B2C Colombian pricing model: the entered price IS the final price.
- * For responsible hotels, IVA is EXTRACTED internally (gross / 1.19).
- * Fees are calculated on the net base (pre-IVA amount).
+ * ADD pricing model: the hotel enters the BASE price.
+ * For responsible hotels, IVA is ADDED on top (base * 0.19).
+ * Fees are calculated on the base price (hotel's net income).
  */
 export function calculatePriceBreakdown(
-	basePrice: number,       // NOW: precio final (IVA incluido si aplica)
+	basePrice: number,       // precio base (sin IVA)
 	taxRegime: TaxRegime,
 ): PriceBreakdown {
-	const guestSees = basePrice;  // El precio ingresado ES el que ve el huésped
 	const ivaRate = taxRegime === 'responsible' ? IVA_RATE : 0;
-	const netBase = ivaRate > 0 ? Math.round(basePrice / (1 + ivaRate)) : basePrice;
-	const iva = basePrice - netBase;
-	
-	// Fees calculated on net base (base gravable, sin IVA)
-	const wompiFee = Math.round(netBase * WOMPI_FEE_RATE);
-	const platformFee = Math.round(netBase * PLATFORM_FEE_RATE);
+	const iva = Math.round(basePrice * ivaRate);
+	const guestSees = basePrice + iva;  // base + IVA
+
+	// Fees calculated on base price (hotel's net income)
+	const wompiFee = Math.round(basePrice * WOMPI_FEE_RATE);
+	const platformFee = Math.round(basePrice * PLATFORM_FEE_RATE);
 	const retencion = Math.round(platformFee * RETENCION_RATE);
-	const hotelReceives = netBase - wompiFee - platformFee - retencion;
+	const hotelReceives = basePrice - wompiFee - platformFee - retencion;
 
 	return {
 		guestSees,
@@ -42,6 +40,5 @@ export function calculatePriceBreakdown(
 		iva,
 		retencion,
 		hotelReceives,
-		netBase,
 	};
 }

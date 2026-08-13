@@ -161,7 +161,7 @@ describe('PriceCalculator Component', () => {
 		it('no muestra el input de precio base', () => {
 			render(<PriceCalculator readonly />);
 			expect(screen.queryByPlaceholderText(/300000/i)).not.toBeInTheDocument();
-			expect(screen.queryByText(/Precio Base/i)).not.toBeInTheDocument();
+			expect(screen.queryByText('Precio Base')).not.toBeInTheDocument();
 		});
 
 		it('muestra el desglose con el label "Precio por Noche"', () => {

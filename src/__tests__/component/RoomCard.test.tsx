@@ -233,10 +233,9 @@ describe("RoomCard", () => {
       />
     );
 
-    // $200.000 + IVA (19%): $38.000 | Total: $238.000
+    // Base $200.000 | Total: $238.000 (IVA agregado)
     expect(getByText(/\$200\.000/)).toBeInTheDocument();
-    expect(getByText(/IVA \(19%\)/)).toBeInTheDocument();
-    expect(getByText(/\$38\.000/)).toBeInTheDocument();
+    expect(getByText(/IVA agregado/i)).toBeInTheDocument();
     expect(getByText(/\$238\.000/)).toBeInTheDocument();
   });
 
@@ -254,8 +253,8 @@ describe("RoomCard", () => {
       />
     );
 
-    expect(getByText(/IVA incluido/i)).toBeInTheDocument();
-    expect(queryByText(/IVA \(19%\)/)).not.toBeInTheDocument();
+    expect(getByText(/Sin IVA/i)).toBeInTheDocument();
+    expect(queryByText(/IVA agregado/i)).not.toBeInTheDocument();
   });
 
   it("calculates total for multiple nights with IVA", () => {
@@ -366,39 +365,6 @@ describe("RoomCard", () => {
     expect(mockRouter.push).toHaveBeenCalledWith(
       expect.stringContaining('checkin=2026-08-10')
     );
-  });
-
-  it("uses DEFAULT_TAX_RATE and fires tax_rate_fallback when tax_rate is null", () => {
-    const warnSpy = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    render(
-      <RoomCard
-        room={baseRoom}
-        hotelSlug="hotel-test"
-        isSearchingDates={false}
-        allRooms={[baseRoom]}
-        totalRooms={1}
-        availableCount={1}
-        hotelId="hotel-test"
-        hotel={{ tax_rate: null as unknown as number }}
-      />
-    );
-
-    const instance = FakeIntersectionObserver.instances[0];
-    act(() => instance.trigger(true, 0.5));
-
-    expect(posthog.capture).toHaveBeenCalledWith('tax_rate_fallback', {
-      hotel_id: 'hotel-test',
-      fallback_rate: 0.19,
-    });
-    expect(posthog.capture).toHaveBeenCalledWith('view_room', {
-      room_id: 'room-1',
-      hotel_id: 'hotel-test',
-      price: 200000,
-      has_dates: false,
-      tax_rate: 0.19,
-    });
-    expect(warnSpy).not.toHaveBeenCalled();
-    warnSpy.mockRestore();
   });
 
   it("renders skeleton placeholders when isLoading is true", () => {

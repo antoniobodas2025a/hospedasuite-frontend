@@ -12,7 +12,7 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
-import { getEffectiveTaxRate, formatPrice, extractTaxFromGross, getTaxLabel } from '@/lib/pricing';
+import { getEffectiveTaxRate, formatPrice, getTaxLabel } from '@/lib/pricing';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
@@ -66,7 +66,10 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
   const basePrice = useMemo(() => room.price_per_night || room.price || 0, [room.price_per_night, room.price]);
   const taxRate = useMemo(() => getEffectiveTaxRate(hotel?.tax_rate, hotel?.tax_regime), [hotel?.tax_rate, hotel?.tax_regime]);
   const priceBreakdown = useMemo(() => {
-    const { net: subtotal, tax: iva, gross: total, hasTax } = extractTaxFromGross(basePrice * nights, taxRate);
+    const subtotal = basePrice * nights;
+    const iva = Math.round(subtotal * taxRate);
+    const total = subtotal + iva;
+    const hasTax = taxRate > 0;
     return { subtotal, iva, total, hasTax, taxLabel: getTaxLabel(taxRate) };
   }, [basePrice, taxRate, nights]);
 
@@ -361,7 +364,7 @@ function RoomCardInner({
                   <span>COP/noche</span>
                 )}
                 {priceBreakdown.hasTax && (
-                  <span>(IVA incluido)</span>
+                  <span>(IVA agregado)</span>
                 )}
                 {!priceBreakdown.hasTax && (
                   <span>(Sin IVA)</span>
@@ -369,7 +372,7 @@ function RoomCardInner({
               </div>
               <div className="flex items-end gap-2 pt-1">
                 <p className="text-3xl font-mono font-bold text-secondary leading-none">
-                  ${formatPrice(basePrice)}
+                  ${formatPrice(priceBreakdown.total)}
                 </p>
                 <span className="text-xs font-sans font-medium text-muted-foreground mb-1">{t('ota.roomCard.copTotal')}</span>
               </div>

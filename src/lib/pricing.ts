@@ -8,9 +8,9 @@
  * - Régimen Simplificado: tax_rate = 0 (most glampings/boutique hotels)
  * - Régimen Responsable de IVA: tax_rate = 0.19 (hotels with IVA registration)
  *
- * B2C pricing model (Colombian consumer law):
- * - The price the hotel enters IS the final price the guest pays (IVA included).
- * - For responsible hotels, IVA is EXTRACTED internally (gross / 1.19), not added.
+ * ADD pricing model:
+ * - The hotel enters the BASE price (net income).
+ * - For responsible hotels, IVA is ADDED on top (base * 0.19).
  * - For simplified hotels, no IVA applies (price stays as-is).
  */
 
@@ -52,12 +52,10 @@ export function calculateTotalWithTax(
 }
 
 /**
- * Extracts IVA from a gross (final) price — the B2C Colombian model.
+ * Extracts IVA from a gross (final) price.
  *
- * For "Responsable de IVA" hotels, the entered price is the final price
- * the guest pays. This function extracts the net base and IVA portion.
- *
- * Example: 300,000 COP at 19% → net: 252,101, tax: 47,899
+ * Kept for compatibility with legacy consumers; prefer calculateTotalWithTax
+ * for the current ADD model.
  */
 export function extractTaxFromGross(
   grossPrice: number,
@@ -123,7 +121,7 @@ export function formatPrice(amount: number): string {
  * Returns the tax label based on rate.
  */
 export function getTaxLabel(taxRate: number = RESPONSIBLE_IVA_RATE): string {
-  return taxRate > 0 ? `IVA incluido (${Math.round(taxRate * 100)}%)` : '';
+  return taxRate > 0 ? `IVA (${Math.round(taxRate * 100)}%)` : '';
 }
 
 export interface RoomPricingBreakdown {
@@ -155,9 +153,8 @@ function toISODate(date: Date): string {
 /**
  * Builds a per-night pricing breakdown for a room stay.
  *
- * B2C Colombian model: pricePerNight and weekendPrice are FINAL prices
- * (what the guest sees). IVA is extracted internally from the subtotal,
- * not added on top. Per-night breakdown shows the gross (final) prices.
+ * ADD model: pricePerNight and weekendPrice are BASE prices (hotel net).
+ * IVA is added on top of the subtotal. Per-night breakdown shows base prices.
  *
  * When no explicit weekend price is provided, it falls back to weekday * 1.2.
  */
@@ -206,17 +203,18 @@ export function buildRoomPricingBreakdown({
     current.setUTCDate(current.getUTCDate() + 1);
   }
 
-  // B2C: extract IVA from the final price (subtotal = gross)
-  const { net, tax } = extractTaxFromGross(subtotal, taxRate);
+  // ADD model: add IVA on top of the base subtotal
+  const tax = Math.round(subtotal * taxRate);
+  const total = subtotal + tax;
 
   return {
     weekdayPrice,
     weekendPrice: effectiveWeekendPrice,
     weekdayNights,
     weekendNights,
-    subtotal: net,     // base gravable (net of IVA) — for accounting
-    tax,               // IVA extracted from the final price
-    total: subtotal,   // final price = what the guest pays
+    subtotal,  // base price (pre-tax)
+    tax,       // IVA added
+    total,     // base + IVA
     taxRate,
     breakdown,
   };

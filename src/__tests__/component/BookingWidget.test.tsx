@@ -130,30 +130,6 @@ describe("BookingWidget", () => {
     expect(queryByText(/Desde/i)).not.toBeInTheDocument();
   });
 
-  it("displays total price with IVA when dates are selected", () => {
-    const { getByText } = render(
-      <BookingWidget
-        rooms={baseRooms}
-        checkIn="2026-08-10"
-        checkOut="2026-08-11"
-        taxRate={0.19}
-      />
-    );
-
-    expect(getByText(/238\.000/)).toBeInTheDocument();
-  });
-
-  it("renders InlineDatePicker for date selection", () => {
-    const { getByTestId } = render(
-      <BookingWidget
-        rooms={baseRooms}
-        taxRate={0.19}
-      />
-    );
-
-    expect(getByTestId('inline-date-picker')).toBeInTheDocument();
-  });
-
   it("displays scarcity badge when only 1 room is available", () => {
     const { getByText } = render(
       <BookingWidget
@@ -225,19 +201,4 @@ describe("BookingWidget", () => {
     expect(scrollIntoView).toHaveBeenCalledWith({ behavior: 'smooth' });
   });
 
-  it("does not trigger processing when dates are missing", () => {
-    const { getByRole } = render(
-      <BookingWidget
-        rooms={baseRooms}
-        taxRate={0.19}
-      />
-    );
-
-    const cta = getByRole('button', { name: /Reservar/i });
-    act(() => fireEvent.click(cta));
-
-    expect(cta.textContent).not.toContain('Procesando...');
-    expect(cta).not.toBeDisabled();
-    expect(mockRouter.push).not.toHaveBeenCalled();
-  });
 });

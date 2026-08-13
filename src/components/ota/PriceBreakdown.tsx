@@ -4,7 +4,7 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { springGentle } from '@/lib/mac2026/spring';
 import { cn } from '@/lib/utils';
-import { getTaxLabel, getEffectiveTaxRate, extractTaxFromGross } from '@/lib/pricing';
+import { getTaxLabel, getEffectiveTaxRate } from '@/lib/pricing';
 
 export interface PriceBreakdownProps {
   pricePerNight: number;
@@ -34,7 +34,8 @@ export default function PriceBreakdown({
 
   const taxLabel = getTaxLabel(effectiveRate);
   const subtotal = pricePerNight * nights;
-  const { net, tax: iva, gross: total } = extractTaxFromGross(subtotal, effectiveRate);
+  const iva = Math.round(subtotal * effectiveRate);
+  const total = subtotal + iva;
   const nightLabel = nights === 1 ? 'noche' : 'noches';
 
   return (
