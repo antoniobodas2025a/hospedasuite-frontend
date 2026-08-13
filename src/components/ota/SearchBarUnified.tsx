@@ -55,9 +55,10 @@ interface SearchBarUnifiedProps {
 		checkout: string | null;
 		guests: number;
 	}) => void;
+	primaryColor?: string;
 }
 
-export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
+export default function SearchBarUnified({ onSearch, primaryColor }: SearchBarUnifiedProps) {
 	const router = useRouter();
 	const pathname = usePathname();
 	const searchParams = useSearchParams();
@@ -440,7 +441,10 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 
 						{/* Calendar */}
 						<div className="px-3 sm:px-4 pb-3">
-							<div className="modal-calendar">
+							<div
+								className="modal-calendar"
+								style={{ '--rdp-accent-color': primaryColor || 'var(--brand-600)' } as React.CSSProperties}
+							>
 								<DayPicker
 									mode="range"
 									selected={pendingDate}
@@ -451,11 +455,11 @@ export default function SearchBarUnified({ onSearch }: SearchBarUnifiedProps) {
 									className="text-foreground font-sans"
 									modifiersClassNames={{
 										selected:
-											"bg-brand-600 text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]",
+											"text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]",
 										range_middle:
-											"bg-brand-50 text-brand-900 rounded-none",
-										range_start: "bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none",
-										range_end: "bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none",
+											"text-brand-900 rounded-none",
+										range_start: "text-primary-foreground rounded-l-xl rounded-r-none",
+										range_end: "text-primary-foreground rounded-r-xl rounded-l-none",
 									}}
 								/>
 							</div>

@@ -42,6 +42,7 @@ import "react-day-picker/dist/style.css";
 
 import { useTranslations, useLocale } from "next-intl";
 import { getDateFnsLocale } from "@/lib/date-locale";
+import { validatePrimaryColor } from "@/lib/calendar-theme";
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -661,7 +662,7 @@ export default function AvailabilitySearchBar({
 													<div
 														className="modal-calendar"
 														style={{
-															'--rdp-accent-color': primaryColor || 'var(--brand-600)',
+															'--rdp-accent-color': validatePrimaryColor(primaryColor) || 'var(--brand-600)',
 														} as React.CSSProperties}
 													>
 														<DayPicker
@@ -673,10 +674,10 @@ export default function AvailabilitySearchBar({
 															disabled={{ before: today }}
 															className="text-foreground font-sans"
 															modifiersClassNames={{
-																selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md border-transparent',
-																range_middle: 'bg-brand-100 text-brand-900 border-y border-transparent rounded-none',
-																range_start: 'bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
-																range_end: 'bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
+																selected: 'text-primary-foreground font-bold shadow-md border-transparent',
+																range_middle: 'text-brand-900 border-y border-transparent rounded-none',
+																range_start: 'text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
+																range_end: 'text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
 															}}
 														/>
 													</div>

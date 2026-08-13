@@ -8,6 +8,7 @@ import { format, parseISO, isValid, startOfDay, addDays, addWeeks, addMonths, ne
 import { ChevronDown, ChevronUp, Calendar, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getDateFnsLocale } from '@/lib/date-locale';
+import { validatePrimaryColor } from '@/lib/calendar-theme';
 import type { QuickDatePreset } from '@/types';
 
 import 'react-day-picker/dist/style.css';
@@ -280,7 +281,7 @@ export default function InlineDatePicker({
           <div
             className="modal-calendar"
             style={{
-              '--rdp-accent-color': primaryColor || 'var(--brand-600)',
+              '--rdp-accent-color': validatePrimaryColor(primaryColor) || 'var(--brand-600)',
             } as React.CSSProperties}
           >
             <DayPicker
@@ -303,10 +304,10 @@ export default function InlineDatePicker({
                 booked: 'bg-destructive/5 text-destructive border border-destructive/20 line-through opacity-60',
                 disabled: 'bg-muted text-muted-foreground/40 border-transparent cursor-not-allowed',
                 outside: 'text-muted-foreground/30',
-                selected: 'bg-brand-600 text-primary-foreground font-bold shadow-md border-transparent',
-                range_middle: 'bg-brand-100 text-brand-900 border-y border-transparent rounded-none',
-                range_start: 'bg-brand-600 text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
-                range_end: 'bg-brand-600 text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
+                selected: 'text-primary-foreground font-bold shadow-md border-transparent',
+                range_middle: 'text-brand-900 border-y border-transparent rounded-none',
+                range_start: 'text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
+                range_end: 'text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
               }}
               className="text-foreground font-sans"
             />

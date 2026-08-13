@@ -11,6 +11,7 @@ import { GlassCard } from '@/components/ui/glass';
 import { cn } from '@/lib/utils';
 import { formatPrice } from '@/lib/pricing';
 import { getDateFnsLocale } from '@/lib/date-locale';
+import { validatePrimaryColor } from '@/lib/calendar-theme';
 import { springSnappy } from '@/lib/mac2026/spring';
 import { MOTION_DURATION, MOTION_EASING } from '@/lib/motion-tokens';
 import type { RoomDetailViewModelOutput } from '@/view-models/room-detail-view-model';
@@ -102,13 +103,7 @@ export function RoomDetailCalendar({
           checkIn={checkInStr}
           checkOut={checkOutStr}
           onChange={handleDateChange}
-          primaryColor={
-            output.primaryColor &&
-            output.primaryColor !== '#ffffff' &&
-            output.primaryColor !== '#fff'
-              ? output.primaryColor
-              : undefined
-          }
+          primaryColor={validatePrimaryColor(output.primaryColor)}
           bookedDates={output.bookedDates}
           defaultExpanded={true}
           className="w-full"

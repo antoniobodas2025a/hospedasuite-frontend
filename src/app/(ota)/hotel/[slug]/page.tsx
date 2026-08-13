@@ -13,6 +13,7 @@ import HotelAmenitiesStrip from "@/components/ota/HotelAmenitiesStrip";
 import HeroGallery from "@/components/ota/HeroGallery";
 import CategorizedHeroGallery from "@/components/ota/CategorizedHeroGallery";
 import { categorizedGalleryFlag } from "@/lib/flags";
+import { validatePrimaryColor } from "@/lib/calendar-theme";
 
 const BASE_URL = "https://hospedasuite.com";
 import { legacyGalleryToCategorized } from "@/lib/adapters/legacy-gallery-adapter";
@@ -277,7 +278,7 @@ export default async function ChannelHotelDetailPage({
 					</div>
 				</div>
 				<div className="max-w-7xl mx-auto px-4 lg:px-6 py-2">
-					<AvailabilitySearchBar sticky navSections={navSections} primaryColor={hotel.primary_color} />
+					<AvailabilitySearchBar sticky navSections={navSections} primaryColor={validatePrimaryColor(hotel.primary_color)} />
 				</div>
 			</div>
 

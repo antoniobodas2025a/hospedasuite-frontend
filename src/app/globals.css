@@ -634,9 +634,19 @@
 }
 
 .modal-calendar .rdp-day_selected {
-  background-color: var(--rdp-accent-color);
-  color: white;
+  background-color: var(--rdp-accent-color) !important;
+  color: white !important;
   font-weight: 700;
+}
+
+.modal-calendar .rdp-day_range_start,
+.modal-calendar .rdp-day_range_end {
+  background-color: var(--rdp-accent-color) !important;
+  color: white !important;
+}
+
+.modal-calendar .rdp-day_range_middle {
+  background-color: color-mix(in srgb, var(--rdp-accent-color) 20%, transparent) !important;
 }
 
 .modal-calendar .rdp-day:hover:not(.rdp-day_selected) {
