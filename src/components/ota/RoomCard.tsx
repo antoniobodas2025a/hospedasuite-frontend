@@ -336,8 +336,8 @@ function RoomCardInner({
         {/* ZONA LOGICA Y EMOCIONAL (Retencion y Cierre) */}
         <div className="flex-1 flex flex-col justify-between py-2 pr-2">
           <div>
-            <div className="flex justify-between items-start mb-3 min-w-0 gap-2">
-              <h4 className="text-2xl font-bold text-foreground tracking-tight truncate min-w-0">{room.name}</h4>
+            <div className="flex justify-between items-start mb-3 min-w-0 gap-2 overflow-hidden">
+              <h4 className="text-2xl font-bold text-foreground tracking-tight truncate min-w-0 flex-1">{room.name}</h4>
             <div className="flex flex-col items-end gap-1 shrink-0">
               <span className="text-xs bg-muted border border-border text-muted-foreground font-bold px-3 py-1 rounded-full uppercase tracking-widest whitespace-nowrap flex items-center gap-1">
                 <Users size={12} className="shrink-0" /> Max {room.capacity}
