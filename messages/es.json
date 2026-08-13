@@ -33,6 +33,24 @@
       "guest": "{count, plural, one {huésped} other {huéspedes}}",
       "refineWithCount": "{count, plural, one {Refinar búsqueda ({count} filtro activo)} other {Refinar búsqueda ({count} filtros activos)}}"
     },
+    "datePreset": {
+      "thisWeekend": "Este fin de semana",
+      "nextWeek": "Próxima semana",
+      "nextMonth": "Próximo mes",
+      "tooltip": "Selecciona fechas predefinidas para reservar más rápido"
+    },
+    "datePicker": {
+      "selectCheckout": "Seleccioná la fecha de salida",
+      "clearDates": "Limpiar fechas",
+      "noDatesSelected": "No hay fechas seleccionadas",
+      "checkInSelected": "Fecha de entrada seleccionada: {date}. Ahora selecciona la fecha de salida.",
+      "rangeSelected": "Rango seleccionado: {range}"
+    },
+    "legend": {
+      "available": "Disponible",
+      "booked": "Ocupado",
+      "past": "Pasado"
+    },
     "categories": {
       "all": "Todo",
       "glamping": "Glamping",

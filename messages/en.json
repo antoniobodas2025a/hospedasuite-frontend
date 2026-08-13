@@ -33,6 +33,24 @@
       "guest": "{count, plural, one {guest} other {guests}}",
       "refineWithCount": "{count, plural, one {Refine search ({count} active filter)} other {Refine search ({count} active filters)}}"
     },
+    "datePreset": {
+      "thisWeekend": "This weekend",
+      "nextWeek": "Next week",
+      "nextMonth": "Next month",
+      "tooltip": "Select preset dates to book faster"
+    },
+    "datePicker": {
+      "selectCheckout": "Select check-out date",
+      "clearDates": "Clear dates",
+      "noDatesSelected": "No dates selected",
+      "checkInSelected": "Check-in date selected: {date}. Now select check-out date.",
+      "rangeSelected": "Range selected: {range}"
+    },
+    "legend": {
+      "available": "Available",
+      "booked": "Booked",
+      "past": "Past"
+    },
     "categories": {
       "all": "All",
       "glamping": "Glamping",

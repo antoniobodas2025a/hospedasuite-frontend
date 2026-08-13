@@ -5,7 +5,7 @@ import { useSearchParams } from 'next/navigation';
 import { useTranslations, useLocale } from 'next-intl';
 import { DayPicker, DateRange } from 'react-day-picker';
 import { format, parseISO, isValid, startOfDay, addDays, addWeeks, addMonths, nextSaturday, nextSunday } from 'date-fns';
-import { ChevronDown, ChevronUp, Calendar } from 'lucide-react';
+import { ChevronDown, ChevronUp, Calendar, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { getDateFnsLocale } from '@/lib/date-locale';
 import type { QuickDatePreset } from '@/types';
@@ -16,7 +16,7 @@ interface InlineDatePickerProps {
   checkIn?: string | null;
   checkOut?: string | null;
   hotelId?: string;
-  onChange?: (range: { from: Date; to: Date }) => void;
+  onChange?: (range: { from: Date; to: Date } | undefined) => void;
   availableDates?: string[];
   bookedDates?: string[];
   defaultExpanded?: boolean;
@@ -122,8 +122,8 @@ export default function InlineDatePicker({
   const quickPresets: QuickDatePreset[] = useMemo(
     () => [
       {
-        label: 'Este fin de semana',
-        tooltip: 'Selecciona fechas predefinidas para reservar más rápido',
+        label: t('ota.datePreset.thisWeekend'),
+        tooltip: t('ota.datePreset.tooltip'),
         getDates: () => {
           const from = nextSaturday(today);
           const to = nextSunday(from);
@@ -131,8 +131,8 @@ export default function InlineDatePicker({
         },
       },
       {
-        label: 'Próxima semana',
-        tooltip: 'Selecciona fechas predefinidas para reservar más rápido',
+        label: t('ota.datePreset.nextWeek'),
+        tooltip: t('ota.datePreset.tooltip'),
         getDates: () => {
           const from = addWeeks(today, 1);
           const to = addDays(from, 1);
@@ -140,8 +140,8 @@ export default function InlineDatePicker({
         },
       },
       {
-        label: 'Próximo mes',
-        tooltip: 'Selecciona fechas predefinidas para reservar más rápido',
+        label: t('ota.datePreset.nextMonth'),
+        tooltip: t('ota.datePreset.tooltip'),
         getDates: () => {
           const from = addMonths(today, 1);
           const to = addDays(from, 1);
@@ -149,7 +149,7 @@ export default function InlineDatePicker({
         },
       },
     ],
-    [today],
+    [today, t],
   );
 
   const handleQuickDate = useCallback(
@@ -162,6 +162,11 @@ export default function InlineDatePicker({
     },
     [onChange, hotelId],
   );
+
+  const handleClear = useCallback(() => {
+    setRange(undefined);
+    if (onChange) onChange(undefined);
+  }, [onChange]);
 
   const bookedSet = useMemo(() => new Set(bookedDates), [bookedDates]);
   const availableSet = useMemo(() => new Set(availableDates), [availableDates]);
@@ -207,6 +212,27 @@ export default function InlineDatePicker({
         <span className="flex items-center gap-2">
           <Calendar size={16} className="text-brand-600" />
           {displayRange ?? t('ota.search.selectDates')}
+          {range && (
+            <span
+              role="button"
+              tabIndex={0}
+              aria-label={t('ota.datePicker.clearDates')}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleClear();
+              }}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  e.stopPropagation();
+                  handleClear();
+                }
+              }}
+              className="p-1 rounded-full hover:bg-muted transition-colors cursor-pointer"
+            >
+              <X size={14} className="text-muted-foreground" />
+            </span>
+          )}
         </span>
         {isExpanded ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
       </button>
@@ -244,6 +270,12 @@ export default function InlineDatePicker({
             ))}
           </div>
 
+          {range?.from && !range?.to && (
+            <p className="text-sm text-brand-600 font-medium">
+              {t('ota.datePicker.selectCheckout')}
+            </p>
+          )}
+
           {/* Calendar */}
           <div
             className="modal-calendar"
@@ -257,7 +289,11 @@ export default function InlineDatePicker({
               onSelect={handleSelect}
               locale={dateLocale}
               numberOfMonths={1}
-              disabled={{ before: today }}
+              disabled={[
+                { before: today },
+                isDateBooked,
+                ...(availableDates.length > 0 ? [(date: Date) => !isDateAvailable(date)] : []),
+              ]}
               modifiers={{
                 available: isDateAvailable,
                 booked: isDateBooked,
@@ -274,21 +310,26 @@ export default function InlineDatePicker({
               }}
               className="text-foreground font-sans"
             />
+            <div aria-live="polite" role="status" className="sr-only">
+              {!range?.from && t('ota.datePicker.noDatesSelected')}
+              {range?.from && !range?.to && t('ota.datePicker.checkInSelected', { date: displayRange ?? '' })}
+              {range?.from && range?.to && t('ota.datePicker.rangeSelected', { range: displayRange ?? '' })}
+            </div>
           </div>
 
           {/* Availability legend */}
           <div className="flex items-center gap-4 text-xs text-muted-foreground">
             <div className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-success" />
-              <span>Disponible</span>
+              <span>{t('ota.legend.available')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-destructive" />
-              <span>Ocupado</span>
+              <span>{t('ota.legend.booked')}</span>
             </div>
             <div className="flex items-center gap-1.5">
               <span className="size-2 rounded-full bg-muted" />
-              <span>Pasado</span>
+              <span>{t('ota.legend.past')}</span>
             </div>
           </div>
           </motion.div>

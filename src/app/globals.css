@@ -626,7 +626,7 @@
    (NO position:fixed — that was covering the footer)
    ==================================================== */
 .modal-calendar .rdp {
-  --rdp-cell-size: 40px;
+  --rdp-cell-size: 44px;
   --rdp-background-color: oklch(0.92 0.04 35);
   --rdp-outline: 2px solid var(--rdp-accent-color);
   margin: 0 auto;
@@ -634,8 +634,8 @@
 }
 
 .modal-calendar .rdp-day_selected {
-  background-color: var(--rdp-accent-color) !important;
-  color: white !important;
+  background-color: var(--rdp-accent-color);
+  color: white;
   font-weight: 700;
 }
 

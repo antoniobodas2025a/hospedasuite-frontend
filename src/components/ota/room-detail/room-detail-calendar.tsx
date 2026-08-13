@@ -60,7 +60,11 @@ export function RoomDetailCalendar({
   }, [output.canBook, output.hotelSlug, output.roomId, checkInStr, checkOutStr, router]);
 
   const handleDateChange = useCallback(
-    (range: { from: Date; to: Date }) => {
+    (range: { from: Date; to: Date } | undefined) => {
+      if (!range) {
+        dispatch({ type: 'CLEAR_DATES' });
+        return;
+      }
       dispatch({
         type: 'SELECT_DATES',
         checkIn: range.from,

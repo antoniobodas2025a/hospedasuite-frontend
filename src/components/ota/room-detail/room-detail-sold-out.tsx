@@ -60,7 +60,11 @@ export function RoomDetailSoldOut({
   const checkOutStr = toISODate(checkOut);
 
   const handleDateChange = React.useCallback(
-    (range: { from: Date; to: Date }) => {
+    (range: { from: Date; to: Date } | undefined) => {
+      if (!range) {
+        dispatch({ type: 'CLEAR_DATES' });
+        return;
+      }
       dispatch({
         type: 'SELECT_SUGGESTION',
         checkIn: range.from,

@@ -61,15 +61,15 @@ describe("InlineDatePicker", () => {
   it("renders quick date preset buttons", () => {
     const { getByText } = render(<InlineDatePicker onChange={onChangeMock} />);
 
-    expect(getByText("Este fin de semana")).toBeInTheDocument();
-    expect(getByText("Próxima semana")).toBeInTheDocument();
-    expect(getByText("Próximo mes")).toBeInTheDocument();
+    expect(getByText("ota.datePreset.thisWeekend")).toBeInTheDocument();
+    expect(getByText("ota.datePreset.nextWeek")).toBeInTheDocument();
+    expect(getByText("ota.datePreset.nextMonth")).toBeInTheDocument();
   });
 
   it("selects next weekend dates when clicking quick date button", () => {
     const { getByText } = render(<InlineDatePicker onChange={onChangeMock} />);
 
-    fireEvent.click(getByText("Este fin de semana"));
+    fireEvent.click(getByText("ota.datePreset.thisWeekend"));
 
     expect(onChangeMock).toHaveBeenCalledTimes(1);
     const call = onChangeMock.mock.calls[0][0];
@@ -81,9 +81,9 @@ describe("InlineDatePicker", () => {
   it("renders availability legend with available, booked, and past states", () => {
     const { getByText } = render(<InlineDatePicker onChange={onChangeMock} />);
 
-    expect(getByText("Disponible")).toBeInTheDocument();
-    expect(getByText("Ocupado")).toBeInTheDocument();
-    expect(getByText("Pasado")).toBeInTheDocument();
+    expect(getByText("ota.legend.available")).toBeInTheDocument();
+    expect(getByText("ota.legend.booked")).toBeInTheDocument();
+    expect(getByText("ota.legend.past")).toBeInTheDocument();
   });
 
   it("toggles collapsible content when header button is clicked", () => {
@@ -130,7 +130,7 @@ describe("InlineDatePicker", () => {
       <InlineDatePicker onChange={onChangeMock} hotelId="hotel-1" />
     );
 
-    fireEvent.click(getByText("Este fin de semana"));
+    fireEvent.click(getByText("ota.datePreset.thisWeekend"));
 
     expect(localStorageMock.setItem).toHaveBeenCalledWith(
       "booking_dates_hotel-1",

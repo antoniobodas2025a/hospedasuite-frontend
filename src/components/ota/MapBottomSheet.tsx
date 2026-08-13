@@ -376,13 +376,6 @@ export default function MapBottomSheet({
 						</div>
 					)}
 
-					{/* ---- FeaturedCard (compact in sheet context) ---- */}
-					{featuredHotel && sortBy === "recommended" && (
-						<div className="mb-4">
-							<FeaturedCard hotel={featuredHotel} variant="compact" />
-						</div>
-					)}
-
 					{/* ---- Sort controls ---- */}
 					<div className="flex items-center justify-between mb-3">
 						<div className="relative">
