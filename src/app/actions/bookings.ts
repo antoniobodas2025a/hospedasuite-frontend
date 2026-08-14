@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 import { isTemporalCollision, type PostgresError } from '@/lib/booking-helpers';
 import { emitEvent } from '@/lib/events';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { buildRoomPricingBreakdown } from '@/lib/pricing';
+import { buildRoomPricingBreakdown, normalizeWeekendPrice } from '@/lib/pricing';
 import { verifySession } from '@/lib/session-utils';
 import { requireHotelAccess } from '@/lib/tenant-guard';
 
@@ -345,7 +345,7 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
 
     // FLAT model: use buildRoomPricingBreakdown to calculate the final guest total
     const roomPrice = room.price || 0;
-    const weekendPrice = room.weekend_price ?? roomPrice * 1.2;
+    const weekendPrice = normalizeWeekendPrice(room.weekend_price, roomPrice);
     const pricing = buildRoomPricingBreakdown({
       pricePerNight: roomPrice,
       weekendPrice,

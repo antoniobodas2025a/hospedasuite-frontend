@@ -1,6 +1,7 @@
 import type { SupabaseClient } from '@supabase/supabase-js';
 import type { RoomDetail, DateRange, Availability, HotelContext } from '@/domain/room-availability';
 import type { RoomDetailGateway, RoomDetailResult } from '@/use-cases/room-detail/gateway.interface';
+import { normalizeWeekendPrice } from '@/lib/pricing';
 
 
 const HOTEL_SELECT = 'id, name, slug, status, subscription_status, go_live, cancellation_policy, primary_color, city, location';
@@ -71,10 +72,7 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       .neq('status', 'maintenance');
 
     const basePrice = room.price ?? 0;
-    // Normalize weekend_price: null/undefined/0/negative → basePrice * 1.2
-    const weekendPrice = (room.weekend_price && room.weekend_price > 0)
-      ? room.weekend_price
-      : basePrice * 1.2;
+    const weekendPrice = normalizeWeekendPrice(room.weekend_price, basePrice);
 
     const hotelContext: HotelContext = {
       id: hotel.id,
@@ -114,10 +112,7 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       .maybeSingle();
 
     const basePrice = room?.price ?? 0;
-    // Normalize weekend_price: null/undefined/0/negative → basePrice * 1.2
-    const weekendPrice = (room?.weekend_price && room.weekend_price > 0)
-      ? room.weekend_price
-      : basePrice * 1.2;
+    const weekendPrice = normalizeWeekendPrice(room?.weekend_price, basePrice);
 
     const { data: bookings } = await this.supabase
       .from('bookings')

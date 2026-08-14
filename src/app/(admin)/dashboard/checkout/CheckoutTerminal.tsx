@@ -10,6 +10,7 @@ import {
 import { useCheckout } from '@/hooks/useCheckout';
 import WompiButton from '@/components/payments/WompiButton';
 import { calculateStayPrice } from '@/utils/supabase/pricing';
+import { normalizeWeekendPrice } from '@/lib/pricing';
 import { cn } from '@/lib/utils';
 
 interface CheckoutTerminalProps {
@@ -48,7 +49,7 @@ export default function CheckoutTerminal({
       selectedBooking.check_in,
       selectedBooking.check_out,
       roomData?.price || 0,
-      roomData?.weekend_price || (roomData?.price * 1.2)
+      normalizeWeekendPrice(roomData?.weekend_price, roomData?.price || 0)
     );
   }, [selectedBooking]);
 

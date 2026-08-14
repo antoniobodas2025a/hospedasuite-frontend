@@ -12,7 +12,7 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
-import { formatPrice, buildRoomPricingBreakdown } from '@/lib/pricing';
+import { formatPrice, buildRoomPricingBreakdown, calculateNights, normalizeWeekendPrice } from '@/lib/pricing';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
@@ -60,11 +60,11 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
   const nights = useMemo(() => {
     if (!parsedDates) return 1;
     const { checkInDate, checkOutDate } = parsedDates;
-    return Math.max(1, Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24)));
+    return calculateNights(checkInDate, checkOutDate);
   }, [parsedDates]);
 
   const basePrice = useMemo(() => room.price_per_night || room.price || 0, [room.price_per_night, room.price]);
-  const weekendPrice = useMemo(() => room.weekend_price || basePrice * 1.2, [room.weekend_price, basePrice]);
+  const weekendPrice = useMemo(() => normalizeWeekendPrice(room.weekend_price, basePrice), [room.weekend_price, basePrice]);
 
   type PriceBreakdownType = {
     subtotal: number;

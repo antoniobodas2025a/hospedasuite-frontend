@@ -80,10 +80,8 @@ export function isWeekend(date: Date): boolean {
   return day === 5 || day === 6;
 }
 
-export function calculateNights(checkIn: Date, checkOut: Date): number {
-  const msPerDay = 24 * 60 * 60 * 1000;
-  return Math.round((checkOut.getTime() - checkIn.getTime()) / msPerDay);
-}
+// Re-export calculateNights from pricing.ts as single source of truth
+export { calculateNights } from '@/lib/pricing';
 
 export function detectIntent(
   checkIn: Date,

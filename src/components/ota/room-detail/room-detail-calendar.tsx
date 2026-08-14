@@ -9,7 +9,7 @@ import { format } from 'date-fns';
 import InlineDatePicker from '@/components/ota/InlineDatePicker';
 import { GlassCard } from '@/components/ui/glass';
 import { cn } from '@/lib/utils';
-import { formatPrice } from '@/lib/pricing';
+import { formatPrice, calculateNights } from '@/lib/pricing';
 import { getDateFnsLocale } from '@/lib/date-locale';
 import { validatePrimaryColor } from '@/lib/calendar-theme';
 import { springSnappy } from '@/lib/mac2026/spring';
@@ -28,11 +28,6 @@ interface RoomDetailCalendarProps {
 function toISODate(date: Date | null | undefined): string | undefined {
   if (!date) return undefined;
   return date.toISOString().split('T')[0];
-}
-
-function calculateNights(checkIn: Date, checkOut: Date): number {
-  const msPerDay = 24 * 60 * 60 * 1000;
-  return Math.max(1, Math.round((checkOut.getTime() - checkIn.getTime()) / msPerDay));
 }
 
 export function RoomDetailCalendar({

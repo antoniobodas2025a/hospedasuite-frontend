@@ -7,6 +7,7 @@ import { cookies } from 'next/headers';
 import { supabaseAdmin } from '@/lib/supabase-admin';
 import { createInvoiceOnCheckout } from './alegra-integration';
 import { verifySession } from '@/lib/session-utils';
+import { normalizeWeekendPrice } from '@/lib/pricing';
 
 async function getActiveStaff() {
   try {
@@ -69,7 +70,7 @@ export async function getAccountStatementAction(
         booking.check_in, 
         booking.check_out, 
         room.price || 0, 
-        room.weekend_price || (room.price * 1.2)
+        normalizeWeekendPrice(room.weekend_price, room.price || 0)
       );
       finalRoomCharge = breakdown.totalPrice;
     }

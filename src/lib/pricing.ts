@@ -5,6 +5,20 @@
  * The price configured by the hotelier is the final price the guest pays.
  */
 
+// ============================================================================
+// CONSTANTS
+// ============================================================================
+
+/**
+ * Default multiplier for weekend price fallback.
+ * When a room doesn't have a configured weekend_price, we use basePrice * 1.2.
+ */
+export const WEEKEND_FALLBACK_MULTIPLIER = 1.2;
+
+// ============================================================================
+// TYPES
+// ============================================================================
+
 export interface PriceBreakdown {
   subtotal: number;
   total: number;
@@ -25,6 +39,10 @@ export interface RoomPricingBreakdown {
   }>;
 }
 
+// ============================================================================
+// PURE FUNCTIONS
+// ============================================================================
+
 function isWeekendNight(date: Date): boolean {
   const day = date.getUTCDay();
   return day === 5 || day === 6;
@@ -32,6 +50,29 @@ function isWeekendNight(date: Date): boolean {
 
 function toISODate(date: Date): string {
   return date.toISOString().split('T')[0];
+}
+
+/**
+ * Calculates the number of nights between two dates.
+ * Single source of truth for night calculation across the app.
+ */
+export function calculateNights(checkIn: Date, checkOut: Date): number {
+  const msPerDay = 24 * 60 * 60 * 1000;
+  return Math.round((checkOut.getTime() - checkIn.getTime()) / msPerDay);
+}
+
+/**
+ * Normalizes weekend_price with fallback to basePrice * WEEKEND_FALLBACK_MULTIPLIER.
+ * Handles null, undefined, 0, and negative values.
+ * Single source of truth for weekend price normalization.
+ */
+export function normalizeWeekendPrice(
+  weekendPrice: number | null | undefined,
+  basePrice: number
+): number {
+  return (weekendPrice && weekendPrice > 0)
+    ? weekendPrice
+    : basePrice * WEEKEND_FALLBACK_MULTIPLIER;
 }
 
 /**
@@ -72,9 +113,9 @@ export function buildRoomPricingBreakdown({
   checkOut: Date;
 }): RoomPricingBreakdown {
   const weekdayPrice = pricePerNight;
+  // Use weekendPrice if configured (> 0), otherwise fall back to weekdayPrice
   const effectiveWeekendPrice = weekendPrice > 0 ? weekendPrice : weekdayPrice;
-  const msPerDay = 24 * 60 * 60 * 1000;
-  const nights = Math.round((checkOut.getTime() - checkIn.getTime()) / msPerDay);
+  const nights = calculateNights(checkIn, checkOut);
 
   const breakdown: RoomPricingBreakdown['breakdown'] = [];
   let weekdayNights = 0;

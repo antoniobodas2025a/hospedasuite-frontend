@@ -8,6 +8,7 @@ import {
   finalizeCheckoutAction 
 } from '@/app/actions/payments';
 import { calculateStayPrice } from '@/utils/supabase/pricing';
+import { normalizeWeekendPrice } from '@/lib/pricing';
 
 // ==========================================
 // BLOQUE 1: INTERFACES Y CONTRATOS ESTRICTOS
@@ -90,7 +91,7 @@ export const useCheckout = (activeBookings: BookingSummary[]) => {
       const roomData = Array.isArray(booking.room) ? booking.room[0] : booking.room;
       const roomId = roomData?.id || '';
       const basePrice = Number(roomData?.price) || 0;
-      const weekendPrice = Number(roomData?.weekend_price) || (basePrice * 1.2);
+      const weekendPrice = normalizeWeekendPrice(Number(roomData?.weekend_price), basePrice);
 
       let effectiveRoomPrice = Number(booking.total_price) || 0;
       
