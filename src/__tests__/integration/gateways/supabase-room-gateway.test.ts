@@ -185,6 +185,26 @@ describe('SupabaseRoomGateway', () => {
       expect(availability[2].available).toBe(true);
       expect(availability[2].price).toBe(150);
     });
+
+    it('normalizes weekend_price=0 to basePrice * 1.2 in availability calendar', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({ data: { price: 100, weekend_price: 0 }, error: null });
+      mock.queue.push({ data: [], error: null });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const availability = await gateway.getAvailability('room-1', {
+        from: new Date('2026-09-10T12:00:00Z'), // Thursday
+        to: new Date('2026-09-13T12:00:00Z'), // Sunday (3 nights: Thu, Fri, Sat)
+      });
+
+      expect(availability).toHaveLength(3);
+      expect(availability[0].date).toBe('2026-09-10'); // Thursday
+      expect(availability[0].price).toBe(100); // weekday
+      expect(availability[1].date).toBe('2026-09-11'); // Friday
+      expect(availability[1].price).toBe(120); // weekend (100 * 1.2, normalized from 0)
+      expect(availability[2].date).toBe('2026-09-12'); // Saturday
+      expect(availability[2].price).toBe(120); // weekend (100 * 1.2, normalized from 0)
+    });
   });
 
   describe('getBookingsInWindow', () => {

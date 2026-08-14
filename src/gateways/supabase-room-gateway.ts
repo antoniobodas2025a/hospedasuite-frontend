@@ -114,7 +114,10 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       .maybeSingle();
 
     const basePrice = room?.price ?? 0;
-    const weekendPrice = room?.weekend_price ?? basePrice * 1.2;
+    // Normalize weekend_price: null/undefined/0/negative → basePrice * 1.2
+    const weekendPrice = (room?.weekend_price && room.weekend_price > 0)
+      ? room.weekend_price
+      : basePrice * 1.2;
 
     const { data: bookings } = await this.supabase
       .from('bookings')
