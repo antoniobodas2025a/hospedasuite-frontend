@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 import { isTemporalCollision, type PostgresError } from '@/lib/booking-helpers';
 import { emitEvent } from '@/lib/events';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { getEffectiveTaxRate } from '@/lib/pricing';
+import { getEffectiveTaxRate, buildRoomPricingBreakdown } from '@/lib/pricing';
 import { verifySession } from '@/lib/session-utils';
 import { requireHotelAccess } from '@/lib/tenant-guard';
 
@@ -333,7 +333,7 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
   try {
     const { data: room, error: roomError } = await supabaseAdmin
       .from('rooms')
-      .select('id, hotel_id, price')
+      .select('id, hotel_id, price, weekend_price')
       .eq('id', payload.roomId)
       .single();
 
@@ -343,11 +343,6 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
     const checkOut = new Date(`${payload.checkout}T12:00:00Z`);
     const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
 
-    // ADD model: payload.amount is the final price the guest pays
-    // (room.price * nights + IVA added on top).
-    // This ensures the DB total matches what the user actually pays via Wompi.
-    const baseRate = room.price * nights;
-
     // Fetch hotel tax_rate to validate total including IVA
     const { data: hotelData } = await supabaseAdmin
       .from('hotels')
@@ -356,8 +351,20 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
       .single();
 
     const hotelTaxRate = getEffectiveTaxRate(hotelData?.tax_rate, hotelData?.tax_regime);
-    const maxExpected = Math.round(baseRate * (1 + hotelTaxRate) * 1.05); // 5% buffer above total with IVA
-    const minExpected = Math.round(baseRate * 0.95); // 5% discount tolerance
+    
+    // ADD model: use buildRoomPricingBreakdown to calculate subtotal with weekend surcharges
+    const roomPrice = room.price || 0;
+    const weekendPrice = room.weekend_price ?? roomPrice * 1.2;
+    const pricing = buildRoomPricingBreakdown({
+      pricePerNight: roomPrice,
+      weekendPrice,
+      taxRate: hotelTaxRate,
+      checkIn,
+      checkOut,
+    });
+    
+    const maxExpected = Math.round(pricing.total * 1.05); // 5% buffer above total with IVA
+    const minExpected = Math.round(pricing.subtotal * 0.95); // 5% discount tolerance on base
 
     if (payload.amount > maxExpected || payload.amount < minExpected) {
       throw new Error('Monto verificado no coincide con tarifa de la unidad.');
@@ -424,6 +431,10 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
         check_in: payload.checkin,
         check_out: payload.checkout,
         total_price: verifiedTotal,
+        subtotal: pricing.subtotal,
+        tax_amount: pricing.tax,
+        tax_rate_applied: hotelTaxRate,
+        weekend_price_used: weekendPrice,
         status: 'PENDING',
         source: effectiveSource,
         referral_channel: referralChannel || null,
@@ -513,7 +524,7 @@ export async function verifyBookingAction(bookingId: string) {
 
     const { data: booking, error } = await supabaseAdmin
       .from('bookings')
-      .select('id, status, total_price, check_in, check_out, source, room_id, hotel_id, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_rate, tax_regime, address, phone), payments(method, status)')
+      .select('id, status, total_price, subtotal, tax_amount, tax_rate_applied, weekend_price_used, check_in, check_out, source, room_id, hotel_id, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_rate, tax_regime, address, phone), payments(method, status)')
       .eq('id', bookingId)
       .single();
 
@@ -543,6 +554,10 @@ export async function verifyBookingAction(bookingId: string) {
         id: booking.id,
         status: booking.status,
         totalPrice: booking.total_price,
+        subtotal: booking.subtotal,
+        taxAmount: booking.tax_amount,
+        taxRateApplied: booking.tax_rate_applied,
+        weekendPriceUsed: booking.weekend_price_used,
         checkIn: booking.check_in,
         checkOut: booking.check_out,
         nights,

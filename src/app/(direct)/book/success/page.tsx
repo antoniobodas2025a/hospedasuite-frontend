@@ -142,9 +142,9 @@ export default async function BookingSuccessPage({
                 </div>
               </div>
             )}
-            {booking.pricePerNight && booking.nights && (
+            {booking.subtotal && booking.nights && (
               <PriceBreakdown
-                pricePerNight={booking.pricePerNight}
+                pricePerNight={Math.round(booking.subtotal / booking.nights)}
                 nights={booking.nights}
                 taxRate={booking.taxRate ?? 0}
                 showDetails={false}

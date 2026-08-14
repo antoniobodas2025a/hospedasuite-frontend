@@ -331,6 +331,10 @@ export interface Database {
       status?: string
       access_token?: string
       total_price?: number
+      subtotal?: number
+      tax_amount?: number
+      tax_rate_applied?: number
+      weekend_price_used?: number
       is_tax_exempt?: boolean
       notes?: string
       source?: string
@@ -351,6 +355,10 @@ export interface Database {
       status?: string
       access_token?: string
       total_price?: number
+      subtotal?: number
+      tax_amount?: number
+      tax_rate_applied?: number
+      weekend_price_used?: number
       is_tax_exempt?: boolean
       notes?: string
       source?: string
@@ -371,6 +379,10 @@ export interface Database {
       status?: string
       access_token?: string
       total_price?: number
+      subtotal?: number
+      tax_amount?: number
+      tax_rate_applied?: number
+      weekend_price_used?: number
       is_tax_exempt?: boolean
       notes?: string
       source?: string
