@@ -40,7 +40,7 @@ export function RoomDetailGallery({
   return (
     <div data-testid="room-detail-gallery" data-checkin={checkInStr} data-checkout={checkOutStr} className="space-y-6">
       {/* Breadcrumb + room name */}
-      <div className="space-y-2">
+      <div className="space-y-2 min-w-0">
         <nav aria-label="breadcrumb">
           <ol className="flex items-center text-xs text-muted-foreground">
             <li>
@@ -51,7 +51,7 @@ export function RoomDetailGallery({
             <li aria-hidden="true">
               <ChevronRight size={12} className="mx-1.5" />
             </li>
-            <li className="font-medium text-foreground">{output.roomName}</li>
+            <li className="font-medium text-foreground truncate">{output.roomName}</li>
           </ol>
         </nav>
         <h1 className="text-2xl lg:text-3xl font-black font-lora text-foreground tracking-tight truncate">
@@ -63,7 +63,7 @@ export function RoomDetailGallery({
       {output.capacity > 0 && (
         <div
           data-testid="room-info-strip"
-          className="flex items-center gap-2 text-sm text-muted-foreground"
+          className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground"
         >
           <Users size={16} />
           <span>
