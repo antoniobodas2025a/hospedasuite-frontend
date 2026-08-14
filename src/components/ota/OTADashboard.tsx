@@ -727,14 +727,6 @@ export default function OTADashboard({
 				</div>
 			) : visibleHotels.length > 0 ? (
 				<>
-					{/* Sprint 2: Featured card */}
-					{featuredHotel && sortBy === "recommended" && (
-						<FeaturedCard
-							hotel={featuredHotel}
-							variant={isSplitView ? "compact" : "full"}
-						/>
-					)}
-
 					{/* Sorting controls — Sprint 1: PRD-005 */}
 					<div className="flex items-center justify-between mb-4">
 						<div className="relative">
