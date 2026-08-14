@@ -69,7 +69,6 @@ vi.mock('next-intl', () => ({
       'ota.roomDetail.weekdayNights_other': '{count} noches entre semana',
       'ota.roomDetail.weekendNights_one': '{count} noche fin de semana',
       'ota.roomDetail.weekendNights_other': '{count} noches fin de semana',
-      'ota.roomDetail.tax': 'IVA ({rate}%)',
       'ota.roomDetail.tryOtherDates': 'Probá con otras fechas o habitaciones',
       'ota.roomDetail.alternativeOptions': 'Otras opciones para estas fechas',
     };
@@ -188,7 +187,6 @@ function makeOutput(overrides: Partial<RoomDetailViewModelOutput> = {}): RoomDet
     totalHotelRooms: 1,
     pricePerNight: 300000,
     weekendPrice: 350000,
-    taxRate: 0.19,
     pricing: null,
     gallery: [{ url: '/hero.jpg' }, { url: '/detail1.jpg' }],
     coverImage: '/hero.jpg',
@@ -300,7 +298,7 @@ describe('T-09: RoomDetailCalendar', () => {
     const output = makeOutput({ state: 'gallery', pricing: null });
     const dispatch = makeDispatch();
 
-    const { getByTestId, getByText } = render(
+    const { getByTestId, getByText, queryByText } = render(
       <RoomDetailCalendar output={output} state="gallery" dispatch={dispatch} />
     );
 
@@ -308,6 +306,8 @@ describe('T-09: RoomDetailCalendar', () => {
     expect(getByText('Desde')).toBeInTheDocument();
     expect(getByText('$300.000')).toBeInTheDocument();
     expect(getByText('Fin de semana: $350.000')).toBeInTheDocument();
+    expect(queryByText(/\+ IVA/i)).not.toBeInTheDocument();
+    expect(queryByText(/Sin IVA/i)).not.toBeInTheDocument();
   });
 
   it('hides the weekend teaser when weekend price equals weekday price', () => {
@@ -336,9 +336,7 @@ describe('T-09: RoomDetailCalendar', () => {
         weekdayNights: 3,
         weekendNights: 0,
         subtotal: 900000,
-        tax: 171000,
-        total: 1071000,
-        taxRate: 0.19,
+        total: 900000,
         breakdown: [],
       },
       initialCheckIn: new Date('2026-08-10T12:00:00Z'),
@@ -346,13 +344,14 @@ describe('T-09: RoomDetailCalendar', () => {
     });
     const dispatch = makeDispatch();
 
-    const { getByTestId } = render(
+    const { getByTestId, queryByText } = render(
       <RoomDetailCalendar output={output} state="dates_selected" dispatch={dispatch} />
     );
 
     expect(getByTestId('summary-bar')).toBeInTheDocument();
     expect(getByTestId('summary-bar')).toHaveTextContent('Total');
-    expect(getByTestId('summary-bar')).toHaveTextContent('$1.071.000');
+    expect(getByTestId('summary-bar')).toHaveTextContent('$900.000');
+    expect(queryByText(/IVA/i)).not.toBeInTheDocument();
   });
 
   it('dispatches SELECT_DATES when InlineDatePicker changes', () => {
@@ -392,9 +391,7 @@ describe('T-09: RoomDetailCalendar', () => {
             weekdayNights: 3,
             weekendNights: 0,
             subtotal: 900000,
-            tax: 171000,
-            total: 1071000,
-            taxRate: 0.19,
+            total: 900000,
             breakdown: [],
           },
           initialCheckIn: new Date('2026-08-10T12:00:00Z'),
@@ -418,9 +415,7 @@ describe('T-09: RoomDetailCalendar', () => {
         weekdayNights: 3,
         weekendNights: 0,
         subtotal: 900000,
-        tax: 171000,
-        total: 1071000,
-        taxRate: 0.19,
+        total: 900000,
         breakdown: [],
       },
       initialCheckIn: new Date('2026-08-10T12:00:00Z'),
@@ -457,9 +452,7 @@ describe('T-09: RoomDetailCalendar', () => {
         weekdayNights: 3,
         weekendNights: 0,
         subtotal: 900000,
-        tax: 171000,
-        total: 1071000,
-        taxRate: 0.19,
+        total: 900000,
         breakdown: [],
       },
       initialCheckIn: new Date('2026-08-10T12:00:00Z'),
@@ -528,9 +521,7 @@ describe('T-10: RoomDetailGallery', () => {
         weekdayNights: 2,
         weekendNights: 1,
         subtotal: 950000,
-        tax: 180500,
-        total: 1130500,
-        taxRate: 0.19,
+        total: 950000,
         breakdown: [],
       },
       initialCheckIn: new Date('2026-08-10T12:00:00Z'),

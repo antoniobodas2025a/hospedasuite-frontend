@@ -61,7 +61,7 @@ interface VirtualizedRoomListProps {
   isSearchingDates: boolean;
   totalRooms: number;
   availableCount: number;
-  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
+  hotel?: { cancellation_policy?: string | null };
   searchParams: URLSearchParams;
 }
 
@@ -149,7 +149,7 @@ interface RoomsListWithFiltersProps {
   checkin?: string | null;
   checkout?: string | null;
   isSearchingDates: boolean;
-  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null };
+  hotel?: { cancellation_policy?: string | null };
 }
 
 export default function RoomsListWithFilters({

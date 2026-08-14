@@ -96,7 +96,6 @@ const baseProps = {
   defaultGuests: 2,
   isOverCapacity: false,
   nights: 1,
-  taxRate: 0.19,
   variant: 'desktop' as const,
   cancellationPolicy: 'Cancel free up to 24h before check-in',
 };

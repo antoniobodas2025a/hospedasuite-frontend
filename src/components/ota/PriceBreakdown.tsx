@@ -4,13 +4,9 @@ import React from 'react';
 import { motion } from 'framer-motion';
 import { springGentle } from '@/lib/mac2026/spring';
 import { cn } from '@/lib/utils';
-import { getTaxLabel, getEffectiveTaxRate } from '@/lib/pricing';
-
 export interface PriceBreakdownProps {
   pricePerNight: number;
   nights: number;
-  taxRate?: number;
-  taxRegime?: 'simplified' | 'responsible';
   showDetails?: boolean;
   className?: string;
   /** Dark variant for rendering on dark backgrounds (e.g. checkout sidebar) */
@@ -22,20 +18,12 @@ const formatCOP = (amount: number) => amount.toLocaleString('es-CO');
 export default function PriceBreakdown({
   pricePerNight,
   nights,
-  taxRate,
-  taxRegime,
   showDetails = true,
   className,
   dark = false,
 }: PriceBreakdownProps) {
-  const effectiveRate = React.useMemo(() => {
-    return getEffectiveTaxRate(taxRate, taxRegime);
-  }, [taxRate, taxRegime]);
-
-  const taxLabel = getTaxLabel(effectiveRate);
   const subtotal = pricePerNight * nights;
-  const iva = Math.round(subtotal * effectiveRate);
-  const total = subtotal + iva;
+  const total = subtotal;
   const nightLabel = nights === 1 ? 'noche' : 'noches';
 
   return (
@@ -65,15 +53,6 @@ export default function PriceBreakdown({
             ${formatCOP(subtotal)}
           </p>
         </div>
-
-        {iva > 0 && (
-          <div className="flex justify-between items-baseline gap-3">
-            <p className={cn('text-sm', dark ? 'text-background/60' : 'text-muted-foreground')}>{taxLabel}</p>
-            <p className={cn('text-sm font-medium tabular-nums', dark ? 'text-background/70' : 'text-foreground')}>
-              ${formatCOP(iva)}
-            </p>
-          </div>
-        )}
 
         <div className={cn('flex justify-between items-baseline gap-3 pt-3 border-t', dark ? 'border-border/20' : 'border-border')}>
           <p className={cn('text-base font-bold', dark ? 'text-background' : 'text-foreground')}>Total</p>

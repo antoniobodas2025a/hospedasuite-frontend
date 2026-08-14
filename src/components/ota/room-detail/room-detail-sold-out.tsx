@@ -193,7 +193,6 @@ export function RoomDetailSoldOut({
                       checkIn={suggestion.checkIn ? toISODate(suggestion.checkIn) : checkInStr}
                       checkOut={suggestion.checkOut ? toISODate(suggestion.checkOut) : checkOutStr}
                       isSearchingDates={true}
-                      hotel={{ tax_rate: output.pricing?.taxRate }}
                       totalRooms={output.totalHotelRooms}
                       availableCount={visibleSuggestions.length}
                     />

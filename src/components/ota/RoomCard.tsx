@@ -12,7 +12,7 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
-import { getEffectiveTaxRate, formatPrice, getTaxLabel, buildRoomPricingBreakdown } from '@/lib/pricing';
+import { formatPrice, buildRoomPricingBreakdown } from '@/lib/pricing';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
@@ -34,7 +34,7 @@ interface RoomCardProps {
   allRooms?: (Partial<Room> & { id: string; name: string; cover_image_blur?: string })[];
   totalRooms?: number;
   availableCount?: number;
-  hotel?: { cancellation_policy?: string | null; tax_rate?: number | null; tax_regime?: string | null };
+  hotel?: { cancellation_policy?: string | null };
   searchParams?: URLSearchParams;
   imagePriority?: boolean;
   index?: number;
@@ -65,59 +65,46 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
 
   const basePrice = useMemo(() => room.price_per_night || room.price || 0, [room.price_per_night, room.price]);
   const weekendPrice = useMemo(() => room.weekend_price || basePrice * 1.2, [room.weekend_price, basePrice]);
-  const taxRate = useMemo(() => getEffectiveTaxRate(hotel?.tax_rate, hotel?.tax_regime), [hotel?.tax_rate, hotel?.tax_regime]);
-  
+
   type PriceBreakdownType = {
     subtotal: number;
-    iva: number;
     total: number;
-    hasTax: boolean;
-    taxLabel: string;
     isEstimate: boolean;
     weekdayNights: number;
     weekendNights: number;
   };
-  
+
   const priceBreakdown: PriceBreakdownType = useMemo(() => {
     if (!checkIn || !checkOut) {
       // No dates selected: show base price (weekday) as estimate
       const subtotal = basePrice;
-      const iva = Math.round(subtotal * taxRate);
-      const total = subtotal + iva;
-      return { 
-        subtotal, 
-        iva, 
-        total, 
-        hasTax: taxRate > 0, 
-        taxLabel: getTaxLabel(taxRate),
+      return {
+        subtotal,
+        total: subtotal,
         isEstimate: true,
         weekdayNights: 0,
         weekendNights: 0,
       };
     }
-    
+
     // Dates selected: use weekend-aware calculation
     const checkInDate = new Date(checkIn);
     const checkOutDate = new Date(checkOut);
     const pricing = buildRoomPricingBreakdown({
       pricePerNight: basePrice,
       weekendPrice,
-      taxRate,
       checkIn: checkInDate,
       checkOut: checkOutDate,
     });
-    
+
     return {
       subtotal: pricing.subtotal,
-      iva: pricing.tax,
       total: pricing.total,
-      hasTax: taxRate > 0,
-      taxLabel: getTaxLabel(taxRate),
       isEstimate: false,
       weekdayNights: pricing.weekdayNights,
       weekendNights: pricing.weekendNights,
     };
-  }, [basePrice, weekendPrice, taxRate, checkIn, checkOut]);
+  }, [basePrice, weekendPrice, checkIn, checkOut]);
 
   const { trackViewRef, trackClickReserve } = useBookingAnalytics({
     hotelId,
@@ -125,7 +112,6 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
     price: basePrice,
     nights,
     hasDates: !!checkIn && !!checkOut,
-    taxRate,
   });
 
   // Preserve existing params (location, category, filters) and navigate to room detail
@@ -198,7 +184,6 @@ export function areRoomCardPropsEqual(prev: RoomCardProps, next: RoomCardProps):
   if (prev.isLoading !== next.isLoading) return false;
   if (prev.totalRooms !== next.totalRooms) return false;
   if (prev.availableCount !== next.availableCount) return false;
-  if (prev.hotel?.tax_rate !== next.hotel?.tax_rate) return false;
   if (prev.hotel?.cancellation_policy !== next.hotel?.cancellation_policy) return false;
   if (prev.searchParams?.toString() !== next.searchParams?.toString()) return false;
   if (prev.imagePriority !== next.imagePriority) return false;
@@ -239,12 +224,9 @@ function RoomCardInner({
   isProcessing: boolean;
   coverImage: string;
   basePrice: number;
-  priceBreakdown: { 
-    subtotal: number; 
-    iva: number; 
-    total: number; 
-    hasTax: boolean; 
-    taxLabel: string;
+  priceBreakdown: {
+    subtotal: number;
+    total: number;
     isEstimate: boolean;
     weekdayNights: number;
     weekendNights: number;
@@ -419,12 +401,6 @@ function RoomCardInner({
                   <span>x {nights} {t('ota.roomCard.nights', { count: nights })}</span>
                 ) : (
                   <span>COP/noche</span>
-                )}
-                {priceBreakdown.hasTax && (
-                  <span title="El IVA se agrega al precio base">(+ IVA)</span>
-                )}
-                {!priceBreakdown.hasTax && (
-                  <span>(Sin IVA)</span>
                 )}
                 {priceBreakdown.weekendNights > 0 && (
                   <span className="text-[10px] text-muted-foreground/70">

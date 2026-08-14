@@ -52,7 +52,6 @@ vi.mock('next-intl', () => ({
       'ota.roomDetail.weekdayNights_other': '{count} noches entre semana',
       'ota.roomDetail.weekendNights_one': '{count} noche fin de semana',
       'ota.roomDetail.weekendNights_other': '{count} noches fin de semana',
-      'ota.roomDetail.tax': 'IVA ({rate}%)',
       'ota.roomDetail.tryOtherDates': 'Prueba con otras fechas o habitaciones',
       'ota.roomDetail.alternativeOptions': 'Otras opciones para estas fechas',
     };
@@ -142,7 +141,6 @@ function makeOutput(overrides: Partial<RoomDetailViewModelOutput> = {}): RoomDet
     totalHotelRooms: 1,
     pricePerNight: 300000,
     weekendPrice: 350000,
-    taxRate: 0.19,
     pricing: null,
     gallery: [],
     coverImage: '/logo.png',
@@ -320,9 +318,7 @@ describe('RoomDetailClient', () => {
             weekdayNights: 2,
             weekendNights: 1,
             subtotal: 950000,
-            tax: 180500,
-            total: 1130500,
-            taxRate: 0.19,
+            total: 950000,
             breakdown: [],
           },
           initialCheckIn: dates.checkIn,
@@ -350,7 +346,7 @@ describe('RoomDetailClient', () => {
 
     expect(getByTestId('summary-bar')).toBeInTheDocument();
     expect(getByTestId('calendar-reserve-button')).toHaveTextContent('Reservar');
-    expect(getByTestId('summary-bar')).toHaveTextContent('$1.071.000');
+    expect(getByTestId('summary-bar')).toHaveTextContent('$900.000');
   });
 
   it('hides calendar Reservar without dates and enables it after selecting dates', () => {
@@ -375,9 +371,7 @@ describe('RoomDetailClient', () => {
             weekdayNights: 3,
             weekendNights: 0,
             subtotal: 900000,
-            tax: 171000,
-            total: 1071000,
-            taxRate: 0.19,
+            total: 900000,
             breakdown: [],
           },
           initialCheckIn: dates.checkIn,
@@ -454,9 +448,7 @@ describe('RoomDetailClient', () => {
             weekdayNights: 3,
             weekendNights: 0,
             subtotal: 900000,
-            tax: 171000,
-            total: 1071000,
-            taxRate: 0.19,
+            total: 900000,
             breakdown: [],
           },
           initialCheckIn: dates.checkIn,

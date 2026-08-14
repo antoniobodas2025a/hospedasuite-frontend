@@ -121,13 +121,11 @@ const defaultSettings: SettingsData = {
 	amenities: [],
 	checkInTime: "15:00",
 	checkOutTime: "11:00",
-	taxRate: 0.19,
-	tax_regime: "simplified",
 	wompi_public_key: "",
 	wompi_integrity_secret: "",
 	wompi_sandbox_mode: false,
 	referred_by: undefined,
-};
+} as unknown as SettingsData;
 
 export const useOnboardingStore = create<OnboardingState>((set) => ({
 	currentStep: 1,

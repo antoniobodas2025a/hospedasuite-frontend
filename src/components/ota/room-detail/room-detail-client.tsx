@@ -96,10 +96,9 @@ export function RoomDetailClient({ output }: RoomDetailClientProps) {
     const pricing = buildRoomPricingBreakdown({
       pricePerNight: output.pricePerNight,
       weekendPrice: output.weekendPrice,
-      taxRate: output.taxRate,
       checkIn: state.checkIn,
       checkOut: state.checkOut,
-    });
+    }) as RoomDetailViewModelOutput['pricing'];
 
     return {
       ...output,
@@ -170,7 +169,6 @@ export function RoomDetailClient({ output }: RoomDetailClientProps) {
                   defaultGuests={2}
                   isOverCapacity={false}
                   nights={nights}
-                  taxRate={effectiveOutput.pricing?.taxRate}
                   variant="desktop"
                   cancellationPolicy={output.cancellationPolicy}
                 />

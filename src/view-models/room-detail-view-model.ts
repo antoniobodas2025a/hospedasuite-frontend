@@ -56,9 +56,7 @@ export interface PriceBreakdown {
   weekdayNights: number;
   weekendNights: number;
   subtotal: number;
-  tax: number;
   total: number;
-  taxRate: number;
   breakdown: DayPrice[];
 }
 
@@ -81,7 +79,6 @@ export interface RoomDetailViewModelOutput {
   totalHotelRooms: number;
   pricePerNight: number;
   weekendPrice: number;
-  taxRate: number;
   pricing: PriceBreakdown | null;
   gallery: GalleryItem[];
   coverImage: string;
@@ -146,7 +143,6 @@ function buildPricing(
   return buildRoomPricingBreakdown({
     pricePerNight: room.pricePerNight,
     weekendPrice: room.weekendPrice,
-    taxRate: hotel.taxRate,
     checkIn: dates.checkIn,
     checkOut: dates.checkOut,
   });
@@ -198,7 +194,6 @@ function errorOutput(): RoomDetailViewModelOutput {
     totalHotelRooms: 0,
     pricePerNight: 0,
     weekendPrice: 0,
-    taxRate: 0,
     pricing: null,
     gallery: [],
     coverImage: '/logo.png',
@@ -245,7 +240,6 @@ export function roomDetailViewModel(
     totalHotelRooms: hotel.totalRooms,
     pricePerNight: room.pricePerNight,
     weekendPrice: room.weekendPrice > 0 ? room.weekendPrice : room.pricePerNight * 1.2,
-    taxRate: hotel.taxRate,
     gallery,
     coverImage: gallery[0].url,
     description: room.description ?? '',

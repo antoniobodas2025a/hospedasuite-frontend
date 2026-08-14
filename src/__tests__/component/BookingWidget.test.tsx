@@ -83,7 +83,6 @@ describe("BookingWidget", () => {
     const { getByRole } = render(
       <BookingWidget
         rooms={baseRooms}
-        taxRate={0.19}
       />
     );
 
@@ -96,7 +95,6 @@ describe("BookingWidget", () => {
         rooms={baseRooms}
         checkIn="2026-08-10"
         checkOut="2026-08-11"
-        taxRate={0.19}
       />
     );
 
@@ -107,7 +105,6 @@ describe("BookingWidget", () => {
     const { queryByText } = render(
       <BookingWidget
         rooms={baseRooms}
-        taxRate={0.19}
       />
     );
 
@@ -123,7 +120,6 @@ describe("BookingWidget", () => {
     const { queryByText } = render(
       <BookingWidget
         rooms={baseRooms}
-        taxRate={0.19}
       />
     );
 
@@ -134,7 +130,6 @@ describe("BookingWidget", () => {
     const { getByText } = render(
       <BookingWidget
         rooms={baseRooms}
-        taxRate={0.19}
         totalRooms={1}
       />
     );
@@ -146,7 +141,6 @@ describe("BookingWidget", () => {
     const { getByText } = render(
       <BookingWidget
         rooms={baseRooms}
-        taxRate={0.19}
         totalRooms={1}
       />
     );
@@ -162,7 +156,6 @@ describe("BookingWidget", () => {
     const { getAllByTestId, queryByRole, queryByTestId } = render(
       <BookingWidget
         rooms={baseRooms}
-        taxRate={0.19}
         isLoading
       />
     );
@@ -183,7 +176,6 @@ describe("BookingWidget", () => {
         rooms={baseRooms}
         checkIn="2026-08-10"
         checkOut="2026-08-11"
-        taxRate={0.19}
       />
     );
 

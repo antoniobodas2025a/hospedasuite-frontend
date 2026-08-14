@@ -1,15 +1,14 @@
 /**
- * Tax Regime Integration Flow Tests
+ * FLAT Pricing Integration Flow Tests
  *
- * Verifies the end-to-end tax regime flow:
- * 1. Hotelero selects tax regime during onboarding
- * 2. Price calculator shows correct breakdown for the hotelero
- * 3. Checkout calculates IVA correctly for the guest
+ * Verifies the end-to-end FLAT pricing model:
+ * 1. Hotelero configures a single final price (no tax regime selection)
+ * 2. Price calculator shows total equal to base price (no IVA)
+ * 3. Checkout uses the same flat total
  * 4. Split payment distributes funds correctly between hotel and platform
  *
  * Business rules:
- * - Simplified regime: no IVA added to guest price
- * - Responsible regime: 19% IVA added to guest price (IVA is passthrough, doesn't affect hotel net)
+ * - Total = base price (no tax added)
  * - Platform fee: 8% of base price
  * - Wompi fee: 3% of base price
  * - Retention: 11% of platform fee
@@ -19,34 +18,29 @@ import { describe, it, expect } from 'vitest';
 import { calculatePriceBreakdown } from '@/components/dashboard/price-calculator-logic';
 import { calculateSplitPayment } from '@/lib/split-payment-calculator';
 
-describe('Tax Regime Integration Flow', () => {
-	describe('Scenario 1: Hotel Régimen Simplificado', () => {
-		const taxRegime = 'simplified';
+describe('FLAT Pricing Integration Flow', () => {
+	describe('Scenario 1: Standard Room Booking', () => {
 		const roomPrice = 300000; // $300.000 COP/noche
 		const nights = 2;
 
-		it('calculadora del hotelero muestra neto correcto', () => {
-			const breakdown = calculatePriceBreakdown(roomPrice, taxRegime);
+		it('calculadora del hotelero muestra total igual al precio base', () => {
+			const breakdown = calculatePriceBreakdown(roomPrice);
 
-			// El hotelero ve cuánto le llega después de comisiones
-			expect(breakdown.guestSees).toBe(300000); // Sin IVA
+			expect(breakdown.total).toBe(roomPrice);
+			expect(breakdown.basePrice).toBe(roomPrice);
 			expect(breakdown.wompiFee).toBe(9000); // 3%
 			expect(breakdown.platformFee).toBe(24000); // 8%
 			expect(breakdown.retencion).toBe(2640); // 11% de 24000
 			expect(breakdown.hotelReceives).toBe(264360); // Neto
 		});
 
-		it('checkout del huésped no agrega IVA', () => {
-			const subtotal = roomPrice * nights;
-			const ivaRate = taxRegime === 'responsible' ? 0.19 : 0;
-			const iva = subtotal * ivaRate;
-			const total = subtotal + iva;
+		it('checkout del huésped usa el precio base como total final', () => {
+			const total = roomPrice * nights;
 
-			expect(iva).toBe(0);
 			expect(total).toBe(600000); // 300000 * 2
 		});
 
-		it('split payment calcula correctamente', () => {
+		it('split payment calcula correctamente sobre el total flat', () => {
 			const totalAmount = roomPrice * nights; // 600000
 
 			const split = calculateSplitPayment({
@@ -64,51 +58,10 @@ describe('Tax Regime Integration Flow', () => {
 		});
 	});
 
-	describe('Scenario 2: Hotel Responsable de IVA', () => {
-		const taxRegime = 'responsible';
-		const roomPrice = 300000;
-		const nights = 2;
-
-		it('calculadora del hotelero muestra IVA pero neto igual', () => {
-			const breakdown = calculatePriceBreakdown(roomPrice, taxRegime);
-
-			// El hotelero ve que el huésped paga IVA, pero su neto es igual
-			expect(breakdown.guestSees).toBe(357000); // 300000 + 19% IVA
-			expect(breakdown.iva).toBe(57000); // 19% de 300000
-			expect(breakdown.hotelReceives).toBe(264360); // MISMO neto (IVA es pasajero)
-		});
-
-		it('checkout del huésped agrega IVA correctamente', () => {
-			const subtotal = roomPrice * nights;
-			const ivaRate = taxRegime === 'responsible' ? 0.19 : 0;
-			const iva = subtotal * ivaRate;
-			const total = subtotal + iva;
-
-			expect(iva).toBe(114000); // 19% de 600000
-			expect(total).toBe(714000); // 600000 + 114000
-		});
-
-		it('split payment se calcula sobre base sin IVA', () => {
-			const baseAmount = roomPrice * nights; // 600000 (sin IVA)
-
-			const split = calculateSplitPayment({
-				totalAmount: baseAmount,
-				platformPercentage: 8,
-				hotelPercentage: 92,
-				wompiFeeRate: 0.03,
-				retentionRate: 0.11,
-			});
-
-			// Las comisiones se calculan sobre la base, no sobre el total con IVA
-			expect(split.platformGrossAmount).toBe(48000); // 8% de 600000 (NO de 714000)
-			expect(split.hotelGrossAmount).toBe(552000); // 92% de 600000
-		});
-	});
-
-	describe('Scenario 3: Edge Cases', () => {
+	describe('Scenario 2: Edge Cases', () => {
 		it('calculadora maneja precio 0 correctamente', () => {
-			const breakdown = calculatePriceBreakdown(0, 'simplified');
-			expect(breakdown.guestSees).toBe(0);
+			const breakdown = calculatePriceBreakdown(0);
+			expect(breakdown.total).toBe(0);
 			expect(breakdown.hotelReceives).toBe(0);
 		});
 
@@ -125,18 +78,17 @@ describe('Tax Regime Integration Flow', () => {
 		});
 
 		it('maneja montos grandes sin overflow', () => {
-			const breakdown = calculatePriceBreakdown(10000000, 'responsible'); // 10 millones
-			expect(breakdown.guestSees).toBe(11900000); // + 19% IVA
+			const breakdown = calculatePriceBreakdown(10000000); // 10 millones
+			expect(breakdown.total).toBe(10000000);
 			expect(breakdown.hotelReceives).toBeGreaterThan(0);
 		});
 
 		it('calculadora y split payment son consistentes en porcentajes', () => {
 			const roomPrice = 500000;
 			const nights = 3;
-			const taxRegime = 'simplified';
 
 			// Calculadora del hotelero (por noche)
-			const breakdown = calculatePriceBreakdown(roomPrice, taxRegime);
+			const breakdown = calculatePriceBreakdown(roomPrice);
 
 			// Split payment del checkout (total de la reserva)
 			const totalAmount = roomPrice * nights;
@@ -161,19 +113,6 @@ describe('Tax Regime Integration Flow', () => {
 
 			const expectedPlatformFee = roomPrice * 0.08;
 			expect(breakdown.platformFee).toBe(expectedPlatformFee);
-		});
-
-		it('IVA es pasajero: no afecta el neto del hotel', () => {
-			const basePrice = 300000;
-
-			const simplified = calculatePriceBreakdown(basePrice, 'simplified');
-			const responsible = calculatePriceBreakdown(basePrice, 'responsible');
-
-			// El neto del hotel es IDENTICO en ambos regímenes
-			expect(simplified.hotelReceives).toBe(responsible.hotelReceives);
-
-			// La diferencia solo la ve el huésped (paga IVA o no)
-			expect(responsible.guestSees - simplified.guestSees).toBe(responsible.iva);
 		});
 	});
 });

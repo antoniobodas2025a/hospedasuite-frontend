@@ -317,7 +317,6 @@ export default async function ChannelHotelDetailPage({
                   isSearchingDates={isSearchingDates}
                   hotel={{
                     cancellation_policy: hotel.cancellation_policy,
-                    tax_rate: hotel.tax_rate,
                   }}
                 />
 							</div>
@@ -357,7 +356,6 @@ export default async function ChannelHotelDetailPage({
 						checkOut={checkout ?? null}
 						cancellationPolicy={hotel.cancellation_policy}
 						totalRooms={(hotel.rooms || []).length}
-						taxRate={hotel.tax_rate}
 						hotelId={hotel.id}
 						primaryColor={hotel.primary_color}
 					/>

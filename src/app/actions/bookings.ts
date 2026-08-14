@@ -6,7 +6,7 @@ import { cookies } from 'next/headers';
 import { isTemporalCollision, type PostgresError } from '@/lib/booking-helpers';
 import { emitEvent } from '@/lib/events';
 import { supabaseAdmin } from '@/lib/supabase-admin';
-import { getEffectiveTaxRate, buildRoomPricingBreakdown } from '@/lib/pricing';
+import { buildRoomPricingBreakdown } from '@/lib/pricing';
 import { verifySession } from '@/lib/session-utils';
 import { requireHotelAccess } from '@/lib/tenant-guard';
 
@@ -343,28 +343,19 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
     const checkOut = new Date(`${payload.checkout}T12:00:00Z`);
     const nights = Math.max(1, Math.ceil((checkOut.getTime() - checkIn.getTime()) / (1000 * 60 * 60 * 24)));
 
-    // Fetch hotel tax_rate to validate total including IVA
-    const { data: hotelData } = await supabaseAdmin
-      .from('hotels')
-      .select('tax_rate, tax_regime')
-      .eq('id', room.hotel_id)
-      .single();
-
-    const hotelTaxRate = getEffectiveTaxRate(hotelData?.tax_rate, hotelData?.tax_regime);
-    
-    // ADD model: use buildRoomPricingBreakdown to calculate subtotal with weekend surcharges
+    // FLAT model: use buildRoomPricingBreakdown to calculate the final guest total
     const roomPrice = room.price || 0;
     const weekendPrice = room.weekend_price ?? roomPrice * 1.2;
     const pricing = buildRoomPricingBreakdown({
       pricePerNight: roomPrice,
       weekendPrice,
-      taxRate: hotelTaxRate,
       checkIn,
       checkOut,
     });
-    
-    const maxExpected = Math.round(pricing.total * 1.05); // 5% buffer above total with IVA
-    const minExpected = Math.round(pricing.subtotal * 0.95); // 5% discount tolerance on base
+
+    const expectedAmount = pricing.total;
+    const maxExpected = Math.round(expectedAmount * 1.05); // 5% buffer above flat total
+    const minExpected = Math.round(expectedAmount * 0.95); // 5% discount tolerance
 
     if (payload.amount > maxExpected || payload.amount < minExpected) {
       throw new Error('Monto verificado no coincide con tarifa de la unidad.');
@@ -432,8 +423,6 @@ export async function createPendingBookingAction(payload: PendingBookingPayload)
         check_out: payload.checkout,
         total_price: verifiedTotal,
         subtotal: pricing.subtotal,
-        tax_amount: pricing.tax,
-        tax_rate_applied: hotelTaxRate,
         weekend_price_used: weekendPrice,
         status: 'PENDING',
         source: effectiveSource,
@@ -524,7 +513,7 @@ export async function verifyBookingAction(bookingId: string) {
 
     const { data: booking, error } = await supabaseAdmin
       .from('bookings')
-      .select('id, status, total_price, subtotal, tax_amount, tax_rate_applied, weekend_price_used, check_in, check_out, source, room_id, hotel_id, guests(full_name, email), rooms(name, price), hotels(name, slug, tax_rate, tax_regime, address, phone), payments(method, status)')
+      .select('id, status, total_price, subtotal, weekend_price_used, check_in, check_out, source, room_id, hotel_id, guests(full_name, email), rooms(name, price), hotels(name, slug, address, phone), payments(method, status)')
       .eq('id', bookingId)
       .single();
 
@@ -543,8 +532,6 @@ export async function verifyBookingAction(bookingId: string) {
     const checkOutDate = new Date(booking.check_out);
     const nights = Math.max(1, Math.ceil((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 3600 * 24)));
     const roomPrice = (booking.rooms as any[])?.[0]?.price ?? 0;
-    const hotelRecord = (booking.hotels as any[])?.[0] ?? {};
-    const taxRate = typeof hotelRecord.tax_rate === 'number' ? hotelRecord.tax_rate : (hotelRecord.tax_regime === 'responsible' ? 0.19 : 0);
 
     const paymentMethod = ((booking.payments as any[])?.[0]?.method as string | undefined) || 'direct';
 
@@ -555,14 +542,11 @@ export async function verifyBookingAction(bookingId: string) {
         status: booking.status,
         totalPrice: booking.total_price,
         subtotal: booking.subtotal,
-        taxAmount: booking.tax_amount,
-        taxRateApplied: booking.tax_rate_applied,
         weekendPriceUsed: booking.weekend_price_used,
         checkIn: booking.check_in,
         checkOut: booking.check_out,
         nights,
         pricePerNight: roomPrice,
-        taxRate,
         roomId: booking.room_id,
         hotelId: booking.hotel_id,
         paymentMethod,

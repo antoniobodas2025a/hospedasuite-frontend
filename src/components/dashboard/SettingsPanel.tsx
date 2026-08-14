@@ -207,7 +207,6 @@ export default function SettingsPanel({
 	const [activeTab, setActiveTab] = useState<
 		"general" | "ota" | "staff" | "advanced"
 	>("general");
-	const [showFiscal, setShowFiscal] = useState(false);
 	const [showPayments, setShowPayments] = useState(false);
 	const [coverPhotoPreview, setCoverPhotoPreview] = useState<string | null>(
 		initialData?.cover_photo_url || null,
@@ -659,39 +658,6 @@ export default function SettingsPanel({
 										/>
 									</div>
 
-									{/* Fiscal — collapsible (Ley de Miller) */}
-									<div className="mt-6 p-4 bg-card/40 border border-border/20 rounded-[var(--radius-squircle-xl)]">
-										<button
-											type="button"
-											onClick={() => setShowFiscal(!showFiscal)}
-											className="w-full flex items-center justify-between"
-										>
-											<span className="text-sm font-bold">
-												💰 Régimen Tributario
-											</span>
-											<span className="text-xs text-muted-foreground">
-												{showFiscal ? "▲" : "▼"}
-											</span>
-										</button>
-										{showFiscal && (
-											<div className="mt-4">
-												<label className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest mb-2 block">
-													Régimen Tributario
-												</label>
-												<select
-													{...register("tax_rate", { valueAsNumber: true })}
-													className="w-full p-5 bg-background border border-border rounded-[var(--radius-squircle-2xl)] text-foreground"
-												>
-													<option value={0}>
-														Régimen Simplificado (sin IVA)
-													</option>
-													<option value={0.19}>
-														Régimen Ordinario (IVA 19%)
-													</option>
-												</select>
-											</div>
-										)}
-									</div>
 								</div>
 							</div>
 							{/* Pagos — collapsible (Ley de Miller) */}

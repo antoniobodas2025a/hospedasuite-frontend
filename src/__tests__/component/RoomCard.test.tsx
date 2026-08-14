@@ -193,7 +193,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
@@ -212,15 +212,15 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
     expect(getByText(/Reservar/i)).toBeInTheDocument();
   });
 
-  it("displays price with IVA breakdown when tax_rate is 0.19", () => {
-    const { getByText } = render(
+  it("does not display IVA labels", () => {
+    const { queryByText } = render(
       <RoomCard
         room={baseRoom}
         hotelSlug="hotel-test"
@@ -229,36 +229,37 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
-    // Base $200.000 | Total: $238.000 (+ IVA)
-    expect(getByText(/\$200\.000/)).toBeInTheDocument();
-    expect(getByText(/\+ IVA/i)).toBeInTheDocument();
-    expect(getByText(/\$238\.000/)).toBeInTheDocument();
+    expect(queryByText(/\(\s*\+\s*IVA\s*\)/i)).not.toBeInTheDocument();
+    expect(queryByText(/\(\s*Sin\s+IVA\s*\)/i)).not.toBeInTheDocument();
   });
 
-  it("displays 'IVA incluido' label when tax_rate is 0", () => {
+  it("displays flat total equal to base price when no dates are selected", () => {
+    const { getAllByText, getByText, queryByText } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        isSearchingDates={false}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{}}
+      />
+    );
+
+    // No dates: one night estimate, base price equals total (FLAT)
+    const prices = getAllByText(/\$200\.000/);
+    expect(prices.length).toBeGreaterThanOrEqual(2);
+    expect(queryByText(/\+ IVA/i)).not.toBeInTheDocument();
+    expect(queryByText(/Sin IVA/i)).not.toBeInTheDocument();
+  });
+
+  it("calculates flat total for multiple nights", () => {
     const { getByText, queryByText } = render(
-      <RoomCard
-        room={baseRoom}
-        hotelSlug="hotel-test"
-        isSearchingDates={false}
-        allRooms={[baseRoom]}
-        totalRooms={1}
-        availableCount={1}
-        hotelId="hotel-test"
-        hotel={{ tax_rate: 0 }}
-      />
-    );
-
-    expect(getByText(/Sin IVA/i)).toBeInTheDocument();
-    expect(queryByText(/IVA agregado/i)).not.toBeInTheDocument();
-  });
-
-  it("calculates total for multiple nights with IVA", () => {
-    const { getByText } = render(
       <RoomCard
         room={baseRoom}
         hotelSlug="hotel-test"
@@ -269,12 +270,35 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
-    // 3 nights: $200.000 × 3 = $600.000 + IVA (19%): $114.000 | Total: $714.000
-    expect(getByText(/\$714\.000/)).toBeInTheDocument();
+    // 3 nights: $200.000 × 3 = $600.000 — no IVA added
+    expect(getByText(/\$600\.000/)).toBeInTheDocument();
+    expect(queryByText(/\+ IVA/i)).not.toBeInTheDocument();
+  });
+
+  it("applies weekend pricing to the flat total", () => {
+    const { getByText, queryByText } = render(
+      <RoomCard
+        room={baseRoom}
+        hotelSlug="hotel-test"
+        checkIn="2026-08-14"
+        checkOut="2026-08-17"
+        isSearchingDates={true}
+        allRooms={[baseRoom]}
+        totalRooms={1}
+        availableCount={1}
+        hotelId="hotel-test"
+        hotel={{}}
+      />
+    );
+
+    // 3 nights: Fri ($200.000) + Sat ($240.000) + Sun ($240.000) = $680.000
+    expect(getByText(/\$680\.000/)).toBeInTheDocument();
+    expect(getByText(/2 noches fin de semana/)).toBeInTheDocument();
+    expect(queryByText(/IVA/i)).not.toBeInTheDocument();
   });
 
   it("does not display legacy conditional button text", () => {
@@ -287,7 +311,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
@@ -307,7 +331,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
@@ -319,7 +343,7 @@ describe("RoomCard", () => {
       hotel_id: 'hotel-test',
       price: 200000,
       has_dates: false,
-      tax_rate: 0.19,
+
     });
   });
 
@@ -336,7 +360,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
@@ -357,7 +381,7 @@ describe("RoomCard", () => {
       price: 200000,
       nights: 1,
       has_dates: true,
-      tax_rate: 0.19,
+
     });
     expect(mockRouter.push).toHaveBeenCalledWith(
       expect.stringContaining('/hotel/hotel-test/room/room-1')
@@ -377,7 +401,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
         isLoading
       />
     );
@@ -396,7 +420,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
@@ -415,7 +439,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
@@ -437,7 +461,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
       />
     );
 
@@ -460,7 +484,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
         searchParams={new URLSearchParams({ guests: "2" })}
       />
     );
@@ -492,7 +516,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
         imagePriority
       />
     );
@@ -513,7 +537,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
         index={2}
       />
     );
@@ -533,7 +557,7 @@ describe("RoomCard", () => {
         totalRooms={1}
         availableCount={1}
         hotelId="hotel-test"
-        hotel={{ tax_rate: 0.19 }}
+        hotel={{}}
         index={0}
       />
     );
@@ -556,7 +580,7 @@ describe("areRoomCardPropsEqual", () => {
     allRooms: [baseRoom],
     totalRooms: 1,
     availableCount: 1,
-    hotel: { tax_rate: 0.19, cancellation_policy: "Flexible" },
+    hotel: { cancellation_policy: "Flexible" },
     searchParams: new URLSearchParams({ guests: "2" }),
     imagePriority: false,
     index: 0,
@@ -572,10 +596,6 @@ describe("areRoomCardPropsEqual", () => {
 
   it("returns false when dates change", () => {
     expect(areRoomCardPropsEqual(baseProps, { ...baseProps, checkOut: "2026-08-12" })).toBe(false);
-  });
-
-  it("returns false when tax_rate changes", () => {
-    expect(areRoomCardPropsEqual(baseProps, { ...baseProps, hotel: { ...baseProps.hotel, tax_rate: 0 } })).toBe(false);
   });
 
   it("returns false when searchParams change", () => {

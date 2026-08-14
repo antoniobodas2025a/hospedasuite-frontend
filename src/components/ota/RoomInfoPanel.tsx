@@ -28,7 +28,6 @@ interface RoomInfoPanelProps {
 	defaultGuests: number;
 	isOverCapacity: boolean;
 	nights: number;
-	taxRate?: number;
 	variant?: "desktop" | "mobile";
 	onAdjustGuests?: () => void;
 	onSeeLargerRooms?: () => void;
@@ -43,7 +42,6 @@ export function RoomInfoPanel({
 	defaultGuests,
 	isOverCapacity,
 	nights,
-	taxRate = 0.19,
 	variant = "desktop",
 	onAdjustGuests,
 	onSeeLargerRooms,

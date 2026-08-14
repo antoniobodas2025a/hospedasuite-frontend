@@ -154,8 +154,3 @@ export function trackAbandonBooking(
 ) {
   captureBookingEvent({ event: 'abandon_booking', properties });
 }
-
-export function trackTaxRateFallback(properties: { hotel_id: string; fallback_rate: number }) {
-  if (typeof window === 'undefined') return;
-  posthog.capture('tax_rate_fallback', properties);
-}

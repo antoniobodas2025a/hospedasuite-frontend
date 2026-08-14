@@ -402,7 +402,6 @@
       "weekendPrice": "Weekend: ${price}/night",
       "weekdayNights": "{count, plural, one {# weekday night} other {# weekday nights}}",
       "weekendNights": "{count, plural, one {# weekend night} other {# weekend nights}}",
-      "tax": "VAT ({rate}%)",
       "notAvailableForDates": "Not available from {from} to {to}",
       "tryOtherDates": "Try other dates",
       "alternativeOptions": "Available options",

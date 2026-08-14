@@ -48,8 +48,8 @@ export interface Hotel {
   address?: string;
   primary_color?: string;
   cancellation_policy?: string;
-  tax_rate?: number;
-  tax_regime?: 'simplified' | 'responsible';
+  tax_rate?: number; // legacy
+  tax_regime?: 'simplified' | 'responsible'; // legacy
   cover_photo_url?: string;
   main_image_url?: string;
   gallery_urls?: string[];
@@ -239,8 +239,8 @@ export interface OtaCommission {
 // BOOKING ANALYTICS EVENTS (PostHog)
 // --------------------------------------------------------------------------
 export type BookingAnalyticsEvent =
-  | { event: 'view_room'; properties: { room_id: string; hotel_id: string; price: number; has_dates: boolean; tax_rate: number } }
-  | { event: 'click_reserve'; properties: { room_id: string; hotel_id: string; price: number; nights: number; has_dates: boolean; tax_rate: number } }
+  | { event: 'view_room'; properties: { room_id: string; hotel_id: string; price: number; has_dates: boolean } }
+  | { event: 'click_reserve'; properties: { room_id: string; hotel_id: string; price: number; nights: number; has_dates: boolean } }
   | { event: 'open_room_modal'; properties: { room_id: string; hotel_id: string; source: 'card' | 'sidebar' } }
   | { event: 'close_room_modal'; properties: { room_id: string; hotel_id: string; action: 'reserve' | 'back' | 'esc' } }
   | { event: 'complete_booking'; properties: { room_id: string; hotel_id: string; total_price: number; nights: number; guests: number; payment_method: string } }

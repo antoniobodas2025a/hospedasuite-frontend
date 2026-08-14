@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import CheckoutForm from '@/components/checkout/CheckoutForm';
-import { buildRoomPricingBreakdown, getEffectiveTaxRate } from '@/lib/pricing';
+import { buildRoomPricingBreakdown } from '@/lib/pricing';
 
 export const dynamic = 'force-dynamic';
 
@@ -30,7 +30,7 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
 
   const { data: hotel, error: hotelError } = await supabase
     .from('hotels')
-    .select('id, name, primary_color, cancellation_policy, location, main_image_url, tax_rate, tax_regime')
+    .select('id, name, primary_color, cancellation_policy, location, main_image_url')
     .eq('slug', slug)
     .single();
 
@@ -69,15 +69,13 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
   const roomPrice = Number(room.price || 0);
   const weekendPrice = Number(room.weekend_price || roomPrice * 1.2);
   // Use per-night breakdown for weekend pricing accuracy
-  const effectiveTaxRate = getEffectiveTaxRate(hotel.tax_rate, hotel.tax_regime);
   const pricing = buildRoomPricingBreakdown({
     pricePerNight: roomPrice,
     weekendPrice,
-    taxRate: effectiveTaxRate,
     checkIn: checkInDate,
     checkOut: checkOutDate,
   });
-  const basePrice = pricing.subtotal; // base price without IVA (CheckoutForm adds IVA)
+  const basePrice = pricing.total; // FLAT: configured price is the final price
 
   return (
     <div className="min-h-screen bg-background selection:bg-brand-200 selection:text-brand-900 pb-24 pt-10">

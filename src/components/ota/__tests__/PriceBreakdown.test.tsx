@@ -31,7 +31,6 @@ describe('PriceBreakdown', () => {
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRate={0}
         />
       );
 
@@ -43,14 +42,13 @@ describe('PriceBreakdown', () => {
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRate={0}
         />
       );
 
       // Price per night and nights label
       expect(getByText(/50.000/)).toBeTruthy();
       expect(getByText(/2 noches/)).toBeTruthy();
-      // Subtotal and total are both $100.000 when no IVA
+      // Subtotal and total are both $100.000 (FLAT)
       expect(getAllByText('$100.000').length).toBe(2);
     });
 
@@ -59,7 +57,6 @@ describe('PriceBreakdown', () => {
         <PriceBreakdown
           pricePerNight={80000}
           nights={1}
-          taxRate={0}
         />
       );
 
@@ -69,86 +66,28 @@ describe('PriceBreakdown', () => {
     });
   });
 
-  describe('Tax calculation with taxRate', () => {
-    it('does NOT show IVA line when taxRate is 0', () => {
+  describe('Flat pricing (no tax)', () => {
+    it('does NOT display an IVA line', () => {
       const { queryByText } = render(
         <PriceBreakdown
-          pricePerNight={50000}
+          pricePerNight={100000}
           nights={2}
-          taxRate={0}
         />
       );
 
       expect(queryByText(/IVA/)).toBeNull();
     });
 
-    it('shows IVA (19%) line when taxRate is 0.19', () => {
-      const { getByText } = render(
+    it('keeps subtotal equal to total', () => {
+      const { getAllByText } = render(
         <PriceBreakdown
-          pricePerNight={100000}
-          nights={1}
-          taxRate={0.19}
-        />
-      );
-
-      expect(getByText(/IVA \(19%\)/)).toBeTruthy();
-      // 100.000 * 0.19 = 19.000
-      expect(getByText('$19.000')).toBeTruthy();
-    });
-
-    it('computes total = subtotal + IVA for taxRate 0.19', () => {
-      const { getByText } = render(
-        <PriceBreakdown
-          pricePerNight={100000}
+          pricePerNight={120000}
           nights={3}
-          taxRate={0.19}
         />
       );
 
-      // subtotal = 300.000, IVA = 57.000, total = 357.000
-      expect(getByText(/total/i)).toBeTruthy();
-      expect(getByText('$357.000')).toBeTruthy();
-    });
-
-    it('defaults to 0% taxRate when no tax prop is provided', () => {
-      const { getAllByText, queryByText } = render(
-        <PriceBreakdown
-          pricePerNight={100000}
-          nights={1}
-        />
-      );
-
-      expect(queryByText(/IVA/)).toBeNull();
-      expect(getAllByText('$100.000').length).toBeGreaterThanOrEqual(2);
-    });
-  });
-
-  describe('Backward compatibility with taxRegime', () => {
-    it('renders without IVA when taxRegime is "simplified"', () => {
-      const { queryByText, getAllByText } = render(
-        <PriceBreakdown
-          pricePerNight={75000}
-          nights={4}
-          taxRegime="simplified"
-        />
-      );
-
-      expect(queryByText(/IVA/)).toBeNull();
-      // 75.000 * 4 = 300.000 — appears as both subtotal and total
-      expect(getAllByText('$300.000').length).toBe(2);
-    });
-
-    it('renders with IVA (19%) when taxRegime is "responsible"', () => {
-      const { getByText } = render(
-        <PriceBreakdown
-          pricePerNight={100000}
-          nights={1}
-          taxRegime="responsible"
-        />
-      );
-
-      expect(getByText(/IVA \(19%\)/)).toBeTruthy();
-      expect(getByText('$119.000')).toBeTruthy();
+      // 120.000 × 3 = 360.000 — appears as both subtotal and total
+      expect(getAllByText('$360.000').length).toBe(2);
     });
 
   });
@@ -159,7 +98,6 @@ describe('PriceBreakdown', () => {
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRate={0}
         />
       );
 
@@ -171,7 +109,6 @@ describe('PriceBreakdown', () => {
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRate={0}
           showDetails={false}
         />
       );
@@ -186,7 +123,6 @@ describe('PriceBreakdown', () => {
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRate={0}
         />
       );
 
@@ -199,7 +135,6 @@ describe('PriceBreakdown', () => {
         <PriceBreakdown
           pricePerNight={50000}
           nights={2}
-          taxRate={0}
         />
       );
 

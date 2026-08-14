@@ -3,8 +3,7 @@
 import React, { useState, useMemo } from "react";
 import { motion } from "framer-motion";
 import { Calculator, Info, TrendingDown, DollarSign } from "lucide-react";
-import { cn } from "@/lib/utils";
-import { calculatePriceBreakdown, type TaxRegime } from "./price-calculator-logic";
+import { calculatePriceBreakdown } from "./price-calculator-logic";
 
 // ==========================================
 // INTERFACES
@@ -12,10 +11,9 @@ import { calculatePriceBreakdown, type TaxRegime } from "./price-calculator-logi
 
 interface PriceCalculatorProps {
 	basePrice?: number;
-	taxRegime?: TaxRegime;
 	compact?: boolean;
 	readonly?: boolean;
-	onChange?: (price: number, regime: TaxRegime) => void;
+	onChange?: (price: number) => void;
 }
 
 // ==========================================
@@ -24,17 +22,15 @@ interface PriceCalculatorProps {
 
 export default function PriceCalculator({
 	basePrice: initialBasePrice = 300000,
-	taxRegime: initialTaxRegime = "simplified",
 	compact = false,
 	readonly = false,
 	onChange,
 }: PriceCalculatorProps) {
 	const [basePrice, setBasePrice] = useState(initialBasePrice);
-	const [taxRegime, setTaxRegime] = useState<TaxRegime>(initialTaxRegime);
 
 	const breakdown = useMemo(
-		() => calculatePriceBreakdown(basePrice, taxRegime),
-		[basePrice, taxRegime],
+		() => calculatePriceBreakdown(basePrice),
+		[basePrice],
 	);
 
 	const formatCOP = (value: number) => {
@@ -49,12 +45,7 @@ export default function PriceCalculator({
 	const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const value = parseFloat(e.target.value) || 0;
 		setBasePrice(value);
-		onChange?.(value, taxRegime);
-	};
-
-	const handleRegimeChange = (regime: TaxRegime) => {
-		setTaxRegime(regime);
-		onChange?.(basePrice, regime);
+		onChange?.(value);
 	};
 
 	// Modo compacto para widgets
@@ -62,7 +53,7 @@ export default function PriceCalculator({
 		return (
 			<div className="rounded-[var(--radius-squircle-lg)] border border-border bg-card/50 p-3 space-y-2">
 				<div className="flex justify-between items-center text-xs">
-					<span className="text-muted-foreground">Precio Neto</span>
+					<span className="text-muted-foreground">Total</span>
 					<span className="text-emerald-400 font-mono font-bold">
 						{formatCOP(basePrice)}
 					</span>
@@ -127,91 +118,34 @@ export default function PriceCalculator({
 					</div>
 				)}
 
-				{/* Selector: Régimen fiscal */}
-				<div className="mb-6">
-					<label className="mb-2 block text-xs font-bold uppercase tracking-wider text-muted-foreground">
-						Régimen Fiscal
-					</label>
-					<div className="grid grid-cols-2 gap-2">
-						<button
-							type="button"
-							onClick={() => handleRegimeChange("simplified")}
-							className={cn(
-								"rounded-[var(--radius-squircle-lg)] border px-4 py-2.5 text-sm font-semibold transition-all",
-								taxRegime === "simplified"
-									? "border-indigo-500/50 bg-indigo-500/10 text-indigo-300 shadow-lg shadow-indigo-500/10"
-									: "border-border bg-background/30 text-muted-foreground hover:border-border hover:bg-background/50",
-							)}
-						>
-							Simplificado
-						</button>
-						<button
-							type="button"
-							onClick={() => handleRegimeChange("responsible")}
-							className={cn(
-								"rounded-[var(--radius-squircle-lg)] border px-4 py-2.5 text-sm font-semibold transition-all",
-								taxRegime === "responsible"
-									? "border-indigo-500/50 bg-indigo-500/10 text-indigo-300 shadow-lg shadow-indigo-500/10"
-									: "border-border bg-background/30 text-muted-foreground hover:border-border hover:bg-background/50",
-							)}
-						>
-							Responsable de IVA
-						</button>
-					</div>
-				</div>
-
 				{/* Desglose */}
 				<div className="space-y-3">
-					{/* Precio Neto */}
+					{/* Precio Base */}
 					<div className="flex items-center justify-between border-b border-border/50 py-2">
 						<span className="text-sm text-muted-foreground">
-							{readonly ? "Precio por Noche" : "Precio Neto"}
+							{readonly ? "Precio por Noche" : "Precio Base"}
 						</span>
 						<span className="text-sm font-bold text-foreground">
 							{formatCOP(basePrice)}
 						</span>
 					</div>
 
-					{/* IVA (solo si aplica) */}
-					{taxRegime === "responsible" && (
-						<motion.div
-							initial={{ opacity: 0, height: 0 }}
-							animate={{ opacity: 1, height: "auto" }}
-							exit={{ opacity: 0, height: 0 }}
-							className="space-y-2"
-						>
-							<div className="flex items-center justify-between border-b border-border/50 py-2">
-								<span className="text-sm text-muted-foreground">IVA (19%)</span>
-								<span className="text-sm font-bold text-amber-400">
-									{formatCOP(breakdown.iva)}
-								</span>
-							</div>
-							<div className="flex items-center justify-between border-b border-border/50 py-2">
-								<span className="text-sm text-muted-foreground">Huésped Ve</span>
-								<span className="text-sm font-bold text-foreground">
-									{formatCOP(breakdown.guestSees)}
-								</span>
-							</div>
-						</motion.div>
-					)}
-
-					{/* Lo que ve el huésped (cuando no hay IVA) */}
-					{taxRegime === "simplified" && (
-						<motion.div
-							layout
-							className="flex items-center justify-between rounded-lg bg-indigo-500/10 border border-indigo-500/20 px-4 py-3"
-						>
-							<div className="flex items-center gap-2">
-								<DollarSign size={16} className="text-indigo-400" />
-								<span className="text-sm font-bold text-indigo-300">
-									Huésped Ve
-								</span>
-							</div>
-							<span className="text-lg font-black text-indigo-400">
-								{formatCOP(breakdown.guestSees)}
+					{/* Total — el precio final que paga el huésped */}
+					<motion.div
+						data-testid="price-total"
+						layout
+						className="flex items-center justify-between rounded-lg bg-indigo-500/10 border border-indigo-500/20 px-4 py-3"
+					>
+						<div className="flex items-center gap-2">
+							<DollarSign size={16} className="text-indigo-400" />
+							<span className="text-sm font-bold text-indigo-300">
+								Total
 							</span>
-						</motion.div>
-					)}
+						</div>
+						<span className="text-lg font-black text-indigo-400">
+							{formatCOP(breakdown.total)}
+						</span>
+					</motion.div>
 
 					{/* Deducciones */}
 					<div className="pt-3">
@@ -285,8 +219,8 @@ export default function PriceCalculator({
 					<div className="flex gap-2">
 						<Info size={14} className="mt-0.5 flex-shrink-0 text-blue-400" />
 						<p className="text-xs text-blue-300">
-							<strong>Importante:</strong> El precio que ingresas es el precio base.
-							El IVA se agrega automáticamente.
+							<strong>Importante:</strong> El precio que ingresas es el precio
+							final que paga el huésped. No se agrega IVA.
 						</p>
 					</div>
 				</div>

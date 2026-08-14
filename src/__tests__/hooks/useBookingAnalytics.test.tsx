@@ -66,12 +66,10 @@ function AllEventsFixture({
   price = 200000,
   nights = 1,
   hasDates = false,
-  taxRate = 0.19,
 }: {
   price?: number;
   nights?: number;
   hasDates?: boolean;
-  taxRate?: number;
 }) {
   const {
     trackViewRef,
@@ -86,7 +84,6 @@ function AllEventsFixture({
     price,
     nights,
     hasDates,
-    taxRate,
   });
 
   return (
@@ -132,7 +129,6 @@ describe('useBookingAnalytics', () => {
       hotel_id: 'hotel-1',
       price: 200000,
       has_dates: false,
-      tax_rate: 0.19,
     });
   });
 
@@ -167,7 +163,6 @@ describe('useBookingAnalytics', () => {
       price: 200000,
       nights: 2,
       has_dates: true,
-      tax_rate: 0.19,
     });
   });
 

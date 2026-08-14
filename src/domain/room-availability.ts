@@ -15,13 +15,7 @@ export type Availability = {
 };
 
 export type PriceBreakdown = {
-  weekdayNights: number;
-  weekendNights: number;
-  weekdayPrice: number;
-  weekendPrice: number;
   subtotal: number;
-  tax: number;
-  taxRate: number;
   total: number;
 };
 
@@ -48,7 +42,6 @@ export type HotelContext = {
   totalRooms: number;
   subscriptionStatus: 'active' | 'inactive' | 'past_due' | 'cancelled';
   status: 'active' | 'inactive' | 'pending';
-  taxRate: number;
   cancellationPolicy: string | null;
   primaryColor: string;
 };

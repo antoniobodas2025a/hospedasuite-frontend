@@ -331,9 +331,9 @@ export interface Database {
       status?: string
       access_token?: string
       total_price?: number
-      subtotal?: number
-      tax_amount?: number
-      tax_rate_applied?: number
+      subtotal?: number // legacy
+      tax_amount?: number // legacy
+      tax_rate_applied?: number // legacy
       weekend_price_used?: number
       is_tax_exempt?: boolean
       notes?: string
@@ -355,9 +355,9 @@ export interface Database {
       status?: string
       access_token?: string
       total_price?: number
-      subtotal?: number
-      tax_amount?: number
-      tax_rate_applied?: number
+      subtotal?: number // legacy
+      tax_amount?: number // legacy
+      tax_rate_applied?: number // legacy
       weekend_price_used?: number
       is_tax_exempt?: boolean
       notes?: string
@@ -379,9 +379,9 @@ export interface Database {
       status?: string
       access_token?: string
       total_price?: number
-      subtotal?: number
-      tax_amount?: number
-      tax_rate_applied?: number
+      subtotal?: number // legacy
+      tax_amount?: number // legacy
+      tax_rate_applied?: number // legacy
       weekend_price_used?: number
       is_tax_exempt?: boolean
       notes?: string
@@ -729,7 +729,7 @@ export interface Database {
       config?: Json
       logo_url?: string
       primary_color?: string
-      tax_rate?: number
+      tax_rate?: number // legacy
       payment_qr_url?: string
       phone?: string
       status?: string
@@ -789,7 +789,7 @@ export interface Database {
        date_paid?: string
        go_live?: boolean
         go_live_at?: string
-        tax_regime?: string
+        tax_regime?: string // legacy
          };
          Insert: {
       id: string
@@ -801,7 +801,7 @@ export interface Database {
       config?: Json
       logo_url?: string
       primary_color?: string
-      tax_rate?: number
+      tax_rate?: number // legacy
       payment_qr_url?: string
       phone?: string
       status?: string
@@ -861,7 +861,7 @@ export interface Database {
        date_paid?: string
        go_live?: boolean
         go_live_at?: string
-        tax_regime?: string
+        tax_regime?: string // legacy
          };
          Update: {
       id?: string
@@ -873,7 +873,7 @@ export interface Database {
       config?: Json
       logo_url?: string
       primary_color?: string
-      tax_rate?: number
+      tax_rate?: number // legacy
       payment_qr_url?: string
       phone?: string
       status?: string
@@ -933,7 +933,7 @@ export interface Database {
        date_paid?: string
        go_live?: boolean
         go_live_at?: string
-        tax_regime?: string
+        tax_regime?: string // legacy
          };
          Relationships: [];
       };

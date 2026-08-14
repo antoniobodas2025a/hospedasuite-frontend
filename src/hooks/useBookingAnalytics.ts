@@ -16,7 +16,6 @@ interface UseBookingAnalyticsProps {
   price?: number;
   nights?: number;
   hasDates?: boolean;
-  taxRate?: number;
 }
 
 /**
@@ -40,7 +39,6 @@ export function useBookingAnalytics({
   price = 0,
   nights = 1,
   hasDates = false,
-  taxRate = 0,
 }: UseBookingAnalyticsProps) {
   const [viewElement, setViewElement] = useState<HTMLElement | null>(null);
   const [hasViewed, setHasViewed] = useState(false);
@@ -51,11 +49,10 @@ export function useBookingAnalytics({
     price,
     nights,
     hasDates,
-    taxRate,
   });
 
   useEffect(() => {
-    propsRef.current = { hotelId, roomId, price, nights, hasDates, taxRate };
+    propsRef.current = { hotelId, roomId, price, nights, hasDates };
   });
 
   useEffect(() => {
@@ -66,13 +63,12 @@ export function useBookingAnalytics({
       (entries) => {
         entries.forEach((entry) => {
           if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
-            const { hotelId: hid, roomId: rid, price: p, hasDates: hd, taxRate: tr } = propsRef.current;
+            const { hotelId: hid, roomId: rid, price: p, hasDates: hd } = propsRef.current;
             trackViewRoom({
               room_id: rid!,
               hotel_id: hid!,
               price: p ?? 0,
               has_dates: hd ?? false,
-              tax_rate: tr ?? 0,
             });
             setHasViewed(true);
             observer.disconnect();
@@ -94,9 +90,8 @@ export function useBookingAnalytics({
       price: price ?? 0,
       nights: nights ?? 1,
       has_dates: hasDates ?? false,
-      tax_rate: taxRate ?? 0,
     });
-  }, [hotelId, roomId, price, nights, hasDates, taxRate]);
+  }, [hotelId, roomId, price, nights, hasDates]);
 
   const onOpenRoomModal = useCallback(
     ({ source }: { source: 'card' | 'sidebar' }) => {

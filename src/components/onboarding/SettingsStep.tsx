@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Settings, ChevronDown, Clock, Shield, Sparkles, Banknote, CreditCard, Eye, EyeOff } from 'lucide-react';
+import { Settings, ChevronDown, Clock, Shield, Sparkles, CreditCard, Eye, EyeOff } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { useOnboardingStore } from '@/store/useOnboardingStore';
 import { AMENITY_REGISTRY } from '@/lib/amenity-registry';
@@ -13,7 +13,7 @@ const springs = {
   medium: { type: 'spring' as const, stiffness: 300, damping: 24, mass: 1.0 },
 };
 
-type Section = 'hours' | 'policy' | 'amenities' | 'tax' | 'wompi' | null;
+type Section = 'hours' | 'policy' | 'amenities' | 'wompi' | null;
 
 export default function SettingsStep() {
   const t = useTranslations('onboarding.settings');
@@ -122,46 +122,7 @@ export default function SettingsStep() {
         </div>
       </SectionCard>
 
-      {/* Section 4: Régimen Tributario */}
-      <SectionCard
-        icon={Banknote}
-        title="Régimen Fiscal"
-        isOpen={openSection === 'tax'}
-        onToggle={() => toggleSection('tax')}
-      >
-        <p className="text-[10px] font-bold text-zinc-600 uppercase tracking-widest mb-3">
-          Selecciona tu régimen fiscal
-        </p>
-        <div className="grid grid-cols-2 gap-3">
-          <button
-            type="button"
-            onClick={() => updateSettings({ tax_regime: 'simplified' })}
-            className={`p-4 rounded-[var(--radius-squircle-lg)] border-2 text-left transition-all ${
-              settings.tax_regime === 'simplified'
-                ? 'border-indigo-500 bg-indigo-500/10'
-                : 'border-white/10 hover:border-white/20'
-            }`}
-          >
-            <p className="text-sm font-bold text-white mb-1">Régimen Simplificado</p>
-            <p className="text-xs text-zinc-500">No cobras IVA al huésped</p>
-          </button>
-          
-          <button
-            type="button"
-            onClick={() => updateSettings({ tax_regime: 'responsible' })}
-            className={`p-4 rounded-[var(--radius-squircle-lg)] border-2 text-left transition-all ${
-              settings.tax_regime === 'responsible'
-                ? 'border-indigo-500 bg-indigo-500/10'
-                : 'border-white/10 hover:border-white/20'
-            }`}
-          >
-            <p className="text-sm font-bold text-white mb-1">Responsable de IVA</p>
-            <p className="text-xs text-zinc-500">Cobras 19% IVA adicional</p>
-          </button>
-        </div>
-      </SectionCard>
-
-      {/* Section 5: Pasarela de Pagos (Soberanía Financiera) */}
+      {/* Section 4: Pasarela de Pagos (Soberanía Financiera) */}
       <SectionCard
         icon={CreditCard}
         title="Pasarela de Pagos"

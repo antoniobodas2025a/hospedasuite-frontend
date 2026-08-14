@@ -29,7 +29,6 @@ interface BookingWidgetProps {
   checkOut?: string | null;
   cancellationPolicy?: string | null;
   totalRooms?: number;
-  taxRate?: number;
   isLoading?: boolean;
   hotelId?: string;
   primaryColor?: string;

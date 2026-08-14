@@ -261,7 +261,6 @@ export default function RoomDetailStep({ room, onUpdate }: RoomDetailStepProps) 
           <div className="mt-4">
             <PriceCalculator
               basePrice={room.price}
-              taxRegime="simplified"
               compact
             />
           </div>

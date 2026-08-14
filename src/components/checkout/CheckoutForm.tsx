@@ -6,7 +6,6 @@ import { ShieldCheck, ArrowRight, ArrowLeft, User, Mail, Phone, CreditCard, Load
 import { motion, AnimatePresence } from 'framer-motion';
 import { createPendingBookingAction } from '@/app/actions/bookings';
 import { Hotel, Room } from '@/types';
-import { getEffectiveTaxRate } from '@/lib/pricing';
 import { shakeHaptic, desaturateFeedback, springSnappy, springGentle } from '@/lib/mac2026/spring';
 import PriceBreakdown from '@/components/ota/PriceBreakdown';
 
@@ -70,11 +69,8 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
   const [consentGiven, setConsentGiven] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
-  // ADD model: entered price is the base price; IVA is added on top.
-  const subtotal = basePrice;
-  const effectiveRate = getEffectiveTaxRate(hotel.tax_rate, hotel.tax_regime);
-  const taxes = Math.round(subtotal * effectiveRate);
-  const grandTotal = subtotal + taxes; // base + IVA
+  // FLAT model: the configured base price is the final price the guest pays.
+  const grandTotal = basePrice;
 
   // Persist state to sessionStorage on every change (booking-scoped key)
   useEffect(() => {
@@ -379,7 +375,6 @@ export default function CheckoutForm({ hotel, room, checkIn, checkOut, nights, b
               <PriceBreakdown
                 pricePerNight={Math.round(basePrice / nights)}
                 nights={nights}
-                taxRate={effectiveRate}
                 dark
               />
 

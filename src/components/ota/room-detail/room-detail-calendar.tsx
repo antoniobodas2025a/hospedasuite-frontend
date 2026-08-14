@@ -85,8 +85,6 @@ export function RoomDetailCalendar({
       nights,
       averagePrice,
       total: output.pricing.total,
-      tax: output.pricing.tax,
-      taxRate: output.pricing.taxRate,
       weekdayNights: output.pricing.weekdayNights,
       weekendNights: output.pricing.weekendNights,
       weekdayPrice: output.pricing.weekdayPrice,
@@ -123,11 +121,6 @@ export function RoomDetailCalendar({
               </span>
               <span className="text-sm text-muted-foreground truncate">{t('ota.roomDetail.perNight')}</span>
             </div>
-            {output.taxRate > 0 ? (
-              <p className="text-[10px] text-muted-foreground font-medium" title="El IVA se agrega al precio base">+ IVA</p>
-            ) : (
-              <p className="text-[10px] text-muted-foreground/50 font-medium">Sin IVA</p>
-            )}
             {output.weekendPrice > 0 && output.weekendPrice !== output.pricePerNight && (
               <p className="text-xs text-muted-foreground">
                 {t('ota.roomDetail.weekendPrice', {
@@ -180,14 +173,6 @@ export function RoomDetailCalendar({
                   <span className="font-medium text-foreground">
                     ${formatPrice(summary.weekendPrice)}
                   </span>
-                </div>
-              )}
-              {summary.tax > 0 && (
-                <div className="flex justify-between">
-                  <span className="text-muted-foreground">
-                    {t('ota.roomDetail.tax', { rate: Math.round(summary.taxRate * 100) })}
-                  </span>
-                  <span className="font-medium text-foreground">${formatPrice(summary.tax)}</span>
                 </div>
               )}
             </div>

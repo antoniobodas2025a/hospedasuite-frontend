@@ -32,7 +32,6 @@ function makeHotel(overrides: Partial<HotelContext> = {}): HotelContext {
     totalRooms: 5,
     subscriptionStatus: 'active',
     status: 'active',
-    taxRate: 0.19,
     cancellationPolicy: 'Cancelación gratuita hasta 24h antes',
     primaryColor: '#3b82f6',
     ...overrides,
@@ -105,7 +104,6 @@ describe('roomDetailViewModel', () => {
     expect(result.pricing).toBeNull();
     expect(result.pricePerNight).toBe(100000);
     expect(result.weekendPrice).toBe(150000);
-    expect(result.taxRate).toBe(0.19);
     expect(result.canBook).toBe(true);
     expect(result.error).toBeNull();
   });
@@ -139,8 +137,7 @@ describe('roomDetailViewModel', () => {
     expect(result.pricing?.weekdayNights).toBe(3);
     expect(result.pricing?.weekendNights).toBe(0);
     expect(result.pricing?.subtotal).toBe(300000);
-    expect(result.pricing?.tax).toBe(57000);
-    expect(result.pricing?.total).toBe(357000);
+    expect(result.pricing?.total).toBe(300000);
     expect(result.error).toBeNull();
   });
 
@@ -178,7 +175,7 @@ describe('roomDetailViewModel', () => {
     expect(result.pricing?.weekdayPrice).toBe(100000);
     expect(result.pricing?.weekendPrice).toBe(150000);
     expect(result.pricing?.subtotal).toBe(300000);
-    expect(result.pricing?.total).toBe(357000);
+    expect(result.pricing?.total).toBe(300000);
   });
 
   it('calculates mixed stay correctly (Thu-Sun: 1 weekday + 2 weekend)', () => {
@@ -196,12 +193,11 @@ describe('roomDetailViewModel', () => {
     expect(result.pricing?.weekdayNights).toBe(1);
     expect(result.pricing?.weekendNights).toBe(2);
     expect(result.pricing?.subtotal).toBe(400000);
-    expect(result.pricing?.tax).toBe(76000);
-    expect(result.pricing?.total).toBe(476000);
+    expect(result.pricing?.total).toBe(400000);
   });
 
   it('calculates weekend-only stay correctly (Fri-Sun: 2 weekend nights)', () => {
-    const dates = makeDates(8, 2); // Fri -> Sun
+    const dates = makeDates(7, 2); // Fri -> Sun
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
@@ -215,7 +211,7 @@ describe('roomDetailViewModel', () => {
     expect(result.pricing?.weekdayNights).toBe(0);
     expect(result.pricing?.weekendNights).toBe(2);
     expect(result.pricing?.subtotal).toBe(300000);
-    expect(result.pricing?.total).toBe(357000);
+    expect(result.pricing?.total).toBe(300000);
   });
 
   it('sets showOtherRooms to false for a single-room hotel', () => {

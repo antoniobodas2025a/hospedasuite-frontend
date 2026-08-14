@@ -9,7 +9,6 @@ import {
   trackCloseRoomModal,
   trackCompleteBooking,
   trackAbandonBooking,
-  trackTaxRateFallback,
 } from '@/lib/analytics';
 
 vi.mock('posthog-js', () => ({
@@ -30,7 +29,6 @@ describe('Booking analytics event dispatchers', () => {
       hotel_id: 'hotel-1',
       price: 200000,
       has_dates: false,
-      tax_rate: 0.19,
     });
 
     expect(posthog.capture).toHaveBeenCalledWith('view_room', {
@@ -38,7 +36,6 @@ describe('Booking analytics event dispatchers', () => {
       hotel_id: 'hotel-1',
       price: 200000,
       has_dates: false,
-      tax_rate: 0.19,
     });
   });
 
@@ -49,7 +46,6 @@ describe('Booking analytics event dispatchers', () => {
       price: 238000,
       nights: 2,
       has_dates: true,
-      tax_rate: 0.19,
     });
 
     expect(posthog.capture).toHaveBeenCalledWith('click_reserve', {
@@ -58,7 +54,6 @@ describe('Booking analytics event dispatchers', () => {
       price: 238000,
       nights: 2,
       has_dates: true,
-      tax_rate: 0.19,
     });
   });
 
@@ -123,18 +118,6 @@ describe('Booking analytics event dispatchers', () => {
       hotel_id: 'hotel-1',
       step: 'modal',
       time_spent: 42,
-    });
-  });
-
-  it('dispatches tax_rate_fallback when a null tax_rate falls back to DEFAULT_TAX_RATE', () => {
-    trackTaxRateFallback({
-      hotel_id: 'hotel-1',
-      fallback_rate: 0.19,
-    });
-
-    expect(posthog.capture).toHaveBeenCalledWith('tax_rate_fallback', {
-      hotel_id: 'hotel-1',
-      fallback_rate: 0.19,
     });
   });
 });
