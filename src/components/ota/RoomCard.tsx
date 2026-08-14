@@ -12,7 +12,7 @@ import { getImageSizeUrl } from '@/lib/image-config';
 import { formatBedType } from '@/lib/room-helpers';
 import { useTranslations } from 'next-intl';
 import type { Room, GalleryItem } from '@/types';
-import { getEffectiveTaxRate, formatPrice, getTaxLabel } from '@/lib/pricing';
+import { getEffectiveTaxRate, formatPrice, getTaxLabel, buildRoomPricingBreakdown } from '@/lib/pricing';
 import { useBookingAnalytics } from '@/hooks/useBookingAnalytics';
 import { useBookingFlow } from '@/hooks/useBookingFlow';
 import { SkeletonLoader } from '@/components/ui/SkeletonLoader';
@@ -64,14 +64,60 @@ function RoomCard({ room, hotelSlug, hotelId, checkIn, checkOut, isSearchingDate
   }, [parsedDates]);
 
   const basePrice = useMemo(() => room.price_per_night || room.price || 0, [room.price_per_night, room.price]);
+  const weekendPrice = useMemo(() => room.weekend_price || basePrice * 1.2, [room.weekend_price, basePrice]);
   const taxRate = useMemo(() => getEffectiveTaxRate(hotel?.tax_rate, hotel?.tax_regime), [hotel?.tax_rate, hotel?.tax_regime]);
-  const priceBreakdown = useMemo(() => {
-    const subtotal = basePrice * nights;
-    const iva = Math.round(subtotal * taxRate);
-    const total = subtotal + iva;
-    const hasTax = taxRate > 0;
-    return { subtotal, iva, total, hasTax, taxLabel: getTaxLabel(taxRate) };
-  }, [basePrice, taxRate, nights]);
+  
+  type PriceBreakdownType = {
+    subtotal: number;
+    iva: number;
+    total: number;
+    hasTax: boolean;
+    taxLabel: string;
+    isEstimate: boolean;
+    weekdayNights: number;
+    weekendNights: number;
+  };
+  
+  const priceBreakdown: PriceBreakdownType = useMemo(() => {
+    if (!checkIn || !checkOut) {
+      // No dates selected: show base price (weekday) as estimate
+      const subtotal = basePrice;
+      const iva = Math.round(subtotal * taxRate);
+      const total = subtotal + iva;
+      return { 
+        subtotal, 
+        iva, 
+        total, 
+        hasTax: taxRate > 0, 
+        taxLabel: getTaxLabel(taxRate),
+        isEstimate: true,
+        weekdayNights: 0,
+        weekendNights: 0,
+      };
+    }
+    
+    // Dates selected: use weekend-aware calculation
+    const checkInDate = new Date(checkIn);
+    const checkOutDate = new Date(checkOut);
+    const pricing = buildRoomPricingBreakdown({
+      pricePerNight: basePrice,
+      weekendPrice,
+      taxRate,
+      checkIn: checkInDate,
+      checkOut: checkOutDate,
+    });
+    
+    return {
+      subtotal: pricing.subtotal,
+      iva: pricing.tax,
+      total: pricing.total,
+      hasTax: taxRate > 0,
+      taxLabel: getTaxLabel(taxRate),
+      isEstimate: false,
+      weekdayNights: pricing.weekdayNights,
+      weekendNights: pricing.weekendNights,
+    };
+  }, [basePrice, weekendPrice, taxRate, checkIn, checkOut]);
 
   const { trackViewRef, trackClickReserve } = useBookingAnalytics({
     hotelId,
@@ -193,7 +239,16 @@ function RoomCardInner({
   isProcessing: boolean;
   coverImage: string;
   basePrice: number;
-  priceBreakdown: { subtotal: number; iva: number; total: number; hasTax: boolean; taxLabel: string };
+  priceBreakdown: { 
+    subtotal: number; 
+    iva: number; 
+    total: number; 
+    hasTax: boolean; 
+    taxLabel: string;
+    isEstimate: boolean;
+    weekdayNights: number;
+    weekendNights: number;
+  };
   nights: number;
   imagePriority?: boolean;
   index?: number;
@@ -358,16 +413,23 @@ function RoomCardInner({
             <div className="space-y-1">
               <div className="flex flex-wrap items-baseline gap-x-2 text-xs text-muted-foreground">
                 <span className="font-bold text-foreground">${formatPrice(basePrice)}</span>
-                {isSearchingDates ? (
+                {isSearchingDates && priceBreakdown.isEstimate ? (
+                  <span>Desde COP/noche</span>
+                ) : isSearchingDates ? (
                   <span>x {nights} {t('ota.roomCard.nights', { count: nights })}</span>
                 ) : (
                   <span>COP/noche</span>
                 )}
                 {priceBreakdown.hasTax && (
-                  <span>(IVA agregado)</span>
+                  <span title="El IVA se agrega al precio base">(+ IVA)</span>
                 )}
                 {!priceBreakdown.hasTax && (
                   <span>(Sin IVA)</span>
+                )}
+                {priceBreakdown.weekendNights > 0 && (
+                  <span className="text-[10px] text-muted-foreground/70">
+                    ({priceBreakdown.weekendNights} noche{priceBreakdown.weekendNights > 1 ? 's' : ''} fin de semana)
+                  </span>
                 )}
               </div>
               <div className="flex items-end gap-2 pt-1">

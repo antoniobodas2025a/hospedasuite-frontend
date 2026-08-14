@@ -233,9 +233,9 @@ describe("RoomCard", () => {
       />
     );
 
-    // Base $200.000 | Total: $238.000 (IVA agregado)
+    // Base $200.000 | Total: $238.000 (+ IVA)
     expect(getByText(/\$200\.000/)).toBeInTheDocument();
-    expect(getByText(/IVA agregado/i)).toBeInTheDocument();
+    expect(getByText(/\+ IVA/i)).toBeInTheDocument();
     expect(getByText(/\$238\.000/)).toBeInTheDocument();
   });
 
