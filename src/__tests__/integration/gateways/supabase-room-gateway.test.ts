@@ -133,6 +133,30 @@ describe('SupabaseRoomGateway', () => {
 
       expect(result?.room.weekendPrice).toBe(120);
     });
+
+    it('normalizes weekend_price=0 to basePrice * 1.2', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({ data: mockHotel(), error: null });
+      mock.queue.push({ data: mockRoom({ weekend_price: 0 }), error: null });
+      mock.queue.push({ data: null, error: null, count: 2 });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const result = await gateway.getRoomDetail('mirador', 'room-1');
+
+      expect(result?.room.weekendPrice).toBe(120); // 100 * 1.2
+    });
+
+    it('normalizes weekend_price=null to basePrice * 1.2', async () => {
+      const mock = createMockSupabase();
+      mock.queue.push({ data: mockHotel(), error: null });
+      mock.queue.push({ data: mockRoom({ weekend_price: null }), error: null });
+      mock.queue.push({ data: null, error: null, count: 2 });
+
+      const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
+      const result = await gateway.getRoomDetail('mirador', 'room-1');
+
+      expect(result?.room.weekendPrice).toBe(120); // 100 * 1.2
+    });
   });
 
   describe('getAvailability', () => {

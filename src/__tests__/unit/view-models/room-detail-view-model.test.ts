@@ -108,7 +108,7 @@ describe('roomDetailViewModel', () => {
     expect(result.error).toBeNull();
   });
 
-  it('falls back weekend price to 1.2x weekday when room weekendPrice is zero', () => {
+  it('passes through weekendPrice as-is (gateway is responsible for normalization)', () => {
     const input: RoomDetailViewModelInput = {
       room: makeRoom({ weekendPrice: 0 }),
       hotel: makeHotel(),
@@ -118,7 +118,8 @@ describe('roomDetailViewModel', () => {
     const result = roomDetailViewModel(input);
 
     expect(result.pricePerNight).toBe(100000);
-    expect(result.weekendPrice).toBe(120000);
+    // View model trusts the domain value — gateway should have normalized 0 → basePrice * 1.2
+    expect(result.weekendPrice).toBe(0);
   });
 
   it('returns dates_selected state with correct pricing when dates are available', () => {

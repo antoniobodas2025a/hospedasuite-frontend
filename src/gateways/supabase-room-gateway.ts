@@ -71,7 +71,10 @@ export class SupabaseRoomGateway implements RoomDetailGateway {
       .neq('status', 'maintenance');
 
     const basePrice = room.price ?? 0;
-    const weekendPrice = room.weekend_price ?? basePrice * 1.2;
+    // Normalize weekend_price: null/undefined/0/negative → basePrice * 1.2
+    const weekendPrice = (room.weekend_price && room.weekend_price > 0)
+      ? room.weekend_price
+      : basePrice * 1.2;
 
     const hotelContext: HotelContext = {
       id: hotel.id,

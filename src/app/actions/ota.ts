@@ -476,7 +476,7 @@ export async function getHotelDetailsBySlugAction(
 				const { data: fallbackRooms } = await supabaseAdmin
 					.from("rooms")
 					.select(
-						"id, name, capacity, beds, bed_type, price, status, gallery, amenities, size_sqm",
+				"id, name, capacity, beds, bed_type, price, weekend_price, status, gallery, amenities, size_sqm",
 					)
 					.eq("hotel_id", hotel.id)
 					.neq("status", "maintenance");
@@ -489,7 +489,7 @@ export async function getHotelDetailsBySlugAction(
 			const { data: allRooms } = await supabaseAdmin
 				.from("rooms")
 				.select(
-					"id, name, capacity, beds, bed_type, price, status, gallery, amenities, size_sqm",
+					"id, name, capacity, beds, bed_type, price, weekend_price, status, gallery, amenities, size_sqm",
 				)
 				.eq("hotel_id", hotel.id)
 				.neq("status", "maintenance");
