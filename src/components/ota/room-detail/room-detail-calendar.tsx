@@ -158,7 +158,7 @@ export function RoomDetailCalendar({
               {summary.weekdayNights > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    {summary.weekdayNights} {t('ota.roomDetail.weekdayNights', { count: summary.weekdayNights })}
+                    {t('ota.roomDetail.weekdayNights', { count: summary.weekdayNights })}
                   </span>
                   <span className="font-medium text-foreground">
                     ${formatPrice(summary.weekdayPrice)}
@@ -168,7 +168,7 @@ export function RoomDetailCalendar({
               {summary.weekendNights > 0 && (
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">
-                    {summary.weekendNights} {t('ota.roomDetail.weekendNights', { count: summary.weekendNights })}
+                    {t('ota.roomDetail.weekendNights', { count: summary.weekendNights })}
                   </span>
                   <span className="font-medium text-foreground">
                     ${formatPrice(summary.weekendPrice)}
