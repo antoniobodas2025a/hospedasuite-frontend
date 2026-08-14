@@ -124,7 +124,7 @@ export function RoomDetailCalendar({
               <span className="text-sm text-muted-foreground truncate">{t('ota.roomDetail.perNight')}</span>
             </div>
             {output.taxRate > 0 ? (
-              <p className="text-[10px] text-muted-foreground font-medium">IVA incluido</p>
+              <p className="text-[10px] text-muted-foreground font-medium" title="El IVA se agrega al precio base">+ IVA</p>
             ) : (
               <p className="text-[10px] text-muted-foreground/50 font-medium">Sin IVA</p>
             )}

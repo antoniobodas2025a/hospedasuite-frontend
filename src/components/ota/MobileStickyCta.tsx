@@ -92,7 +92,7 @@ export default function MobileStickyCta({
               <p className="text-2xl font-black text-foreground">${displayPrice.toLocaleString()}</p>
               <span className="text-xs text-muted-foreground font-medium">{t('ota.mobileCta.copPerNight')}</span>
             </div>
-            <p className="text-[9px] text-muted-foreground/60">{effectiveRate > 0 ? 'IVA incluido' : 'Sin IVA'}</p>
+            <p className="text-[9px] text-muted-foreground/60" title="El IVA se agrega al precio base">{effectiveRate > 0 ? '+ IVA' : 'Sin IVA'}</p>
             {availableCount > 0 && availableCount <= 2 && (
               <p className="text-[10px] font-bold text-destructive flex items-center gap-1 mt-0.5">
                 <span className="size-1.5 rounded-full bg-destructive animate-pulse" />
