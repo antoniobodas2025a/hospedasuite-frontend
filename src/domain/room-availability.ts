@@ -1,3 +1,5 @@
+import { calculateNights } from '@/lib/pricing';
+
 export type DateRange = {
   from: Date;
   to: Date;
