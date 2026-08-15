@@ -304,10 +304,6 @@ export default function InlineDatePicker({
                 booked: 'bg-destructive/5 text-destructive border border-destructive/20 line-through opacity-60',
                 disabled: 'bg-muted text-muted-foreground/40 border-transparent cursor-not-allowed',
                 outside: 'text-muted-foreground/30',
-                selected: 'text-primary-foreground font-bold shadow-md border-transparent',
-                range_middle: 'text-brand-900 border-y border-transparent rounded-none',
-                range_start: 'text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
-                range_end: 'text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
               }}
               className="text-foreground font-sans"
             />
