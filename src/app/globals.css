@@ -593,27 +593,28 @@
 }
 
 /* --- DAYPICKER OVERRIDES (B2C FROSTED PEARL) --- */
-.date-picker-b2c .rdp {
-  --rdp-cell-size: 42px;
+.date-picker-b2c .rdp-root {
+  --rdp-day-width: 42px;
+  --rdp-day-height: 42px;
   --rdp-accent-color: oklch(0.52 0.18 35);
-  --rdp-background-color: oklch(0.92 0.04 35);
-  --rdp-outline: 2px solid var(--rdp-accent-color);
+  --rdp-accent-background-color: oklch(0.92 0.04 35);
+  --rdp-selected-border: 2px solid var(--rdp-accent-color);
   margin: 0;
   color: oklch(0.32 0.10 28);
 }
 
-.date-picker-b2c .rdp-day_selected {
+.date-picker-b2c .rdp-selected {
   background-color: var(--rdp-accent-color) !important;
   color: white !important;
   font-weight: 700;
 }
 
-.date-picker-b2c .rdp-day:hover:not(.rdp-day_selected) {
-  background-color: oklch(0.94 0.02 75);
+.date-picker-b2c .rdp-day:hover:not(.rdp-selected) {
+  background-color: color-mix(in srgb, var(--rdp-accent-color) 15%, transparent);
   border-radius: 12px;
 }
 
-.date-picker-b2c .rdp-head_cell {
+.date-picker-b2c .rdp-weekday {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;
@@ -625,36 +626,37 @@
    MODAL CALENDAR — DayPicker inside our modal system
    (NO position:fixed — that was covering the footer)
    ==================================================== */
-.modal-calendar .rdp {
-  --rdp-cell-size: 44px;
-  --rdp-background-color: oklch(0.92 0.04 35);
-  --rdp-outline: 2px solid var(--rdp-accent-color);
+.modal-calendar .rdp-root {
+  --rdp-day-width: 44px;
+  --rdp-day-height: 44px;
+  --rdp-accent-background-color: oklch(0.92 0.04 35);
+  --rdp-selected-border: 2px solid var(--rdp-accent-color);
   margin: 0 auto;
   color: oklch(0.32 0.10 28);
 }
 
-.modal-calendar .rdp-day_selected {
+.modal-calendar .rdp-selected {
   background-color: var(--rdp-accent-color) !important;
   color: white !important;
   font-weight: 700;
 }
 
-.modal-calendar .rdp-day_range_start,
-.modal-calendar .rdp-day_range_end {
+.modal-calendar .rdp-range_start,
+.modal-calendar .rdp-range_end {
   background-color: var(--rdp-accent-color) !important;
   color: white !important;
 }
 
-.modal-calendar .rdp-day_range_middle {
+.modal-calendar .rdp-range_middle {
   background-color: color-mix(in srgb, var(--rdp-accent-color) 20%, transparent) !important;
 }
 
-.modal-calendar .rdp-day:hover:not(.rdp-day_selected) {
-  background-color: oklch(0.94 0.02 75);
+.modal-calendar .rdp-day:hover:not(.rdp-selected) {
+  background-color: color-mix(in srgb, var(--rdp-accent-color) 15%, transparent);
   border-radius: 12px;
 }
 
-.modal-calendar .rdp-head_cell {
+.modal-calendar .rdp-weekday {
   font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.1em;

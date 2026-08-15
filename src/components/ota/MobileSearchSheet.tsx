@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DayPicker, DateRange } from "react-day-picker";
 import { format, parseISO, isValid, startOfDay } from "date-fns";
 import { cn } from "@/lib/utils";
+import { validatePrimaryColor } from "@/lib/calendar-theme";
 import { springSnappy, springModal, springBounce } from "@/lib/mac2026/spring";
 import GuestSelector from "@/components/ota/GuestSelector";
 import LocationAutocomplete from "@/components/ota/LocationAutocomplete";
@@ -319,7 +320,7 @@ export default function MobileSearchSheet({
 											<div
 												className="modal-calendar"
 												style={{
-													'--rdp-accent-color': primaryColor || 'var(--brand-600)',
+													'--rdp-accent-color': validatePrimaryColor(primaryColor) || 'var(--brand-600)',
 												} as React.CSSProperties}
 											>
 										<DayPicker

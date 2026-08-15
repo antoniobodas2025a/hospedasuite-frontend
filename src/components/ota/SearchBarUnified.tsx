@@ -20,6 +20,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { DayPicker, DateRange } from "react-day-picker";
 import { format, parseISO, isValid, startOfDay, addDays, addWeeks, addMonths, nextSaturday, nextSunday } from "date-fns";
 import { cn } from "@/lib/utils";
+import { validatePrimaryColor } from "@/lib/calendar-theme";
 import {
 	springSnappy,
 	springBounce,
@@ -443,7 +444,7 @@ export default function SearchBarUnified({ onSearch, primaryColor }: SearchBarUn
 						<div className="px-3 sm:px-4 pb-3">
 							<div
 								className="modal-calendar"
-								style={{ '--rdp-accent-color': primaryColor || 'var(--brand-600)' } as React.CSSProperties}
+								style={{ '--rdp-accent-color': validatePrimaryColor(primaryColor) || 'var(--brand-600)' } as React.CSSProperties}
 							>
 								<DayPicker
 									mode="range"
