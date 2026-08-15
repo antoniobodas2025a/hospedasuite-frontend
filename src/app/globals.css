@@ -600,17 +600,20 @@
   --rdp-accent-color: oklch(0.52 0.18 35);
   --rdp-accent-background-color: oklch(0.92 0.04 35);
   --rdp-selected-border: 2px solid var(--rdp-accent-color);
+  --rdp-range_start-date-background-color: var(--rdp-accent-color);
+  --rdp-range_end-date-background-color: var(--rdp-accent-color);
+  --rdp-range_middle-background-color: color-mix(in srgb, var(--rdp-accent-color) 20%, transparent);
   margin: 0;
   color: oklch(0.32 0.10 28);
 }
 
-.date-picker-b2c .rdp-selected {
+.date-picker-b2c .rdp-selected .rdp-day_button {
   background-color: var(--rdp-accent-color) !important;
   color: white !important;
   font-weight: 700;
 }
 
-.date-picker-b2c .rdp-day:hover:not(.rdp-selected) {
+.date-picker-b2c .rdp-day:hover:not(.rdp-selected) .rdp-day_button {
   background-color: color-mix(in srgb, var(--rdp-accent-color) 15%, transparent);
   border-radius: 12px;
 }
@@ -632,27 +635,30 @@
   --rdp-day-height: 44px;
   --rdp-accent-background-color: oklch(0.92 0.04 35);
   --rdp-selected-border: 2px solid var(--rdp-accent-color);
+  --rdp-range_start-date-background-color: var(--rdp-accent-color);
+  --rdp-range_end-date-background-color: var(--rdp-accent-color);
+  --rdp-range_middle-background-color: color-mix(in srgb, var(--rdp-accent-color) 20%, transparent);
   margin: 0 auto;
   color: oklch(0.32 0.10 28);
 }
 
-.modal-calendar .rdp-selected {
+.modal-calendar .rdp-selected .rdp-day_button {
   background-color: var(--rdp-accent-color) !important;
   color: white !important;
   font-weight: 700;
 }
 
-.modal-calendar .rdp-range_start,
-.modal-calendar .rdp-range_end {
+.modal-calendar .rdp-range_start .rdp-day_button,
+.modal-calendar .rdp-range_end .rdp-day_button {
   background-color: var(--rdp-accent-color) !important;
   color: white !important;
 }
 
-.modal-calendar .rdp-range_middle {
+.modal-calendar .rdp-range_middle .rdp-day_button {
   background-color: color-mix(in srgb, var(--rdp-accent-color) 20%, transparent) !important;
 }
 
-.modal-calendar .rdp-day:hover:not(.rdp-selected) {
+.modal-calendar .rdp-day:hover:not(.rdp-selected) .rdp-day_button {
   background-color: color-mix(in srgb, var(--rdp-accent-color) 15%, transparent);
   border-radius: 12px;
 }
