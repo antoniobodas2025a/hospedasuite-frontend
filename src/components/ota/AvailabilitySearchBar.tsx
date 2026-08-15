@@ -673,12 +673,6 @@ export default function AvailabilitySearchBar({
 															numberOfMonths={1}
 															disabled={{ before: today }}
 															className="text-foreground font-sans"
-															modifiersClassNames={{
-																selected: 'text-primary-foreground font-bold shadow-md border-transparent',
-																range_middle: 'text-brand-900 border-y border-transparent rounded-none',
-																range_start: 'text-primary-foreground rounded-l-xl rounded-r-none border-transparent',
-																range_end: 'text-primary-foreground rounded-r-xl rounded-l-none border-transparent',
-															}}
 														/>
 													</div>
 												</div>

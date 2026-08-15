@@ -454,14 +454,6 @@ export default function SearchBarUnified({ onSearch, primaryColor }: SearchBarUn
 									numberOfMonths={1}
 									disabled={{ before: today }}
 									className="text-foreground font-sans"
-									modifiersClassNames={{
-										selected:
-											"text-primary-foreground font-bold shadow-md rounded-[var(--radius-squircle-lg)]",
-										range_middle:
-											"text-brand-900 rounded-none",
-										range_start: "text-primary-foreground rounded-l-xl rounded-r-none",
-										range_end: "text-primary-foreground rounded-r-xl rounded-l-none",
-									}}
 								/>
 							</div>
 						</div>
