@@ -14,12 +14,38 @@ export function validatePrimaryColor(color: string | null | undefined): string |
   
   // Basic CSS color validation (hex, rgb, hsl, or CSS variable)
   const isValidHex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.test(trimmed);
-  const isValidRgb = /^rgb\(\s*\d{1,3}\s*,\s*\d{1,3}\s*,\s*\d{1,3}\s*\)$/i.test(trimmed);
-  const isValidHsl = /^hsl\(\s*\d{1,3}\s*,\s*\d{1,3}%?\s*,\s*\d{1,3}%?\s*\)$/i.test(trimmed);
+  const isValidRgb = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i.test(trimmed);
+  const isValidHsl = /^hsl\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%\s*\)$/i.test(trimmed);
   const isValidVar = /^var\(--/.test(trimmed);
 
   if (!isValidHex && !isValidRgb && !isValidHsl && !isValidVar) {
     return undefined;
+  }
+  
+  // Validate RGB ranges (0-255)
+  if (isValidRgb) {
+    const rgbMatch = trimmed.match(/^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/i);
+    if (rgbMatch) {
+      const r = parseInt(rgbMatch[1], 10);
+      const g = parseInt(rgbMatch[2], 10);
+      const b = parseInt(rgbMatch[3], 10);
+      if (r > 255 || g > 255 || b > 255) {
+        return undefined;
+      }
+    }
+  }
+  
+  // Validate HSL ranges (hue 0-360, saturation/lightness 0-100)
+  if (isValidHsl) {
+    const hslMatch = trimmed.match(/^hsl\(\s*(\d{1,3})\s*,\s*(\d{1,3})%\s*,\s*(\d{1,3})%\s*\)$/i);
+    if (hslMatch) {
+      const h = parseInt(hslMatch[1], 10);
+      const s = parseInt(hslMatch[2], 10);
+      const l = parseInt(hslMatch[3], 10);
+      if (h > 360 || s > 100 || l > 100) {
+        return undefined;
+      }
+    }
   }
   
   // Check if color is too light for white text (luminance > 0.7)
@@ -32,17 +58,26 @@ export function validatePrimaryColor(color: string | null | undefined): string |
 
 /**
  * Checks if a color is too light for white text overlay.
- * Uses relative luminance formula (WCAG 2.0).
+ * Uses WCAG 2.0 relative luminance formula with sRGB linearization.
+ * Requires minimum 4.5:1 contrast ratio for normal text.
  */
 function isColorTooLight(color: string): boolean {
   const rgb = parseColor(color);
   if (!rgb) return false;
   
-  // Calculate relative luminance (WCAG 2.0 formula)
-  const luminance = (0.299 * rgb.r + 0.587 * rgb.g + 0.114 * rgb.b) / 255;
+  // Linearize sRGB values (WCAG 2.0 gamma correction)
+  const linearize = (c: number): number => {
+    const sRGB = c / 255;
+    return sRGB <= 0.03928 ? sRGB / 12.92 : Math.pow((sRGB + 0.055) / 1.055, 2.4);
+  };
   
-  // If luminance > 0.7, color is too light for white text
-  return luminance > 0.7;
+  // Calculate relative luminance (WCAG 2.0 formula)
+  const L = 0.2126 * linearize(rgb.r) + 0.7152 * linearize(rgb.g) + 0.0722 * linearize(rgb.b);
+  
+  // For white text (luminance 1.0) on colored background, need 4.5:1 contrast ratio
+  // Contrast = (1.0 + 0.05) / (L + 0.05) >= 4.5
+  // Solving: L <= 0.179
+  return L > 0.4; // Conservative threshold for good readability
 }
 
 /**

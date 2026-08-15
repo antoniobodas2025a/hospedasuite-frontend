@@ -325,7 +325,7 @@ export default function InlineDatePicker({
               <span>{t('ota.legend.available')}</span>
             </div>
             <div className="flex items-center gap-1.5">
-              <span className="size-2 rounded-full bg-destructive/20" />
+              <span className="size-2 rounded-full bg-destructive/5 border border-destructive/20" />
               <span>{t('ota.legend.booked')}</span>
             </div>
             <div className="flex items-center gap-1.5">

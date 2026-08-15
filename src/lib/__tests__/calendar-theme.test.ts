@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { validatePrimaryColor } from './calendar-theme';
+import { validatePrimaryColor } from '../calendar-theme';
 
 describe('validatePrimaryColor', () => {
   describe('null/undefined/empty handling', () => {
@@ -84,6 +84,17 @@ describe('validatePrimaryColor', () => {
     it('rejects rgb() with out of range values', () => {
       expect(validatePrimaryColor('rgb(999, -50, abc)')).toBeUndefined();
     });
+
+    it('rejects rgb() with values > 255', () => {
+      expect(validatePrimaryColor('rgb(300, 0, 0)')).toBeUndefined();
+      expect(validatePrimaryColor('rgb(0, 256, 0)')).toBeUndefined();
+      expect(validatePrimaryColor('rgb(0, 0, 999)')).toBeUndefined();
+    });
+
+    it('accepts rgb() with max valid values', () => {
+      expect(validatePrimaryColor('rgb(255, 255, 255)')).toBeUndefined(); // white
+      expect(validatePrimaryColor('rgb(255, 0, 0)')).toBe('rgb(255, 0, 0)'); // red
+    });
   });
 
   describe('hsl() validation', () => {
@@ -91,12 +102,28 @@ describe('validatePrimaryColor', () => {
       expect(validatePrimaryColor('hsl(210, 100%, 50%)')).toBe('hsl(210, 100%, 50%)');
     });
 
-    it('accepts hsl() without % signs', () => {
-      expect(validatePrimaryColor('hsl(210, 100, 50)')).toBe('hsl(210, 100, 50)');
+    it('rejects hsl() without % signs', () => {
+      expect(validatePrimaryColor('hsl(210, 100, 50)')).toBeUndefined();
     });
 
     it('rejects hsl() with invalid values', () => {
       expect(validatePrimaryColor('hsl(garbage)')).toBeUndefined();
+    });
+
+    it('rejects hsl() with hue > 360', () => {
+      expect(validatePrimaryColor('hsl(400, 50%, 50%)')).toBeUndefined();
+    });
+
+    it('rejects hsl() with saturation > 100', () => {
+      expect(validatePrimaryColor('hsl(210, 150%, 50%)')).toBeUndefined();
+    });
+
+    it('rejects hsl() with lightness > 100', () => {
+      expect(validatePrimaryColor('hsl(210, 50%, 150%)')).toBeUndefined();
+    });
+
+    it('accepts hsl() with max valid values', () => {
+      expect(validatePrimaryColor('hsl(360, 100%, 50%)')).toBe('hsl(360, 100%, 50%)');
     });
   });
 
