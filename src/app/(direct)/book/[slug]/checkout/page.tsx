@@ -2,7 +2,7 @@ import React from 'react';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/utils/supabase/server';
 import CheckoutForm from '@/components/checkout/CheckoutForm';
-import { buildRoomPricingBreakdown } from '@/lib/pricing';
+import { buildRoomPricingBreakdown, calculateNights, normalizeWeekendPrice } from '@/lib/pricing';
 
 export const dynamic = 'force-dynamic';
 
@@ -64,10 +64,10 @@ export default async function CheckoutPage({ params, searchParams }: CheckoutPag
     redirect(`/book/${slug}`);
   }
 
-  const nights = Math.max(1, Math.round((checkOutDate.getTime() - checkInDate.getTime()) / (1000 * 60 * 60 * 24)));
+  const nights = calculateNights(checkInDate, checkOutDate);
 
   const roomPrice = Number(room.price || 0);
-  const weekendPrice = Number(room.weekend_price || roomPrice * 1.2);
+  const weekendPrice = normalizeWeekendPrice(room.weekend_price, roomPrice);
   // Use per-night breakdown for weekend pricing accuracy
   const pricing = buildRoomPricingBreakdown({
     pricePerNight: roomPrice,

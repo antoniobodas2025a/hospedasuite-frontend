@@ -122,7 +122,7 @@ describe('SupabaseRoomGateway', () => {
       expect(result?.room.weekendPrice).toBe(175);
     });
 
-    it('falls back to price * 1.2 when weekend_price is not set', async () => {
+    it('falls back to basePrice when weekend_price is not set (FLAT model)', async () => {
       const mock = createMockSupabase();
       mock.queue.push({ data: mockHotel(), error: null });
       mock.queue.push({ data: mockRoom({ weekend_price: null }), error: null });
@@ -131,10 +131,10 @@ describe('SupabaseRoomGateway', () => {
       const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
       const result = await gateway.getRoomDetail('mirador', 'room-1');
 
-      expect(result?.room.weekendPrice).toBe(120);
+      expect(result?.room.weekendPrice).toBe(100); // Same as basePrice (FLAT model)
     });
 
-    it('normalizes weekend_price=0 to basePrice * 1.2', async () => {
+    it('normalizes weekend_price=0 to basePrice (FLAT model)', async () => {
       const mock = createMockSupabase();
       mock.queue.push({ data: mockHotel(), error: null });
       mock.queue.push({ data: mockRoom({ weekend_price: 0 }), error: null });
@@ -143,10 +143,10 @@ describe('SupabaseRoomGateway', () => {
       const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
       const result = await gateway.getRoomDetail('mirador', 'room-1');
 
-      expect(result?.room.weekendPrice).toBe(120); // 100 * 1.2
+      expect(result?.room.weekendPrice).toBe(100); // Same as basePrice (FLAT model)
     });
 
-    it('normalizes weekend_price=null to basePrice * 1.2', async () => {
+    it('normalizes weekend_price=null to basePrice (FLAT model)', async () => {
       const mock = createMockSupabase();
       mock.queue.push({ data: mockHotel(), error: null });
       mock.queue.push({ data: mockRoom({ weekend_price: null }), error: null });
@@ -155,7 +155,7 @@ describe('SupabaseRoomGateway', () => {
       const gateway = new SupabaseRoomGateway(mock as unknown as SupabaseClient);
       const result = await gateway.getRoomDetail('mirador', 'room-1');
 
-      expect(result?.room.weekendPrice).toBe(120); // 100 * 1.2
+      expect(result?.room.weekendPrice).toBe(100); // Same as basePrice (FLAT model)
     });
   });
 
@@ -186,7 +186,7 @@ describe('SupabaseRoomGateway', () => {
       expect(availability[2].price).toBe(150);
     });
 
-    it('normalizes weekend_price=0 to basePrice * 1.2 in availability calendar', async () => {
+    it('normalizes weekend_price=0 to basePrice in availability calendar (FLAT model)', async () => {
       const mock = createMockSupabase();
       mock.queue.push({ data: { price: 100, weekend_price: 0 }, error: null });
       mock.queue.push({ data: [], error: null });
@@ -201,9 +201,9 @@ describe('SupabaseRoomGateway', () => {
       expect(availability[0].date).toBe('2026-09-10'); // Thursday
       expect(availability[0].price).toBe(100); // weekday
       expect(availability[1].date).toBe('2026-09-11'); // Friday
-      expect(availability[1].price).toBe(120); // weekend (100 * 1.2, normalized from 0)
+      expect(availability[1].price).toBe(100); // weekend (same as basePrice, FLAT model)
       expect(availability[2].date).toBe('2026-09-12'); // Saturday
-      expect(availability[2].price).toBe(120); // weekend (100 * 1.2, normalized from 0)
+      expect(availability[2].price).toBe(100); // weekend (same as basePrice, FLAT model)
     });
   });
 

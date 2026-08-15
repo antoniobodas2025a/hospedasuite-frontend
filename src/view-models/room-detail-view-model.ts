@@ -239,7 +239,7 @@ export function roomDetailViewModel(
     hotelSlug: hotel.slug,
     totalHotelRooms: hotel.totalRooms,
     pricePerNight: room.pricePerNight,
-    weekendPrice: room.weekendPrice, // Gateway ya normalizó null/0/negative → basePrice * 1.2
+    weekendPrice: room.weekendPrice, // Gateway ya normalizó null/0/negative → basePrice (FLAT model)
     gallery,
     coverImage: gallery[0].url,
     description: room.description ?? '',

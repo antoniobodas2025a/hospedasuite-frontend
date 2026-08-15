@@ -38,9 +38,8 @@ function makeHotel(overrides: Partial<HotelContext> = {}): HotelContext {
   };
 }
 
-function makeDates(daysFromNow: number, nights: number) {
-  const checkIn = new Date();
-  checkIn.setDate(checkIn.getDate() + daysFromNow);
+function makeDates(checkInDate: string, nights: number) {
+  const checkIn = new Date(`${checkInDate}T12:00:00Z`);
   const checkOut = new Date(checkIn);
   checkOut.setDate(checkOut.getDate() + nights);
   const checkInStr = checkIn.toISOString().split('T')[0];
@@ -67,7 +66,7 @@ describe('roomDetailViewModel', () => {
     const input: RoomDetailViewModelInput = {
       room: null,
       hotel: makeHotel(),
-      dates: makeDates(10, 3),
+      dates: makeDates('2026-09-10', 3),
     };
 
     const result = roomDetailViewModel(input);
@@ -81,7 +80,7 @@ describe('roomDetailViewModel', () => {
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel({ subscriptionStatus: 'cancelled' }),
-      dates: makeDates(10, 3),
+      dates: makeDates('2026-09-10', 3),
     };
 
     const result = roomDetailViewModel(input);
@@ -123,7 +122,7 @@ describe('roomDetailViewModel', () => {
   });
 
   it('returns dates_selected state with correct pricing when dates are available', () => {
-    const dates = makeDates(4, 3);
+    const dates = makeDates('2026-09-07', 3); // Mon -> Thu (3 weekday nights)
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
@@ -143,7 +142,7 @@ describe('roomDetailViewModel', () => {
   });
 
   it('returns sold_out state when no availability for selected dates', () => {
-    const dates = makeDates(10, 3);
+    const dates = makeDates('2026-09-10', 3);
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
@@ -160,7 +159,7 @@ describe('roomDetailViewModel', () => {
   });
 
   it('calculates weekday-only stay correctly (3 nights)', () => {
-    const dates = makeDates(4, 3); // Mon -> Thu
+    const dates = makeDates('2026-09-07', 3); // Mon -> Thu (3 weekday nights)
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
@@ -180,7 +179,7 @@ describe('roomDetailViewModel', () => {
   });
 
   it('calculates mixed stay correctly (Thu-Sun: 1 weekday + 2 weekend)', () => {
-    const dates = makeDates(7, 3); // Thu -> Sun
+    const dates = makeDates('2026-09-10', 3); // Thu -> Sun (1 weekday + 2 weekend)
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
@@ -198,7 +197,7 @@ describe('roomDetailViewModel', () => {
   });
 
   it('calculates weekend-only stay correctly (Fri-Sun: 2 weekend nights)', () => {
-    const dates = makeDates(7, 2); // Fri -> Sun
+    const dates = makeDates('2026-09-11', 2); // Fri -> Sun (2 weekend nights)
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),
@@ -240,7 +239,7 @@ describe('roomDetailViewModel', () => {
   });
 
   it('sets canBook to false when hotel subscription is past_due', () => {
-    const dates = makeDates(10, 3);
+    const dates = makeDates('2026-09-10', 3);
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel({ subscriptionStatus: 'past_due' }),
@@ -254,7 +253,7 @@ describe('roomDetailViewModel', () => {
   });
 
   it('sets canBook to false when room is restricted', () => {
-    const dates = makeDates(10, 3);
+    const dates = makeDates('2026-09-10', 3);
     const input: RoomDetailViewModelInput = {
       room: makeRoom({ restricted: true }),
       hotel: makeHotel(),
@@ -324,7 +323,7 @@ describe('roomDetailViewModel', () => {
   });
 
   it('includes initial dates in output when dates are provided', () => {
-    const dates = makeDates(10, 3);
+    const dates = makeDates('2026-09-10', 3);
     const input: RoomDetailViewModelInput = {
       room: makeRoom(),
       hotel: makeHotel(),

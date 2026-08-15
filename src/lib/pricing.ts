@@ -11,7 +11,7 @@
 
 /**
  * Default multiplier for weekend price fallback.
- * When a room doesn't have a configured weekend_price, we use basePrice * 1.2.
+ * When a room doesn't have a configured weekend_price, we use basePrice (FLAT model, no markup).
  */
 export const WEEKEND_FALLBACK_MULTIPLIER = 1.2;
 
@@ -62,9 +62,11 @@ export function calculateNights(checkIn: Date, checkOut: Date): number {
 }
 
 /**
- * Normalizes weekend_price with fallback to basePrice * WEEKEND_FALLBACK_MULTIPLIER.
+ * Normalizes weekend_price with fallback to basePrice.
  * Handles null, undefined, 0, and negative values.
  * Single source of truth for weekend price normalization.
+ * 
+ * FLAT model: if hotelier doesn't configure weekend_price, use basePrice (no markup).
  */
 export function normalizeWeekendPrice(
   weekendPrice: number | null | undefined,
@@ -72,7 +74,7 @@ export function normalizeWeekendPrice(
 ): number {
   return (weekendPrice && weekendPrice > 0)
     ? weekendPrice
-    : basePrice * WEEKEND_FALLBACK_MULTIPLIER;
+    : basePrice;
 }
 
 /**
