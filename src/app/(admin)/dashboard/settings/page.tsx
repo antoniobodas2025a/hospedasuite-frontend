@@ -19,18 +19,27 @@ export default async function SettingsPage() {
 
   try {
     // 2. Extraemos toda la configuración actual y el equipo en paralelo (Mejora de rendimiento)
-    const [hotelResponse, staffResponse] = await Promise.all([
+    const [hotelResponse, staffResponse, locationResponse] = await Promise.all([
       supabaseAdmin.from('hotels').select('id, name, slug, subscription_plan, subscription_status, trial_ends_at, owner_id, email, phone, city, location, address, settings, wompi_public_key, wompi_integrity_secret, created_at').eq('id', hotel.id).single(),
-      supabaseAdmin.from('staff').select('id, hotel_id, user_id, name, role, pin_code, created_at').eq('hotel_id', hotel.id).order('created_at', { ascending: false })
+      supabaseAdmin.from('staff').select('id, hotel_id, user_id, name, role, pin_code, created_at').eq('hotel_id', hotel.id).order('created_at', { ascending: false }),
+      supabaseAdmin.from('hotel_locations').select('lat, lng, precision').eq('hotel_id', hotel.id).order('created_at', { ascending: false }).limit(1)
     ]);
 
     if (hotelResponse.error) throw hotelResponse.error;
+
+    // Merge coordinates into initialData so MapPicker can initialize
+    const rawLocation = locationResponse.data?.[0] as unknown as { lat: number; lng: number; precision: string } | null;
+    const initialData = {
+      ...(hotelResponse.data || {}),
+      latitude: rawLocation?.lat ?? null,
+      longitude: rawLocation?.lng ?? null,
+    };
 
     // 3. Renderizamos el panel blindado
     return (
       <div className="w-full space-y-6">
         <SettingsPanel 
-          initialData={hotelResponse.data || {}} 
+          initialData={initialData} 
           initialStaff={staffResponse.data || []} 
         />
         

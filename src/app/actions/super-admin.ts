@@ -66,7 +66,29 @@ export async function createHotelAction(formData: FormData) {
     if (dbError) throw dbError;
     createdHotelId = hotelData.id;
 
-    // 3. 🚀 RESTAURACIÓN DEL PUENTE DE IDENTIDAD
+    // 3b. Geocode and save coordinates (best-effort — non-blocking)
+    try {
+      // We geocode using hotel name + "Colombia" as fallback
+      const geocodeResult = await import('@/lib/geocoding-service').then(m =>
+        m.geocodeAddress(name, 'Colombia')
+      );
+      if (geocodeResult) {
+        await supabaseAdmin.from('hotel_locations').insert({
+          hotel_id: createdHotelId,
+          lat: geocodeResult.lat,
+          lng: geocodeResult.lng,
+          precision: geocodeResult.precision ?? 'city',
+          source: 'wizard',
+          raw_input: name,
+          geocoded_at: new Date().toISOString(),
+        });
+        console.log(`📍 [createHotelAction] Coordenadas geocodificadas para ${name}: ${geocodeResult.lat}, ${geocodeResult.lng}`);
+      }
+    } catch (geocodeErr) {
+      console.warn(`📍 [createHotelAction] Geocoding falló para ${name} (no es crítico):`, geocodeErr instanceof Error ? geocodeErr.message : geocodeErr);
+    }
+
+    // 4. 🚀 RESTAURACIÓN DEL PUENTE DE IDENTIDAD
     // Vinculamos el staff inicial con el UUID de Auth para que el Wizard sea accesible.
     const { plain: plainPin, hash: hashedPin } = await generatePin();
     

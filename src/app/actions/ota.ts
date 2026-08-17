@@ -51,6 +51,7 @@ function normalizeSpaces(str: string): string {
 
 export interface LocationSuggestion {
 	city: string;
+	coordinates?: { lat: number; lng: number } | null;
 	hotelCount: number;
 }
 
@@ -66,72 +67,26 @@ export async function searchLocationsAction(
 			return { success: true, data: [] };
 		}
 
-		// Fetch all active hotels with their city
-		const { data, error } = await supabaseAdmin
-			.from("hotels")
-			.select("city, location")
-			.eq("status", "active")
-			.not("city", "is", null);
+		const { data, error } = await supabaseAdmin.rpc("search_cities_fuzzy", {
+			search_query: query,
+			min_similarity: 0.3,
+			max_results: 8,
+		});
 
 		if (error) {
-			console.error("[LOCATIONS] Error fetching cities:", error.message);
+			console.error("[LOCATIONS] RPC error:", error.message);
 			return { success: false, data: [], error: error.message };
 		}
 
-		// Group by city, count hotels, filter by query
-		const cityMap = new Map<string, number>();
-		const locationSet = new Set<string>();
+		const results: LocationSuggestion[] = (data || []).map((row: any) => ({
+			city: row.city as string,
+			coordinates: row.coordinates as { lat: number; lng: number } | null,
+			hotelCount: Number(row.hotel_count) as number,
+		}));
 
-		for (const hotel of data || []) {
-			const city = (hotel.city || "").trim();
-			const location = (hotel.location || "").trim();
-
-			if (city) {
-				cityMap.set(city, (cityMap.get(city) || 0) + 1);
-			}
-			if (location) {
-				locationSet.add(location);
-			}
-		}
-
-		// Filter by query match (city, location, or address) — accent-insensitive
-		const normalizedQuery = normalizeForSearch(query);
-		const spaceFreeQuery = normalizeSpaces(query);
-		const results: LocationSuggestion[] = [];
-
-		// Match cities (accent-insensitive + space-forgiving)
-		for (const [city, count] of cityMap.entries()) {
-			const normalizedCity = normalizeForSearch(city);
-			const spaceFreeCity = normalizeSpaces(city);
-			if (normalizedCity.includes(normalizedQuery) || spaceFreeCity.includes(spaceFreeQuery)) {
-				results.push({ city, hotelCount: count });
-			}
-		}
-
-		// Match locations (neighborhoods, areas) that aren't already in cities
-		for (const loc of locationSet) {
-			const normalizedLoc = normalizeForSearch(loc);
-			if (normalizedLoc.includes(normalizedQuery) && !cityMap.has(loc)) {
-				// Count hotels with this location
-				const count = (data || []).filter(
-					(h: any) => normalizeForSearch(h.location || "") === normalizedLoc,
-				).length;
-				if (count > 0) {
-					results.push({ city: loc, hotelCount: count });
-				}
-			}
-		}
-
-		// Sort by hotel count (descending), then alphabetically
-		results.sort(
-			(a, b) => b.hotelCount - a.hotelCount || a.city.localeCompare(b.city),
-		);
-
-		// Limit to top 8 suggestions
-		return { success: true, data: results.slice(0, 8) };
+		return { success: true, data: results };
 	} catch (error: unknown) {
-		const message =
-			error instanceof Error ? error.message : "Error desconocido";
+		const message = error instanceof Error ? error.message : "Error desconocido";
 		console.error("[LOCATIONS] Failed to search locations:", message);
 		return { success: false, data: [], error: message };
 	}
